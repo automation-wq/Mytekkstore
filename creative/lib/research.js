@@ -8,7 +8,7 @@ const { visit } = require("./browser.js");
 const { palette } = require("./image.js");
 
 const TYPES = [
-  ["compare", /compare|comparison|vs\b/i], ["offers", /offer|deal|sale|festive|diwali|promotion|discount|emi/i], ["campaign", /campaign|launch|event|week|days\b|season/i],
+  ["compare", /\/compare|comparison|[-_]vs[-_]/i], ["offers", /offer|deal|sale|festive|diwali|promotion|discount|emi/i], ["campaign", /campaign|launch|event|week|days\b|season/i],
   ["product", /\/(p|dp|product|products)\/|\/buy\/|[-_][a-z0-9]{6,}\.html$|\/[a-z0-9-]+-(tv|television|refrigerator|washing|laptop|phone|ac)\b/i], ["listing", /\/(all|list|c|category|shop)\/|\?page=|all-tvs|televisions|appliances|laptops|smartphones/i],
 ];
 const robotsCache = {};
@@ -34,7 +34,8 @@ const sha = s => crypto.createHash("sha1").update(s).digest("hex").slice(0, 16);
 // discover same-site links from a visited page that look like the page types we study
 // product pages first, then offers, campaigns, comparisons, listings; addresses with a query string (filters, sorts) are skipped
 function discover(obs, base, max) {
-  const host = new URL(base).host, seen = new Set(), out = [], rank = { product: 0, offers: 1, campaign: 2, compare: 3, listing: 4 };
+  const b = new URL(base), host = b.host, seen = new Set(), out = [], rank = { product: 0, offers: 1, campaign: 2, compare: 3, listing: 4 };
+  const section = b.pathname.split("/").filter(Boolean).slice(0, 2).join("/"); // pages under the start page's own section come first (TVs, not phones)
   for (const href of obs.links || []) {
     let u; try { u = new URL(href, base); } catch { continue; }
     if (u.host !== host || !/^https?:$/.test(u.protocol) || u.search) continue;
@@ -42,9 +43,9 @@ function discover(obs, base, max) {
     if (seen.has(s) || s === base) continue;
     const t = (TYPES.find(([, re]) => re.test(s)) || [null])[0];
     if (!t) continue;
-    seen.add(s); out.push({ url: s, type: t });
+    seen.add(s); out.push({ url: s, type: t, far: section && !u.pathname.split("/").filter(Boolean).slice(0, 2).join("/").startsWith(section) ? 10 : 0 });
   }
-  return out.sort((a, b) => rank[a.type] - rank[b.type]).slice(0, max);
+  return out.sort((a, b) => a.far + rank[a.type] - (b.far + rank[b.type])).slice(0, max).map(({ url, type }) => ({ url, type }));
 }
 
 // one page -> one reference (or an update of the reference that already holds this URL)
@@ -58,7 +59,8 @@ async function collect(website, url, type) {
   const id = sha(url), imagePath = path.join("refs", id + ".png");
   fs.writeFileSync(path.join(ASSETS, imagePath), obs.png);
   const colours = await palette(obs.png, 6);
-  const ctaEl = obs.buttons[0] || null, priceText = obs.prices[0] || (prod && prod.offers && (prod.offers.price || (prod.offers[0] || {}).price) ? "₹" + (prod.offers.price || prod.offers[0].price) : "");
+  const ctaEl = obs.buttons[0] || null, shown = obs.prices.filter(p => !/\/\s?mo|month/i.test(p)); // a full price, not an EMI per month
+  const priceText = shown[0] || (prod && prod.offers && (prod.offers.price || (prod.offers[0] || {}).price) ? "₹" + (prod.offers.price || prod.offers[0].price) : "");
   const facts = {
     title: obs.title, description: obs.description, headline: obs.h1 ? obs.h1.text : (obs.heads[0] || {}).text || "", copy: obs.heads.slice(0, 12).map(h => h.text), price: priceText, offers: obs.offers,
     productName: prod ? prod.name : "", model: prod ? (prod.sku || prod.mpn || prod.model || "") : "", brand: prod && prod.brand ? (prod.brand.name || prod.brand) : website.brand, category: prod ? (prod.category || "") : "",

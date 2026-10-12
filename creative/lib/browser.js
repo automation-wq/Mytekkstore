@@ -25,10 +25,11 @@ const OBSERVE = `(() => {
   const font = el => { const s = getComputedStyle(el); return { family: s.fontFamily.split(",")[0].replace(/["']/g, "").trim(), size: Math.round(parseFloat(s.fontSize)), weight: s.fontWeight, color: s.color, transform: s.textTransform, letterSpacing: s.letterSpacing }; };
   const text = el => (el.innerText || el.textContent || "").replace(/\\s+/g, " ").trim();
   const meta = n => (document.querySelector('meta[name="' + n + '"], meta[property="' + n + '"]') || {}).content || "";
-  const h1 = [...document.querySelectorAll("h1")].find(vis), body = document.body;
+  const body = document.body;
   const heads = [...document.querySelectorAll("h1,h2,h3")].filter(vis).slice(0, 40).map(el => ({ tag: el.tagName.toLowerCase(), text: text(el).slice(0, 200), box: box(el), font: font(el) })).filter(h => h.text);
+  const h1 = [...document.querySelectorAll("h1")].find(el => vis(el) && parseFloat(getComputedStyle(el).fontSize) >= 14) || null; // not a 1px heading kept for screen readers
   const all = text(body);
-  const prices = [...new Set((all.match(/(?:₹|Rs\\.?|INR)\\s?[\\d,]{3,}(?:\\.\\d+)?/g) || []).slice(0, 30))];
+  const prices = [...new Set((all.match(/(?:₹|Rs\\.?|INR)\\s?[\\d,]{3,}(?:\\.\\d+)?(?:\\s?\\/\\s?mo(?:nth)?\\.?|\\s?per month)?/gi) || []).slice(0, 30))];
   const offers = [...new Set((all.match(/\\b\\d{1,2}%\\s?(?:off|discount)|no cost emi|cashback|exchange|free (?:delivery|shipping|installation)|limited (?:time|period)|save ₹[\\d,]+/gi) || []).map(s => s.toLowerCase()).slice(0, 20))];
   const buttons = [...document.querySelectorAll("a,button")].filter(el => vis(el) && /^(buy|shop|add to cart|learn more|know more|explore|see|view|compare|order|get|pre-?order|discover|check)/i.test(text(el))).slice(0, 20).map(el => ({ text: text(el).slice(0, 60), href: el.href || "", box: box(el), font: font(el) }));
   const images = [...document.images].filter(vis).map(i => ({ src: i.currentSrc || i.src, alt: (i.alt || "").slice(0, 160), w: i.naturalWidth, h: i.naturalHeight, box: box(i) })).filter(i => i.box.w >= 120 && i.box.h >= 80 && /^https?:/.test(i.src)).slice(0, 60);
