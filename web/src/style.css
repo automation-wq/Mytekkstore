@@ -1440,3 +1440,23 @@ main > .cols { margin-top:22px }
 .slide.k-brand h1, .slide.k-promo h1 { font-size:clamp(44px,7vw,92px); letter-spacing:-3px }
 @media (max-width:760px) { .slide .ghostmark { font-size:46vw; bottom:-6%; opacity:.05 } .slide.k-brand .bigtv.cut, .slide.k-promo .bigtv.cut { width:40vw } .slide.k-brand h1, .slide.k-promo h1 { font-size:clamp(34px,10vw,48px); max-width:62% } .slide .pts li { padding:5px 11px 5px 8px; font-size:13px } }
 @media (prefers-reduced-motion: reduce) { .slide .ghostmark { transition:none } }
+
+/* ===== premium polish (2026-10-12 night): no hard 1px borders anywhere — depth comes from soft shadow and the tile background,
+   the way Apple/Samsung surfaces read; and the broken banner reflection removed ===== */
+.slide.k-brand .bigtv.cut::after, .slide.k-promo .bigtv.cut::after { content:none } /* the reflection showed the gradient, not the TV */
+.slide .ghostmark { opacity:.05 }
+/* surfaces: drop the grey outline, lift with a soft shadow instead */
+.card, .panel, .filters, .box, .offer, .fstrip, .emiband, .guide, .help, .cmp .scroll, .mbox, .qbox, .npanel, .quote { border:none }
+.card { box-shadow:0 1px 3px #0f111508, 0 12px 28px -20px #0f111522 }
+.card:hover { border:none; box-shadow:0 24px 44px -24px #0b3d2e55; translate:0 -6px }
+.panel, .filters, .box, .offer, .fstrip, .emiband, .guide, .help, .cmp .scroll { box-shadow:0 1px 3px #0f111508, 0 18px 40px -30px #0f111526 }
+/* image frames: soft tile instead of a hard border */
+.thumb, .cimg, .pdp .img, .line .img, .cat span, .brand, .sharerow a, .fopt, .emiplans, .way { border:none }
+.pdp .img, .cimg, .thumb { background:var(--tile); box-shadow:inset 0 0 0 1px #0f11150a }
+.thumb.on { box-shadow:inset 0 0 0 2px var(--accent) }
+.brand { background:var(--tile); box-shadow:none }
+.chip { border:none; background:var(--tile) } .chip.on, .chip:hover { box-shadow:inset 0 0 0 1.5px var(--accent); color:var(--accent) }
+.sharerow a { background:var(--tile) }
+/* the product photo: a clean framed stage with a smooth zoom, no border */
+.pdp .img { border-radius:22px; overflow:hidden } .zoom { cursor:zoom-in } .zoom img { transition:scale .35s cubic-bezier(.2,.8,.2,1) } .zoom:hover img { scale:2.1 }
+.pdp .hint { text-align:center; color:var(--soft); font-size:12.5px; margin-top:10px }
