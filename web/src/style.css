@@ -1268,3 +1268,14 @@ a.way:hover { translate:0 -3px; box-shadow:0 30px 50px -34px #0f111552 }
 .pincheck label { display:grid; gap:6px; font-size:13px; color:var(--muted) } .pincheck input { width:200px } .pincheck p { flex-basis:100%; margin:0 }
 .box.sent { margin:0; text-align:left; padding:32px }
 @media (max-width:860px) { .contact, .brands2 { grid-template-columns:1fr } .policy > section { grid-template-columns:44px 1fr } }
+
+/* buying-flow pages (2026-10-09): page titles, no stray gap above the two columns, panels in the house radius, help cards in a row */
+.ptitle { font-size:clamp(28px,3.4vw,42px); letter-spacing:-1.4px; margin:26px 0 6px }
+.ptitle .muted { font-weight:500; letter-spacing:0 }
+main > .cols { margin-top:22px }
+.panel, .box { border-radius:24px } .panel { padding:24px }
+.sum .perks { margin-top:16px; padding-top:16px }
+.box.okbox { padding:44px 32px 36px }
+.ways3 { grid-template-columns:repeat(3,1fr) } .ways3 .way { align-content:start }
+.steps3 .done .pnum { color:var(--accent) } .steps3 > div { position:relative }
+@media (max-width:860px) { .ways3 { grid-template-columns:1fr } }

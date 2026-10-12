@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { useStore } from "./store.jsx";
 import { api, qs, demoPay, track } from "./api.js";
 import { Card, Row, Strip, Box, Line, OrderItems, BankOffers, Form, Ico, Icon } from "./components.jsx";
-import { DRAW_ICONS, STEPS, FESTIVE, KV_IMG, catUrl, brandUrl, listUrl, off, etaText } from "./data.js";
+import { DRAW_ICONS, STEPS, FESTIVE, KV_IMG, POLICY, catUrl, brandUrl, listUrl, off, etaText } from "./data.js";
 import { reveal } from "./motion.js";
 
 const $ = (s, el = document) => el.querySelector(s);
@@ -25,8 +25,8 @@ export function Offers() {
       {FESTIVE.ends && <div className="cdown" aria-label="Time left">{["Days", "Hours", "Minutes", "Seconds"].map((l, i) => <div key={l}><b>{cells[i]}</b><span>{l}</span></div>)}</div>}
       <div className="fcta">{CATS.map(c => <a className="btn" href={listUrl({ cat: c, sort: "off" })} key={c}>{c}</a>)}</div>
     </div>
-    <section><h2>Offers by category</h2><div className="ftiles">{CATS.map(c => <a className="ftile" href={listUrl({ cat: c, sort: "off" })} key={c}><span><b>Up to {maxOff(c)}% off</b>{c}</span><img src={catImg(c)} alt="" loading="lazy" /></a>)}</div></section>
-    <section><h2>Top deals <a href="category.html?sort=off">View all</a></h2><div className="grid">{deals.slice(0, 8).map(p => <Card p={p} key={p.id} />)}</div></section>
+    <section><h2>Offers by category</h2><p className="lead">The biggest discount in each category right now.</p><div className="ftiles">{CATS.map(c => <a className="ftile" href={listUrl({ cat: c, sort: "off" })} key={c}><span><b>Up to {maxOff(c)}% off</b>{c}</span><img src={catImg(c)} alt="" loading="lazy" /></a>)}</div></section>
+    <section><h2>Top deals <a href="category.html?sort=off">View all</a></h2><p className="lead">Sorted by discount, biggest first.</p><div className="grid">{deals.slice(0, 8).map(p => <Card p={p} key={p.id} />)}</div></section>
     <BankOffers />
     <section><div className="emiband"><div><p className="kicker">No Cost EMI</p><h2>Pay in easy monthly instalments</h2><p>Products marked "No Cost EMI" can be paid for in 3, 6 or 9 monthly instalments on participating bank credit cards, with no extra interest.</p></div><a className="btn" href="category.html">Shop now</a></div></section>
     <p className="muted small" style={{ marginTop: 24 }}>Offers depend on bank terms and stock. Discounts are against the MRP.</p>
@@ -39,14 +39,14 @@ export function Cart() {
   if (!cartCount()) return <><Box title="Your cart is empty" text="Add something you like and it will show up here." href="index.html" cta="Continue shopping" />
     <Row title="Deals of the Day" href="category.html?sort=off" list={[...P].sort((a, b) => off(b) - off(a)).slice(0, 5)} /></>;
   return <>
-    <h1 style={{ margin: "24px 0 16px" }}>Your Cart ({cartCount()})</h1>
+    <h1 className="ptitle">Your cart <span className="muted">({cartCount()})</span></h1>
     <div className="cols">
       <div className="lines panel">{Object.keys(cart).map(id => <Line p={byId(id)} key={id} />)}</div>
       <aside className="panel sum"><h3>Order summary</h3>
         <div className="tot"><span>Items ({cartCount()})</span><span>{money(cartTotal())}</span></div>
         <div className="tot"><span>Delivery</span><span className="free">Free</span></div>
         <div className="tot grand"><span>Total</span><b>{money(cartTotal())}</b></div>
-        <a className="btn" href="checkout.html">Proceed to checkout</a><a className="btn ghost" href="index.html">Continue shopping</a></aside>
+        <a className="btn" href="checkout.html">Proceed to checkout</a><a className="btn ghost" href="index.html">Continue shopping</a><div className="perks"><span><Icon k="truck" /> Free delivery</span><span><Icon k="cash" /> Cash on delivery</span><span><Icon k="undo" /> Easy returns</span><span><Icon k="shield" /> Brand warranty</span></div></aside>
     </div>
     <Row title="You may also like" href="category.html?sort=off" list={P.filter(p => !cart[p.id] && p.stock > 0).sort((a, b) => off(b) - off(a)).slice(0, 5)} />
   </>;
@@ -72,8 +72,8 @@ export function Checkout() {
     location.href = "order.html?id=" + id;
   };
   return <>
-    <h1 style={{ margin: "24px 0 4px" }}>Checkout</h1>
-    <p className="muted">Signed in as {me.email || me.phone}</p>
+    <h1 className="ptitle">Checkout</h1>
+    <p className="lead">Signed in as {me.email || me.phone}. Two steps: where to deliver, and how you pay.</p>
     <div className="cols">
       <Form className="form panel" onSubmit={submit} after={busy => <button className="btn" disabled={busy}>Place order</button>}>
         <h3>1. Delivery details</h3>
@@ -89,13 +89,13 @@ export function Checkout() {
       <aside className="panel sum"><h3>Order summary</h3><div id="sum">
         <div className="lines">{Object.keys(cart).map(id => <Line p={byId(id)} key={id} />)}</div>
         <div className="tot"><span>Delivery</span><span className="free">Free</span></div>
-        <div className="tot grand"><span>Total</span><b>{money(cartTotal())}</b></div><p className="muted small">Usually delivered by {etaText()}.</p></div></aside>
+        <div className="tot grand"><span>Total</span><b>{money(cartTotal())}</b></div><p className="muted small">Usually delivered by {etaText()}.</p></div><div className="perks"><span><Icon k="truck" /> Free delivery</span><span><Icon k="cash" /> Cash on delivery</span><span><Icon k="undo" /> Easy returns</span><span><Icon k="shield" /> Brand warranty</span></div><p className="muted small">Questions? <a className="alink" href="page.html?p=shipping">Delivery</a> · <a className="alink" href="page.html?p=returns">Returns</a> · <a className="alink" href="page.html?p=contact">Contact us</a></p></aside>
     </div>
   </>;
 }
 
 export function Order() {
-  const { me, money, CFG } = useStore();
+  const { me, money, CFG, P } = useStore();
   const [o, setO] = useState(null), [bad, setBad] = useState(false);
   const id = qs.get("id") || "";
   useEffect(() => {
@@ -119,8 +119,16 @@ export function Order() {
     <div className="cols">
       <div className="panel"><h3>Items</h3><div className="lines"><OrderItems o={o} /></div><div className="tot grand"><span>Total</span><b>{money(o.total)}</b></div></div>
       <aside className="panel sum"><h3>Delivery</h3><p>{o.name}<br />{o.address}<br />{o.pin}<br />{o.phone}</p><h3>Payment</h3><p>{o.pay}</p>
-        <a className="btn" href="index.html">Continue shopping</a></aside>
+        <a className="btn" href="index.html">Continue shopping</a><div className="perks"><span><Icon k="truck" /> Free delivery</span><span><Icon k="cash" /> Cash on delivery</span><span><Icon k="undo" /> Easy returns</span><span><Icon k="shield" /> Brand warranty</span></div></aside>
     </div>
+    {o.status !== "Cancelled" && <section><h2>What happens next</h2><p className="lead">Every step shows in your account, and we message you as it moves.</p>
+      <div className="why steps3">{[["Confirmed", "We check the stock and confirm your order, usually within a day."], ["Shipped", "Your order leaves with the delivery partner. Large items travel with care."], ["Delivered", /cash/i.test(o.pay) ? "Pay the delivery partner when it arrives, then check the product. " + POLICY.returnDays + " days to tell us if anything is wrong." : "Check the product when it arrives. " + POLICY.returnDays + " days to tell us if anything is wrong."]]
+        .map(([t, s], i) => <div className={i + 1 <= step ? "done" : undefined} key={t}><span className="pnum">{String(i + 1).padStart(2, "0")}</span><b>{t}</b><p>{s}</p></div>)}</div></section>}
+    <section><h2>Need a hand?</h2><div className="ways ways3">
+      <a className="way" href="account.html"><i className="kico"><Icon k="box" /></i><b>Track this order</b><span>Open your account at any time to see where it is.</span></a>
+      <a className="way" href="page.html?p=returns"><i className="kico"><Icon k="undo" /></i><b>Returns</b><span>How a return works, start to finish.</span></a>
+      <a className="way" href="page.html?p=contact"><i className="kico"><Icon k="user" /></i><b>Contact us</b><span>Write to us with your order number.</span></a></div></section>
+    <Row title="You may also like" href="category.html?sort=off" list={[...P].filter(p => p.stock > 0 && !o.items.some(i => i.id === p.id)).sort((a, b) => off(b) - off(a)).slice(0, 5)} />
   </>;
 }
 

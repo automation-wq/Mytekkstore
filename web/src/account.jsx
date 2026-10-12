@@ -2,7 +2,8 @@
 import { useEffect, useRef, useState } from "react";
 import { useStore } from "./store.jsx";
 import { api, qs, load, save } from "./api.js";
-import { Form, Icon } from "./components.jsx";
+import { Form, Icon, Row } from "./components.jsx";
+import { off } from "./data.js";
 import { reveal } from "./motion.js";
 
 export function Account() {
@@ -82,10 +83,11 @@ export function Tabs({ tabs, children }) {
 }
 
 function SignedIn({ me, money }) {
+  const { P, wish, recent, byId } = useStore();
   const [orders, setOrders] = useState([]);
   useEffect(() => { api("orders").then(r => { setOrders(r.orders); reveal(); }); }, []);
   const logout = async () => { await api("logout", "POST"); location.href = "index.html"; };
-  return <><h1 style={{ margin: "24px 0 16px" }}>Hello, {me.name}</h1><div className="cols">
+  return <><h1 className="ptitle">Hello, {me.name}</h1><p className="lead">Your orders, your details, and the products you saved.</p><div className="cols">
     <div className="panel"><h3>My orders</h3>{orders.length ? orders.map(o => <a className="orow" href={"order.html?id=" + o.id} key={o.id}>
       <div><b>{o.id}</b><br /><span className="muted">{new Date(o.at).toLocaleDateString()} · {o.items.reduce((n, i) => n + i.qty, 0)} item(s)</span></div>
       <div style={{ textAlign: "right" }}><b>{money(o.total)}</b><br /><span className={"stock" + (o.status === "Cancelled" ? " out" : "")}>{o.status}</span></div></a>) : <p className="muted">You have no orders yet.</p>}</div>
@@ -99,5 +101,12 @@ function SignedIn({ me, money }) {
           <label>Pincode<input name="pin" pattern="[0-9A-Za-z ]{4,10}" autoComplete="postal-code" defaultValue={me.pin || ""} /></label>
         </Form></details>
       {me.admin && <a className="btn" href="admin.html">Open store admin</a>}
-      <button className="btn ghost" id="logout" onClick={logout}>Sign out</button></aside></div></>;
+      <button className="btn ghost" id="logout" onClick={logout}>Sign out</button></aside></div>
+    <Row title="My wishlist" href="category.html?wish=1" list={wish.map(byId).filter(Boolean)} />
+    <Row title="Recently viewed" href="" list={recent.map(byId).filter(Boolean)} />
+    <section><h2>Need a hand?</h2><div className="ways ways3">
+      <a className="way" href="page.html?p=returns"><i className="kico"><Icon k="undo" /></i><b>Returns</b><span>How a return works, start to finish.</span></a>
+      <a className="way" href="page.html?p=shipping"><i className="kico"><Icon k="truck" /></i><b>Delivery</b><span>Where we deliver and how long it takes.</span></a>
+      <a className="way" href="page.html?p=contact"><i className="kico"><Icon k="user" /></i><b>Contact us</b><span>Write to us with your order number.</span></a></div></section>
+    {!wish.length && <Row title="Deals of the Day" href="category.html?sort=off" list={[...P].sort((a, b) => off(b) - off(a)).slice(0, 5)} />}</>;
 }
