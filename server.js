@@ -6,6 +6,10 @@ const HOST = process.env.HOST || "127.0.0.1"; // set HOST=0.0.0.0 on a hosting s
 const PUBLIC = path.join(__dirname, "public");
 const DATA = process.env.DATA_DIR || path.join(__dirname, "data");
 fs.mkdirSync(DATA, { recursive: true });
+// when the pages were last built (the sitemap's lastmod for pages whose content comes from the build)
+const BUILT = (() => { try { return fs.statSync(path.join(PUBLIC, "index.html")).mtime.toISOString(); } catch { return new Date().toISOString(); } })();
+// the visitor's address: behind a proxy (Vercel, nginx) set TRUST_PROXY=1 to use the forwarded one
+const ipOf = req => (process.env.TRUST_PROXY && String(req.headers["x-forwarded-for"] || "").split(",").pop().trim()) || req.socket.remoteAddress;
 
 // ===== optional services: set these environment variables to switch them on (see docs/TRD.md section 11) =====
 // SMS through Twilio: order confirmations and sign-in codes. Without them, messages are only recorded in the admin outbox.
@@ -365,14 +369,14 @@ on("POST", "admin/upload", ({ body }) => {
 }, "admin");
 on("POST", "admin/products", ({ body }) => {
   // an id is never reused, even after a delete: old orders still point at it
-  const p = { id: Math.max(0, ...db.products.map(p => p.id), ...db.orders.flatMap(o => o.items.map(i => i.id))) + 1, ...productFrom(body), reviews: [] };
+  const p = { id: Math.max(0, ...db.products.map(p => p.id), ...db.orders.flatMap(o => o.items.map(i => i.id))) + 1, ...productFrom(body), reviews: [], updated: new Date().toISOString() };
   db.products.push(p); write("products");
   return { product: p };
 }, "admin");
 on("PUT", "admin/products/(\\d+)", ({ params, body }) => {
   const p = db.products.find(p => p.id === +params[0]);
   if (!p) throw new HttpError(404, "Product not found.");
-  Object.assign(p, productFrom(body)); write("products");
+  Object.assign(p, productFrom(body), { updated: new Date().toISOString() }); write("products");
   return { product: p };
 }, "admin");
 on("DELETE", "admin/products/(\\d+)", ({ params }) => {
@@ -383,6 +387,7 @@ on("DELETE", "admin/products/(\\d+)", ({ params }) => {
 }, "admin");
 
 // ===== HTTP plumbing =====
+const hits = new Map(); // address -> { n, since }: the write limit above
 function readBody(req, limit) {
   return new Promise((resolve, reject) => {
     let data = "";
@@ -396,6 +401,12 @@ async function handleApi(req, res, pathname) {
   try {
     let body = {};
     if (req.method !== "GET") {
+      // one address gets at most 120 writes (orders, sign-ins, codes, reviews, messages) per 10 minutes; a shopper never needs more.
+      // ponytail: counted in this process's memory; share the counter if more than one server runs
+      const ip = ipOf(req), now = Date.now(), h = hits.get(ip) || { n: 0, since: now };
+      if (now - h.since > 600000) { h.n = 0; h.since = now; }
+      if (++h.n > 120) throw new HttpError(429, "Too many requests from this address. Please try again in a few minutes.");
+      hits.set(ip, h); if (hits.size > 5000) hits.clear();
       // Cross-site request protection: browsers cannot send JSON cross-site without permission, and the origin must be ours.
       if (!/^application\/json/.test(req.headers["content-type"] || "")) throw new HttpError(415, "Invalid request.");
       const origin = req.headers.origin;
@@ -432,49 +443,101 @@ const SECURITY = {
 const escHtml = s => String(s).replace(/[&<>"']/g, c => "&#" + c.charCodeAt(0) + ";");
 const siteUrl = req => (req.headers["x-forwarded-proto"] || "http") + "://" + (req.headers.host || "localhost:" + PORT);
 const INFO_PAGES = ["about", "contact", "stores", "shipping", "returns", "terms", "privacy"];
+// title and description of each info page (the page itself is drawn by web/src/info.jsx)
+const INFO_TITLES = {
+  about: ["About Mytekkstore", "Mytekkstore sells Elista and Telefunken televisions, washing machines and air conditioners, delivered free with cash on delivery and the brand's warranty."],
+  contact: ["Contact us", "Write to Mytekkstore about orders, delivery, returns and service. We reply by email."],
+  stores: ["Store locator", "Find a Mytekkstore store, or check delivery to your pincode: free delivery across India, usually in 3 to 5 days."],
+  shipping: ["Shipping and delivery", "Free delivery on every Mytekkstore order, usually in 3 to 5 days, with cash on delivery. Check your pincode before you order."],
+  returns: ["Returns and refunds", "How returns work at Mytekkstore: tell us within the return window, we pick the product up, and the refund goes back the way you paid."],
+  terms: ["Terms of use", "The terms that apply when you order from Mytekkstore: prices, payment, delivery, cancellation, returns and warranty."],
+  privacy: ["Privacy policy", "What Mytekkstore stores about you, why, and what it never does: no card details, one sign-in cookie, no tracking cookies."],
+};
+
+// ===== clean addresses =====
+// /televisions, /televisions/<brand-and-model>, /products?brand=Elista, /shipping, /offers, /cart ... The old addresses
+// (category.html?cat=..., product.html?id=..., page.html?p=...) keep working and point at the clean one as canonical.
+// The same slug rule lives in web/src/data.js, so the links the app builds are the ones this server resolves.
+const slug = s => String(s).toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+const catPath = c => "/" + slug(c);
+const productPath = p => catPath(p.cat) + "/" + slug(p.brand + " " + p.name);
+const CLEAN = { "/products": "category.html", "/offers": "offers.html", "/cart": "cart.html", "/checkout": "checkout.html", "/account": "account.html", "/order": "order.html", "/admin": "admin.html" };
+function resolveClean(pathname) { // -> { file, params } for a clean address, else null
+  if (CLEAN[pathname]) return { file: CLEAN[pathname], params: {} };
+  const parts = pathname.split("/").filter(Boolean);
+  if (parts.length === 1 && INFO_PAGES.includes(parts[0])) return { file: "page.html", params: { p: parts[0] } };
+  const cat = parts.length && [...new Set(db.products.map(p => p.cat))].find(c => slug(c) === parts[0]);
+  if (cat && parts.length === 1) return { file: "category.html", params: { cat } };
+  if (cat && parts.length === 2) { const p = db.products.find(p => p.cat === cat && slug(p.brand + " " + p.name) === parts[1]); if (p) return { file: "product.html", params: { id: String(p.id) } }; }
+  return null;
+}
 // Search engines and WhatsApp or Facebook link previews do not run our JavaScript, so the server writes the title, description,
 // sharing tags and schema.org data into each page before sending it. Product and category pages get their own.
 function seoTags(req, url) {
-  const base = siteUrl(req), here = base + url.pathname + url.search, tag = (k, v) => `<meta property="${k}" content="${escHtml(v)}">`;
-  let title = "Mytekkstore | Elista and Telefunken TVs, washing machines and ACs", img = base + "/img/hero0.jpg", ld = null;
-  let desc = "Shop Elista and Telefunken televisions, washing machines and air conditioners at Mytekkstore. Genuine products with brand warranty, cash on delivery.";
-  const p = url.pathname === "/product.html" && db.products.find(p => p.id === +url.searchParams.get("id"));
-  const cat = url.pathname === "/category.html" && url.searchParams.get("cat");
+  const base = siteUrl(req), q = url.searchParams, file = url.pathname, tag = (k, v) => `<meta property="${k}" content="${escHtml(v)}">`;
+  let title = "Mytekkstore | Elista and Telefunken TVs, washing machines and ACs", img = base + "/img/hero0.jpg", ld = null, robots = "";
+  let desc = "Shop Elista and Telefunken televisions, washing machines and air conditioners at Mytekkstore. Genuine products with brand warranty, free delivery, cash on delivery.";
+  let canonical = file + url.search; // the clean address of this page; the old .html addresses point at it
+  const p = file === "/product.html" && db.products.find(p => p.id === +q.get("id"));
+  const cat = file === "/category.html" && q.get("cat"), brand = file === "/category.html" && !cat && q.get("brand"), info = file === "/page.html" && q.get("p");
+  const priv = /^\/(account|cart|checkout|order|admin)\.html$/.exec(file);
   if (p) {
+    canonical = productPath(p);
+    const here = base + canonical;
     title = p.brand + " " + p.name + " | Mytekkstore";
-    desc = (p.desc || p.brand + " " + p.name + " at ₹" + p.price.toLocaleString("en-IN") + ".").slice(0, 160);
+    // every product gets its own description, built from its own specifications (the catalogue text can read alike)
+    const specs = (p.specs || []).slice(0, 3).map(([, v]) => v).join(", ");
+    desc = (p.brand + " " + p.name + (specs ? ": " + specs : "") + ". ₹" + p.price.toLocaleString("en-IN") + ", free delivery, cash on delivery, brand warranty.").slice(0, 160);
     img = /^https:/.test(p.img) ? p.img : base + "/" + p.img;
     const reviews = p.reviews || [];
     ld = [
-      { "@context": "https://schema.org", "@type": "Product", name: p.brand + " " + p.name, image: img, description: desc, sku: String(p.id), category: p.cat, brand: { "@type": "Brand", name: p.brand },
-        offers: { "@type": "Offer", url: here, priceCurrency: "INR", price: p.price, availability: "https://schema.org/" + (p.stock > 0 ? "InStock" : "OutOfStock"), seller: { "@type": "Organization", name: "Mytekkstore" } },
+      { "@context": "https://schema.org", "@type": "Product", name: p.brand + " " + p.name, image: [img], description: desc, sku: String(p.id), category: p.cat, brand: { "@type": "Brand", name: p.brand },
+        offers: { "@type": "Offer", url: here, priceCurrency: "INR", price: p.price, availability: "https://schema.org/" + (p.stock > 0 ? "InStock" : "OutOfStock"), itemCondition: "https://schema.org/NewCondition", seller: { "@type": "Organization", name: "Mytekkstore" } },
         aggregateRating: reviews.length ? { "@type": "AggregateRating", ratingValue: +(reviews.reduce((t, r) => t + r.rating, 0) / reviews.length).toFixed(1), reviewCount: reviews.length } : undefined },
-      { "@context": "https://schema.org", "@type": "BreadcrumbList", itemListElement: [["Home", base + "/"], [p.cat, base + "/category.html?cat=" + encodeURIComponent(p.cat)], [p.name, here]].map(([name, item], i) => ({ "@type": "ListItem", position: i + 1, name, item })) },
+      { "@context": "https://schema.org", "@type": "BreadcrumbList", itemListElement: [["Home", base + "/"], [p.cat, base + catPath(p.cat)], [p.name, here]].map(([name, item], i) => ({ "@type": "ListItem", position: i + 1, name, item })) },
     ];
-  } else if (url.pathname === "/offers.html") {
+  } else if (file === "/offers.html") {
+    canonical = "/offers";
     title = "Festive offers | Mytekkstore";
     desc = "Festive offers at Mytekkstore: top deals on Elista and Telefunken TVs, washing machines and ACs, bank offers and No Cost EMI.";
   } else if (cat) {
+    canonical = catPath(cat);
     title = cat + " | Mytekkstore";
-    desc = "Elista and Telefunken " + cat.toLowerCase() + ": compare sizes, prices and features at Mytekkstore.";
+    desc = "Elista and Telefunken " + cat.toLowerCase() + " at Mytekkstore: every model compared side by side, with a buying guide, free delivery and cash on delivery.";
     const first = db.products.find(p => p.cat === cat);
     if (first) img = base + "/" + first.img;
     ld = [
-      { "@context": "https://schema.org", "@type": "BreadcrumbList", itemListElement: [["Home", base + "/"], [cat, here]].map(([name, item], i) => ({ "@type": "ListItem", position: i + 1, name, item })) },
-      { "@context": "https://schema.org", "@type": "ItemList", name: cat + " at Mytekkstore", itemListElement: db.products.filter(p => p.cat === cat).slice(0, 20).map((p, i) => ({ "@type": "ListItem", position: i + 1, name: p.brand + " " + p.name, url: base + "/product.html?id=" + p.id })) },
+      { "@context": "https://schema.org", "@type": "BreadcrumbList", itemListElement: [["Home", base + "/"], [cat, base + canonical]].map(([name, item], i) => ({ "@type": "ListItem", position: i + 1, name, item })) },
+      { "@context": "https://schema.org", "@type": "ItemList", name: cat + " at Mytekkstore", itemListElement: db.products.filter(p => p.cat === cat).slice(0, 20).map((p, i) => ({ "@type": "ListItem", position: i + 1, name: p.brand + " " + p.name, url: base + productPath(p) })) },
     ];
-  } else if (url.pathname === "/" || url.pathname === "/index.html") {
+  } else if (file === "/category.html") {
+    canonical = brand ? "/products?brand=" + encodeURIComponent(brand) : "/products";
+    title = (brand || "All products") + " | Mytekkstore";
+    desc = brand ? "Every " + brand + " television, washing machine and air conditioner at Mytekkstore, with filters for size, price and discount." : "Every Elista and Telefunken television, washing machine and air conditioner at Mytekkstore, with filters for brand, size, price and discount.";
+    if (q.has("wish") || q.get("q")) robots = "noindex"; // a personal wishlist and search results are not landing pages
+  } else if (info && INFO_TITLES[info]) {
+    canonical = "/" + info;
+    title = INFO_TITLES[info][0] + " | Mytekkstore";
+    desc = INFO_TITLES[info][1];
+  } else if (file === "/" || file === "/index.html") {
+    canonical = "/";
     // the store itself: lets Google show a search box under the result, and the organisation card
     ld = [
-      { "@context": "https://schema.org", "@type": "WebSite", name: "Mytekkstore", url: base + "/", potentialAction: { "@type": "SearchAction", target: base + "/category.html?q={search_term_string}", "query-input": "required name=search_term_string" } },
+      { "@context": "https://schema.org", "@type": "WebSite", name: "Mytekkstore", url: base + "/", potentialAction: { "@type": "SearchAction", target: base + "/products?q={search_term_string}", "query-input": "required name=search_term_string" } },
       { "@context": "https://schema.org", "@type": "Organization", name: "Mytekkstore", url: base + "/", logo: base + "/favicon.svg" },
     ];
+  } else if (priv) {
+    const name = priv[1];
+    canonical = "/" + name; robots = "noindex, nofollow"; // private pages stay out of search
+    title = { account: "My account", cart: "Cart", checkout: "Checkout", order: "Order", admin: "Store admin" }[name] + " | Mytekkstore";
+    desc = "Mytekkstore: " + { account: "sign in, your orders and your details", cart: "your cart", checkout: "delivery details and payment", order: "your order", admin: "store administration" }[name] + ".";
   }
-  const head = `<meta name="description" content="${escHtml(desc)}"><link rel="canonical" href="${escHtml(here)}"><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>${tag("og:type", p ? "product" : "website")}${tag("og:site_name", "Mytekkstore")}${tag("og:title", title)}${tag("og:description", desc)}${tag("og:image", img)}${tag("og:url", here)}<meta name="twitter:card" content="summary_large_image">${ld ? `<script type="application/ld+json">${JSON.stringify(ld).replace(/</g, "\\u003c")}</script>` : ""}`;
+  const here = base + canonical;
+  const head = `<meta name="description" content="${escHtml(desc)}"><link rel="canonical" href="${escHtml(here)}">${robots ? `<meta name="robots" content="${robots}">` : ""}${tag("og:type", p ? "product" : "website")}${tag("og:site_name", "Mytekkstore")}${tag("og:title", title)}${tag("og:description", desc)}${tag("og:image", img)}${tag("og:url", here)}<meta name="twitter:card" content="summary_large_image">${ld ? `<script type="application/ld+json">${JSON.stringify(ld).replace(/</g, "\\u003c")}</script>` : ""}`;
   return { title, head };
 }
-function serveStatic(req, res, url) {
-  const pathname = url.pathname;
+function serveStatic(req, res, url, clean) {
+  const pathname = clean ? "/" + clean.file : url.pathname; // clean: a clean address resolved to its page (resolveClean)
   let p;
   try { p = path.normalize(path.join(PUBLIC, decodeURIComponent(pathname) + (pathname.endsWith("/") ? "index.html" : ""))); } catch { p = ""; }
   const ext = path.extname(p);
@@ -492,8 +555,11 @@ function serveStatic(req, res, url) {
       if (err) return notFound();
       const headers = { "Content-Type": TYPES[ext], "Last-Modified": mtime, "Cache-Control": "no-cache" }; // every file is revalidated (304 when unchanged), so a replaced photo shows at once
       if (ext === ".html") {
+        if (clean) { url = new URL(url); url.pathname = "/" + clean.file; for (const [k, v] of Object.entries(clean.params)) url.searchParams.set(k, v); }
         const { title, head } = seoTags(req, url);
-        buf = Buffer.from(buf.toString().replace(/<title>[^<]*<\/title>/, "<title>" + escHtml(title) + "</title>").replace("</head>", head + "\n</head>"));
+        // a clean address also tells the app which category, product or info page this is (web/src/api.js reads it from <body>)
+        const data = clean ? Object.entries(clean.params).map(([k, v]) => ` data-${k}="${escHtml(v)}"`).join("") : "";
+        buf = Buffer.from(buf.toString().replace(/<title>[^<]*<\/title>/, "<title>" + escHtml(title) + "</title>").replace("</head>", head + "\n</head>").replace("<body", "<body" + data));
       }
       // text goes out gzipped; photos are already compressed. ponytail: gzipSync per request is fine for a small store; pre-compress if traffic grows
       if (/^(text\/|application\/)/.test(TYPES[ext]) && /\bgzip\b/.test(req.headers["accept-encoding"] || "")) { buf = zlib.gzipSync(buf); headers["Content-Encoding"] = "gzip"; headers.Vary = "Accept-Encoding"; }
@@ -511,14 +577,17 @@ const server = http.createServer((req, res) => {
   const pathname = url.pathname;
   if (pathname.startsWith("/api/")) return handleApi(req, res, pathname);
   if (req.method !== "GET" && req.method !== "HEAD") { res.writeHead(405); return res.end(); } // HEAD works like GET for health checks (Node sends no body)
-  if (pathname === "/robots.txt") { res.writeHead(200, { "Content-Type": "text/plain; charset=utf-8" }); return res.end("User-agent: *\nAllow: /\nDisallow: /api/\nDisallow: /admin.html\nSitemap: " + siteUrl(req) + "/sitemap.xml\n"); }
+  if (pathname === "/robots.txt") { res.writeHead(200, { "Content-Type": "text/plain; charset=utf-8" }); return res.end("User-agent: *\nAllow: /\nAllow: /api/products\nAllow: /api/config\nAllow: /api/me\nDisallow: /api/\nDisallow: /admin\nDisallow: /account\nDisallow: /cart\nDisallow: /checkout\nDisallow: /order\nSitemap: " + siteUrl(req) + "/sitemap.xml\n"); } // Google's renderer may fetch the product data; private pages and the rest of the API stay out
   if (pathname === "/sitemap.xml") {
-    const base = siteUrl(req), cats = [...new Set(db.products.map(p => p.cat))];
-    const urls = ["/", "/category.html", "/offers.html", ...cats.map(c => "/category.html?cat=" + encodeURIComponent(c)), ...db.products.map(p => "/product.html?id=" + p.id), ...INFO_PAGES.map(p => "/page.html?p=" + p)];
+    // clean addresses only, each with the day its content last changed (products: their last edit; lists: their newest product; pages: the build)
+    const base = siteUrl(req), cats = [...new Set(db.products.map(p => p.cat))], brands = [...new Set(db.products.map(p => p.brand))];
+    const newest = list => list.map(p => p.updated || "").sort().pop() || BUILT;
+    const urls = [["/", BUILT], ["/products", newest(db.products)], ["/offers", newest(db.products)], ...cats.map(c => [catPath(c), newest(db.products.filter(p => p.cat === c))]),
+      ...brands.map(b => ["/products?brand=" + encodeURIComponent(b), newest(db.products.filter(p => p.brand === b))]), ...db.products.map(p => [productPath(p), p.updated || BUILT]), ...INFO_PAGES.map(p => ["/" + p, BUILT])];
     res.writeHead(200, { "Content-Type": "application/xml; charset=utf-8" });
-    return res.end('<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n' + urls.map(u => "<url><loc>" + escHtml(base + u) + "</loc></url>").join("\n") + "\n</urlset>\n");
+    return res.end('<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n' + urls.map(([u, d]) => "<url><loc>" + escHtml(base + u) + "</loc><lastmod>" + d.slice(0, 10) + "</lastmod></url>").join("\n") + "\n</urlset>\n");
   }
-  serveStatic(req, res, url);
+  serveStatic(req, res, url, resolveClean(pathname));
 });
 
 // ===== safety net (only when run directly, so the tests still fail loudly) =====

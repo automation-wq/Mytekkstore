@@ -179,7 +179,7 @@ async function run() {
     await b.click(...away); await sleep(120);
     assert.equal(await open(), "", "a click on the dimmed page closes the menu");
     await b.afterLoad(async () => b.click(...await b.center(".l0link", 2)));
-    assert.ok((await b.ev(`location.search`)).includes("Air"), "a mouse click on a category name goes to its page");
+    assert.ok((await b.ev(`location.pathname`)).includes("air-conditioners"), "a mouse click on a category name goes to its page");
     await b.goto(base + "/");
 
     step = "keyboard";
@@ -224,7 +224,7 @@ async function run() {
     }
 
     step = "a guide link on the same page closes the menu and scrolls";
-    await b.goto(base + "/category.html?cat=Televisions");
+    await b.goto(base + "/televisions");
     assert.equal(await b.ev(`document.querySelector(".l0.cur .l0link").textContent`), "Televisions", "the current category is marked in the bar");
     await b.move(...away);
     await b.glide(...await b.center(".l0link", 0), 120); await sleep(450);
@@ -236,7 +236,7 @@ async function run() {
     assert.ok(g > 0 && g < 480, "the guide is in view, its top is " + g);
 
     step = "product page: size switcher, delivery check, share, rating bars";
-    await b.goto(base + "/product.html?id=2");
+    await b.goto(base + "/televisions/telefunken-140-cm-55-inch-4k-ultra-hd-google-tv");
     assert.deepEqual(await b.ev(`[...document.querySelectorAll(".sizes .chip b")].map(a => a.textContent)`), ["32 inch", "43 inch", "55 inch"]);
     assert.equal(await b.ev(`document.querySelector(".sizes .chip.on b").textContent`), "55 inch");
     await b.afterLoad(async () => b.click(...await b.center(".sizes .chip", 0)));
@@ -289,14 +289,14 @@ async function run() {
     assert.equal(await b.ev(`document.querySelectorAll("#bank .offer").length`), 4, "bank offers on the home page");
     assert.equal(await b.ev(`document.querySelectorAll(".sizerow").length`), 0, "no shop-by-size rows on the home page (client decision 2026-10-09; sizes live on the category pages)");
     assert.ok(await b.ev(`document.querySelectorAll(".faqs details").length >= 5 && document.querySelectorAll(".quote").length > 0`), "Good to know questions and customer quotes on the home page");
-    assert.equal(await b.ev(`document.querySelector(".wide").getAttribute("href")`), "offers.html", "the festive banner opens the offers page");
+    assert.equal(await b.ev(`document.querySelector(".wide").getAttribute("href")`), "/offers", "the festive banner opens the offers page");
     await b.goto(base + "/product.html?id=1");
     assert.ok(await b.ev(`!!document.querySelector(".pdp .emiline") && document.querySelectorAll(".pofs div").length === 3`), "EMI line and offers box on the product page");
     assert.ok(await b.ev(`document.querySelectorAll("#t-specs .grp").length >= 2`), "grouped specifications on the product page");
 
     step = "every link on the main pages opens a real page";
-    const seen = new Set(), skip = /checkout\.html|order\.html|admin\.html|#/;
-    for (const start of ["/", "/offers.html", "/product.html?id=2", "/account.html", "/page.html?p=about"]) {
+    const seen = new Set(), skip = /\/(checkout|order|admin)(\.html|\?|$)|#/; // pages that need a sign-in or an order, and in-page anchors
+    for (const start of ["/", "/offers.html", "/televisions/telefunken-140-cm-55-inch-4k-ultra-hd-google-tv", "/account.html", "/shipping"]) {
       await b.goto(base + start);
       for (const h of await b.ev(`[...document.querySelectorAll("a[href]")].map(a => a.href)`)) if (h.startsWith(base) && !skip.test(h)) seen.add(h);
     }
@@ -338,12 +338,12 @@ async function run() {
     // checkout sends a signed-out shopper (there is one item in the cart) on to the sign-in page, so wait for that second page
     await b.goto(base + "/checkout.html").catch(() => {});
     let where = "";
-    for (let i = 0; i < 40 && !where.endsWith("account.html"); i++) { await sleep(150); try { where = await b.ev("location.pathname"); } catch {} }
-    assert.ok(where.endsWith("account.html"), "checkout should send a signed-out shopper to sign in, but ended at " + where);
+    for (let i = 0; i < 40 && !where.endsWith("/account"); i++) { await sleep(150); try { where = await b.ev("location.pathname"); } catch {} }
+    assert.ok(where.endsWith("/account"), "checkout should send a signed-out shopper to sign in, but ended at " + where);
     await b.goto(base + "/order.html?id=MT0000000000").catch(() => {}); // an order page is private too
     where = "";
-    for (let i = 0; i < 40 && !where.endsWith("account.html"); i++) { await sleep(150); try { where = await b.ev("location.pathname"); } catch {} }
-    assert.ok(where.endsWith("account.html"), "an order page should send a signed-out visitor to sign in, but ended at " + where);
+    for (let i = 0; i < 40 && !where.endsWith("/account"); i++) { await sleep(150); try { where = await b.ev("location.pathname"); } catch {} }
+    assert.ok(where.endsWith("/account"), "an order page should send a signed-out visitor to sign in, but ended at " + where);
     assert.deepEqual(realErrors(b), [], "script errors on desktop: " + JSON.stringify(realErrors(b)));
 
     step = "phone: taps";
@@ -360,7 +360,7 @@ async function run() {
       await m.tap(...await m.center(".l0link", 1)); await sleep(400);
       assert.equal(await open(m), "Washing Machines", "a tap on another name switches to its menu");
       await m.afterLoad(async () => m.tap(...await m.center(".l0link", 1)));
-      assert.ok((await m.ev(`location.search`)).includes("Washing"), "a second tap on the open name goes to its page");
+      assert.ok((await m.ev(`location.pathname`)).includes("washing-machines"), "a second tap on the open name goes to its page");
       assert.deepEqual(realErrors(m), [], "script errors on a phone: " + JSON.stringify(realErrors(m)));
     } finally { await m.close(); }
 

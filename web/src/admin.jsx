@@ -1,4 +1,5 @@
 // Store admin: orders, products (with photo upload and the No Cost EMI flag), customer messages. The server checks admin rights on every request.
+import { pic } from "./data.js";
 import { useEffect, useState } from "react";
 import { useStore } from "./store.jsx";
 import { api } from "./api.js";
@@ -19,7 +20,7 @@ export function Admin() {
   };
   useEffect(() => { document.title = "Store admin | Mytekkstore"; if (allowed) draw(); }, []);
   useEffect(() => { if (ready) reveal(); }, [ready]);
-  if (!allowed) return <Box title="Admins only" text="Sign in with the store admin account to manage products and orders." href="account.html?next=admin.html" cta="Sign in" />;
+  if (!allowed) return <Box title="Admins only" text="Sign in with the store admin account to manage products and orders." href="/account?next=/admin" cta="Sign in" />;
   if (!ready) return null;
   const live = orders.filter(o => o.status !== "Cancelled");
   const set = k => e => setF(x => ({ ...x, [k]: e.target.type === "checkbox" ? e.target.checked : e.target.value }));
@@ -57,7 +58,7 @@ export function Admin() {
     </div>
     <section><h2>Orders</h2>{orders.length ? <div className="scroll"><table className="tbl"><tbody>
       <tr><th>Order</th><th>Date</th><th>Customer</th><th>Items</th><th>Total</th><th>Status</th></tr>
-      {orders.map(o => <tr key={o.id}><td><a className="alink" href={"order.html?id=" + o.id}>{o.id}</a></td><td>{new Date(o.at).toLocaleString()}</td>
+      {orders.map(o => <tr key={o.id}><td><a className="alink" href={"/order?id=" + o.id}>{o.id}</a></td><td>{new Date(o.at).toLocaleString()}</td>
         <td>{o.name}<br /><span className="muted">{o.phone}<br />{o.address}, {o.pin}</span></td>
         <td>{o.items.map((i, k) => <span key={k}>{k ? <br /> : null}{i.qty} × {i.brand} {i.name}</span>)}</td><td>{money(o.total)}</td>
         <td><select data-order={o.id} aria-label={"Status of " + o.id} value={o.status} onChange={e => status(o.id, e.target.value)}>{ALL.map(s => <option value={s} key={s}>{s}</option>)}</select></td></tr>)}
@@ -81,7 +82,7 @@ export function Admin() {
       </Form>
       <div className="scroll"><table className="tbl"><tbody>
         <tr><th></th><th>Product</th><th>Category</th><th>Price</th><th>MRP</th><th>Stock</th><th></th></tr>
-        {products.map(p => <tr key={p.id}><td><img className="thumb" src={p.img} alt="" /></td><td>{p.brand} {p.name}{p.emi && <> <span className="stock">EMI</span></>}</td><td>{p.cat}</td><td>{money(p.price)}</td><td>{money(p.mrp)}</td>
+        {products.map(p => <tr key={p.id}><td><img className="thumb" src={pic(p.img, 480)} alt="" /></td><td>{p.brand} {p.name}{p.emi && <> <span className="stock">EMI</span></>}</td><td>{p.cat}</td><td>{money(p.price)}</td><td>{money(p.mrp)}</td>
           <td>{p.stock <= 5 ? <span className={"stock " + (p.stock ? "low" : "out")}>{p.stock}</span> : p.stock}</td>
           <td style={{ whiteSpace: "nowrap" }}><button className="link" data-edit={p.id} onClick={() => edit(p)}>Edit</button> · <button className="link" data-del={p.id} onClick={() => del(p)}>{sure === p.id ? "Sure?" : "Delete"}</button></td></tr>)}
       </tbody></table></div>

@@ -19,7 +19,7 @@ class Safe extends Component {
   state = {};
   static getDerivedStateFromError(e) { return { e }; }
   componentDidCatch(e) { console.error(e); }
-  render() { return this.state.e ? <Box title="Something went wrong" text="Please reload the page. If it happens again, go back to the home page." href="index.html" cta="Back to home" /> : this.props.children; }
+  render() { return this.state.e ? <Box title="Something went wrong" text="Please reload the page. If it happens again, go back to the home page." href="/" cta="Back to home" /> : this.props.children; }
 }
 
 export default function App() {
@@ -38,7 +38,7 @@ export default function App() {
         if (page === "product") st.openCart(); else st.toast("Added to cart", true);
       }
       else if ((b = t.closest("[data-q]"))) st.setQty(b.dataset.q, +b.dataset.n);
-      else if ((b = t.closest("[data-buy]"))) { if (!st.qtyOf(b.dataset.buy)) st.setQty(b.dataset.buy, 1); location.href = "checkout.html"; }
+      else if ((b = t.closest("[data-buy]"))) { if (!st.qtyOf(b.dataset.buy)) st.setQty(b.dataset.buy, 1); location.href = "/checkout"; }
       else if ((b = t.closest("[data-wish]"))) st.toggleWish(+b.dataset.wish);
       else if ((b = t.closest("[data-scroll]"))) { const r = $(".row", b.parentNode); r.scrollBy({ left: +b.dataset.scroll * r.clientWidth * 0.8, behavior: "smooth" }); }
       else if ((b = t.closest("[data-drawer]"))) { e.preventDefault(); st.openCart(); }
@@ -59,7 +59,7 @@ export default function App() {
   }, [s.loaded, s.error]);
   useEffect(() => { if (s.loaded) { reveal(); lazyClips(); fitStrips(); } }); // pages that draw more after their data arrives
 
-  if (s.error) return <main id="main" className="wrap"><Box title="Something went wrong" text={s.error} href="index.html" cta="Back to home" /></main>;
+  if (s.error) return <main id="main" className="wrap"><Box title="Something went wrong" text={s.error} href="/" cta="Back to home" /></main>;
   if (!s.loaded) return <main id="main" className="wrap"><div className="skel" style={{ height: 300, marginTop: 20 }}></div><div className="grid" style={{ marginTop: 32 }}>{[0, 1, 2, 3, 4].map(i => <div className="skel" style={{ height: 320 }} key={i}></div>)}</div></main>;
   const Page = PAGES[page] || NotFound;
   return <>

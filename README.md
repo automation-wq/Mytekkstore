@@ -66,6 +66,13 @@ The site is then at `https://<project-name>.vercel.app`, and every push to `main
 | Web standards | `server.js` | Server-written SEO and sharing tags, schema.org product data, sitemap and robots files, gzip and caching, security headers, web app manifest (see TRD section 10) |
 | Tests | `test.js`, `test-ui.js`, `test-vercel.js` | `node test.js` checks the API (orders, stock, accounts, admin, request safety). `node test-vercel.js` checks the Vercel entry. `node test-ui.js` drives a real headless Edge or Chrome through the menus, cart, keyboard and phone taps |
 
+## Addresses, photos and protection (audit pass, 12 October 2026)
+
+- Clean addresses: `/televisions`, `/televisions/<brand-and-model>`, `/products?brand=Elista`, `/products?sort=off`, `/offers`, `/cart`, `/account`, `/shipping` and the other info pages. The server resolves them (`resolveClean` in `server.js`) and the app builds them (`catUrl`, `productUrl` and `listUrl` in `web/src/data.js`; both sides use the same slug rule). The old `.html?...` addresses keep working and name the clean one as canonical. A renamed product gets a new address and old links to it stop working, so rename with care.
+- Photos: after adding or replacing photos in `public/img`, run `npm run images` inside `web` to write the WebP copies (full, 960 and 480 px). The app picks them up on its own. Uploads from the admin page and outside links are used as they are. Keep the `.jpg` originals: sharing previews use them, and photo paths are always absolute (`/img/...`), because product pages sit one level deep.
+- Search: every page has its own title and description, private pages are `noindex`, the sitemap carries last-modified dates, and `robots.txt` lets search engines fetch the product data. `docs/AUDIT_RESPONSE.md` answers the October audit item by item.
+- Protection: 120 API writes per address per 10 minutes, plus the sign-in and code limits. Bundles of the last three builds are kept, so pages that are open during a deploy keep working.
+
 ## Documents
 
 - `docs/PRD.md`: what the store must do and what the client still needs to supply.

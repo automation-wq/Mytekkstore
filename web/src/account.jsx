@@ -13,7 +13,7 @@ export function Account() {
 }
 
 function SignIn({ CFG }) {
-  const next = /^[a-z]+\.html(\?id=\w+)?$/.test(qs.get("next") || "") ? qs.get("next") : "account.html";
+  const next = /^\/(?!\/)[\w\/-]*(\?[\w=&%-]*)?$/.test(qs.get("next") || "") ? qs.get("next") : "/account"; // only an address on this site
   const done = () => location.href = next;
   const [showReg, setShowReg] = useState(false);
   const [stage, setStage] = useState("send"), [codeRow, setCodeRow] = useState(false), [nameRow, setNameRow] = useState(false);
@@ -47,11 +47,11 @@ function SignIn({ CFG }) {
     document.head.append(g);
   }, []);
   return <div className="auth">
-    <aside className="aside"><div className="aimg" style={{ backgroundImage: "url(img/kv-tv.jpg)" }}></div><div className="atext"><p className="kicker">Welcome to Mytekkstore</p><h2>One account for everything</h2>
+    <aside className="aside"><div className="aimg" style={{ backgroundImage: "url(/img/kv-tv-960.webp)" }}></div><div className="atext"><p className="kicker">Welcome to Mytekkstore</p><h2>One account for everything</h2>
       <ul><li><Icon k="check" />Faster checkout with a saved address</li><li><Icon k="check" />Order tracking and order history</li><li><Icon k="check" />Reviews and wishlist</li></ul></div></aside>
     <div className="panel acard">
-      <div><h1>{next === "checkout.html" ? "Sign in to continue to checkout" : "Sign in or create an account"}</h1>
-        <p className="muted small">{next === "checkout.html" ? "An account keeps your orders, address and order tracking in one place. It takes a minute." : "A one-time code by SMS or email, your password, or your Google account."}</p></div>
+      <div><h1>{next === "/checkout" ? "Sign in to continue to checkout" : "Sign in or create an account"}</h1>
+        <p className="muted small">{next === "/checkout" ? "An account keeps your orders, address and order tracking in one place. It takes a minute." : "A one-time code by SMS or email, your password, or your Google account."}</p></div>
       {CFG.google && <><div className="gbtn" id="gbtn"></div><div className="or"><span>or</span></div></>}
       <Tabs tabs={[["t-phone", "Mobile number or email"], ["t-email", "Password"]]}>
         {tab => <>
@@ -86,9 +86,9 @@ function SignedIn({ me, money }) {
   const { P, wish, recent, byId } = useStore();
   const [orders, setOrders] = useState([]);
   useEffect(() => { api("orders").then(r => { setOrders(r.orders); reveal(); }); }, []);
-  const logout = async () => { await api("logout", "POST"); location.href = "index.html"; };
+  const logout = async () => { await api("logout", "POST"); location.href = "/"; };
   return <><h1 className="ptitle">Hello, {me.name}</h1><p className="lead">Your orders, your details, and the products you saved.</p><div className="cols">
-    <div className="panel"><h3>My orders</h3>{orders.length ? orders.map(o => <a className="orow" href={"order.html?id=" + o.id} key={o.id}>
+    <div className="panel"><h3>My orders</h3>{orders.length ? orders.map(o => <a className="orow" href={"/order?id=" + o.id} key={o.id}>
       <div><b>{o.id}</b><br /><span className="muted">{new Date(o.at).toLocaleDateString()} · {o.items.reduce((n, i) => n + i.qty, 0)} item(s)</span></div>
       <div style={{ textAlign: "right" }}><b>{money(o.total)}</b><br /><span className={"stock" + (o.status === "Cancelled" ? " out" : "")}>{o.status}</span></div></a>) : <p className="muted">You have no orders yet.</p>}</div>
     <aside className="panel sum"><h3>Profile</h3><p>{me.name}<br /><span className="muted">{me.email || me.phone}</span>{me.phoneVerified && <> <span className="stock">Mobile verified</span></>}</p>
@@ -100,13 +100,13 @@ function SignedIn({ me, money }) {
           <label>Address<textarea name="address" rows="3" maxLength="400" autoComplete="street-address" defaultValue={me.address || ""}></textarea></label>
           <label>Pincode<input name="pin" pattern="[0-9A-Za-z ]{4,10}" autoComplete="postal-code" defaultValue={me.pin || ""} /></label>
         </Form></details>
-      {me.admin && <a className="btn" href="admin.html">Open store admin</a>}
+      {me.admin && <a className="btn" href="/admin">Open store admin</a>}
       <button className="btn ghost" id="logout" onClick={logout}>Sign out</button></aside></div>
-    <Row title="My wishlist" href="category.html?wish=1" list={wish.map(byId).filter(Boolean)} />
+    <Row title="My wishlist" href="/products?wish=1" list={wish.map(byId).filter(Boolean)} />
     <Row title="Recently viewed" href="" list={recent.map(byId).filter(Boolean)} />
     <section><h2>Need a hand?</h2><div className="ways ways3">
-      <a className="way" href="page.html?p=returns"><i className="kico"><Icon k="undo" /></i><b>Returns</b><span>How a return works, start to finish.</span></a>
-      <a className="way" href="page.html?p=shipping"><i className="kico"><Icon k="truck" /></i><b>Delivery</b><span>Where we deliver and how long it takes.</span></a>
-      <a className="way" href="page.html?p=contact"><i className="kico"><Icon k="user" /></i><b>Contact us</b><span>Write to us with your order number.</span></a></div></section>
-    {!wish.length && <Row title="Deals of the Day" href="category.html?sort=off" list={[...P].sort((a, b) => off(b) - off(a)).slice(0, 5)} />}</>;
+      <a className="way" href="/returns"><i className="kico"><Icon k="undo" /></i><b>Returns</b><span>How a return works, start to finish.</span></a>
+      <a className="way" href="/shipping"><i className="kico"><Icon k="truck" /></i><b>Delivery</b><span>Where we deliver and how long it takes.</span></a>
+      <a className="way" href="/contact"><i className="kico"><Icon k="user" /></i><b>Contact us</b><span>Write to us with your order number.</span></a></div></section>
+    {!wish.length && <Row title="Deals of the Day" href="/products?sort=off" list={[...P].sort((a, b) => off(b) - off(a)).slice(0, 5)} />}</>;
 }

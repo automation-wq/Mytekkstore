@@ -50,7 +50,7 @@ export function countUp(root) {
 }
 
 // looping background clips: loaded only when needed, never on data saver or reduced motion (the poster photo stays instead)
-export const clipsOk = !reduced() && !(navigator.connection && navigator.connection.saveData);
+export const clipsOk = !reduced() && !(navigator.connection && navigator.connection.saveData) && matchMedia("(min-width: 900px)").matches; // phones keep the still photo: a clip would compete with the page's main image
 export function playClip(v) {
   if (!clipsOk) return;
   if (!v.src) { v.src = v.dataset.src; v.onplaying = () => v.classList.add("playing"); }
@@ -72,6 +72,19 @@ export function chrome() {
   chromeDone = true;
   addEventListener("scroll", () => document.body.classList.toggle("scrolled", document.documentElement.scrollTop > 300), { passive: true });
   addEventListener("resize", fitStrips);
+  // main buttons lean a few pixels toward the pointer (desktop with a mouse only, never under reduced motion)
+  if (matchMedia("(hover: hover) and (min-width: 1024px)").matches && !reduced()) {
+    document.addEventListener("pointermove", e => {
+      const b = e.target.closest && e.target.closest(".btn:not(.ghost)");
+      if (!b || e.pointerType !== "mouse") return;
+      const r = b.getBoundingClientRect();
+      animate(b, { x: ((e.clientX - r.left) / r.width - .5) * 8, y: ((e.clientY - r.top) / r.height - .5) * 6 }, { duration: .18, ease: "easeOut" });
+    }, { passive: true });
+    document.addEventListener("pointerout", e => {
+      const b = e.target.closest && e.target.closest(".btn:not(.ghost)");
+      if (b && !b.contains(e.relatedTarget)) animate(b, { x: 0, y: 0 }, { type: "spring", stiffness: 300, damping: 18 });
+    }, { passive: true });
+  }
 }
 
 // the product photo flies to the cart icon when something is added: a copy shrinks toward the icon's centre, then goes away

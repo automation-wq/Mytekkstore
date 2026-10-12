@@ -5,7 +5,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useStore } from "./store.jsx";
 import { api, qs } from "./api.js";
-import { Row, Form, Icon } from "./components.jsx";
+import { Row, Form, Icon, KvImg } from "./components.jsx";
 import { KV_IMG, CAT_CLIPS, CAT_SIZE, BANK_OFFERS, FAQ, CONTACT, STORES, POLICY, catUrl, brandUrl, listUrl, off, etaText } from "./data.js";
 import { countUp } from "./motion.js";
 
@@ -21,8 +21,8 @@ const PAGES = {
 
 // the opener every info page starts with: the category photo with its room clip, an eyebrow, a headline and one line
 function Hero({ eyebrow, title, sub, cat }) {
-  return <div className="kv pagehero"><div className="kvimg" style={{ backgroundImage: `url(img/${KV_IMG[cat]}.jpg)` }}></div>
-    {CAT_CLIPS[cat] && <video className="bvid" muted loop playsInline preload="none" data-src={`img/${CAT_CLIPS[cat]}.mp4`} aria-hidden="true"></video>}
+  return <div className="kv pagehero"><div className="kvimg"><KvImg src={`img/${KV_IMG[cat]}.jpg`} sizes="(max-width:1240px) 100vw, 1240px" eager /></div>
+    {CAT_CLIPS[cat] && <video className="bvid" muted loop playsInline preload="none" data-src={`/img/${CAT_CLIPS[cat]}.mp4`} aria-hidden="true"></video>}
     <div><span className="eyebrow">{eyebrow}</span><h1 className="explore">{title}</h1><p>{sub}</p></div></div>;
 }
 // the four promises the whole site makes (ticker, footer, FAQ): one source of truth for the info pages
@@ -49,7 +49,7 @@ function PinCheck() {
 function Cats() {
   const { P, CATS, money } = useStore();
   return <div className="kcats">{CATS.map(c => { const ps = P.filter(p => p.cat === c), low = ps.length ? Math.min(...ps.map(p => p.price)) : 0;
-    return <a className="kcat" href={catUrl(c)} key={c} style={{ backgroundImage: `url(img/${KV_IMG[c] || "kv-tv"}.jpg)` }}><div className="kshade"></div>
+    return <a className="kcat" href={catUrl(c)} key={c}><KvImg className="kimg" src={`img/${KV_IMG[c] || "kv-tv"}.jpg`} sizes="(max-width:760px) 100vw, 33vw" /><div className="kshade"></div>
       <div className="ktext"><b>{c}</b><small>{ps.length} model{ps.length === 1 ? "" : "s"} · from {money(low)}</small><u>Shop now →</u></div></a>; })}</div>;
 }
 
@@ -59,15 +59,15 @@ export function InfoPage() {
   const numRef = useRef();
   useEffect(() => { document.title = (page ? page[0] : "Page not found") + " | Mytekkstore"; }, []);
   useEffect(() => { if (numRef.current) countUp(numRef.current); }, [P]);
-  if (!page) return <><div className="crumbs"><a href="index.html">Home</a> › Page not found</div><div className="box"><h1>Page not found</h1><p>This page does not exist.</p><a className="btn" href="index.html">Back to home</a></div></>;
+  if (!page) return <><div className="crumbs"><a href="/">Home</a> › Page not found</div><div className="box"><h1>Page not found</h1><p>This page does not exist.</p><a className="btn" href="/">Back to home</a></div></>;
   const [title, eyebrow, head, sub, cat] = page;
   const deals = [...P].sort((a, b) => off(b) - off(a)).slice(0, 5);
   const maxOff = Math.max(0, ...P.map(off));
   const brandBlurb = { Elista: "An Indian consumer electronics brand making televisions, washing machines and air conditioners for Indian homes, each with the brand's own warranty.",
     Telefunken: "A German electronics name since 1903, sold in India under licence, with televisions and home appliances built to the brand's standard." };
-  const crumbs = <div className="crumbs"><a href="index.html">Home</a> › {title}</div>;
+  const crumbs = <div className="crumbs"><a href="/">Home</a> › {title}</div>;
   const hero = <Hero eyebrow={eyebrow} title={head} sub={sub} cat={cat} />;
-  const cta = <section><a className="cban" href="offers.html"><img className="cph" src={`img/${KV_IMG[cat]}.jpg`} alt="" loading="lazy" /><div><span className="kicker">Festive offers</span><h2>Up to {maxOff}% off</h2><p>Bank offers and No Cost EMI on the models that carry it · free delivery · cash on delivery</p><u>See the deals →</u></div></a></section>;
+  const cta = <section><a className="cban" href="/offers"><KvImg className="cph" src={`img/${KV_IMG[cat]}.jpg`} sizes="(max-width:1240px) 100vw, 1240px" /><div><span className="kicker">Festive offers</span><h2>Up to {maxOff}% off</h2><p>Bank offers and No Cost EMI on the models that carry it · free delivery · cash on delivery</p><u>See the deals →</u></div></a></section>;
 
   if (p === "about") return <>{crumbs}{hero}
     <div className="num" ref={numRef}>{[[P.length, "", "Products", "across " + CATS.length + " categories"], [BRANDS.length, "", "Brands", BRANDS.join(" and ")], [BANK_OFFERS.length, "", "Bank offers", "plus No Cost EMI"], [100, "%", "Genuine", "brand warranty on everything"]]
@@ -87,9 +87,9 @@ export function InfoPage() {
           {CONTACT.phone && <a className="way" href={"tel:" + CONTACT.phone.replace(/\s/g, "")}><i className="kico"><Icon k="user" /></i><b>Call us</b><span>{CONTACT.phone}</span>{CONTACT.hours && <small>{CONTACT.hours}</small>}</a>}
           {CONTACT.email && <a className="way" href={"mailto:" + CONTACT.email}><i className="kico"><Icon k="tag" /></i><b>Email</b><span>{CONTACT.email}</span></a>}
           {CONTACT.address && <div className="way"><i className="kico"><Icon k="pin" /></i><b>Visit</b><span>{CONTACT.address}</span></div>}
-          <a className="way" href="account.html"><i className="kico"><Icon k="box" /></i><b>Track an order</b><span>Every order shows its status from Placed to Delivered in your account.</span></a>
-          <a className="way" href="page.html?p=returns"><i className="kico"><Icon k="undo" /></i><b>Return something</b><span>How returns and refunds work, step by step.</span></a>
-          <a className="way" href="page.html?p=shipping"><i className="kico"><Icon k="truck" /></i><b>Delivery questions</b><span>Where we deliver, how long it takes, and how to check your pincode.</span></a>
+          <a className="way" href="/account"><i className="kico"><Icon k="box" /></i><b>Track an order</b><span>Every order shows its status from Placed to Delivered in your account.</span></a>
+          <a className="way" href="/returns"><i className="kico"><Icon k="undo" /></i><b>Return something</b><span>How returns and refunds work, step by step.</span></a>
+          <a className="way" href="/shipping"><i className="kico"><Icon k="truck" /></i><b>Delivery questions</b><span>Where we deliver, how long it takes, and how to check your pincode.</span></a>
         </div></div></section>
     <Faq list={FAQ} lead="The questions we are asked most." />
     {cta}</>;
@@ -159,7 +159,7 @@ export function InfoPage() {
 // the contact form: the message lands in the store's admin outbox (Customer messages), even before an email provider is connected
 function ContactForm() {
   const [done, setDone] = useState(false);
-  if (done) return <div className="box sent"><h3>Thank you.</h3><p>We have your message and will reply to your email.</p><a className="btn" href="index.html">Back to home</a></div>;
+  if (done) return <div className="box sent"><h3>Thank you.</h3><p>We have your message and will reply to your email.</p><a className="btn" href="/">Back to home</a></div>;
   return <Form className="form cform" onSubmit={async f => { await api("contact", "POST", f); setDone(true); }} after={busy => <button className="btn" disabled={busy}>Send message</button>}>
     <label>Your name<input name="name" required maxLength="80" autoComplete="name" /></label>
     <label>Email<input name="email" type="email" required maxLength="120" autoComplete="email" /></label>

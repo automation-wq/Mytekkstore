@@ -4,7 +4,8 @@
   "type": "module",
   "scripts": {
     "build": "node shells.js && vite build && node tidy.js",
-    "dev": "node shells.js && vite"
+    "dev": "node shells.js && vite",
+    "images": "node images.js"
   },
   "dependencies": {
     "motion": "^14.0.0",
@@ -13,6 +14,7 @@
   },
   "devDependencies": {
     "@vitejs/plugin-react": "^5.0.0",
+    "sharp": "^0.35.5",
     "vite": "^7.0.0"
   }
 }

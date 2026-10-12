@@ -14,11 +14,11 @@ export const POLICY = { returnDays: 7, refundDays: 7 };
 export const FAQ = [
   ["Is delivery free?", "Yes. Every order is delivered free, usually within 3 to 5 days. Enter your pincode on any product page to check your area.", null],
   ["Can I pay when the order arrives?", "Yes. Cash on delivery is available on every order.", null],
-  ["How does No Cost EMI work?", "On products marked No Cost EMI, the price is split over 3, 6 or 9 months on participating bank credit cards with no extra interest. The plans are listed on each product page.", ["offers.html", "See the offers"]],
+  ["How does No Cost EMI work?", "On products marked No Cost EMI, the price is split over 3, 6 or 9 months on participating bank credit cards with no extra interest. The plans are listed on each product page.", ["/offers", "See the offers"]],
   ["Are the products genuine?", "Yes. Mytekkstore sells genuine Elista and Telefunken products, each with the brand's warranty.", null],
-  ["Which TV size is right for my room?", "Measure how far you sit from the screen. The TV size guide turns that distance into a recommended size.", ["category.html?cat=Televisions#guide", "Open the TV size guide"]],
-  ["How do I track my order?", "Sign in and open your account: every order shows its status from Placed to Delivered.", ["account.html", "Go to my account"]],
-  ["Can I return a product?", "Yes, returns are easy. The full policy is on the Returns and Refunds page.", ["page.html?p=returns", "Read the returns policy"]],
+  ["Which TV size is right for my room?", "Measure how far you sit from the screen. The TV size guide turns that distance into a recommended size.", ["/televisions#guide", "Open the TV size guide"]],
+  ["How do I track my order?", "Sign in and open your account: every order shows its status from Placed to Delivered.", ["/account", "Go to my account"]],
+  ["Can I return a product?", "Yes, returns are easy. The full policy is on the Returns and Refunds page.", ["/returns", "Read the returns policy"]],
 ];
 export const STEPS = ["Placed", "Confirmed", "Shipped", "Delivered"];
 
@@ -145,10 +145,21 @@ export function catSizes(P, cat) {
   P.filter(p => p.cat === cat).forEach(p => { const s = raw(p); if (s && !canon.has(s.n)) canon.set(s.n, s.label); });
   return { S, sizeOf: p => { const s = raw(p); return s && { label: canon.get(s.n), n: s.n }; }, all: [...canon].map(([n, label]) => ({ n, label })).sort((a, b) => b.n - a.n) };
 }
-export const catUrl = c => "category.html?cat=" + encodeURIComponent(c);
-export const brandUrl = b => "category.html?brand=" + encodeURIComponent(b);
+// Clean addresses, resolved by server.js (the same slug rule lives there): /televisions, /televisions/<brand-and-model>, /products?brand=Elista
+export const slug = s => String(s).toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+export const catUrl = c => "/" + slug(c);
+export const productUrl = p => catUrl(p.cat) + "/" + slug(p.brand + " " + p.name);
+export const brandUrl = b => "/products?brand=" + encodeURIComponent(b);
 // product-list link from filters, for example listUrl({ cat: "Televisions", brand: "Elista" }); empty values are left out
-export const listUrl = o => "category.html?" + new URLSearchParams(Object.entries(o).filter(([, v]) => v)).toString();
+export const listUrl = ({ cat, ...o }) => { const q = new URLSearchParams(Object.entries(o).filter(([, v]) => v)).toString(); return (cat ? catUrl(cat) : "/products") + (q ? "?" + q : ""); };
+// Photos: `npm run images` (web/images.js) writes WebP copies of the seeded photos as name.webp, name-960.webp and name-480.webp.
+// Uploaded photos (img/u-*.jpg) and outside links have no copies and are used as they are.
+const hasWebp = src => /^img\/(?!u-)[\w-]+\.jpg$/.test(src || "");
+// always an absolute address: a product page lives at /televisions/<model>, where a relative img/... would point one level too deep
+export const pic = (src, w) => { const s = hasWebp(src) ? src.replace(/\.jpg$/, (w ? "-" + w : "") + ".webp") : src; return /^img\//.test(s || "") ? "/" + s : s; };
+const DIMS = { "img/hero0.jpg": [1344, 752], "img/hero1.jpg": [1344, 752], "img/hero2.jpg": [1344, 752], "img/kv-tv.jpg": [1600, 2350], "img/kv-ac.jpg": [1600, 1074], "img/kv-wash.jpg": [1600, 1067] };
+export const dims = src => DIMS[src] || [800, 800]; // the product photos are square
+export const picSet = src => hasWebp(src) ? `${pic(src, 480)} 480w, ${pic(src, 960)} 960w, ${pic(src)} ${dims(src)[0]}w` : undefined;
 export const off = p => Math.round((1 - p.price / p.mrp) * 100);
 export const avg = p => p.reviews && p.reviews.length ? p.reviews.reduce((t, r) => t + r.rating, 0) / p.reviews.length : 0;
 export const starRow = n => "★".repeat(n) + "☆".repeat(5 - n);

@@ -186,7 +186,17 @@ server.listen(0, "127.0.0.1", async () => {
     html = await (await fetch(base + "/")).text();
     assert.ok(html.includes('name="description"') && html.includes('"@type":"WebSite"') && html.includes('"SearchAction"'), "home page carries the site and search structured data");
     assert.ok((await (await fetch(base + "/category.html?cat=Televisions")).text()).includes('"@type":"ItemList"'), "category pages list their products as structured data");
-    assert.ok((await (await fetch(base + "/sitemap.xml")).text()).includes("/product.html?id=1"));
+    const map = await (await fetch(base + "/sitemap.xml")).text();
+    assert.ok(map.includes("/televisions/elista-80-cm-32-inch-hd-ready-smart-led-tv") && map.includes("<lastmod>") && !map.includes("product.html"), "the sitemap lists clean addresses with lastmod");
+    // clean addresses: the server serves the page, its own tags, and tells the app what to draw
+    html = await (await fetch(base + "/televisions/telefunken-140-cm-55-inch-4k-ultra-hd-google-tv")).text();
+    assert.ok(html.includes("<title>Telefunken 140 cm (55 inch) 4K Ultra HD Google TV | Mytekkstore</title>") && html.includes('data-id="2"') && html.includes('"@type":"Product"') && html.includes('rel="canonical" href="' + base + '/televisions/telefunken-140-cm-55-inch-4k-ultra-hd-google-tv"'), "a clean product address");
+    assert.ok((await (await fetch(base + "/televisions")).text()).includes('data-cat="Televisions"'), "a clean category address");
+    assert.ok((await (await fetch(base + "/shipping")).text()).includes("<title>Shipping and delivery | Mytekkstore</title>"), "a clean info address with its own title");
+    assert.ok((await (await fetch(base + "/product.html?id=2")).text()).includes('rel="canonical" href="' + base + '/televisions/telefunken-140-cm-55-inch-4k-ultra-hd-google-tv"'), "the old address points at the clean one");
+    assert.ok((await (await fetch(base + "/account")).text()).includes('name="robots" content="noindex'), "private pages are not indexed");
+    assert.ok((await (await fetch(base + "/robots.txt")).text()).includes("Allow: /api/products"), "search engines may fetch the product data");
+    assert.ok((await (await fetch(base + "/category.html")).text()).includes("<title>All products | Mytekkstore</title>"), "the full list has its own title");
     assert.ok((await (await fetch(base + "/robots.txt")).text()).includes("Sitemap:"));
     assert.equal((await raw("/seed-data.js", { "Accept-Encoding": "gzip" })).headers["content-encoding"], "gzip");
     assert.equal((await raw("/img/p0.jpg", { "Accept-Encoding": "gzip" })).headers["content-encoding"], undefined); // photos are not re-compressed

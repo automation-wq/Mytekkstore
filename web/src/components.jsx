@@ -5,7 +5,7 @@ import { animate, stagger } from "motion";
 import { reduced } from "./motion.js";
 import { useStore } from "./store.jsx";
 import { api, qs, load, save } from "./api.js";
-import { ICONS, DRAW_ICONS, COUNTRIES, BANK_OFFERS, TOP_FEATURES, GUIDES, CAT_SIZE, catSizes, catUrl, brandUrl, listUrl, off, avg, starRow, eta } from "./data.js";
+import { ICONS, DRAW_ICONS, COUNTRIES, BANK_OFFERS, TOP_FEATURES, GUIDES, CAT_SIZE, catSizes, catUrl, brandUrl, listUrl, off, avg, starRow, eta, productUrl, pic, picSet, dims } from "./data.js";
 
 const $ = (s, el = document) => el.querySelector(s);
 const $$ = (s, el = document) => [...el.querySelectorAll(s)];
@@ -17,7 +17,12 @@ export const Ico = ({ shapes }) => <i className="ico"><svg viewBox="0 0 24 24" f
 
 // ===== product pieces =====
 // the main photo on a product page loads first; every other photo waits until it scrolls near the screen
-export const Photo = ({ p, main }) => main ? <img src={p.img} alt={p.brand + " " + p.name} fetchPriority="high" /> : <img src={p.img} alt={p.brand + " " + p.name} loading="lazy" decoding="async" />;
+// product photo in its WebP sizes (pic, picSet in data.js), with width and height so the page never shifts while it loads
+export const Photo = ({ p, main, sizes = "(max-width:760px) 46vw, 240px" }) => { const [w, h] = dims(p.img); return main
+  ? <img src={pic(p.img)} srcSet={picSet(p.img)} sizes="(max-width:860px) 100vw, 50vw" alt={p.brand + " " + p.name} width={w} height={h} fetchPriority="high" decoding="async" />
+  : <img src={pic(p.img, 480)} srcSet={picSet(p.img)} sizes={sizes} alt={p.brand + " " + p.name} width={w} height={h} loading="lazy" decoding="async" />; };
+// a big photo (hero, category banner, tile) in its WebP sizes; eager for the one at the top of the page
+export const KvImg = ({ src, sizes, className, eager }) => { const [w, h] = dims(src); return <img className={className} src={pic(src, 960)} srcSet={picSet(src)} sizes={sizes} alt="" width={w} height={h} loading={eager ? "eager" : "lazy"} fetchPriority={eager ? "high" : undefined} decoding="async" />; };
 export const Stars = ({ p }) => p.reviews && p.reviews.length ? <span className="stars" title={avg(p).toFixed(1) + " out of 5"}><span>{starRow(Math.round(avg(p)))}</span> <small>{avg(p).toFixed(1)} ({p.reviews.length})</small></span> : null;
 export function Stepper({ p }) {
   const { qtyOf } = useStore();
@@ -49,13 +54,13 @@ export function Card({ p, i = 0 }) {
   const onLeave = () => { rx.set(0); ry.set(0); };
   return <m.div className="card" style={{ rotateX: rx, rotateY: ry, transformPerspective: 900 }} onPointerMove={onMove} onPointerLeave={onLeave}
     initial={{ opacity: 0, y: 10 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: "0px 0px -40px" }} transition={{ type: "spring", stiffness: 220, damping: 26, delay: (i % 6) * .06 }}><Heart p={p} />
-    <a href={"product.html?id=" + p.id}><div className="img"><Photo p={p} />{off(p) > 0 && <span className="badge">{off(p)}% off</span>}</div><small>{p.brand}</small><h3>{p.name}</h3><Stars p={p} /></a>
+    <a href={productUrl(p)}><div className="img"><Photo p={p} />{off(p) > 0 && <span className="badge">{off(p)}% off</span>}</div><small>{p.brand}</small><h3>{p.name}</h3><Stars p={p} /></a>
     <div className="price"><b>{money(p.price)}</b>{p.mrp > p.price && <><s>{money(p.mrp)}</s><em className="save">Save {money(p.mrp - p.price)}</em></>}</div>{p.emi && <span className="emi">No Cost EMI</span>}<span className="geta"><Icon k="truck" /> Free delivery · get it by {eta()[1]}</span><Buy p={p} /></m.div>;
 }
 export function Line({ p }) {
   const { money, qtyOf } = useStore();
-  return <div className="line"><a className="img" href={"product.html?id=" + p.id}><Photo p={p} /></a>
-    <div><a href={"product.html?id=" + p.id}>{p.brand} {p.name}</a>
+  return <div className="line"><a className="img" href={productUrl(p)}><Photo p={p} /></a>
+    <div><a href={productUrl(p)}>{p.brand} {p.name}</a>
       <div className="lrow"><Stepper p={p} /><b>{money(p.price * qtyOf(p.id))}</b></div>
       <button className="link" data-q={p.id} data-n="0">Remove</button></div></div>;
 }
@@ -65,11 +70,11 @@ export const Row = ({ title, href, list }) => list.length ? <section><h2>{title}
 export const Box = ({ title, text, href, cta }) => <div className="box"><h1>{title}</h1><p>{text}</p><a className="btn" href={href}>{cta}</a></div>;
 export function OrderItems({ o }) {
   const { money } = useStore();
-  return o.items.map(it => <div className="line" key={it.id}><span className="img"><img src={it.img} alt="" /></span>
+  return o.items.map(it => <div className="line" key={it.id}><span className="img"><img src={pic(it.img, 480)} alt="" width="800" height="800" /></span>
     <div><span>{it.brand} {it.name}</span><div className="lrow"><span className="muted">Qty {it.qty}</span><b>{money(it.price * it.qty)}</b></div></div></div>);
 }
 // bank offers block, used on the home page and the offers page
-export const BankOffers = () => <section className="offers" id="bank"><h2>Bank offers <a href="offers.html">All offers</a></h2><div className="ogrid">{BANK_OFFERS.map(([bank, big, note, c]) =>
+export const BankOffers = () => <section className="offers" id="bank"><h2>Bank offers <a href="/offers">All offers</a></h2><div className="ogrid">{BANK_OFFERS.map(([bank, big, note, c]) =>
   <div className="offer" style={{ "--bc": c }} key={bank}><i className="blogo">{bank.split(" ")[0]}</i><b>{big}</b><span>{note}</span><small>{bank} · T&amp;C apply</small></div>)}</div></section>;
 
 // forms: show the server's message under the form and stop double submits. onSubmit gets the fields; throw to show an error.
@@ -101,17 +106,17 @@ function navItems(P, CATS, BRANDS, catImg) {
         ...all.map(s => [s.label, listUrl({ cat, size: s.label }), inCat.find(p => (sizeOf(p) || {}).label === s.label).img]),
         ...BRANDS.filter(b => inCat.some(p => p.brand === b)).map(b => [b + " " + short, listUrl({ cat, brand: b }), inCat.find(p => p.brand === b).img])],
       links: [...(g ? [[g.nav, catUrl(cat) + "#guide"]] : []), ...(TOP_FEATURES[cat] ? [["Top features", catUrl(cat) + "#features"]] : []),
-        ["Deals on " + short, listUrl({ cat, sort: "off" })], ["Delivery and returns", "page.html?p=shipping"], ["Store locator", "page.html?p=stores"]],
+        ["Deals on " + short, listUrl({ cat, sort: "off" })], ["Delivery and returns", "/shipping"], ["Store locator", "/stores"]],
       promo: g ? ["Not sure which " + S.by.toLowerCase() + "?", "Answer one question and we will suggest the right one.", catUrl(cat) + "#guide"] : null,
     };
   });
   items.push({
-    label: "Brands", href: "category.html", cur: page === "category" && !curCat && !!qs.get("brand"), head: "Shop by brand", prodHead: "Top deals", prods: top(P),
+    label: "Brands", href: "/products", cur: page === "category" && !curCat && !!qs.get("brand"), head: "Shop by brand", prodHead: "Top deals", prods: top(P),
     tiles: BRANDS.flatMap(b => [["All " + b, brandUrl(b), P.find(p => p.brand === b).img],
       ...CATS.filter(c => P.some(p => p.brand === b && p.cat === c)).map(c => [b + " " + (CAT_SIZE[c] ? CAT_SIZE[c].short : c), listUrl({ cat: c, brand: b }), P.find(p => p.brand === b && p.cat === c).img])]),
-    links: [["All products", "category.html"], ["Deals of the day", "category.html?sort=off"], ["My wishlist", "category.html?wish=1"], ["About Mytekkstore", "page.html?p=about"], ["Contact us", "page.html?p=contact"]],
+    links: [["All products", "/products"], ["Deals of the day", "/products?sort=off"], ["My wishlist", "/products?wish=1"], ["About Mytekkstore", "/about"], ["Contact us", "/contact"]],
   });
-  items.push({ label: "Deals", href: "offers.html", cur: page === "offers" }); // a plain link to the festive offers page, no panel
+  items.push({ label: "Deals", href: "/offers", cur: page === "offers" }); // a plain link to the festive offers page, no panel
   return items;
 }
 
@@ -122,7 +127,7 @@ function Search() {
   const t = q.trim().toLowerCase(), typing = t.length >= 2;
   const hits = typing ? P.filter(p => (p.brand + " " + p.cat + " " + p.name).toLowerCase().includes(t)).slice(0, 6) : [...P].sort((a, b) => off(b) - off(a)).slice(0, 4);
   const links = typing ? [...CATS.filter(c => c.toLowerCase().includes(t)).map(c => [c, catUrl(c)]), ...BRANDS.filter(b => b.toLowerCase().includes(t)).map(b => ["All " + b, brandUrl(b)])].slice(0, 4) : [];
-  const items = [...links.map(([label, href]) => ({ label, href })), ...hits.map(p => ({ label: p.brand + " " + p.name, href: "product.html?id=" + p.id, p }))];
+  const items = [...links.map(([label, href]) => ({ label, href })), ...hits.map(p => ({ label: p.brand + " " + p.name, href: productUrl(p), p }))];
   const show = open && items.length > 0;
   const onKey = e => {
     if (!show) return;
@@ -131,15 +136,15 @@ function Search() {
     else if (e.key === "Enter" && sel >= 0) { e.preventDefault(); location.href = items[sel].href; }
     else if (e.key === "Escape") setOpen(false);
   };
-  return <form role="search" action="category.html" className="sbox" onSubmit={e => { if (!q.trim()) e.preventDefault(); }}>
+  return <form role="search" action="/products" className="sbox" onSubmit={e => { if (!q.trim()) e.preventDefault(); }}>
     <input type="search" name="q" value={q} placeholder="What are you looking for?" aria-label="Search products" autoComplete="off"
       role="combobox" aria-expanded={show} aria-controls="sugg" aria-autocomplete="list" aria-activedescendant={sel >= 0 ? "sg" + sel : undefined}
       onChange={e => { setQ(e.target.value); setSel(-1); setOpen(true); }} onFocus={() => setOpen(true)} onBlur={() => setOpen(false)} onKeyDown={onKey} />
     {show && <div className="sugg" id="sugg" role="listbox" onMouseDown={e => e.preventDefault()}>
       <p className="shead">{typing ? "Suggestions" : "Popular right now"}</p>
       {items.map((it, i) => <a href={it.href} className={"sg" + (it.p ? " sp" : "") + (i === sel ? " on" : "")} id={"sg" + i} role="option" aria-selected={i === sel} key={it.href}>
-        {it.p ? <><img src={it.p.img} alt="" loading="lazy" /><span><small>{it.p.brand} · {it.p.cat}</small><b>{it.p.name}</b></span><i>{money(it.p.price)}</i></> : <><Icon k="search" /><b>{it.label}</b></>}</a>)}
-      {typing && <a className="sg all" href={"category.html?q=" + encodeURIComponent(q.trim())}><Icon k="search" /><b>See all results for "{q.trim()}"</b></a>}
+        {it.p ? <><img src={pic(it.p.img, 480)} alt="" loading="lazy" width="800" height="800" /><span><small>{it.p.brand} · {it.p.cat}</small><b>{it.p.name}</b></span><i>{money(it.p.price)}</i></> : <><Icon k="search" /><b>{it.label}</b></>}</a>)}
+      {typing && <a className="sg all" href={"/products?q=" + encodeURIComponent(q.trim())}><Icon k="search" /><b>See all results for "{q.trim()}"</b></a>}
     </div>}
   </form>;
 }
@@ -159,7 +164,7 @@ function Deliver() {
     catch (ex) { if (/find/.test(ex.message)) return setMsg(ex.message); } // service down: keep the pincode, the standard promise still applies
     save("pin", v); save("pinplace", district); setPin(v); setPlace(district); setMsg(""); ref.current.open = false;
   };
-  return <details className="deliver" ref={ref}><summary aria-label="Delivery pincode"><Icon k="pin" /><span><small>Deliver to</small><b>{pin ? (place ? place + " " + pin : pin) : "Enter pincode"}</b></span></summary>
+  return <details className="deliver" ref={ref}><summary><Icon k="pin" /><span><small>Deliver to</small><b>{pin ? (place ? place + " " + pin : pin) : "Enter pincode"}</b></span></summary>
     <form className="dpop" onSubmit={submit}><label>Pincode<input name="pin" inputMode="numeric" maxLength="6" defaultValue={pin} placeholder="6-digit pincode" /></label><button className="btn">Check</button>
       <p className="muted small" role="status">{msg || "Free delivery, usually in 3 to 5 days. Cash on delivery available."}</p></form></details>;
 }
@@ -227,18 +232,18 @@ export function Header() {
   return <header id="hdr">
     <div className="ticker" aria-label="Store offers"><div>{[0, 1].flatMap(r => [["truck", "Free delivery on every order"], ["shield", "100% genuine products with brand warranty"], ["cash", "Cash on delivery available"], ["undo", "Easy returns"], ["box", "Track every order from your account"]].map(([i, t]) => <span key={r + i}><Icon k={i} /> {t}</span>))}</div></div>
     <div className="wrap">
-      <a className="logo" href="index.html"><svg viewBox="0 0 32 32" width="30" height="30" aria-hidden="true"><rect width="32" height="32" rx="9" fill="#08805f" /><path d="M18 5 9 18h6l-2 9 10-14h-6z" fill="#ffffff" /></svg><span>mytekk<b>store</b></span></a>
+      <a className="logo" href="/"><svg viewBox="0 0 32 32" width="30" height="30" aria-hidden="true"><rect width="32" height="32" rx="9" fill="#08805f" /><path d="M18 5 9 18h6l-2 9 10-14h-6z" fill="#ffffff" /></svg><span>mytekk<b>store</b></span></a>
       <Search /><Deliver />
       <select id="country" aria-label="Country" defaultValue={country} onChange={e => { save("country", e.target.value); location.reload(); }}>{Object.keys(COUNTRIES).map(c => <option value={c} key={c}>{c}</option>)}</select>
-      <a className="hlink" href="account.html"><Icon k="user" /> <span>{me ? me.name.split(" ")[0] : "Sign in"}</span></a>
-      <a className="hlink" href="category.html?wish=1" aria-label="Wishlist"><Icon k="heart" /> <span id="wishN" className="count" hidden={!wish.length}>{wish.length}</span></a>
-      <a className="hlink" href="cart.html" data-drawer aria-label="Cart"><Icon k="cart" /> <span id="cartN" className={"count" + (bump ? " bump" : "")} key={bump} hidden={!n}>{n}</span></a>
+      <a className="hlink" href="/account" aria-label={me ? "My account" : "Sign in"}><Icon k="user" /> <span>{me ? me.name.split(" ")[0] : "Sign in"}</span></a>
+      <a className="hlink" href="/products?wish=1" aria-label="Wishlist"><Icon k="heart" /> <span id="wishN" className="count" hidden={!wish.length}>{wish.length}</span></a>
+      <a className="hlink" href="/cart" data-drawer aria-label="Cart"><Icon k="cart" /> <span id="cartN" className={"count" + (bump ? " bump" : "")} key={bump} hidden={!n}>{n}</span></a>
     </div>
     <nav className="gnav" aria-label="Shop" ref={navRef}><ul className="gbar">{items.map((it, i) => <li className={"l0" + (it.cur ? " cur" : "")} key={it.label}>
       <a className="l0link" href={it.href} aria-current={it.cur && page === "category" ? "page" : undefined} {...(it.tiles ? { "aria-haspopup": "true", "aria-expanded": "false", "aria-controls": "nav" + i } : {})}>{it.label}</a>{it.tiles &&
       <div className="npanel" id={"nav" + i}><div className="ngrid">
-        <div><p className="nhead">{it.head}</p><div className="ntiles">{it.tiles.map(([t, h, img]) => <a className="ntile" href={h} key={h}><img src={img} alt="" loading="lazy" /><span>{t}</span></a>)}</div></div>
-        <div><p className="nhead">{it.prodHead}</p><div className="nprods">{it.prods.map(p => <a className="nprod" href={"product.html?id=" + p.id} key={p.id}><img src={p.img} alt="" loading="lazy" /><span><small>{p.brand}</small><b>{p.name}</b><i>{money(p.price)}</i></span></a>)}</div></div>
+        <div><p className="nhead">{it.head}</p><div className="ntiles">{it.tiles.map(([t, h, img]) => <a className="ntile" href={h} key={h}><img src={pic(img, 480)} alt="" loading="lazy" width="800" height="800" /><span>{t}</span></a>)}</div></div>
+        <div><p className="nhead">{it.prodHead}</p><div className="nprods">{it.prods.map(p => <a className="nprod" href={productUrl(p)} key={p.id}><img src={pic(p.img, 480)} alt="" loading="lazy" width="800" height="800" /><span><small>{p.brand}</small><b>{p.name}</b><i>{money(p.price)}</i></span></a>)}</div></div>
         <div className="ndisc"><p className="nhead">Discover</p>{it.links.map(([t, h]) => <a href={h} key={t}>{t}</a>)}{it.promo && <a className="npromo" href={it.promo[2]}><b>{it.promo[0]}</b><span>{it.promo[1]}</span><u>Open the guide →</u></a>}</div>
       </div></div>}</li>)}</ul></nav>
   </header>;
@@ -251,8 +256,8 @@ export function Footer() {
     <div className="fcols">
       <div><b>Shop</b>{CATS.slice(0, 6).map(c => <a href={catUrl(c)} key={c}>{c}</a>)}</div>
       <div><b>Brands</b>{BRANDS.slice(0, 6).map(b => <a href={brandUrl(b)} key={b}>{b}</a>)}</div>
-      <div><b>Help</b><a href="page.html?p=contact">Contact</a><a href="page.html?p=shipping">Shipping</a><a href="page.html?p=returns">Returns</a><a href="page.html?p=stores">Store locator</a></div>
-      <div><b>Mytekkstore</b><a href="page.html?p=about">About</a><a href="account.html">My account</a><a href="page.html?p=terms">Terms</a><a href="page.html?p=privacy">Privacy</a></div>
+      <div><b>Help</b><a href="/contact">Contact</a><a href="/shipping">Shipping</a><a href="/returns">Returns</a><a href="/stores">Store locator</a></div>
+      <div><b>Mytekkstore</b><a href="/about">About</a><a href="/account">My account</a><a href="/terms">Terms</a><a href="/privacy">Privacy</a></div>
     </div>
     <div className="copy">© 2026 Mytekkstore. All rights reserved.</div>
   </div></footer>;
@@ -263,8 +268,8 @@ export function Footer() {
 function MobileNav() {
   const { cartCount } = useStore();
   const page = document.body.dataset.page, n = cartCount();
-  const items = [["index.html", "home", "Home", page === "home"], ["category.html", "apps", "Shop", page === "category" || page === "product"], ["offers.html", "tag", "Deals", page === "offers"],
-    ["cart.html", "cart", "Cart", page === "cart" || page === "checkout"], ["account.html", "user", "Account", page === "account" || page === "order"]];
+  const items = [["/", "home", "Home", page === "home"], ["/products", "apps", "Shop", page === "category" || page === "product"], ["/offers", "tag", "Deals", page === "offers"],
+    ["/cart", "cart", "Cart", page === "cart" || page === "checkout"], ["/account", "user", "Account", page === "account" || page === "order"]];
   return <nav className="mnav" aria-label="Quick links">{items.map(([h, i, t, on]) => <a href={h} className={on ? "on" : undefined} aria-current={on ? "page" : undefined} key={h}><Icon k={i} />{t}{i === "cart" && n > 0 && <span className="count">{n}</span>}</a>)}</nav>;
 }
 
@@ -279,8 +284,8 @@ export function Chrome() {
   return <>
     <div className="navshade"></div><div className="overlay" data-close></div>
     <m.aside className="drawer" aria-label="Cart" initial={false} animate={cartOpen ? "open" : "closed"} variants={DRAWER} transition={SPRING}><h2>Your cart (<span>{n}</span>) <button className="x" data-close aria-label="Close cart">×</button></h2><div className="dbody">{n ? <>
-      <div className="lines">{Object.keys(cart).map(id => <Line p={byId(id)} key={id} />)}</div>
-      <div className="dfoot"><div className="tot"><span>Subtotal</span><b>{money(cartTotal())}</b></div><a className="btn" href="checkout.html">Checkout</a><a className="btn ghost" href="cart.html">View cart</a></div></>
+      <div className="lines"><AnimatePresence initial={false}>{Object.keys(cart).map(id => <m.div layout key={id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, x: 40 }} transition={SPRING}><Line p={byId(id)} /></m.div>)}</AnimatePresence></div>
+      <div className="dfoot"><div className="tot"><span>Subtotal</span><b>{money(cartTotal())}</b></div><a className="btn" href="/checkout">Checkout</a><a className="btn ghost" href="/cart">View cart</a></div></>
       : <div className="empty"><div className="big"><Icon k="cart" /></div><p>Your cart is empty.</p><button className="btn" data-close>Continue shopping</button></div>}</div></m.aside>
     <AnimatePresence>{toastState.msg && <m.div className="toast on" role="status" key="toast" style={{ x: "-50%" }} initial={{ y: 90, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 90, opacity: 0 }} transition={SPRING}><span>{toastState.msg}</span>{toastState.withCart && <button data-drawer>View cart</button>}</m.div>}</AnimatePresence>
     <MobileNav />

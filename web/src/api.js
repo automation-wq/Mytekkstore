@@ -1,7 +1,10 @@
 // Talks to the store server (see ../../server.js).
 export const load = (k, d) => { try { return JSON.parse(localStorage.getItem(k)) ?? d; } catch { return d; } };
 export const save = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} };
-export const qs = new URLSearchParams(location.search);
+// address parameters: the query string first, then what the server put on <body> for a clean address
+// (/televisions -> data-cat, /televisions/<product> -> data-id, /shipping -> data-p; see resolveClean in server.js)
+const search = new URLSearchParams(location.search), given = document.body.dataset;
+export const qs = { get: k => search.has(k) ? search.get(k) : (k in given ? given[k] : null), has: k => search.has(k) || k in given };
 // analytics hook: events go to window.dataLayer, where Google Tag Manager or GA4 picks them up once the client's tag snippet is added
 export const track = (event, data) => (window.dataLayer = window.dataLayer || []).push({ event, ...data });
 

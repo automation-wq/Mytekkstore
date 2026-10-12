@@ -5,7 +5,7 @@ import { m, AnimatePresence } from "motion/react";
 import { useStore } from "./store.jsx";
 import { api, qs, load, save, track } from "./api.js";
 import { Photo, Stars, Buy, Heart, Row, Box, Form, Ico, Icon } from "./components.jsx";
-import { DEFAULT_FEATURES, BANK_OFFERS, GUIDES, SPEC_GROUPS, specIcon, catSizes, catUrl, brandUrl, off, avg, starRow, etaText, emiPlans } from "./data.js";
+import { DEFAULT_FEATURES, BANK_OFFERS, GUIDES, SPEC_GROUPS, specIcon, catSizes, catUrl, brandUrl, off, avg, starRow, etaText, emiPlans, productUrl, pic, picSet } from "./data.js";
 
 const $ = (s, el = document) => el.querySelector(s);
 const $$ = (s, el = document) => [...el.querySelectorAll(s)];
@@ -45,7 +45,7 @@ export function Product() {
     addEventListener("scroll", spy, { passive: true });
     return () => { io.disconnect(); removeEventListener("scroll", spy); };
   }, []);
-  if (!p) return <Box title="Product not found" text="This product does not exist." href="index.html" cta="Back to home" />;
+  if (!p) return <Box title="Product not found" text="This product does not exist." href="/" cta="Back to home" />;
 
   const stock = p.stock <= 0 ? <span className="stock out">Out of stock</span> : p.stock <= 5 ? <span className="stock low">Only {p.stock} left</span> : <span className="stock">In stock</span>;
   // the Specifications tab, grouped (Display, Sound, ...); warranty comes from the product's own specifications
@@ -74,14 +74,14 @@ export function Product() {
   const review = async f => { const { product } = await api(`products/${p.id}/reviews`, "POST", { rating: +f.rating, text: f.text }); updateProduct(product); setTab("t-rev"); toast("Thank you for your review"); };
 
   return <div onClick={onTab}>
-    <div className="crumbs"><a href="index.html">Home</a> › <a href={catUrl(p.cat)}>{p.cat}</a> › {p.name}</div>
+    <div className="crumbs"><a href="/">Home</a> › <a href={catUrl(p.cat)}>{p.cat}</a> › {p.name}</div>
     <nav className={"subnav" + (subOn ? " on" : "")} aria-label="Product sections"><div><b>{p.brand} {p.name}</b>
       <div className="stabs">{[["#overview", "Overview", "overview", "t-specs0"], ["#tabs", "Specs", "tabs", "t-specs"], ["#compare", "Compare", "compare"], ["#tabs", "Reviews", "tabs2", "t-rev"]].map(([h, t, key, dt], i) =>
         <a href={h} className={key === spySec ? "on" : undefined} data-tab={dt && dt !== "t-specs0" ? dt : undefined} key={i}>{t}{key === spySec && <m.i className="ink" layoutId="stab-ink" transition={INK} />}</a>)}</div>
       <span className="sprice">{money(p.price)}</span><Buy p={p} /></div></nav>
     <div className="pdp" id="overview">
-      <div className="gallery"><div className="img zoom" ref={zoomRef} onMouseMove={zoomMove}><AnimatePresence initial={false} mode="popLayout"><m.img key={img} src={img} alt={p.brand + " " + p.name} fetchPriority="high" initial={{ opacity: 0, scale: 1.03 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }} transition={{ duration: .3 }} /></AnimatePresence>{save$ && <span className="badge">{off(p)}% off</span>}</div>
-        {images.length > 1 && <div className="thumbs">{images.map((src, i) => <button className={"thumb" + (src === img ? " on" : "")} data-img={src} aria-label={"Photo " + (i + 1)} onClick={() => setImg(src)} key={src}><img src={src} alt="" loading="lazy" /></button>)}</div>}
+      <div className="gallery"><div className="img zoom" ref={zoomRef} onMouseMove={zoomMove}><AnimatePresence initial={false} mode="popLayout"><m.img key={img} src={pic(img)} srcSet={picSet(img)} sizes="(max-width:860px) 100vw, 50vw" alt={p.brand + " " + p.name} width="800" height="800" fetchPriority="high" initial={{ opacity: 0, scale: 1.03 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }} transition={{ duration: .3 }} /></AnimatePresence>{save$ && <span className="badge">{off(p)}% off</span>}</div>
+        {images.length > 1 && <div className="thumbs">{images.map((src, i) => <button className={"thumb" + (src === img ? " on" : "")} data-img={src} aria-label={"Photo " + (i + 1)} onClick={() => setImg(src)} key={src}><img src={pic(src, 480)} alt="" loading="lazy" width="800" height="800" /></button>)}</div>}
         <p className="muted hint">Move the pointer over the photo to zoom in</p>
         {feats.length > 0 && <div className="fstrip">{feats.map(([k, v]) => <div className="ft" key={k}><Ico shapes={specIcon(k)} /><span><small>{k}</small><b>{v}</b></span></div>)}</div>}</div>
       <div className="pinfo">
@@ -90,17 +90,17 @@ export function Product() {
         <p className="rating"><Stars p={p} />{!(p.reviews || []).length && <span className="muted" style={{ fontSize: 13 }}>No reviews yet</span>} <a className="alink" href="#t-rev" data-tab="t-rev" style={{ fontSize: 13 }}>See reviews</a></p>
         <div className="price"><b>{money(p.price)}</b>{save$ && <><s>{money(p.mrp)}</s><span className="badge">{off(p)}% off</span></>}</div>
         <p className="muted" style={{ fontSize: 13 }}>Inclusive of all taxes{save$ ? ` · You save ${money(p.mrp - p.price)}` : ""}</p>
-        {p.emi && <><p className="emiline">From <b>{money(Math.ceil(p.price / 9))}/month</b> with No Cost EMI over 9 months · <a className="alink" href="offers.html">See offers</a></p>
+        {p.emi && <><p className="emiline">From <b>{money(Math.ceil(p.price / 9))}/month</b> with No Cost EMI over 9 months · <a className="alink" href="/offers">See offers</a></p>
           <details className="emiplans"><summary>View EMI plans</summary><table className="specs"><tbody>{emiPlans(p.price).map(([n, m]) => <tr key={n}><th>{n} months</th><td><b>{money(m)}</b>/month · {money(0)} interest · {money(p.price)} in total</td></tr>)}</tbody></table>
-            <p className="muted">On participating bank credit cards, subject to the bank's terms. <a className="alink" href="offers.html">See all offers</a></p></details></>}
+            <p className="muted">On participating bank credit cards, subject to the bank's terms. <a className="alink" href="/offers">See all offers</a></p></details></>}
         <p style={{ marginTop: 12 }}>{stock} <span className="muted" style={{ fontSize: 13 }}>· Sold by Mytekkstore</span></p>
         {p.stock > 0 && p.stock <= 10 && <div className="stockbar"><span>Hurry, only {p.stock} left in stock</span><i><b style={{ width: p.stock * 10 + "%" }}></b></i></div>}
-        {sizes.length > 0 && <div className="sizes"><span>{S.by}</span>{sizes.map(({ s, t, on }) => <a className={"chip sw" + (on ? " on" : "")} href={"product.html?id=" + t.id} aria-current={on ? "page" : undefined} key={s.label}><b>{s.label.replace(/ TVs$/, "")}</b><small>{money(t.price)}</small></a>)}{GUIDES[p.cat] && <a className="alink" href={catUrl(p.cat) + "#guide"}>Not sure? Open the {GUIDES[p.cat].nav} →</a>}</div>}
+        {sizes.length > 0 && <div className="sizes"><span>{S.by}</span>{sizes.map(({ s, t, on }) => <a className={"chip sw" + (on ? " on" : "")} href={productUrl(t)} aria-current={on ? "page" : undefined} key={s.label}><b>{s.label.replace(/ TVs$/, "")}</b><small>{money(t.price)}</small></a>)}{GUIDES[p.cat] && <a className="alink" href={catUrl(p.cat) + "#guide"}>Not sure? Open the {GUIDES[p.cat].nav} →</a>}</div>}
         <div className="pill"><i></i><b>Free delivery</b> · usually by {etaText()} · cash on delivery available</div>
-        <div className="pofs"><b>Offers</b>{BANK_OFFERS.slice(0, 3).map(([bank, big, note, c]) => <div style={{ "--bc": c }} key={bank}><b>{big}</b><span>{note}</span></div>)}<a href="offers.html">See all offers →</a></div>
+        <div className="pofs"><b>Offers</b>{BANK_OFFERS.slice(0, 3).map(([bank, big, note, c]) => <div style={{ "--bc": c }} key={bank}><b>{big}</b><span>{note}</span></div>)}<a href="/offers">See all offers →</a></div>
         {picks.length > 0 && <div className="bundle"><b>Complete your home</b><p className="muted small">Pair it with these and add everything in one go.</p>
-          <label className="brow main"><input type="checkbox" checked disabled readOnly /><img src={p.img} alt="" /><span><small>This product</small>{p.name}</span><b>{money(p.price)}</b></label>
-          {picks.map(x => <label className="brow" key={x.id}><input type="checkbox" name="pick" value={x.id} checked={ticked.includes(x.id)} onChange={e => setChecked(e.target.checked ? [...ticked, x.id] : ticked.filter(i => i !== x.id))} /><img src={x.img} alt="" /><span><small>{x.brand} · {x.cat}</small><a href={"product.html?id=" + x.id}>{x.name}</a></span><b>{money(x.price)}</b></label>)}
+          <label className="brow main"><input type="checkbox" checked disabled readOnly /><img src={pic(p.img, 480)} alt="" width="800" height="800" /><span><small>This product</small>{p.name}</span><b>{money(p.price)}</b></label>
+          {picks.map(x => <label className="brow" key={x.id}><input type="checkbox" name="pick" value={x.id} checked={ticked.includes(x.id)} onChange={e => setChecked(e.target.checked ? [...ticked, x.id] : ticked.filter(i => i !== x.id))} /><img src={pic(x.img, 480)} alt="" width="800" height="800" /><span><small>{x.brand} · {x.cat}</small><a href={productUrl(x)}>{x.name}</a></span><b>{money(x.price)}</b></label>)}
           <div className="btot"><span>Total for <i>{pickedList.length + 1}</i> items</span><b>{money(p.price + pickedList.reduce((t, x) => t + x.price, 0))}</b><button className="btn" id="addAll" type="button" onClick={addAll}>Add all to cart</button></div></div>}
         <div className="actions"><Buy p={p} />{p.stock > 0 && <button className="btn ghost" data-buy={p.id}>Buy now</button>}<Heart p={p} /></div>
         <form className="pin" id="pincheck" noValidate ref={pinRef} onSubmit={e => { e.preventDefault(); pinCheck(); }}><label>Deliver to <input name="pin" inputMode="numeric" maxLength="6" placeholder="Enter pincode" defaultValue={(me && me.pin) || load("pin", "")} aria-label="Pincode" /></label><button className="btn ghost">Check</button>
@@ -121,9 +121,9 @@ export function Product() {
         {me ? <Form className="form rform" id="rform" onSubmit={review} after={busy => <button className="btn" disabled={busy}>Submit review</button>}><h3>Write a review</h3>
           <label>Rating<select name="rating" defaultValue="5">{[5, 4, 3, 2, 1].map(n => <option value={n} key={n}>{starRow(n)} {n}</option>)}</select></label>
           <label>Your review<textarea name="text" rows="3" required maxLength="500" placeholder="What did you like or dislike?"></textarea></label></Form>
-          : <p style={{ marginTop: 16 }}><a className="alink" href={"account.html?next=" + encodeURIComponent("product.html?id=" + p.id)}>Sign in</a> to write a review.</p>}
+          : <p style={{ marginTop: 16 }}><a className="alink" href={"/account?next=" + encodeURIComponent(productUrl(p))}>Sign in</a> to write a review.</p>}
       </div>
-      <div className="tabpane" id="t-del" hidden={tab !== "t-del"}><ul><li>Free delivery on this product, usually by {etaText()} when you order today.</li><li>Check delivery to your area with the pincode box above.</li><li>Pay by cash on delivery.</li><li>See <a className="alink" href="page.html?p=shipping">Shipping</a> and <a className="alink" href="page.html?p=returns">Returns</a> for the full policy.</li></ul></div>
+      <div className="tabpane" id="t-del" hidden={tab !== "t-del"}><ul><li>Free delivery on this product, usually by {etaText()} when you order today.</li><li>Check delivery to your area with the pincode box above.</li><li>Pay by cash on delivery.</li><li>See <a className="alink" href="/shipping">Shipping</a> and <a className="alink" href="/returns">Returns</a> for the full policy.</li></ul></div>
     </section>
     <Compare p={p} />
     <Row title={"More in " + p.cat} href={catUrl(p.cat)} list={P.filter(x => x.cat === p.cat && x.id !== p.id)} />
@@ -145,7 +145,7 @@ function Compare({ p }) {
   return <section className="cmp" id="compare"><h2>Compare with similar {p.cat.toLowerCase()}</h2>
     <p className="muted small">Rows marked with a dot are where these models differ.</p>
     <div className="scroll"><table className="ctable">
-      <thead><tr><th></th>{cols.map((x, i) => <th className={i ? undefined : "me"} key={x.id}><a href={"product.html?id=" + x.id}><span className="cimg"><Photo p={x} /></span><small>{x.brand}</small><b>{x.name}</b></a>{!i && <span className="stock">This product</span>}</th>)}</tr></thead>
+      <thead><tr><th></th>{cols.map((x, i) => <th className={i ? undefined : "me"} key={x.id}><a href={productUrl(x)}><span className="cimg"><Photo p={x} sizes="120px" /></span><small>{x.brand}</small><b>{x.name}</b></a>{!i && <span className="stock">This product</span>}</th>)}</tr></thead>
       <tbody>
         {line("Price", x => <><b className="cprice">{money(x.price)}</b>{x.mrp > x.price && <><s>{money(x.mrp)}</s><span className="badge">{off(x)}% off</span></>}{x.price === cheapest && <><br /><span className="stock">Lowest price</span></>}</>)}
         {line("Rating", x => <Stars p={x} /> && (x.reviews && x.reviews.length ? <Stars p={x} /> : <span className="muted">No reviews yet</span>))}
