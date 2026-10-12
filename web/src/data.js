@@ -15,7 +15,7 @@ export const POLICY = { returnDays: 7, refundDays: 7 };
 // The store sells televisions only for now: washing machines and air conditioners are hidden by HIDDEN_CATS in server.js.
 // The store locator is hidden (the business is B2C only); set SHOW_STORES to true and remove "stores" from HIDDEN_PAGES in server.js to bring it back.
 export const SHOW_STORES = false;
-// Shown in the category bar as "coming soon": the client wants the two hidden categories seen, with no pages behind them. Empty to remove.
+// Shown in the category bar like any category, but with no link and no page: the client wants the two hidden categories seen, not sold. Empty to remove.
 export const COMING_SOON = ["Washing Machines", "Air Conditioners"];
 // Warranty and returns, asked the way customers ask; shown on every product page, the home page and the Returns page.
 // DRAFT: the claim steps describe how the store handles a claim today (contact page, order number, the brand's service centre); the client confirms the wording.

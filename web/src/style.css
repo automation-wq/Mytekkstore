@@ -1328,8 +1328,7 @@ main > .cols { margin-top:22px }
 .aplus .ablock img[src*="/img/p"] { object-fit:contain; padding:6% }
 
 /* categories that are coming soon: in the bar for the look, no page behind them */
-.gbar .soon { display:flex; align-items:center; padding:12px 10px; color:var(--muted); font-weight:500 }
-.gbar .soon small { margin-left:7px; font-size:10px; letter-spacing:.7px; text-transform:uppercase; background:var(--tile); border-radius:999px; padding:3px 8px; color:var(--soft); font-weight:700 }
+.gbar .soon { display:flex; align-items:center; padding:12px 10px; font-weight:500; cursor:default } /* looks like Televisions, but nothing opens */
 
 /* ===== premium A+ content and floating cutouts (2026-10-12, after a look at Samsung, TCL, Vu and the Apple/Sony pattern) ===== */
 /* banners and brand tiles: the TV floats on the gradient, no white tile */
