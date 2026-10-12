@@ -33,6 +33,7 @@ Set these before starting the server (in the terminal, or at the top of `start.b
 | `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_FROM` | Order confirmation messages and sign-in codes by SMS through Twilio. `TWILIO_FROM` is your Twilio number, or `whatsapp:+1...` for WhatsApp |
 | `SMS_COUNTRY_CODE` | Country code added to mobile numbers typed without one. Default `+91` |
 | `GOOGLE_CLIENT_ID` | The "Continue with Google" button on the sign-in page |
+| `CLARITY_ID` | Microsoft Clarity project id (free heatmaps and session recordings, clarity.microsoft.com). Loads on every page except the admin; the privacy page mentions it when set |
 | `BREVO_API_KEY`, `MAIL_FROM` | Sign-in codes by email and order emails through Brevo (free tier) |
 | `OTP_DEMO` | `1` shows sign-in codes on the page for a client walkthrough. Remove before real customers use the site |
 

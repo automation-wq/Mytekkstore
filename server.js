@@ -26,6 +26,9 @@ const smsReady = !!(TW.sid && TW.token && TW.from);
 const CC = process.env.SMS_COUNTRY_CODE || "+91"; // country code added to mobile numbers typed without one
 // Google sign-in: the OAuth client id from console.cloud.google.com. Without it the Google button is not shown.
 const GOOGLE = process.env.GOOGLE_CLIENT_ID || "";
+// Microsoft Clarity (free heatmaps and session recordings): set CLARITY_ID to the project id from clarity.microsoft.com and the
+// tag loads on every page except the admin; the privacy page then says so. Typed text is masked by Clarity itself.
+const CLARITY = /^[a-z0-9]{6,32}$/i.test(process.env.CLARITY_ID || "") ? process.env.CLARITY_ID : "";
 // Email through Brevo (free tier at brevo.com): sign-in codes sent to an email address, and order messages when there is no SMS.
 const BREVO = process.env.BREVO_API_KEY, MAIL_FROM = process.env.MAIL_FROM;
 const mailReady = !!(BREVO && MAIL_FROM);
@@ -293,7 +296,7 @@ on("POST", "login/google", async ({ body, req, res }) => {
   return { user: publicUser(u) };
 });
 // what the pages need to know about the optional services
-on("GET", "config", () => ({ google: GOOGLE, sms: smsReady, mail: mailReady, demoCodes: OTP_DEMO }));
+on("GET", "config", () => ({ google: GOOGLE, sms: smsReady, mail: mailReady, demoCodes: OTP_DEMO, clarity: !!CLARITY }));
 // Contact form (page.html?p=contact): the message is recorded in the admin outbox ("Customer messages"), so the store sees it
 // even before an email provider is connected. ponytail: no rate limit beyond the body size; add one if the form gets abused.
 on("POST", "contact", ({ body }) => {
@@ -455,7 +458,7 @@ const TYPES = { ".html": "text/html; charset=utf-8", ".css": "text/css; charset=
 const SECURITY = {
   "X-Content-Type-Options": "nosniff", "X-Frame-Options": "DENY", "Referrer-Policy": "strict-origin-when-cross-origin",
   "Permissions-Policy": "camera=(), microphone=(), geolocation=()",
-  "Content-Security-Policy": `default-src 'self'; script-src 'self'${GOOGLE ? " https://accounts.google.com" : ""}; connect-src 'self'${GOOGLE ? " https://accounts.google.com" : ""}; frame-src ${GOOGLE ? "https://accounts.google.com" : "'none'"}; img-src 'self' data: https:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com${GOOGLE ? " https://accounts.google.com" : ""}; font-src https://fonts.gstatic.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self'`,
+  "Content-Security-Policy": `default-src 'self'; script-src 'self'${GOOGLE ? " https://accounts.google.com" : ""}${CLARITY ? " https://www.clarity.ms" : ""}; connect-src 'self'${GOOGLE ? " https://accounts.google.com" : ""}${CLARITY ? " https://*.clarity.ms" : ""}; frame-src ${GOOGLE ? "https://accounts.google.com" : "'none'"}; img-src 'self' data: https:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com${GOOGLE ? " https://accounts.google.com" : ""}; font-src https://fonts.gstatic.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self'`,
 };
 const escHtml = s => String(s).replace(/[&<>"']/g, c => "&#" + c.charCodeAt(0) + ";");
 const siteUrl = req => (req.headers["x-forwarded-proto"] || "http") + "://" + (req.headers.host || "localhost:" + PORT);
@@ -550,8 +553,8 @@ function seoTags(req, url) {
     desc = "Mytekkstore: " + { account: "sign in, your orders and your details", cart: "your cart", checkout: "delivery details and payment", order: "your order", admin: "store administration" }[name] + ".";
   }
   const here = base + canonical;
-  const head = `<meta name="description" content="${escHtml(desc)}"><link rel="canonical" href="${escHtml(here)}">${robots ? `<meta name="robots" content="${robots}">` : ""}${tag("og:type", p ? "product" : "website")}${tag("og:site_name", "Mytekkstore")}${tag("og:title", title)}${tag("og:description", desc)}${tag("og:image", img)}${tag("og:url", here)}<meta name="twitter:card" content="summary_large_image">${ld ? `<script type="application/ld+json">${JSON.stringify(ld).replace(/</g, "\\u003c")}</script>` : ""}`;
-  return { title, head };
+  const head = `<meta name="description" content="${escHtml(desc)}"><link rel="canonical" href="${escHtml(here)}">${robots ? `<meta name="robots" content="${robots}">` : ""}${tag("og:type", p ? "product" : "website")}${tag("og:site_name", "Mytekkstore")}${tag("og:title", title)}${tag("og:description", desc)}${tag("og:image", img)}${tag("og:url", here)}<meta name="twitter:card" content="summary_large_image">${ld ? `<script type="application/ld+json">${JSON.stringify(ld).replace(/</g, "\\u003c")}</script>` : ""}${CLARITY && file !== "/admin.html" ? `<script src="https://www.clarity.ms/tag/${CLARITY}" async></script>` : ""}`;
+  return { title, head, robots };
 }
 function serveStatic(req, res, url, clean) {
   const pathname = clean ? "/" + clean.file : url.pathname; // clean: a clean address resolved to its page (resolveClean)
@@ -573,7 +576,10 @@ function serveStatic(req, res, url, clean) {
       const headers = { "Content-Type": TYPES[ext], "Last-Modified": mtime, "Cache-Control": "no-cache" }; // every file is revalidated (304 when unchanged), so a replaced photo shows at once
       if (ext === ".html") {
         if (clean) { url = new URL(url); url.pathname = "/" + clean.file; for (const [k, v] of Object.entries(clean.params)) url.searchParams.set(k, v); }
-        const { title, head } = seoTags(req, url);
+        const { title, head, robots } = seoTags(req, url);
+        // public pages may be kept at the CDN edge for a minute and served stale while a fresh copy is fetched, so a traffic spike
+        // barely reaches the server (the app still fetches live prices and stock); private pages are never cached
+        headers["Cache-Control"] = robots ? "no-store" : "public, max-age=0, s-maxage=60, stale-while-revalidate=600";
         // a clean address also tells the app which category, product or info page this is (web/src/api.js reads it from <body>)
         const data = clean ? Object.entries(clean.params).map(([k, v]) => ` data-${k}="${escHtml(v)}"`).join("") : "";
         buf = Buffer.from(buf.toString().replace(/<title>[^<]*<\/title>/, "<title>" + escHtml(title) + "</title>").replace("</head>", head + "\n</head>").replace("<body", "<body" + data));

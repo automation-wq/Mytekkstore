@@ -105,7 +105,7 @@ server.listen(0, "127.0.0.1", async () => {
     assert.ok((await call("/api/admin/outbox", "GET", null, admin)).data.messages.some(m => m.text.includes("Do you deliver to Pune?") && m.sent === "received"));
     // Google sign-in and SMS stay off until their keys are set
     assert.equal((await call("/api/login/google", "POST", { credential: "x" })).status, 503);
-    assert.deepEqual((await call("/api/config")).data, { google: "", sms: false, mail: false, demoCodes: false });
+    assert.deepEqual((await call("/api/config")).data, { google: "", sms: false, mail: false, demoCodes: false, clarity: false });
     // a code by email signs into the account with that email; a new email gets its own account
     r = await call("/api/otp/send", "POST", { to: "Asha@Example.com" });
     assert.equal(r.status, 200); assert.equal(r.data.via, "demo");
@@ -204,6 +204,8 @@ server.listen(0, "127.0.0.1", async () => {
     assert.ok((await (await fetch(base + "/robots.txt")).text()).includes("Allow: /api/products"), "search engines may fetch the product data");
     assert.ok((await (await fetch(base + "/category.html")).text()).includes("<title>All products | Mytekkstore</title>"), "the full list has its own title");
     assert.ok((await (await fetch(base + "/robots.txt")).text()).includes("Sitemap:"));
+    assert.ok(/s-maxage=60/.test((await raw("/televisions")).headers["cache-control"]), "public pages may be cached at the edge"); assert.equal((await raw("/cart")).headers["cache-control"], "no-store", "private pages are never cached");
+    assert.equal((await call("/api/config")).data.clarity, false, "Clarity is off until CLARITY_ID is set");
     assert.equal((await raw("/seed-data.js", { "Accept-Encoding": "gzip" })).headers["content-encoding"], "gzip");
     assert.equal((await raw("/img/p0.jpg", { "Accept-Encoding": "gzip" })).headers["content-encoding"], undefined); // photos are not re-compressed
     const lm = (await raw("/seed-data.js")).headers["last-modified"];

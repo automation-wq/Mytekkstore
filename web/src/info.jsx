@@ -54,7 +54,7 @@ function Cats() {
 }
 
 export function InfoPage() {
-  const { P, CATS, BRANDS, money } = useStore();
+  const { P, CATS, BRANDS, money, CFG } = useStore();
   const p = qs.get("p"), page = Object.hasOwn(PAGES, p) && (p !== "stores" || SHOW_STORES) ? PAGES[p] : null; // the store locator is hidden (client decision 2026-10-12)
   const numRef = useRef();
   useEffect(() => { document.title = (page ? page[0] : "Page not found") + " | Mytekkstore"; }, []);
@@ -148,7 +148,7 @@ export function InfoPage() {
       ["What we collect", "Your name, email address or mobile number, delivery address and pincode, your orders, and the reviews you write. Your cart, wishlist, pincode and country choice are kept in your own browser, not on our servers, until you order."],
       ["Why we collect it", "To deliver your orders, to send order updates and sign-in codes by SMS or email, and to show you your order history."],
       ["Payments", "No card details are stored by Mytekkstore. Online payments are handled by the payment provider shown at checkout."],
-      ["Cookies", "One cookie keeps you signed in. There are no advertising or tracking cookies."],
+      ["Cookies", "One cookie keeps you signed in. There are no advertising cookies." + (CFG.clarity ? " Microsoft Clarity records how pages are used (clicks, scrolling, time on page) to improve the site; anything you type is masked. See Microsoft's privacy statement for how Microsoft handles that data." : " There are no tracking cookies.")],
       ["Who sees it", "Delivery partners see your name, address and phone number to deliver the order. Our messaging providers see your number or email to send codes and updates. Your data is never sold."],
       ["Security", "Passwords are stored hashed, never in plain text. The site is served over https."],
       ["Your choices", "Sign out from your account at any time. To correct or delete your account data, write to us through the contact page."],

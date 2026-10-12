@@ -1358,3 +1358,7 @@ main > .cols { margin-top:22px }
 /* the connections block shows the cutout on the light card too */
 .aplus .ablock img.cut { aspect-ratio:auto; object-fit:contain; border-radius:0; padding:0; background:none; filter:drop-shadow(0 40px 50px #0005); width:min(100%, 480px); justify-self:center }
 
+
+/* the price travels with the sticky buy bar on phones (audit: sticky price and buy area on mobile) */
+.pdp .actions .aprice { display:none }
+@media (max-width:860px) { .pdp .actions .aprice { display:block; flex-basis:100%; font-size:19px; letter-spacing:-.5px; margin-bottom:-4px } }

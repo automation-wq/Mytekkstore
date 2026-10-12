@@ -9,7 +9,7 @@ export const useStore = () => useContext(Ctx);
 export function StoreProvider({ children }) {
   const [P, setP] = useState([]);
   const [me, setMe] = useState(null);
-  const [CFG, setCFG] = useState({ google: "", sms: false, mail: false, demoCodes: false });
+  const [CFG, setCFG] = useState({ google: "", sms: false, mail: false, demoCodes: false, clarity: false });
   const [cart, setCart] = useState({});
   const [wish, setWishState] = useState(() => load("wish", []));
   const [recent, setRecentState] = useState(() => load("recent", []));

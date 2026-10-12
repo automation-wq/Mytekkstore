@@ -50,3 +50,17 @@ What remains is main-thread work: on a phone throttled four times, laying out th
 ## Still the client's
 
 Real product photos and lifestyle shots, the logo and brand colour, the store list and contact details, the policy figures (`POLICY` in `web/src/data.js`), a custom domain, Vercel Pro, a payment gateway account, and an email provider key.
+
+## Re-checked on the live site, 12 October (evening)
+
+All six problems and the "likely problems" were re-tested against https://mytekkstore.vercel.app with a script (23 checks: unique titles and descriptions on 12 pages, clean and old addresses with canonical, spec-based product description, sitemap with 21 clean addresses and lastmod, robots, noindex on private pages, Product and BreadcrumbList data with every field Google's rich results need, WebSite and Organization data, WebP photos, security headers, gzip, three builds kept, non-blocking font, hero preload, hidden categories 404): 23 of 23 pass.
+
+Added the same day, the free items of sections 4, 7 and 11 that were still open:
+
+- Public pages are cached at Vercel's edge for a minute and served stale while a fresh copy is fetched (`s-maxage=60, stale-while-revalidate=600`), so a traffic spike from an ad or a festival post barely reaches the server; the app still fetches live prices and stock, and private pages are never cached.
+- Microsoft Clarity (section 11: "understand visitors from the first day") is wired as an opt-in: set `CLARITY_ID` in Vercel and the tag loads on every page except the admin, the content security policy opens for clarity.ms only then, and the privacy page states it. Nothing loads until the client creates the free project and pastes the id.
+- The price travels with the sticky Add to cart bar on phones (section 4).
+
+Load test (section 8), run against a local copy of the store, never the live site, with a dependency-free script (`scratchpad/load.js`): 50 shoppers browsing at once for 15 s gave 1,810 requests per second with p95 under 60 ms and 0 errors; 200 shoppers at once gave 2,070 requests per second, p95 187 ms, 0 errors. The audit's pass marks are error rate under 1% and p95 under 1 s. On Vercel the function is smaller than this machine, but the edge cache above now answers most page views before the function runs.
+
+Still the client's decisions (each needs an account, a key or a paid plan): custom domain, Vercel Pro, a database, Razorpay, Clerk or another login provider, a mail queue, Sentry and an uptime monitor, Search Console and the Rich Results test on the final domain, and the Next.js server-rendered move.
