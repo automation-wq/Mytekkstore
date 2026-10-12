@@ -12,7 +12,7 @@ const SEED = [
   "stock": 25,
   "emi": true,
   "img": "img/p0.jpg",
-  "desc": "Bring the cinema home. This television delivers a bright, detailed picture and clear sound, with the apps you watch most built in.",
+  "desc": "Elista 80 cm (32 inch) HD Ready Smart LED TV. HD Ready, 1366 x 768, WebOS with streaming apps, 20 W, 2 HDMI, 1 USB. Free delivery, cash on delivery, and the Elista warranty.",
   "specs": [
    [
     "Screen size",
@@ -63,7 +63,7 @@ const SEED = [
   "stock": 25,
   "emi": true,
   "img": "img/p1.jpg",
-  "desc": "Bring the cinema home. This television delivers a bright, detailed picture and clear sound, with the apps you watch most built in.",
+  "desc": "Telefunken 140 cm (55 inch) 4K Ultra HD Google TV. 4K Ultra HD, 3840 x 2160, Google TV with voice remote, 30 W, Dolby Audio, 3 HDMI, 2 USB. Free delivery, cash on delivery, and the Telefunken warranty.",
   "specs": [
    [
     "Screen size",
@@ -107,7 +107,7 @@ const SEED = [
   "stock": 25,
   "emi": true,
   "img": "img/p2.jpg",
-  "desc": "Bring the cinema home. This television delivers a bright, detailed picture and clear sound, with the apps you watch most built in.",
+  "desc": "Elista 108 cm (43 inch) 4K Ultra HD Smart TV. 4K Ultra HD, 3840 x 2160, WebOS with streaming apps, 20 W, 3 HDMI, 1 USB. Free delivery, cash on delivery, and the Elista warranty.",
   "specs": [
    [
     "Screen size",
@@ -151,7 +151,7 @@ const SEED = [
   "stock": 25,
   "emi": true,
   "img": "img/p3.jpg",
-  "desc": "Bring the cinema home. This television delivers a bright, detailed picture and clear sound, with the apps you watch most built in.",
+  "desc": "Telefunken 139 cm (55 inch) 4K Ultra HD Smart TV. 4K Ultra HD, 3840 x 2160, Google TV with voice remote, 20 W, Dolby Audio, 4 HDMI, 2 USB. Free delivery, cash on delivery, and the Telefunken warranty.",
   "specs": [
    [
     "Screen size",
@@ -400,5 +400,230 @@ const SEED = [
    ]
   ],
   "reviews": []
+ },
+ {
+  "id": 10,
+  "brand": "Elista",
+  "cat": "Televisions",
+  "name": "100 cm (40 inch) Full HD Smart LED TV",
+  "price": 15990,
+  "mrp": 21990,
+  "stock": 22,
+  "emi": true,
+  "img": "img/p0.jpg",
+  "os": "WebOS",
+  "specs": [
+   [
+    "Screen size",
+    "100 cm (40 inch)"
+   ],
+   [
+    "Resolution",
+    "Full HD, 1920 x 1080"
+   ],
+   [
+    "Display type",
+    "LED"
+   ],
+   [
+    "Refresh rate",
+    "60 Hz"
+   ],
+   [
+    "Smart TV",
+    "WebOS with streaming apps"
+   ],
+   [
+    "Sound output",
+    "20 W"
+   ],
+   [
+    "Ports",
+    "2 HDMI, 2 USB"
+   ]
+  ],
+  "images": [],
+  "reviews": [],
+  "desc": "Elista 100 cm (40 inch) Full HD Smart LED TV. Full HD, 1920 x 1080, WebOS with streaming apps, 20 W, 2 HDMI, 2 USB. Free delivery, cash on delivery, and the Elista warranty."
+ },
+ {
+  "id": 11,
+  "brand": "Elista",
+  "cat": "Televisions",
+  "name": "126 cm (50 inch) 4K Ultra HD Smart TV",
+  "price": 31990,
+  "mrp": 45990,
+  "stock": 18,
+  "emi": true,
+  "img": "img/p2.jpg",
+  "os": "WebOS",
+  "specs": [
+   [
+    "Screen size",
+    "126 cm (50 inch)"
+   ],
+   [
+    "Resolution",
+    "4K Ultra HD, 3840 x 2160"
+   ],
+   [
+    "Display type",
+    "LED"
+   ],
+   [
+    "Refresh rate",
+    "60 Hz"
+   ],
+   [
+    "Smart TV",
+    "WebOS with streaming apps"
+   ],
+   [
+    "Sound output",
+    "24 W"
+   ],
+   [
+    "Ports",
+    "3 HDMI, 2 USB"
+   ]
+  ],
+  "images": [],
+  "reviews": [],
+  "desc": "Elista 126 cm (50 inch) 4K Ultra HD Smart TV. 4K Ultra HD, 3840 x 2160, WebOS with streaming apps, 24 W, 3 HDMI, 2 USB. Free delivery, cash on delivery, and the Elista warranty."
+ },
+ {
+  "id": 12,
+  "brand": "Telefunken",
+  "cat": "Televisions",
+  "name": "108 cm (43 inch) 4K Ultra HD Google TV",
+  "price": 26990,
+  "mrp": 39990,
+  "stock": 20,
+  "emi": true,
+  "img": "img/p1.jpg",
+  "os": "Google TV",
+  "specs": [
+   [
+    "Screen size",
+    "108 cm (43 inch)"
+   ],
+   [
+    "Resolution",
+    "4K Ultra HD, 3840 x 2160"
+   ],
+   [
+    "Display type",
+    "LED"
+   ],
+   [
+    "Refresh rate",
+    "60 Hz"
+   ],
+   [
+    "Smart TV",
+    "Google TV with voice remote"
+   ],
+   [
+    "Sound output",
+    "24 W, Dolby Audio"
+   ],
+   [
+    "Ports",
+    "3 HDMI, 2 USB"
+   ]
+  ],
+  "images": [],
+  "reviews": [],
+  "desc": "Telefunken 108 cm (43 inch) 4K Ultra HD Google TV. 4K Ultra HD, 3840 x 2160, Google TV with voice remote, 24 W, Dolby Audio, 3 HDMI, 2 USB. Free delivery, cash on delivery, and the Telefunken warranty."
+ },
+ {
+  "id": 13,
+  "brand": "Telefunken",
+  "cat": "Televisions",
+  "name": "164 cm (65 inch) 4K Ultra HD Google TV",
+  "price": 64990,
+  "mrp": 89990,
+  "stock": 12,
+  "emi": true,
+  "img": "img/p3.jpg",
+  "os": "Google TV",
+  "specs": [
+   [
+    "Screen size",
+    "164 cm (65 inch)"
+   ],
+   [
+    "Resolution",
+    "4K Ultra HD, 3840 x 2160"
+   ],
+   [
+    "Display type",
+    "LED, bezel-less"
+   ],
+   [
+    "Refresh rate",
+    "60 Hz"
+   ],
+   [
+    "Smart TV",
+    "Google TV with voice remote"
+   ],
+   [
+    "Sound output",
+    "40 W, Dolby Audio"
+   ],
+   [
+    "Ports",
+    "4 HDMI, 2 USB"
+   ]
+  ],
+  "images": [],
+  "reviews": [],
+  "desc": "Telefunken 164 cm (65 inch) 4K Ultra HD Google TV. 4K Ultra HD, 3840 x 2160, Google TV with voice remote, 40 W, Dolby Audio, 4 HDMI, 2 USB. Free delivery, cash on delivery, and the Telefunken warranty."
+ },
+ {
+  "id": 14,
+  "brand": "Elista",
+  "cat": "Televisions",
+  "name": "80 cm (32 inch) HD Ready Google TV",
+  "price": 11490,
+  "mrp": 15990,
+  "stock": 25,
+  "emi": true,
+  "img": "img/p0.jpg",
+  "os": "Google TV",
+  "specs": [
+   [
+    "Screen size",
+    "80 cm (32 inch)"
+   ],
+   [
+    "Resolution",
+    "HD Ready, 1366 x 768"
+   ],
+   [
+    "Display type",
+    "LED"
+   ],
+   [
+    "Refresh rate",
+    "60 Hz"
+   ],
+   [
+    "Smart TV",
+    "Google TV with voice remote"
+   ],
+   [
+    "Sound output",
+    "20 W"
+   ],
+   [
+    "Ports",
+    "2 HDMI, 1 USB"
+   ]
+  ],
+  "images": [],
+  "reviews": [],
+  "desc": "Elista 80 cm (32 inch) HD Ready Google TV. HD Ready, 1366 x 768, Google TV with voice remote, 20 W, 2 HDMI, 1 USB. Free delivery, cash on delivery, and the Elista warranty."
  }
 ];

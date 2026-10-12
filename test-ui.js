@@ -131,7 +131,7 @@ async function run() {
     assert.ok(Math.abs(panel.top - panel.hdrBottom) <= 2, "panel sits directly under the header");
     assert.ok(panel.bottom <= panel.vh, "panel fits in the window");
     assert.equal(panel.expanded, "true"); assert.ok(+panel.shade > 0.9, "page behind is dimmed");
-    assert.equal(panel.tiles, 8, "all TVs, three sizes, two brands, two operating systems"); assert.equal(panel.prods, 4);
+    assert.equal(panel.tiles, 11, "all TVs, six sizes, two brands, two operating systems"); assert.equal(panel.prods, 4);
     assert.equal(panel.links[0], "Compare operating systems"); assert.ok(panel.links.includes("Top features") && !panel.links.includes("Store locator"), "no store locator link (hidden, client decision)");
 
     step = "moving into the panel keeps it open";
@@ -238,7 +238,7 @@ async function run() {
 
     step = "product page: size switcher, delivery check, share, rating bars";
     await b.goto(base + "/televisions/telefunken-140-cm-55-inch-4k-ultra-hd-google-tv");
-    assert.deepEqual(await b.ev(`[...document.querySelectorAll(".sizes .chip b")].map(a => a.textContent)`), ["32 inch", "43 inch", "55 inch"]);
+    assert.deepEqual(await b.ev(`[...document.querySelectorAll(".sizes .chip b")].map(a => a.textContent)`), ["32 inch", "40 inch", "43 inch", "50 inch", "55 inch", "65 inch"]);
     assert.equal(await b.ev(`document.querySelector(".sizes .chip.on b").textContent`), "55 inch");
     await b.afterLoad(async () => b.click(...await b.center(".sizes .chip", 0)));
     assert.equal(await b.ev(`document.querySelector("main h1").textContent`), "Elista 80 cm (32 inch) HD Ready Smart LED TV", "the 32 inch chip opens the 32 inch model");
@@ -274,13 +274,13 @@ async function run() {
     await b.goto(base + "/category.html?cat=Televisions");
     assert.deepEqual(await b.ev(`[...document.querySelectorAll(".finder .tile b")].map(b => b.textContent)`), ["TVs by Size", "Elista TVs", "Telefunken TVs", "Google TV", "WebOS"], "a category's explore row shows only that category");
     assert.equal(await b.ev(`document.querySelectorAll(".fbar, .ftrack").length`), 0, "no scroll line or arrow buttons under the explore tiles (client decision)");
-    assert.ok(await b.ev(`!!document.querySelector(".kv .kvimg") && document.querySelector(".kv h1").textContent === "Explore TVs by Size"`), "the category headline sits on its lifestyle photo");
+    assert.ok(await b.ev(`!!document.querySelector(".kv .kvimg") && document.querySelector(".kv h1").textContent === "Explore TVs"`), "the category headline sits on its lifestyle photo");
     assert.ok(await b.ev(`!!document.querySelector(".topf video.bvid") && document.querySelectorAll(".tf svg").length === 6`), "the Top features band has its room clip and line icons");
 
     step = "offers page, bank offers and the No Cost EMI tag";
     await b.goto(base + "/offers.html");
     assert.ok(await b.ev(`document.querySelectorAll(".fest .sparks i").length`) > 10, "festive sparks");
-    assert.equal(await b.ev(`document.querySelectorAll(".ftile").length`), 1, "one offer tile per category (televisions only for now)");
+    assert.equal(await b.ev(`document.querySelectorAll(".ftile").length`), 0, "the offers-by-category tiles appear only with more than one category on sale");
     assert.equal(await b.ev(`document.querySelectorAll(".offer").length`), 4, "bank offer cards");
     assert.ok(await b.ev(`document.querySelectorAll(".card .emi").length`) > 0, "No Cost EMI tags on deal cards");
     assert.equal(await b.ev(`document.querySelector(".l0.cur .l0link").textContent`), "Deals", "Deals is marked current in the bar");

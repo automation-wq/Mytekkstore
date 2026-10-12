@@ -63,11 +63,11 @@ export function Category() {
   const n = list.length, nText = n + " product" + (n === 1 ? "" : "s");
   return <>
     <div className="crumbs"><a href="/">Home</a> › {title}</div>
-    {wishOnly ? <h1>My wishlist</h1> : S && KV_IMG[cat] ? <div className="kv"><div className="kvimg"><KvImg src={`img/${KV_IMG[cat]}.jpg`} sizes="(max-width:1240px) 100vw, 1240px" eager /></div>{CAT_CLIPS[cat] && <video className="bvid" muted loop playsInline preload="none" data-src={`/img/${CAT_CLIPS[cat]}.mp4`} aria-hidden="true"></video>}<div><span className="eyebrow">{cat}</span><h1 className="explore">Explore {S.short} by {S.by}</h1><p>{S.note}</p></div></div>
-      : <h1 className="explore">{S ? "Explore " + S.short + " by " + S.by : title}</h1>}
+    {wishOnly ? <h1>My wishlist</h1> : S && KV_IMG[cat] ? <div className="kv"><div className="kvimg"><KvImg src={`img/${KV_IMG[cat]}.jpg`} sizes="(max-width:1240px) 100vw, 1240px" eager /></div>{CAT_CLIPS[cat] && <video className="bvid" muted loop playsInline preload="none" data-src={`/img/${CAT_CLIPS[cat]}.mp4`} aria-hidden="true"></video>}<div><span className="eyebrow">{cat}</span><h1 className="explore">Explore {S.short}</h1><p>By size, by brand, or by operating system. {S.note}.</p></div></div>
+      : <h1 className="explore">{S ? "Explore " + S.short : title}</h1>}
     {!wishOnly && <div className="finder"><div className="tiles">{tiles.map(([name, note, href, img, on]) => <a className={"tile" + (on ? " on" : "")} href={href} aria-current={on ? "page" : undefined} key={href}><span><b>{name}</b><small>{note}</small></span><img src={pic(img, 480)} alt="" loading="lazy" width="800" height="800" /></a>)}</div></div>}
     {sizes.length > 0 && <nav className="sizetabs" aria-label={S.by}><a href={url({ size: "" })} className={f.size ? undefined : "on"} aria-current={f.size ? undefined : "page"}>All</a>{sizes.map(s => <a href={url({ size: s })} className={s === f.size ? "on" : undefined} aria-current={s === f.size ? "page" : undefined} key={s}>{s}</a>)}</nav>}
-    <div className="ptool"><h2 className="count">{nText}{q ? ' · "' + q + '"' : ""}</h2>
+    <div className="ptool"><h2 className="ptotal">{nText}{q ? ' · "' + q + '"' : ""}</h2>
       {!wishOnly && <button type="button" className="btn ghost fbtn" onClick={() => setOpen(true)} aria-expanded={open} aria-controls="filters"><Icon k="sliders" /> Filters{chips.length ? " (" + chips.length + ")" : ""}</button>}
       <label className="sortby">Sort by <select value={f.sort} onChange={e => set({ sort: e.target.value })}><option value="">Featured</option><option value="low">Price: low to high</option><option value="high">Price: high to low</option><option value="off">Biggest discount</option></select></label></div>
     {chips.length > 0 && <div className="chips" aria-label="Applied filters"><AnimatePresence>{chips.map(([t, rm]) => <m.button type="button" className="fchip" onClick={rm} aria-label={"Remove " + t} key={t} layout initial={{ opacity: 0, scale: .8 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: .8 }} transition={{ type: "spring", stiffness: 400, damping: 30 }}>{t} <span aria-hidden="true">×</span></m.button>)}</AnimatePresence><button type="button" className="link" onClick={clear}>Clear all</button></div>}
@@ -101,7 +101,7 @@ function CategoryExtras({ cat, list, sizes, sizeUrl }) {
   const { money } = useStore();
   const has = (o, k) => Object.hasOwn(o, k); // cat comes from the address
   const feats = has(TOP_FEATURES, cat) ? TOP_FEATURES[cat] : null, know = has(CAT_KNOW, cat) ? CAT_KNOW[cat] : null, faq = has(CAT_FAQ, cat) ? CAT_FAQ[cat] : null;
-  const S = has(CAT_SIZE, cat) ? CAT_SIZE[cat] : null, short = S ? S.short : cat, rich = !!cat && list.length > 0;
+  const S = has(CAT_SIZE, cat) ? CAT_SIZE[cat] : null, short = S ? S.short : cat || "our products", rich = !!cat && list.length > 0;
   const quotes = list.flatMap(p => (p.reviews || []).map(r => ({ ...r, p }))).sort((a, b) => new Date(b.at) - new Date(a.at)).slice(0, 4);
   const low = rich ? Math.min(...list.map(p => p.price)) : 0, maxOff = rich ? Math.max(0, ...list.map(off)) : 0;
   return <>

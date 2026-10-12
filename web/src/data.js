@@ -15,6 +15,8 @@ export const POLICY = { returnDays: 7, refundDays: 7 };
 // The store sells televisions only for now: washing machines and air conditioners are hidden by HIDDEN_CATS in server.js.
 // The store locator is hidden (the business is B2C only); set SHOW_STORES to true and remove "stores" from HIDDEN_PAGES in server.js to bring it back.
 export const SHOW_STORES = false;
+// Shown in the category bar as "coming soon": the client wants the two hidden categories seen, with no pages behind them. Empty to remove.
+export const COMING_SOON = ["Washing Machines", "Air Conditioners"];
 // Warranty and returns, asked the way customers ask; shown on every product page, the home page and the Returns page.
 // DRAFT: the claim steps describe how the store handles a claim today (contact page, order number, the brand's service centre); the client confirms the wording.
 export const WARRANTY_QA = [
@@ -31,6 +33,24 @@ export const TV_OS = {
   "WebOS": { blurb: "LG's TV platform, used under licence: a quick card-style home screen, apps from the webOS store and screen sharing from a phone.", rows: ["webOS app store", "On supported remotes", "Screen share (Miracast)", "Card-style launcher", "Optional LG account"] },
   "Android TV": { blurb: "Google's earlier TV platform: apps from Google Play, Google Assistant and Chromecast built in, with an app-grid home screen.", rows: ["Google Play Store", "Google Assistant on the remote", "Chromecast built in", "App grid", "Google account"] },
 };
+// A+ content when the admin has not written any: up to four blocks built from the product's own specifications (nothing invented),
+// with the product's photo and the store's lifestyle photos. The admin's own blocks (story) replace these as soon as they exist.
+// the three or four big facts of a TV, for the showcase callouts: screen inch, resolution, sound, operating system
+export function callouts(p) {
+  const spec = k => ((p.specs || []).find(([n]) => n.toLowerCase() === k) || [])[1] || "";
+  const inch = (/\((\d+) inch\)/.exec(p.name) || [])[1], res = spec("resolution"), sound = (/(\d+)\s*W/.exec(spec("sound output")) || [])[1];
+  return [inch && [inch + "\"", "screen"], res && [/4K/i.test(res) ? "4K" : /Full HD/i.test(res) ? "FHD" : "HD", /4K/i.test(res) ? "Ultra HD" : "Ready"], sound && [sound + " W", /dolby/i.test(spec("sound output")) ? "Dolby Audio" : "sound"], p.os && [p.os, "built in"]].filter(Boolean).slice(0, 4);
+}
+export function autoStory(p) {
+  const spec = k => ((p.specs || []).find(([n]) => n.toLowerCase() === k) || [])[1] || "";
+  const size = spec("screen size"), res = spec("resolution"), smart = spec("smart tv"), sound = spec("sound output"), ports = spec("ports"), blocks = [];
+  if (res) blocks.push({ kicker: "Picture", title: /4K/i.test(res) ? "4K Ultra HD picture" : /Full HD/i.test(res) ? "Full HD picture" : "HD Ready picture", text: res + (/4K/i.test(res) ? ": four times the detail of Full HD, so films, sport and games stay sharp" : ": a clear, bright picture") + (size ? " on the " + size + " screen." : ".") });
+  if (smart) blocks.push({ kicker: "Smart", title: /google/i.test(smart) ? "Google TV built in" : /webos/i.test(smart) ? "WebOS built in" : /android/i.test(smart) ? "Android TV built in" : "Smart TV built in", text: smart + ". " + (/google/i.test(smart) ? "Apps from Google Play, Google Assistant on the remote and Chromecast built in, with no set-top box." : /webos/i.test(smart) ? "A quick card-style home screen with apps from the webOS store, with no set-top box." : "Streaming apps built in, with no set-top box.") });
+  if (sound) blocks.push({ kicker: "Sound", title: /dolby/i.test(sound) ? "Dolby Audio sound" : "Built-in sound", text: sound + (/dolby/i.test(sound) ? ": clearer dialogue and fuller sound straight from the TV." : " from the built-in speakers, for everyday viewing.") });
+  if (ports) blocks.push({ kicker: "Connections", title: "Everything plugs in", text: ports + ": a set-top box, a console and a pen drive, without swapping cables." });
+  const imgs = [p.img, "img/kv-tv.jpg", "img/hero0.jpg", p.img];
+  return blocks.slice(0, 4).map((b, i) => ({ ...b, img: imgs[i] }));
+}
 export const osList = P => [...new Set(P.map(p => p.os).filter(Boolean))].sort();
 export const osUrl = os => listUrl({ cat: "Televisions", os });
 // two or three reasons to choose a brand, read from its own products: sizes, operating systems, 4K and sound, EMI
@@ -182,6 +202,8 @@ const hasWebp = src => /^img\/(?!u-)[\w-]+\.jpg$/.test(src || "");
 export const pic = (src, w) => { const s = hasWebp(src) ? src.replace(/\.jpg$/, (w ? "-" + w : "") + ".webp") : src; return /^img\//.test(s || "") ? "/" + s : s; };
 const DIMS = { "img/hero0.jpg": [1344, 752], "img/hero1.jpg": [1344, 752], "img/hero2.jpg": [1344, 752], "img/kv-tv.jpg": [1600, 2350], "img/kv-ac.jpg": [1600, 1074], "img/kv-wash.jpg": [1600, 1067] };
 export const dims = src => DIMS[src] || [800, 800]; // the product photos are square
+// floating cutout of a product render (white background made transparent by `npm run cutouts`); only the seeded renders have one
+export const cutout = src => /^img\/p\d+\.jpg$/.test(src || "") ? "/" + src.replace(/\.jpg$/, "-cut.webp") : null;
 export const picSet = src => hasWebp(src) ? `${pic(src, 480)} 480w, ${pic(src, 960)} 960w, ${pic(src)} ${dims(src)[0]}w` : undefined;
 export const off = p => Math.round((1 - p.price / p.mrp) * 100);
 export const avg = p => p.reviews && p.reviews.length ? p.reviews.reduce((t, r) => t + r.rating, 0) / p.reviews.length : 0;

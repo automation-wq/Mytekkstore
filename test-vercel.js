@@ -12,7 +12,7 @@ const srv = http.createServer((req, res) => {
 srv.listen(0, "127.0.0.1", async () => {
   const base = "http://127.0.0.1:" + srv.address().port;
   const j = async (p, o) => { const r = await fetch(base + p, o); return [r.status, await r.json().catch(() => null)]; };
-  let [s, b] = await j("/api/products"); assert.equal(s, 200); assert.equal(b.products.length, 4, "televisions only: the other categories are hidden");
+  let [s, b] = await j("/api/products"); assert.equal(s, 200); assert.equal(b.products.length, 9, "televisions only: the other categories are hidden");
   for (const consume of ["", "1"]) {
     const post = body => j("/api/login", { method: "POST", headers: { "content-type": "application/json", ...(consume && { "x-consume": "1" }) }, body: JSON.stringify(body) });
     [s] = await post({ email: "admin@mytekkstore.local", password: "wrong" }); assert.equal(s, 401, "wrong password, consume=" + consume);

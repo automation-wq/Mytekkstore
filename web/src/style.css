@@ -1288,7 +1288,7 @@ main > .cols { margin-top:22px }
 :root { --muted:#5b6370 }
 .crumbs, .crumbs a, .sizetabs a, .sortby { color:var(--soft) }
 .pbrand, .alink, .card small { color:#06704f }
-.ptool h2.count { font:inherit; font-size:16px; letter-spacing:0; margin:0; color:var(--soft) }
+.ptool h2.ptotal { font:inherit; font-size:16px; letter-spacing:0; margin:0; color:var(--soft) }
 @media (max-width:760px) { .slide .bg > img { object-position:70% center } }
 
 /* client decisions of 2026-10-12: brand banners with the flagship TV, Find your TV rows, giant brand tiles, the OS chart, warranty Q&A, A+ blocks */
@@ -1321,3 +1321,40 @@ main > .cols { margin-top:22px }
 #os { scroll-margin-top:calc(var(--hh,150px) + 16px) }
 @media (max-width:860px) { .bbrand { grid-template-columns:1fr; min-height:0 } .bbrand.flip .btext { order:0 } .bbrand img { width:min(100%, 360px) } .aplus .ablock { grid-template-columns:1fr } .ablock.flip img { order:0 } .find .frow > b { min-width:100% } .find .alink { margin-left:0 } }
 @media (max-width:760px) { .slide.k-brand .bigtv, .slide.k-promo .bigtv { top:16px; translate:none; right:14px; width:34vw; border-radius:18px } .slide.k-brand h1, .slide.k-promo h1 { max-width:60% } .slide .pts { font-size:14px; max-width:62% } }
+
+/* review of 2026-10-12: brand tiles a size down; A+ blocks */
+.bbrand { min-height:320px } .bbrand img { width:min(100%, 400px) }
+.aplus .ablock img { aspect-ratio:4/3; object-fit:cover; background:var(--tile) }
+.aplus .ablock img[src*="/img/p"] { object-fit:contain; padding:6% }
+
+/* categories that are coming soon: in the bar for the look, no page behind them */
+.gbar .soon { display:flex; align-items:center; padding:12px 10px; color:var(--muted); font-weight:500 }
+.gbar .soon small { margin-left:7px; font-size:10px; letter-spacing:.7px; text-transform:uppercase; background:var(--tile); border-radius:999px; padding:3px 8px; color:var(--soft); font-weight:700 }
+
+/* ===== premium A+ content and floating cutouts (2026-10-12, after a look at Samsung, TCL, Vu and the Apple/Sony pattern) ===== */
+/* banners and brand tiles: the TV floats on the gradient, no white tile */
+.slide .bigtv.cut { background:none; padding:0; box-shadow:none; aspect-ratio:auto; width:clamp(190px,34vw,520px); display:grid; place-items:center }
+.slide .bigtv.cut img { width:100%; height:auto; filter:drop-shadow(0 50px 60px #0009) }
+.bbrand img.cut { background:none; padding:0; box-shadow:none; aspect-ratio:auto; width:min(100%, 520px); filter:drop-shadow(0 50px 70px #000a) }
+/* the showcase: a dark stage with the TV floating, the first feature as the headline, and the big callouts */
+.showcase { display:grid; grid-template-columns:1fr 1fr; gap:clamp(20px,4vw,60px); align-items:center; min-height:460px; padding:clamp(28px,5vw,64px); border-radius:32px; color:#fff; background:radial-gradient(120% 90% at 80% 20%,#1b2a4a 0%,#0d1117 55%,#06080c 100%); overflow:hidden; position:relative }
+.showcase::before { content:""; position:absolute; inset:-40% -20% auto auto; width:70%; aspect-ratio:1; border-radius:50%; background:radial-gradient(circle,#08805f55,transparent 60%); filter:blur(30px) }
+.showcase > * { position:relative }
+.showcase img.cut { width:100%; max-width:560px; justify-self:center; filter:drop-shadow(0 60px 70px #000c) }
+.showcase img.tilep { width:min(100%, 420px); justify-self:center; background:#fff; border-radius:28px; padding:5% }
+.showcase .kicker { color:#7ef0d0 }
+.showcase h2 { color:#fff; font-size:clamp(30px,4.2vw,56px); letter-spacing:-2px; line-height:1.02; margin:8px 0 14px; display:block }
+.showcase p { color:#ffffffd0; font-size:clamp(15px,1.3vw,18px); max-width:520px; line-height:1.55 }
+.callouts { display:flex; flex-wrap:wrap; gap:clamp(14px,2.5vw,36px); margin-top:26px; padding-top:22px; border-top:1px solid #ffffff22 }
+.callouts div { display:grid; gap:2px } .callouts b { font-family:Manrope,Inter,system-ui,sans-serif; font-size:clamp(26px,3vw,40px); letter-spacing:-1.5px; line-height:1 } .callouts small { color:#ffffffa8; font-size:12.5px; letter-spacing:.6px; text-transform:uppercase }
+/* feature blocks: large image, a kicker, a short headline, one line; the second one is a dark stage with the cutout */
+.aplus .ablock { min-height:420px; margin-top:28px; border-radius:32px; overflow:hidden; background:var(--card); padding:clamp(22px,3.5vw,48px); gap:clamp(20px,4vw,60px) }
+.aplus .ablock img { border-radius:24px; aspect-ratio:4/3; object-fit:cover; width:100% }
+.aplus .ablock .kicker { color:var(--accent); display:block; margin-bottom:8px }
+.aplus .ablock h3 { font-size:clamp(26px,3.4vw,44px); letter-spacing:-1.5px; line-height:1.05 } .aplus .ablock p { font-size:clamp(15px,1.3vw,18px); line-height:1.55; max-width:520px }
+.aplus .ablock.dark { background:radial-gradient(100% 120% at 20% 100%,#0b3d2e 0%,#0d1117 60%); color:#fff }
+.aplus .ablock.dark p { color:#ffffffcc } .aplus .ablock.dark .kicker { color:#7ef0d0 } .aplus .ablock.dark img.cut { aspect-ratio:auto; object-fit:contain; border-radius:0; filter:drop-shadow(0 50px 60px #000c); width:min(100%, 480px); justify-self:center }
+@media (max-width:860px) { .showcase { grid-template-columns:1fr; min-height:0; text-align:left } .showcase img.cut { max-width:340px } .aplus .ablock { min-height:0 } .callouts b { font-size:28px } }
+/* the connections block shows the cutout on the light card too */
+.aplus .ablock img.cut { aspect-ratio:auto; object-fit:contain; border-radius:0; padding:0; background:none; filter:drop-shadow(0 40px 50px #0005); width:min(100%, 480px); justify-self:center }
+
