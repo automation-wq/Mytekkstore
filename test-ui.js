@@ -236,6 +236,16 @@ async function run() {
     const g = await b.ev(`document.querySelector("#os").getBoundingClientRect().top`);
     assert.ok(g > 0 && g < 480, "the operating-system chart is in view, its top is " + g);
 
+    step = "ticking two cards opens the compare bar and the compare table shows those two";
+    await b.goto(base + "/televisions");
+    // a card lifts and tilts under the pointer, so rest the pointer on it first and measure the tick box again before clicking
+    // and bring the box to the middle of the screen, or the fixed compare bar at the bottom covers it
+    const tick = async n => { await b.ev(`document.querySelectorAll(".card .ccmp input")[${n}].scrollIntoView({ block: "center", behavior: "instant" })`); await sleep(300); await b.move(...await b.center(".card .ccmp input", n)); await sleep(280); await b.click(...await b.center(".card .ccmp input", n)); await sleep(150); };
+    await tick(0); await tick(1); await sleep(400);
+    const picked = await b.ev(`({ bar: (document.querySelector(".cmpbar span") || {}).textContent, cols: document.querySelectorAll(".cmp .ctable thead th").length - 1, h2: document.querySelector(".cmp h2").textContent, sizes: document.querySelectorAll(".card .csizes b").length, emi: (document.querySelector(".card .emi") || {}).textContent, find: document.querySelectorAll(".findtv .fcols > div").length })`);
+    assert.equal(picked.bar, "2 of 4"); assert.equal(picked.cols, 2, "the compare table shows the two picks"); assert.equal(picked.h2, "Compare your picks");
+    assert.ok(picked.sizes > 0, "size pills on cards"); assert.ok(/\/month/.test(picked.emi), "No Cost EMI per month on cards"); assert.equal(picked.find, 4, "find by size, budget, operating system and resolution");
+
     step = "product page: size switcher, delivery check, share, rating bars";
     await b.goto(base + "/televisions/telefunken-140-cm-55-inch-4k-ultra-hd-google-tv");
     assert.deepEqual(await b.ev(`[...document.querySelectorAll(".sizes .chip b")].map(a => a.textContent)`), ["32 inch", "40 inch", "43 inch", "50 inch", "55 inch", "65 inch"]);

@@ -1361,3 +1361,19 @@ main > .cols { margin-top:22px }
 /* the price travels with the sticky buy bar on phones (audit: sticky price and buy area on mobile) */
 .pdp .actions .aprice { display:none }
 @media (max-width:860px) { .pdp .actions .aprice { display:block; flex-basis:100%; font-size:19px; letter-spacing:-.5px; margin-bottom:-4px } }
+
+/* ===== category page after Samsung, LG and Croma (12 Oct): size pills, EMI per month and a Compare tick on cards, the sticky compare bar, find-by clusters, help strip ===== */
+.card .csizes { display:flex; align-items:center; flex-wrap:wrap; gap:5px; margin:6px 0 2px; font-size:12px } .card .csizes small { color:var(--soft); margin-right:3px }
+.card .csizes a, .card .csizes b { padding:3px 8px; border-radius:999px; background:var(--tile); color:var(--text); font-weight:600; line-height:1.2 } .card .csizes b { background:var(--ink); color:#fff } .card .csizes a:hover { background:#e7e5df }
+.card .ccmp { display:flex; align-items:center; gap:6px; margin-top:10px; font-size:12.5px; font-weight:600; color:var(--muted); cursor:pointer; width:max-content } .card .ccmp input { accent-color:var(--accent); margin:0; width:15px; height:15px }
+.cmpbar { position:fixed; left:50%; translate:-50% 0; bottom:18px; z-index:6; display:flex; align-items:center; gap:12px; padding:9px 12px 9px 18px; border-radius:999px; background:var(--ink); color:#fff; box-shadow:0 24px 44px -18px #000b; max-width:calc(100vw - 32px); font-weight:600; font-size:14px }
+.cmpbar img { width:38px; height:38px; object-fit:contain; background:#fff; border-radius:10px; padding:3px } .cmpbar .btn { padding:9px 18px } .cmpbar .link { color:#ffffffb0; font-weight:500 } .cmpbar .btn[aria-disabled="true"] { opacity:.45; pointer-events:none }
+@media (max-width:760px) { .cmpbar { bottom:78px; gap:8px; padding-left:14px } .cmpbar img { width:32px; height:32px } }
+.findtv .fcols { display:grid; grid-template-columns:repeat(auto-fit,minmax(210px,1fr)); gap:28px 36px } .findtv h3 { font-size:15px; margin:0 0 6px; letter-spacing:0 } .findtv ul { list-style:none; margin:0; padding:0 }
+.findtv a { display:flex; justify-content:space-between; align-items:baseline; gap:12px; padding:9px 0; border-bottom:1px solid var(--line); font-weight:600; font-size:14.5px } .findtv a small { color:var(--soft); font-weight:500; white-space:nowrap } .findtv a:hover { color:var(--accent) }
+.help { display:flex; flex-wrap:wrap; align-items:center; gap:16px 28px; background:var(--card); border-radius:28px; padding:30px 34px } .help h2 { margin:0; font-size:26px } .help p { margin:4px 0 0; color:var(--muted) } .help .btns { margin-left:auto; display:flex; gap:10px; flex-wrap:wrap }
+/* phones: the compare bar stays on one line without thumbnails; the EMI pill may wrap */
+.cmpbar, .cmpbar span, .cmpbar .btn { white-space:nowrap }
+.card .emi { white-space:normal; line-height:1.35 }
+@media (max-width:760px) { .cmpbar img { display:none } .cmpbar { gap:10px; padding:8px 10px 8px 16px } .card .emi { font-size:11.5px } }
+
