@@ -105,7 +105,7 @@ async function run() {
     step = "bar contents";
     await b.goto(base + "/");
     assert.equal(await b.ev(`document.querySelector("#hdr").innerText.includes("Menu")`), false, "the old Menu button is gone");
-    assert.deepEqual(await b.ev(`[...document.querySelectorAll(".l0link")].map(a => a.textContent)`), ["Televisions", "Washing Machines", "Air Conditioners", "Brands", "Deals"]);
+    assert.deepEqual(await b.ev(`[...document.querySelectorAll(".l0link")].map(a => a.textContent)`), ["Televisions", "Brands", "Deals"]);
     assert.equal(await open(), "", "no menu is open at the start");
 
     step = "hover opens after a short delay";
@@ -131,8 +131,8 @@ async function run() {
     assert.ok(Math.abs(panel.top - panel.hdrBottom) <= 2, "panel sits directly under the header");
     assert.ok(panel.bottom <= panel.vh, "panel fits in the window");
     assert.equal(panel.expanded, "true"); assert.ok(+panel.shade > 0.9, "page behind is dimmed");
-    assert.equal(panel.tiles, 6); assert.equal(panel.prods, 4);
-    assert.equal(panel.links[0], "TV size guide"); assert.ok(panel.links.includes("Top features"));
+    assert.equal(panel.tiles, 8, "all TVs, three sizes, two brands, two operating systems"); assert.equal(panel.prods, 4);
+    assert.equal(panel.links[0], "Compare operating systems"); assert.ok(panel.links.includes("Top features") && !panel.links.includes("Store locator"), "no store locator link (hidden, client decision)");
 
     step = "moving into the panel keeps it open";
     await b.glide(...await b.center(".l0.open .ntile", 2), 250);
@@ -145,7 +145,7 @@ async function run() {
     step = "moving to another category switches";
     await b.glide(...await b.center(".l0link", 1), 250);
     await sleep(400);
-    assert.equal(await open(), "Washing Machines");
+    assert.equal(await open(), "Brands");
 
     step = "leaving closes";
     await b.glide(...away, 200);
@@ -174,13 +174,13 @@ async function run() {
 
     step = "the name is the only control: an outside click closes the menu, a click on the name opens the category page";
     assert.equal(await b.ev(`document.querySelectorAll(".l0btn").length`), 0, "there is no arrow button beside the names");
-    await b.glide(...await b.center(".l0link", 2), 150); await sleep(450);
-    assert.equal(await open(), "Air Conditioners");
+    await b.glide(...await b.center(".l0link", 1), 150); await sleep(450);
+    assert.equal(await open(), "Brands");
     assert.equal(await b.ev(`document.querySelector(".l0.open .l0link").getAttribute("aria-expanded")`), "true");
     await b.click(...away); await sleep(120);
     assert.equal(await open(), "", "a click on the dimmed page closes the menu");
-    await b.afterLoad(async () => b.click(...await b.center(".l0link", 2)));
-    assert.ok((await b.ev(`location.pathname`)).includes("air-conditioners"), "a mouse click on a category name goes to its page");
+    await b.afterLoad(async () => b.click(...await b.center(".l0link", 1)));
+    assert.ok((await b.ev(`location.pathname`)).includes("/products"), "a mouse click on a category name goes to its page");
     await b.goto(base + "/");
 
     step = "keyboard";
@@ -199,8 +199,8 @@ async function run() {
     const count = await b.ev(`document.querySelectorAll(".l0.open .npanel a").length`);
     for (let i = 0; i <= count; i++) await b.key("Tab");
     await sleep(200);
-    assert.equal(await b.ev(`document.activeElement.textContent`), "Washing Machines", "Tab leaves the panel for the next category");
-    assert.equal(await open(), "Washing Machines", "which opens in turn while the first one closed");
+    assert.equal(await b.ev(`document.activeElement.textContent`), "Brands", "Tab leaves the panel for the next category");
+    assert.equal(await open(), "Brands", "which opens in turn while the first one closed");
     await b.key("Escape"); await sleep(100);
 
     step = "add to cart still works";
@@ -210,7 +210,7 @@ async function run() {
 
     step = "every menu link leads to a real page";
     const hrefs = await b.ev(`[...new Set([...document.querySelectorAll(".gnav a")].map(a => a.href))]`);
-    assert.ok(hrefs.length > 30, "expected many menu links, found " + hrefs.length);
+    assert.ok(hrefs.length > 20, "expected many menu links, found " + hrefs.length);
     for (const h of hrefs) {
       const hash = new URL(h).hash;
       if (hash) await b.goto(base + "/cart.html"); // arrive from another page, so the section has to be found after a full load
@@ -224,17 +224,17 @@ async function run() {
       if (hash) assert.ok(r.top !== null && r.top >= r.hdr - 2 && r.top < r.vh * 0.6, `section ${hash} should be in view under the header at ${h}, its top is ${r.top}`);
     }
 
-    step = "a guide link on the same page closes the menu and scrolls";
+    step = "a compare link on the same page closes the menu and scrolls";
     await b.goto(base + "/televisions");
     assert.equal(await b.ev(`document.querySelector(".l0.cur .l0link").textContent`), "Televisions", "the current category is marked in the bar");
     await b.move(...away);
     await b.glide(...await b.center(".l0link", 0), 120); await sleep(450);
     await b.click(...await b.center(".l0.open .ndisc a", 0));
     await sleep(1100);
-    assert.equal(await b.ev(`location.hash`), "#guide");
+    assert.equal(await b.ev(`location.hash`), "#os");
     assert.equal(await open(), "");
-    const g = await b.ev(`document.querySelector("#guide").getBoundingClientRect().top`);
-    assert.ok(g > 0 && g < 480, "the guide is in view, its top is " + g);
+    const g = await b.ev(`document.querySelector("#os").getBoundingClientRect().top`);
+    assert.ok(g > 0 && g < 480, "the operating-system chart is in view, its top is " + g);
 
     step = "product page: size switcher, delivery check, share, rating bars";
     await b.goto(base + "/televisions/telefunken-140-cm-55-inch-4k-ultra-hd-google-tv");
@@ -249,17 +249,16 @@ async function run() {
     assert.match(await b.ev(`document.querySelector("#pinmsg").textContent`), /6-digit/);
     assert.ok(await b.ev(`!!document.querySelector("#share")`), "share button present");
     assert.equal(await b.ev(`document.querySelectorAll(".rbars div").length`), 5, "rating bars on a reviewed product");
-    const cmp = await b.ev(`({ cols: document.querySelectorAll(".ctable thead th").length - 1, diff: document.querySelectorAll(".ctable tr.diff").length, me: document.querySelector(".ctable thead th.me .stock").textContent, buys: document.querySelectorAll(".ctable .buy .btn").length })`);
+    const cmp = await b.ev(`({ cols: document.querySelectorAll(".ctable thead th").length - 1, diff: document.querySelectorAll(".ctable tr.diff").length, me: document.querySelector(".ctable thead th.me .stock").textContent, buys: document.querySelectorAll(".ctable .buy").length })`);
     assert.equal(cmp.cols, 4, "this TV compared with three others"); assert.ok(cmp.diff > 0, "differing rows are marked");
-    assert.equal(cmp.me, "This product"); assert.equal(cmp.buys, 4, "add to cart in every column");
+    assert.equal(cmp.me, "This product"); assert.equal(cmp.buys, 4, "a buy control in every column (a button, or the stepper once it is in the cart)");
     const pdp = await b.ev(`({ feats: document.querySelectorAll(".fstrip .ft").length, emi: !!document.querySelector(".emiline"), share: document.querySelectorAll(".sharerow a").length, sw: document.querySelectorAll(".chip.sw small").length, pill: !!document.querySelector(".pill") })`);
     assert.ok(pdp.feats >= 4, "feature strip under the photo"); assert.ok(pdp.emi, "EMI per month line"); assert.equal(pdp.share, 3, "share links");
     assert.ok(pdp.sw >= 3, "size swatches show prices"); assert.ok(pdp.pill, "delivery pill");
-    const picks = await b.ev(`document.querySelectorAll(".bundle input[name=pick]").length`);
-    assert.ok(picks >= 1, "add-on box offers products from the other categories");
+    assert.equal(await b.ev(`document.querySelectorAll(".bundle").length`), 0, "no add-on box while the store sells one category (it pairs products across categories)");
     const before = +(await b.ev(`document.querySelector("#cartN").textContent`)) || 0;
-    await b.click(...await b.center("#addAll")); await sleep(400);
-    assert.equal(+(await b.ev(`document.querySelector("#cartN").textContent`)), before + picks + 1, "Add all puts this product and the ticked ones in the cart");
+    await b.click(...await b.center(".pdp .actions [data-add]")); await sleep(400);
+    assert.equal(+(await b.ev(`document.querySelector("#cartN").textContent`)), before + 1, "Add to cart puts this product in the cart");
     assert.equal(await b.ev(`document.body.classList.contains("cart-open")`), true, "and opens the cart drawer");
     await b.key("Escape"); await sleep(300);
     assert.equal(await b.ev(`/\\p{Extended_Pictographic}/u.test(document.querySelector("#hdr").innerText + document.querySelector(".perks").innerText)`), false, "no emoji icons left in the header or perks");
@@ -269,12 +268,11 @@ async function run() {
     assert.equal(await b.ev(`document.querySelector(".stabs a.on").textContent`), "Compare", "the sub-nav marks the section in view");
     assert.equal(await b.ev(`getComputedStyle(document.querySelector(".pdp .actions .btn")).borderRadius`), "999px", "pill buttons");
     await b.goto(base + "/");
-    const clips = await b.ev(`({ hero: document.querySelectorAll(".slide").length, tiles: document.querySelectorAll(".kcat").length, texts: [...document.querySelectorAll(".ktext b")].map(b => b.textContent), arrows: [...document.querySelectorAll(".strip")].filter(x => !x.classList.contains("nos") && x.querySelector(".row").scrollWidth <= x.querySelector(".row").clientWidth + 2).length })`);
-    assert.equal(clips.hero, 3, "three hero banners"); assert.equal(clips.tiles, 3, "a tile per category");
-    assert.deepEqual(clips.texts, ["Televisions", "Washing Machines", "Air Conditioners"], "category tiles carry their names");
+    const clips = await b.ev(`({ hero: document.querySelectorAll(".slide").length, oss: document.querySelectorAll(".find .chip.os").length, brands: document.querySelectorAll(".bbrand").length, arrows: [...document.querySelectorAll(".strip")].filter(x => !x.classList.contains("nos") && x.querySelector(".row").scrollWidth <= x.querySelector(".row").clientWidth + 2).length })`);
+    assert.equal(clips.hero, 4, "four banners: factory prices, Elista, Telefunken, offers"); assert.equal(clips.oss, 2, "shop by operating system on the home page"); assert.equal(clips.brands, 2, "a giant tile per brand");
     assert.equal(clips.arrows, 0, "a row that fits on the screen shows no scroll arrows");
     await b.goto(base + "/category.html?cat=Televisions");
-    assert.deepEqual(await b.ev(`[...document.querySelectorAll(".finder .tile b")].map(b => b.textContent)`), ["TVs by Size", "Elista TVs", "Telefunken TVs", "4K Ultra HD", "Google TV"], "a category's explore row shows only that category");
+    assert.deepEqual(await b.ev(`[...document.querySelectorAll(".finder .tile b")].map(b => b.textContent)`), ["TVs by Size", "Elista TVs", "Telefunken TVs", "Google TV", "WebOS"], "a category's explore row shows only that category");
     assert.equal(await b.ev(`document.querySelectorAll(".fbar, .ftrack").length`), 0, "no scroll line or arrow buttons under the explore tiles (client decision)");
     assert.ok(await b.ev(`!!document.querySelector(".kv .kvimg") && document.querySelector(".kv h1").textContent === "Explore TVs by Size"`), "the category headline sits on its lifestyle photo");
     assert.ok(await b.ev(`!!document.querySelector(".topf video.bvid") && document.querySelectorAll(".tf svg").length === 6`), "the Top features band has its room clip and line icons");
@@ -282,7 +280,7 @@ async function run() {
     step = "offers page, bank offers and the No Cost EMI tag";
     await b.goto(base + "/offers.html");
     assert.ok(await b.ev(`document.querySelectorAll(".fest .sparks i").length`) > 10, "festive sparks");
-    assert.equal(await b.ev(`document.querySelectorAll(".ftile").length`), 3, "one offer tile per category");
+    assert.equal(await b.ev(`document.querySelectorAll(".ftile").length`), 1, "one offer tile per category (televisions only for now)");
     assert.equal(await b.ev(`document.querySelectorAll(".offer").length`), 4, "bank offer cards");
     assert.ok(await b.ev(`document.querySelectorAll(".card .emi").length`) > 0, "No Cost EMI tags on deal cards");
     assert.equal(await b.ev(`document.querySelector(".l0.cur .l0link").textContent`), "Deals", "Deals is marked current in the bar");
@@ -290,7 +288,6 @@ async function run() {
     assert.equal(await b.ev(`document.querySelectorAll("#bank .offer").length`), 4, "bank offers on the home page");
     assert.equal(await b.ev(`document.querySelectorAll(".sizerow").length`), 0, "no shop-by-size rows on the home page (client decision 2026-10-09; sizes live on the category pages)");
     assert.ok(await b.ev(`document.querySelectorAll(".faqs details").length >= 5 && document.querySelectorAll(".quote").length > 0`), "Good to know questions and customer quotes on the home page");
-    assert.equal(await b.ev(`document.querySelector(".wide").getAttribute("href")`), "/offers", "the festive banner opens the offers page");
     await b.goto(base + "/product.html?id=1");
     assert.ok(await b.ev(`!!document.querySelector(".pdp .emiline") && document.querySelectorAll(".pofs div").length === 3`), "EMI line and offers box on the product page");
     assert.ok(await b.ev(`document.querySelectorAll("#t-specs .grp").length >= 2`), "grouped specifications on the product page");
@@ -301,7 +298,7 @@ async function run() {
       await b.goto(base + start);
       for (const h of await b.ev(`[...document.querySelectorAll("a[href]")].map(a => a.href)`)) if (h.startsWith(base) && !skip.test(h)) seen.add(h);
     }
-    assert.ok(seen.size > 40, "expected many links, found " + seen.size);
+    assert.ok(seen.size > 25, "expected many links, found " + seen.size);
     for (const h of seen) {
       await b.goto(h);
       const r = await b.ev(`({ page: document.body.dataset.page, h1: (document.querySelector("main h1") || {}).textContent || "" })`);
@@ -334,7 +331,7 @@ async function run() {
     step = "other pages load without errors";
     for (const p of ["/product.html?id=1", "/cart.html", "/account.html", "/admin.html", "/page.html?p=about", "/offers.html"]) {
       await b.goto(base + p);
-      assert.equal(await b.ev(`document.querySelectorAll(".l0").length`), 5, "the bar is missing on " + p);
+      assert.equal(await b.ev(`document.querySelectorAll(".l0").length`), 3, "the bar is missing on " + p); // Televisions, Brands, Deals
     }
     // checkout sends a signed-out shopper (there is one item in the cart) on to the sign-in page, so wait for that second page
     await b.goto(base + "/checkout.html").catch(() => {});
@@ -359,9 +356,9 @@ async function run() {
       assert.equal(mp.left, 0); assert.equal(mp.width, mp.vw); assert.ok(mp.bottom <= mp.vh + 1, "the panel fits the phone screen and scrolls inside");
       assert.ok(mp.wide <= mp.vw, "an open menu must not make the page scroll sideways");
       await m.tap(...await m.center(".l0link", 1)); await sleep(400);
-      assert.equal(await open(m), "Washing Machines", "a tap on another name switches to its menu");
+      assert.equal(await open(m), "Brands", "a tap on another name switches to its menu");
       await m.afterLoad(async () => m.tap(...await m.center(".l0link", 1)));
-      assert.ok((await m.ev(`location.pathname`)).includes("washing-machines"), "a second tap on the open name goes to its page");
+      assert.ok((await m.ev(`location.pathname`)).includes("/products"), "a second tap on the open name goes to its page");
       assert.deepEqual(realErrors(m), [], "script errors on a phone: " + JSON.stringify(realErrors(m)));
     } finally { await m.close(); }
 

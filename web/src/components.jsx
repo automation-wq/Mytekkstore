@@ -5,7 +5,7 @@ import { animate, stagger } from "motion";
 import { reduced } from "./motion.js";
 import { useStore } from "./store.jsx";
 import { api, qs, load, save } from "./api.js";
-import { ICONS, DRAW_ICONS, COUNTRIES, BANK_OFFERS, TOP_FEATURES, GUIDES, CAT_SIZE, catSizes, catUrl, brandUrl, listUrl, off, avg, starRow, eta, productUrl, pic, picSet, dims } from "./data.js";
+import { ICONS, DRAW_ICONS, COUNTRIES, BANK_OFFERS, TOP_FEATURES, CAT_SIZE, TV_OS, OS_ROWS, SHOW_STORES, catSizes, catUrl, brandUrl, listUrl, off, avg, starRow, eta, productUrl, pic, picSet, dims, osList, osUrl } from "./data.js";
 
 const $ = (s, el = document) => el.querySelector(s);
 const $$ = (s, el = document) => [...el.querySelectorAll(s)];
@@ -54,7 +54,7 @@ export function Card({ p, i = 0 }) {
   const onLeave = () => { rx.set(0); ry.set(0); };
   return <m.div className="card" style={{ rotateX: rx, rotateY: ry, transformPerspective: 900 }} onPointerMove={onMove} onPointerLeave={onLeave}
     initial={{ opacity: 0, y: 10 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: "0px 0px -40px" }} transition={{ type: "spring", stiffness: 220, damping: 26, delay: (i % 6) * .06 }}><Heart p={p} />
-    <a href={productUrl(p)}><div className="img"><Photo p={p} />{off(p) > 0 && <span className="badge">{off(p)}% off</span>}</div><small>{p.brand}</small><h3>{p.name}</h3><Stars p={p} /></a>
+    <a href={productUrl(p)}><div className="img"><Photo p={p} />{off(p) > 0 && <span className="badge">{off(p)}% off</span>}</div><small>{p.brand}{p.os ? " · " + p.os : ""}</small><h3>{p.name}</h3><Stars p={p} /></a>
     <div className="price"><b>{money(p.price)}</b>{p.mrp > p.price && <><s>{money(p.mrp)}</s><em className="save">Save {money(p.mrp - p.price)}</em></>}</div>{p.emi && <span className="emi">No Cost EMI</span>}<span className="geta"><Icon k="truck" /> Free delivery · get it by {eta()[1]}</span><Buy p={p} /></m.div>;
 }
 export function Line({ p }) {
@@ -99,15 +99,16 @@ function navItems(P, CATS, BRANDS, catImg) {
   const curCat = page === "category" ? qs.get("cat") : page === "product" ? (byId(qs.get("id")) || {}).cat : "";
   const top = list => [...list].sort((a, b) => off(b) - off(a)).slice(0, 4);
   const items = CATS.map(cat => {
-    const inCat = P.filter(p => p.cat === cat), { S, sizeOf, all } = catSizes(P, cat), g = all.length ? GUIDES[cat] : null, short = S ? S.short : cat;
+    const inCat = P.filter(p => p.cat === cat), { S, sizeOf, all } = catSizes(P, cat), oss = osList(inCat), short = S ? S.short : cat;
     return {
       label: cat, href: catUrl(cat), cur: curCat === cat, head: "Shop " + cat, prodHead: "Popular " + cat, prods: top(inCat),
       tiles: [["All " + cat, catUrl(cat), catImg(cat)],
         ...all.map(s => [s.label, listUrl({ cat, size: s.label }), inCat.find(p => (sizeOf(p) || {}).label === s.label).img]),
-        ...BRANDS.filter(b => inCat.some(p => p.brand === b)).map(b => [b + " " + short, listUrl({ cat, brand: b }), inCat.find(p => p.brand === b).img])],
-      links: [...(g ? [[g.nav, catUrl(cat) + "#guide"]] : []), ...(TOP_FEATURES[cat] ? [["Top features", catUrl(cat) + "#features"]] : []),
-        ["Deals on " + short, listUrl({ cat, sort: "off" })], ["Delivery and returns", "/shipping"], ["Store locator", "/stores"]],
-      promo: g ? ["Not sure which " + S.by.toLowerCase() + "?", "Answer one question and we will suggest the right one.", catUrl(cat) + "#guide"] : null,
+        ...BRANDS.filter(b => inCat.some(p => p.brand === b)).map(b => [b + " " + short, listUrl({ cat, brand: b }), inCat.find(p => p.brand === b).img]),
+        ...oss.map(os => [os, listUrl({ cat, os }), inCat.find(p => p.os === os).img])],
+      links: [...(oss.length > 1 ? [["Compare operating systems", catUrl(cat) + "#os"]] : []), ...(TOP_FEATURES[cat] ? [["Top features", catUrl(cat) + "#features"]] : []),
+        ["Deals on " + short, listUrl({ cat, sort: "off" })], ["Delivery", "/shipping"], ["Warranty and returns", "/returns"], ...(SHOW_STORES ? [["Store locator", "/stores"]] : [])],
+      promo: oss.length > 1 ? [oss.join(" or ") + "?", "See what each one gives you, side by side.", catUrl(cat) + "#os"] : null,
     };
   });
   items.push({
@@ -256,7 +257,7 @@ export function Footer() {
     <div className="fcols">
       <div><b>Shop</b>{CATS.slice(0, 6).map(c => <a href={catUrl(c)} key={c}>{c}</a>)}</div>
       <div><b>Brands</b>{BRANDS.slice(0, 6).map(b => <a href={brandUrl(b)} key={b}>{b}</a>)}</div>
-      <div><b>Help</b><a href="/contact">Contact</a><a href="/shipping">Shipping</a><a href="/returns">Returns</a><a href="/stores">Store locator</a></div>
+      <div><b>Help</b><a href="/contact">Contact</a><a href="/shipping">Shipping</a><a href="/returns">Warranty and returns</a>{SHOW_STORES && <a href="/stores">Store locator</a>}</div>
       <div><b>Mytekkstore</b><a href="/about">About</a><a href="/account">My account</a><a href="/terms">Terms</a><a href="/privacy">Privacy</a></div>
     </div>
     <div className="copy">© 2026 Mytekkstore. All rights reserved.</div>
@@ -292,3 +293,18 @@ export function Chrome() {
     <m.div className="progress" style={{ scaleX: progress }}></m.div><button className="totop" aria-label="Back to top" onClick={() => scrollTo({ top: 0, behavior: "smooth" })}>↑</button>
   </>;
 }
+
+// the operating systems side by side: one column per system the catalogue carries, general facts per row, a shop link per column
+export function OsChart({ P, id = "os", lead }) {
+  const oss = osList(P).filter(o => TV_OS[o]);
+  if (oss.length < 2) return null;
+  return <section className="oschart" id={id}><h2>{oss.join(" or ") + "?"}</h2><p className="lead">{lead || "What each operating system gives you, side by side. Every model shows its system on its card."}</p>
+    <div className="scroll"><table className="ctable os"><thead><tr><th></th>{oss.map(o => { const n = P.filter(p => p.os === o).length; return <th key={o}><b>{o}</b><small>{n} model{n === 1 ? "" : "s"}</small></th>; })}</tr></thead>
+      <tbody>
+        <tr><th>In short</th>{oss.map(o => <td key={o}>{TV_OS[o].blurb}</td>)}</tr>
+        {OS_ROWS.map((r, i) => <tr key={r}><th>{r}</th>{oss.map(o => <td key={o}>{TV_OS[o].rows[i]}</td>)}</tr>)}
+        <tr><th></th>{oss.map(o => <td key={o}><a className="btn" href={osUrl(o)}>Shop {o} TVs</a></td>)}</tr>
+      </tbody></table></div></section>;
+}
+// a question-and-answer list (warranty, returns), in the same shape as Good to know
+export const Qa = ({ title, lead, list, id }) => <section className="faq" id={id}><h2>{title}</h2>{lead && <p className="lead">{lead}</p>}<div className="faqs">{list.map(([q, a, link]) => <details key={q}><summary>{q}</summary><p>{a}{link && <> <a className="alink" href={link[0]}>{link[1]} →</a></>}</p></details>)}</div></section>;

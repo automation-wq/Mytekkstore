@@ -1,5 +1,6 @@
 // Sample catalogue for Mytekkstore. Loaded by server.js on first start and by demo mode in the browser.
 // Prices, specifications and reviews here are SAMPLES. Replace them with the real data before launch.
+// The operating system (os) of each TV is a SAMPLE too: the client confirms which models run Google TV, WebOS or Android TV.
 const SEED = [
  {
   "id": 1,
@@ -31,7 +32,7 @@ const SEED = [
    ],
    [
     "Smart TV",
-    "Yes, with streaming apps"
+    "WebOS with streaming apps"
    ],
    [
     "Sound output",
@@ -49,7 +50,8 @@ const SEED = [
     "text": "Good value for the price. Delivery was quick and the product works as described.",
     "at": "2026-09-01T00:00:00.000Z"
    }
-  ]
+  ],
+  "os": "WebOS"
  },
  {
   "id": 2,
@@ -92,7 +94,8 @@ const SEED = [
     "3 HDMI, 2 USB"
    ]
   ],
-  "reviews": []
+  "reviews": [],
+  "os": "Google TV"
  },
  {
   "id": 3,
@@ -124,7 +127,7 @@ const SEED = [
    ],
    [
     "Smart TV",
-    "Yes, with streaming apps"
+    "WebOS with streaming apps"
    ],
    [
     "Sound output",
@@ -135,7 +138,8 @@ const SEED = [
     "3 HDMI, 1 USB"
    ]
   ],
-  "reviews": []
+  "reviews": [],
+  "os": "WebOS"
  },
  {
   "id": 4,
@@ -185,7 +189,8 @@ const SEED = [
     "text": "Very happy with this purchase. Looks premium and performs well.",
     "at": "2026-09-22T00:00:00.000Z"
    }
-  ]
+  ],
+  "os": "Google TV"
  },
  {
   "id": 5,

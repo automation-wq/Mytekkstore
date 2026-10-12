@@ -1,5 +1,5 @@
 // Store admin: orders, products (with photo upload and the No Cost EMI flag), customer messages. The server checks admin rights on every request.
-import { pic } from "./data.js";
+import { pic, TV_OS } from "./data.js";
 import { useEffect, useState } from "react";
 import { useStore } from "./store.jsx";
 import { api } from "./api.js";
@@ -7,7 +7,7 @@ import { Form, Box } from "./components.jsx";
 import { reveal } from "./motion.js";
 
 const ALL = ["Placed", "Confirmed", "Shipped", "Delivered", "Cancelled"];
-const EMPTY = { id: "", brand: "", cat: "", name: "", price: "", mrp: "", stock: 10, img: "", desc: "", specs: "", emi: false, images: "" };
+const EMPTY = { id: "", brand: "", cat: "", name: "", price: "", mrp: "", stock: 10, img: "", desc: "", specs: "", emi: false, images: "", os: "", story: "" };
 
 export function Admin() {
   const { me, CFG, money, CATS, BRANDS, toast } = useStore();
@@ -15,7 +15,7 @@ export function Admin() {
   const [f, setF] = useState(EMPTY), [sure, setSure] = useState(null), [ready, setReady] = useState(false);
   const allowed = !!(me && me.admin);
   const draw = async () => {
-    setOrders((await api("admin/orders")).orders); setProducts((await api("products")).products); setOutbox((await api("admin/outbox")).messages);
+    setOrders((await api("admin/orders")).orders); setProducts((await api("products?all=1")).products); // the admin also sees the hidden categories setOutbox((await api("admin/outbox")).messages);
     setF(EMPTY); setReady(true);
   };
   useEffect(() => { document.title = "Store admin | Mytekkstore"; if (allowed) draw(); }, []);
@@ -25,13 +25,14 @@ export function Admin() {
   const live = orders.filter(o => o.status !== "Cancelled");
   const set = k => e => setF(x => ({ ...x, [k]: e.target.type === "checkbox" ? e.target.checked : e.target.value }));
   const saveProduct = async () => {
-    const body = { brand: f.brand, cat: f.cat, name: f.name, price: +f.price, mrp: +f.mrp, stock: +f.stock, img: f.img, desc: f.desc, emi: !!f.emi, images: f.images.split("\n").map(s => s.trim()).filter(Boolean),
+    const body = { brand: f.brand, cat: f.cat, name: f.name, price: +f.price, mrp: +f.mrp, stock: +f.stock, img: f.img, desc: f.desc, emi: !!f.emi, images: f.images.split("\n").map(s => s.trim()).filter(Boolean), os: f.os.trim(),
+      story: f.story.split("\n").map(l => l.split("|").map(x => x.trim())).filter(([t, x]) => t && x).map(([title, text, img]) => ({ title, text, img: img || "" })),
       specs: f.specs.split("\n").map(l => l.split(/:(.*)/s).slice(0, 2).map(x => x.trim())).filter(([k, v]) => k && v) };
     await (f.id ? api("admin/products/" + f.id, "PUT", body) : api("admin/products", "POST", body));
     toast(f.id ? "Product updated" : "Product added");
     await draw();
   };
-  const edit = p => { setF({ id: p.id, brand: p.brand, cat: p.cat, name: p.name, price: p.price, mrp: p.mrp, stock: p.stock, img: p.img, desc: p.desc || "", specs: (p.specs || []).map(([k, v]) => k + ": " + v).join("\n"), emi: !!p.emi, images: (p.images || []).join("\n") }); document.getElementById("pform").scrollIntoView({ behavior: "smooth", block: "center" }); };
+  const edit = p => { setF({ id: p.id, brand: p.brand, cat: p.cat, name: p.name, price: p.price, mrp: p.mrp, stock: p.stock, img: p.img, desc: p.desc || "", specs: (p.specs || []).map(([k, v]) => k + ": " + v).join("\n"), emi: !!p.emi, images: (p.images || []).join("\n"), os: p.os || "", story: (p.story || []).map(b => [b.title, b.text, b.img].filter(Boolean).join(" | ")).join("\n") }); document.getElementById("pform").scrollIntoView({ behavior: "smooth", block: "center" }); };
   const del = async p => { // two clicks to delete instead of a pop-up
     if (sure !== p.id) { setSure(p.id); setTimeout(() => setSure(s => s === p.id ? null : s), 3000); return; }
     try { await api("admin/products/" + p.id, "DELETE"); toast("Product deleted"); } catch (ex) { toast(ex.message); }
@@ -69,6 +70,7 @@ export function Admin() {
         <label>Brand<input name="brand" required maxLength="60" list="brands" value={f.brand} onChange={set("brand")} /></label>
         <label>Category<input name="cat" required maxLength="60" list="cats" value={f.cat} onChange={set("cat")} /></label>
         <label className="span2">Name<input name="name" required maxLength="160" value={f.name} onChange={set("name")} /></label>
+        <label>Operating system (TVs: Google TV, WebOS, Android TV)<input name="os" maxLength="40" list="oss" placeholder="Google TV" value={f.os} onChange={set("os")} /></label>
         <label>Price (₹)<input name="price" type="number" required min="1" step="1" value={f.price} onChange={set("price")} /></label>
         <label>MRP (₹)<input name="mrp" type="number" required min="1" step="1" value={f.mrp} onChange={set("mrp")} /></label>
         <label>Stock<input name="stock" type="number" required min="0" step="1" value={f.stock} onChange={set("stock")} /></label>
@@ -77,8 +79,9 @@ export function Admin() {
         <label className="span2">More photos for the gallery (one link per line)<textarea name="images" rows="2" placeholder={"img/p1.jpg\nhttps://..."} value={f.images} onChange={set("images")}></textarea></label>
         <label className="span2">Description<textarea name="desc" rows="4" maxLength="2000" value={f.desc} onChange={set("desc")}></textarea></label>
         <label className="span2">Specifications (one per line, as Name: Value)<textarea name="specs" rows="4" placeholder={"Screen size: 55 inch\nResolution: 4K Ultra HD"} value={f.specs} onChange={set("specs")}></textarea></label>
+        <label className="span2">A+ content for the product page (one block per line: Title | Text | img/photo.jpg)<textarea name="story" rows="3" placeholder={"Cinema at home | A 55 inch 4K picture with Dolby Audio. | img/p1.jpg"} value={f.story} onChange={set("story")}></textarea></label>
         <label className="radio span2"><input type="checkbox" name="emi" value="1" checked={f.emi} onChange={set("emi")} /> No Cost EMI available on this product (shows the tag on the site)</label>
-        <datalist id="brands">{BRANDS.map(b => <option value={b} key={b} />)}</datalist><datalist id="cats">{CATS.map(c => <option value={c} key={c} />)}</datalist>
+        <datalist id="brands">{BRANDS.map(b => <option value={b} key={b} />)}</datalist><datalist id="cats">{CATS.map(c => <option value={c} key={c} />)}</datalist><datalist id="oss">{Object.keys(TV_OS).map(o => <option value={o} key={o} />)}</datalist>
       </Form>
       <div className="scroll"><table className="tbl"><tbody>
         <tr><th></th><th>Product</th><th>Category</th><th>Price</th><th>MRP</th><th>Stock</th><th></th></tr>

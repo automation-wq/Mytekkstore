@@ -10,13 +10,58 @@ export const CONTACT = { phone: "", email: "", hours: "", address: "" };
 export const STORES = [];
 // Policy figures used on the Shipping, Returns and Terms pages. DRAFT: the client confirms these before launch (README, "Before launch").
 export const POLICY = { returnDays: 7, refundDays: 7 };
+
+// ===== client decisions of 2026-10-12 (meeting notes) =====
+// The store sells televisions only for now: washing machines and air conditioners are hidden by HIDDEN_CATS in server.js.
+// The store locator is hidden (the business is B2C only); set SHOW_STORES to true and remove "stores" from HIDDEN_PAGES in server.js to bring it back.
+export const SHOW_STORES = false;
+// Warranty and returns, asked the way customers ask; shown on every product page, the home page and the Returns page.
+// DRAFT: the claim steps describe how the store handles a claim today (contact page, order number, the brand's service centre); the client confirms the wording.
+export const WARRANTY_QA = [
+  ["How do I claim the warranty?", "Every TV carries the brand's own warranty. Keep the invoice from your order page. To claim, write to us from the Contact page with your order number and a short description of the problem, and we connect you with the brand's authorised service centre, which repairs or replaces the TV under the warranty terms. We stay on the claim until it is closed.", ["/contact", "Contact us"]],
+  ["What is the return and replacement policy?", `Tell us within ${POLICY.returnDays} days of delivery if the TV is damaged, faulty or not what you ordered. We arrange the pickup free of charge and replace it with the same model when it is in stock, or refund you in full, usually within ${POLICY.refundDays} working days. The TV must be unused and complete, with its accessories and packaging.`, ["/returns", "Returns and refunds"]],
+  ["What if the TV arrives damaged or does not switch on?", `Check the TV when it arrives, before the delivery partner leaves if you can. Tell us within ${POLICY.returnDays} days, with a photo if there is visible damage, and we arrange a replacement or a refund.`, ["/contact", "Contact us"]],
+  ["How long does a warranty repair take?", "The brand's service centre sets the repair time, which depends on the fault and the spare parts needed. We follow up with the service centre on your behalf and keep you informed until it is done.", null],
+];
+// Operating systems on the TVs we sell: Shop by OS and the comparison chart. General, public facts about each platform; which
+// models run which system comes from each product's own `os` field (set in the admin page). The client confirms the wording before launch.
+export const OS_ROWS = ["Apps", "Voice control", "Casting from a phone", "Home screen", "Account"];
+export const TV_OS = {
+  "Google TV": { blurb: "Google's TV platform: apps from Google Play, Google Assistant on the remote, Chromecast built in, and a home screen that recommends shows across your apps.", rows: ["Google Play Store", "Google Assistant on the remote", "Chromecast built in", "Recommendations across your apps", "Google account"] },
+  "WebOS": { blurb: "LG's TV platform, used under licence: a quick card-style home screen, apps from the webOS store and screen sharing from a phone.", rows: ["webOS app store", "On supported remotes", "Screen share (Miracast)", "Card-style launcher", "Optional LG account"] },
+  "Android TV": { blurb: "Google's earlier TV platform: apps from Google Play, Google Assistant and Chromecast built in, with an app-grid home screen.", rows: ["Google Play Store", "Google Assistant on the remote", "Chromecast built in", "App grid", "Google account"] },
+};
+export const osList = P => [...new Set(P.map(p => p.os).filter(Boolean))].sort();
+export const osUrl = os => listUrl({ cat: "Televisions", os });
+// two or three reasons to choose a brand, read from its own products: sizes, operating systems, 4K and sound, EMI
+export function brandPoints(P, brand) {
+  const ps = P.filter(p => p.brand === brand), pts = [];
+  const sizes = [...new Set(ps.map(p => (/\((\d+) inch\)/.exec(p.name) || [])[1]).filter(Boolean))].map(Number).sort((a, b) => a - b);
+  if (sizes.length > 1) pts.push(sizes.length + " sizes, " + sizes[0] + " to " + sizes[sizes.length - 1] + " inch"); else if (sizes.length) pts.push(sizes[0] + " inch");
+  const os = osList(ps);
+  if (os.length === 1 && ps.every(p => p.os)) pts.push(os[0] + " on every model"); else if (os.length) pts.push(os.join(" and ") + " models");
+  const spec = re => ps.some(p => re.test(p.name) || (p.specs || []).some(([k, v]) => re.test(k + " " + v)));
+  if (spec(/4K/)) pts.push("4K Ultra HD" + (spec(/Dolby/) ? " with Dolby Audio" : ""));
+  if (ps.length && ps.every(p => p.emi)) pts.push("No Cost EMI on every model");
+  return pts.slice(0, 3);
+}
+// Home banners (client decision): the factory-price message, one banner per brand, one promotion. SAMPLE words and pictures;
+// the client supplies the final ones. kind "photo" uses a lifestyle photo, "brand" shows the brand's biggest TV with its reasons
+// (brandPoints), "promo" opens the offers page with the biggest discount.
+export const HOME_BANNERS = [
+  { kind: "photo", eyebrow: "Mytekkstore", h: ["Unbelievable prices.", "Straight from the factory."], s: "Elista and Telefunken Smart TVs at factory prices, delivered free, cash on delivery.", href: "/televisions", cta: "Shop TVs", im: "img/kv-tv.jpg" },
+  { kind: "brand", brand: "Elista", h: ["Elista."], tone: "linear-gradient(120deg,#052e25,#08805f 55%,#0b3d2e)" },
+  { kind: "brand", brand: "Telefunken", h: ["Telefunken."], tone: "linear-gradient(120deg,#0f0c3a,#4338ca 55%,#1e1b4b)" },
+  { kind: "promo", eyebrow: "Limited time", h: ["Festive offers."], href: "/offers", cta: "See the offers", im: "img/hero0.jpg" },
+];
 // "Good to know" on the home page. Every answer only repeats a promise the site already makes elsewhere: [question, answer, [link, label] or null]
 export const FAQ = [
   ["Is delivery free?", "Yes. Every order is delivered free, usually within 3 to 5 days. Enter your pincode on any product page to check your area.", null],
   ["Can I pay when the order arrives?", "Yes. Cash on delivery is available on every order.", null],
   ["How does No Cost EMI work?", "On products marked No Cost EMI, the price is split over 3, 6 or 9 months on participating bank credit cards with no extra interest. The plans are listed on each product page.", ["/offers", "See the offers"]],
   ["Are the products genuine?", "Yes. Mytekkstore sells genuine Elista and Telefunken products, each with the brand's warranty.", null],
-  ["Which TV size is right for my room?", "Measure how far you sit from the screen. The TV size guide turns that distance into a recommended size.", ["/televisions#guide", "Open the TV size guide"]],
+  ["Google TV or WebOS: which should I pick?", "Both stream the usual apps. Google TV adds Google Assistant on the remote and recommendations across your apps; WebOS keeps a quick card-style home screen. The Televisions page shows them side by side.", ["/televisions#os", "Compare the operating systems"]],
+  WARRANTY_QA[0], WARRANTY_QA[1],
   ["How do I track my order?", "Sign in and open your account: every order shows its status from Placed to Delivered.", ["/account", "Go to my account"]],
   ["Can I return a product?", "Yes, returns are easy. The full policy is on the Returns and Refunds page.", ["/returns", "Read the returns policy"]],
 ];
@@ -96,10 +141,10 @@ export const BANK_OFFERS = [
   ["Axis Bank", "₹1,000 off", "On Axis Bank cards for orders above ₹25,000.", "#97144d"],
 ];
 // The festive offers page. Set ends to a date such as "2026-11-15T23:59:59+05:30" to show a live countdown; empty hides it.
-export const FESTIVE = { title: "Festive Offers", sub: "Big savings on TVs, washing machines and ACs", ends: "" };
+export const FESTIVE = { title: "Festive Offers", sub: "Big savings on Elista and Telefunken Smart TVs", ends: "" };
 
-// ===== category extras: "Top features" at the end of every category page, plus an interactive size guide on the TV page =====
-// (the client wants the guide for televisions only). Sample marketing text: only claims the catalogue's specifications support.
+// ===== category extras: "Top features" at the end of every category page. Sample marketing text: only claims the catalogue's =====
+// specifications support. (The TV size guide was removed on 2026-10-12: the client's buyers already know the size they want.)
 export const TOP_FEATURES = {
   "Televisions": [["tv", "4K Ultra HD", "Four times the detail of Full HD on the 43 and 55 inch models"], ["apps", "Smart TV apps", "Streaming apps built in on every model, no extra box needed"], ["mic", "Google TV with voice remote", "On the Telefunken 55 inch models"],
     ["sound", "Dolby Audio", "Clearer dialogue and fuller sound on the Telefunken models"], ["ruler", "Three sizes", "32, 43 and 55 inch, for every room"], ["plug", "HDMI and USB ports", "Connect a set-top box, console or pen drive"]],
@@ -107,28 +152,6 @@ export const TOP_FEATURES = {
     ["quiet", "Inverter direct drive", "Quieter, with less vibration, on the 8 kg front load"], ["shield", "Built to last", "Rust-proof body or stainless steel drum"], ["basket", "Three types", "Semi automatic, top load and front load"]],
   "Air Conditioners": [["gear", "Inverter compressor", "Adjusts its power to save electricity, on both models"], ["medal", "Copper condenser", "Better cooling and a longer life"], ["star", "Up to 5 Star rating", "The 1.5 Ton model carries the top rating"],
     ["room", "Sized for your room", "1 Ton up to 120 sq ft, 1.5 Ton up to 180 sq ft"], ["snow", "Split AC", "Quiet indoor unit, compressor outside"], ["quiet", "Smooth running", "Inverter compressors avoid the on-off cycling of older ACs"]],
-};
-export const GUIDES = {
-  "Televisions": {
-    nav: "TV size guide", featTitle: "What makes these TVs stand out", title: "How do you find the right TV size?",
-    intro: "Start with how far you sit from the screen. For a cinema-like view the screen should fill about 40° of your vision. That works out to your viewing distance in inches, divided by 1.2.",
-    ask: "How far do you sit from the TV?", min: 1, max: 3, step: 0.1, value: 1.7, show: v => v.toFixed(1) + " m",
-    rec: v => v * 39.37 / 1.2, fmt: n => "about " + Math.round(n) + " inch",
-    thead: ["Screen size", "Cinema-style viewing distance"], row: n => "about " + (n * 1.2 * 0.0254).toFixed(1) + " m",
-    foot: "A guide based on the 40° viewing angle recommended for cinemas. Sit a little further back if you prefer a more relaxed picture.",
-    art(v, n) {
-      const tx = 150 + (v - 1) / 3 * 330, h = 20 + 0.27 * (tx - 82);
-      return `<svg viewBox="0 0 520 260" role="img"><line x1="0" y1="222" x2="520" y2="222" stroke="#cfd4dc" stroke-width="2"/>
-        <polygon points="84,128 ${tx},${128 - h / 2} ${tx},${128 + h / 2}" fill="#08805f" opacity=".16"/>
-        <rect x="14" y="132" width="22" height="88" rx="9" fill="#9aa3b2"/><rect x="20" y="168" width="78" height="52" rx="12" fill="#b6bdc9"/>
-        <circle cx="70" cy="128" r="13" fill="#15181e"/><rect x="56" y="143" width="28" height="34" rx="10" fill="#15181e"/>
-        <rect x="${tx}" y="${128 - h / 2}" width="9" height="${h}" rx="3" fill="#15181e"/><rect x="${tx - 6}" y="${128 + h / 2}" width="21" height="${222 - 128 - h / 2}" fill="#9aa3b2" opacity=".5"/>
-        <text x="${tx + 4}" y="${118 - h / 2}" text-anchor="middle" font-size="15" font-weight="700" fill="#15181e">${Math.round(n)}"</text>
-        <line x1="84" y1="244" x2="${tx}" y2="244" stroke="#08805f" stroke-width="2" stroke-dasharray="6 5"/>
-        <text x="${(84 + tx) / 2}" y="238" text-anchor="middle" font-size="14" font-weight="600" fill="#08805f">${v.toFixed(1)} m</text>
-        <text x="${Math.min(140, tx - 20)}" y="110" font-size="12" fill="#08805f">40°</text></svg>`;
-    },
-  },
 };
 
 // Each category has one "size" that shoppers pick by: screen size for TVs, capacity for the others. It is read from the product name.
@@ -187,9 +210,9 @@ export const CAT_KNOW = {
     ["bolt", "Star ratings", "A 5 Star rating means the machine uses the least electricity and water for each wash."],
   ],
   "Televisions": [
-    ["ruler", "Screen size", "Measure the distance from your sofa to the wall. Divide that distance in inches by 1.2 for a cinema-like fit, or use the size guide on this page."],
+    ["ruler", "Screen size", "Measure the distance from your sofa to the screen and divide it in inches by 1.2 for a cinema-like fit: about 1.7 m for 55 inch, 1.3 m for 43 inch, 1 m for 32 inch."],
     ["tv", "HD Ready, Full HD or 4K", "4K Ultra HD has four times the pixels of Full HD, so the picture stays sharp on 43 inch and bigger screens. HD Ready suits a small bedroom TV."],
-    ["apps", "Smart TV and Google TV", "A smart TV streams apps without a set-top box. Google TV adds a voice remote and recommendations across your apps."],
+    ["apps", "Google TV or WebOS", "Both stream apps without a set-top box. Google TV adds Google Assistant on the remote and recommendations across your apps; WebOS has a quick card-style home screen. They are compared on this page."],
     ["plug", "Ports", "Count what you plug in: a set-top box, a console and a soundbar each need an HDMI port. More ports means fewer cable swaps."],
   ],
 };
@@ -207,9 +230,9 @@ export const CAT_FAQ = {
     ["Does a higher spin speed matter?", "A faster spin leaves clothes drier, so they take less time on the line."],
   ],
   "Televisions": [
-    ["Which size is right for my room?", "Measure how far you sit from the screen and use the TV size guide on this page."],
+    ["Google TV or WebOS: what is the difference?", "Google TV: apps from Google Play, Google Assistant on the remote, Chromecast built in, recommendations across apps. WebOS: a card-style home screen with apps from the webOS store and screen sharing from a phone. The chart on this page lists them side by side."],
     ["Is 4K worth it?", "On a 43 inch or bigger screen, yes: four times the detail of Full HD, and streaming apps carry 4K content. For a small bedroom TV, HD Ready is enough."],
-    ["What is Google TV?", "A smart TV system with a voice remote and recommendations across your apps."],
+    WARRANTY_QA[0], WARRANTY_QA[1],
     ["How many HDMI ports do I need?", "One for each device you plug in: set-top box, console, soundbar."],
   ],
 };

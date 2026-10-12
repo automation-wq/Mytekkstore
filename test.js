@@ -12,25 +12,26 @@ server.listen(0, "127.0.0.1", async () => {
   const addr = { name: "Test User", phone: "9999999999", address: "1 Test Street", pin: "110001" };
   try {
     let r = await call("/api/products");
-    assert.equal(r.data.products.length, 9);
+    assert.equal(r.data.products.length, 4, "televisions only: the other categories are hidden (client decision 2026-10-12)");
+    assert.ok(r.data.products.every(p => p.cat === "Televisions" && p.os), "every TV carries its operating system");
     assert.equal(r.data.products[0].emi, true); // sample products carry the No Cost EMI tag
 
     // orders need a signed-in customer
     assert.equal((await call("/api/orders", "POST", { ...addr, items: [{ id: 2, qty: 2 }] })).status, 401);
     const buyer = (await call("/api/register", "POST", { name: "Buyer One", email: "buyer@example.com", password: "longenough1" })).cookie;
     // order: total comes from server prices, stock goes down, a demo message is recorded
-    r = await call("/api/orders", "POST", { ...addr, pay: "online", items: [{ id: 2, qty: 2, price: 1 }, { id: 5, qty: 1 }] }, buyer);
+    r = await call("/api/orders", "POST", { ...addr, pay: "online", items: [{ id: 2, qty: 2, price: 1 }, { id: 3, qty: 1 }] }, buyer);
     assert.equal(r.status, 200);
     const orderId = r.data.id;
     r = await call("/api/orders/" + orderId, "GET", null, buyer);
-    assert.equal(r.data.order.total, 32990 * 2 + 8990);
+    assert.equal(r.data.order.total, 32990 * 2 + 28990);
     assert.equal(r.data.order.userId, undefined);
     assert.equal(r.data.order.pay, "Paid online (demo payment)");
     r = await call("/api/products");
     assert.equal(r.data.products.find(p => p.id === 2).stock, 23);
 
     // bad orders are refused
-    assert.equal((await call("/api/orders", "POST", { ...addr, items: [{ id: 9, qty: 4 }] }, buyer)).status, 409); // only 3 in stock
+    assert.equal((await call("/api/orders", "POST", { ...addr, items: [{ id: 9, qty: 1 }] }, buyer)).status, 400); // a product in a hidden category cannot be ordered
     assert.equal((await call("/api/orders", "POST", { ...addr, items: [] }, buyer)).status, 400);
     assert.equal((await call("/api/orders", "POST", { ...addr, items: [null] }, buyer)).status, 400);
     assert.equal((await call("/api/orders", "POST", { ...addr, phone: "abc", items: [{ id: 1, qty: 1 }] }, buyer)).status, 400);
@@ -69,6 +70,7 @@ server.listen(0, "127.0.0.1", async () => {
     const admin = (await call("/api/login", "POST", { email: "admin@mytekkstore.local", password: pw })).cookie;
     assert.equal((await call("/api/admin/orders", "GET", null, admin)).data.orders.length, 2);
     assert.ok((await call("/api/admin/outbox", "GET", null, admin)).data.messages.some(m => m.text.includes(orderId) && m.sent === "recorded only"));
+    assert.equal((await call("/api/products?all=1", "GET", null, admin)).data.products.length, 9, "the admin still sees the hidden categories");
 
     // sign in with a mobile number: the code is hashed, expires, works once and (with no SMS provider, on localhost only) comes back for testing
     const wrongFor = c => String((+c + 1) % 1e6).padStart(6, "0");
@@ -137,9 +139,11 @@ server.listen(0, "127.0.0.1", async () => {
     r = await call("/api/products");
     assert.equal(r.data.products.find(p => p.id === 2).stock, 25); // cancel returned the stock
     // reopening a cancelled order takes the stock again, and is refused once someone else has bought it
-    const small = (await call("/api/orders", "POST", { ...addr, items: [{ id: 9, qty: 3 }] }, buyer)).data.id; // all 3 in stock
+    const p4 = (await call("/api/products")).data.products.find(p => p.id === 4);
+    assert.equal((await call("/api/admin/products/4", "PUT", { ...p4, stock: 3 }, admin)).status, 200); // only 3 left of this TV
+    const small = (await call("/api/orders", "POST", { ...addr, items: [{ id: 4, qty: 3 }] }, buyer)).data.id; // all 3 in stock
     assert.equal((await call("/api/admin/orders/" + small, "PATCH", { status: "Cancelled" }, admin)).status, 200);
-    assert.equal((await call("/api/orders", "POST", { ...addr, items: [{ id: 9, qty: 3 }] }, user)).status, 200);
+    assert.equal((await call("/api/orders", "POST", { ...addr, items: [{ id: 4, qty: 3 }] }, user)).status, 200);
     assert.equal((await call("/api/admin/orders/" + small, "PATCH", { status: "Placed" }, admin)).status, 409);
     assert.equal((await call("/api/admin/orders/" + small, "PATCH", { status: "Cancelled" }, admin)).status, 200); // same status again is harmless
     assert.equal((await call("/api/admin/orders/" + orderId, "GET", null, admin)).status, 404); // no such admin route, orders come as a list
@@ -160,7 +164,7 @@ server.listen(0, "127.0.0.1", async () => {
     assert.equal((await call("/api/admin/products/10", "PUT", { ...np, price: 150 }, admin)).data.product.price, 150);
     assert.equal((await call("/api/admin/products/10", "DELETE", null, admin)).status, 200);
     assert.equal((await call("/api/admin/products/9", "DELETE", null, admin)).status, 200);
-    assert.equal((await call("/api/admin/products", "POST", np, admin)).data.product.id, 10); // 9 was ordered, so its id is never given to a new product
+    assert.equal((await call("/api/admin/products", "POST", np, admin)).data.product.id, 9); // 9 was deleted but never ordered, so its id is free again; an ordered product's id is never reused
     assert.equal((await call("/api/admin/products", "POST", np, user)).status, 403);
 
     // sign out ends the session
@@ -188,6 +192,8 @@ server.listen(0, "127.0.0.1", async () => {
     assert.ok((await (await fetch(base + "/category.html?cat=Televisions")).text()).includes('"@type":"ItemList"'), "category pages list their products as structured data");
     const map = await (await fetch(base + "/sitemap.xml")).text();
     assert.ok(map.includes("/televisions/elista-80-cm-32-inch-hd-ready-smart-led-tv") && map.includes("<lastmod>") && !map.includes("product.html"), "the sitemap lists clean addresses with lastmod");
+    assert.ok(!map.includes("washing-machines") && !map.includes("/stores"), "hidden categories and the store locator are not in the sitemap");
+    assert.equal((await fetch(base + "/washing-machines")).status, 404, "a hidden category has no page"); assert.equal((await fetch(base + "/stores")).status, 404, "the store locator is hidden");
     // clean addresses: the server serves the page, its own tags, and tells the app what to draw
     html = await (await fetch(base + "/televisions/telefunken-140-cm-55-inch-4k-ultra-hd-google-tv")).text();
     assert.ok(html.includes("<title>Telefunken 140 cm (55 inch) 4K Ultra HD Google TV | Mytekkstore</title>") && html.includes('data-id="2"') && html.includes('"@type":"Product"') && html.includes('rel="canonical" href="' + base + '/televisions/telefunken-140-cm-55-inch-4k-ultra-hd-google-tv"'), "a clean product address");

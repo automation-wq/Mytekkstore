@@ -10,6 +10,14 @@ fs.mkdirSync(DATA, { recursive: true });
 const BUILT = (() => { try { return JSON.parse(fs.readFileSync(path.join(PUBLIC, "assets", "builds.json"), "utf8")).built || new Date().toISOString(); } catch { return new Date().toISOString(); } })();
 // the visitor's address: behind a proxy (Vercel, nginx) set TRUST_PROXY=1 to use the forwarded one
 const ipOf = req => (process.env.TRUST_PROXY && String(req.headers["x-forwarded-for"] || "").split(",").pop().trim()) || req.socket.remoteAddress;
+// Client decision of 2026-10-12: the store sells televisions only for now. Products in these categories stay in the data (the admin
+// still sees and edits them) but are not served, listed, linked or sold. Empty the list to bring them back.
+const HIDDEN_CATS = ["Washing Machines", "Air Conditioners"];
+const visible = p => !HIDDEN_CATS.includes(p.cat), live = () => db.products.filter(visible);
+// The store locator page is hidden too (the business is B2C only). Remove "stores" here and set SHOW_STORES in web/src/data.js to bring it back.
+const HIDDEN_PAGES = ["stores"];
+// what is on sale, in words, for the home page title and description
+const catWords = () => { const n = [...new Set(live().map(p => p.cat))].map(c => ({ Televisions: "Smart TVs", "Washing Machines": "washing machines", "Air Conditioners": "ACs" })[c] || c.toLowerCase()); return n.length > 1 ? n.slice(0, -1).join(", ") + " and " + n[n.length - 1] : n[0] || "electronics"; };
 
 // ===== optional services: set these environment variables to switch them on (see docs/TRD.md section 11) =====
 // SMS through Twilio: order confirmations and sign-in codes. Without them, messages are only recorded in the admin outbox.
@@ -50,6 +58,12 @@ if (!fs.existsSync(file("products"))) write("products");
 if (db.products.some(p => p.emi === undefined)) {
   const seed = seedProducts();
   db.products.forEach(p => { if (p.emi === undefined) p.emi = !!(seed.find(x => x.id === p.id) || {}).emi; });
+  write("products");
+}
+// ponytail: one-off migration. Products saved before the operating system field existed take the seed's value for the same id.
+if (db.products.some(p => p.os === undefined)) {
+  const seed = seedProducts();
+  db.products.forEach(p => { if (p.os === undefined) p.os = (seed.find(x => x.id === p.id) || {}).os || ""; });
   write("products");
 }
 
@@ -111,6 +125,9 @@ function productFrom(b) {
     img: str(b.img, "Image", 300, /^(img\/[\w.-]+|https:\/\/[^\s"'<>]+)$/),
     desc: typeof b.desc === "string" && b.desc.trim() ? str(b.desc, "Description", 2000) : "",
     emi: !!b.emi, // shows the "No Cost EMI" tag
+    os: typeof b.os === "string" && b.os.trim() ? str(b.os, "Operating system", 40) : "", // Google TV, WebOS, Android TV: Shop by OS and the comparison chart
+    // A+ content blocks on the product page: [{ title, text, img }], up to 8
+    story: Array.isArray(b.story) ? b.story.slice(0, 8).map(x => ({ title: str(x && x.title, "A+ title", 80), text: str(x && x.text, "A+ text", 600), img: x && typeof x.img === "string" && x.img.trim() ? str(x.img, "A+ photo", 300, /^(img\/[\w.-]+|https:\/\/[^\s"'<>]+)$/) : "" })) : [],
     // extra photos for the product page gallery (thumbnails), up to 8 links
     images: Array.isArray(b.images) ? b.images.slice(0, 8).map(s => str(s, "Photo link", 300, /^(img\/[\w.-]+|https:\/\/[^\s"'<>]+)$/)) : [],
     specs: [],
@@ -161,7 +178,7 @@ const routes = [];
 const on = (method, pattern, fn, need) => routes.push({ method, re: new RegExp("^/api/" + pattern + "$"), fn, need });
 
 const publicProduct = p => ({ ...p, reviews: (p.reviews || []).map(({ userId, ...r }) => r) });
-on("GET", "products", () => ({ products: db.products.map(publicProduct) }));
+on("GET", "products", ({ req, user }) => ({ products: (user && user.admin && /[?&]all=1\b/.test(req.url) ? db.products : live()).map(publicProduct) })); // the admin asks for all=1 to see hidden categories
 // one review per customer per product; a new review replaces the old one
 on("POST", "products/(\\d+)/reviews", ({ params, body, user }) => {
   const p = db.products.find(p => p.id === +params[0]);
@@ -308,7 +325,7 @@ on("POST", "orders", ({ body, user }) => { // sign-in required
   if (!Array.isArray(body.items) || !body.items.length || body.items.length > 50) bad("Your cart is empty.");
   // Prices and stock always come from the server's own product list, never from the browser.
   const lines = body.items.map(it => {
-    const p = it && typeof it === "object" && db.products.find(p => p.id === it.id);
+    const p = it && typeof it === "object" && db.products.find(p => p.id === it.id && visible(p)); // a hidden category cannot be ordered
     if (!p) bad("A product in your cart is no longer available.");
     const qty = int(it.qty, "Quantity", 1, 10);
     if (p.stock < qty) throw new HttpError(409, p.stock ? `Only ${p.stock} left of ${p.brand} ${p.name}.` : `${p.brand} ${p.name} is out of stock.`);
@@ -445,7 +462,7 @@ const siteUrl = req => (req.headers["x-forwarded-proto"] || "http") + "://" + (r
 const INFO_PAGES = ["about", "contact", "stores", "shipping", "returns", "terms", "privacy"];
 // title and description of each info page (the page itself is drawn by web/src/info.jsx)
 const INFO_TITLES = {
-  about: ["About Mytekkstore", "Mytekkstore sells Elista and Telefunken televisions, washing machines and air conditioners, delivered free with cash on delivery and the brand's warranty."],
+  about: ["About Mytekkstore", "Mytekkstore sells genuine Elista and Telefunken electronics at factory prices, delivered free with cash on delivery and the brand's warranty."],
   contact: ["Contact us", "Write to Mytekkstore about orders, delivery, returns and service. We reply by email."],
   stores: ["Store locator", "Find a Mytekkstore store, or check delivery to your pincode: free delivery across India, usually in 3 to 5 days."],
   shipping: ["Shipping and delivery", "Free delivery on every Mytekkstore order, usually in 3 to 5 days, with cash on delivery. Check your pincode before you order."],
@@ -465,8 +482,8 @@ const CLEAN = { "/products": "category.html", "/offers": "offers.html", "/cart":
 function resolveClean(pathname) { // -> { file, params } for a clean address, else null
   if (CLEAN[pathname]) return { file: CLEAN[pathname], params: {} };
   const parts = pathname.split("/").filter(Boolean);
-  if (parts.length === 1 && INFO_PAGES.includes(parts[0])) return { file: "page.html", params: { p: parts[0] } };
-  const cat = parts.length && [...new Set(db.products.map(p => p.cat))].find(c => slug(c) === parts[0]);
+  if (parts.length === 1 && INFO_PAGES.includes(parts[0]) && !HIDDEN_PAGES.includes(parts[0])) return { file: "page.html", params: { p: parts[0] } };
+  const cat = parts.length && [...new Set(live().map(p => p.cat))].find(c => slug(c) === parts[0]);
   if (cat && parts.length === 1) return { file: "category.html", params: { cat } };
   if (cat && parts.length === 2) { const p = db.products.find(p => p.cat === cat && slug(p.brand + " " + p.name) === parts[1]); if (p) return { file: "product.html", params: { id: String(p.id) } }; }
   return null;
@@ -475,8 +492,8 @@ function resolveClean(pathname) { // -> { file, params } for a clean address, el
 // sharing tags and schema.org data into each page before sending it. Product and category pages get their own.
 function seoTags(req, url) {
   const base = siteUrl(req), q = url.searchParams, file = url.pathname, tag = (k, v) => `<meta property="${k}" content="${escHtml(v)}">`;
-  let title = "Mytekkstore | Elista and Telefunken TVs, washing machines and ACs", img = base + "/img/hero0.jpg", ld = null, robots = "";
-  let desc = "Shop Elista and Telefunken televisions, washing machines and air conditioners at Mytekkstore. Genuine products with brand warranty, free delivery, cash on delivery.";
+  let title = "Mytekkstore | Elista and Telefunken " + catWords() + " at factory prices", img = base + "/img/hero0.jpg", ld = null, robots = "";
+  let desc = "Shop Elista and Telefunken " + catWords() + " at Mytekkstore, straight from the factory. Genuine products with brand warranty, free delivery, cash on delivery.";
   let canonical = file + url.search; // the clean address of this page; the old .html addresses point at it
   const p = file === "/product.html" && db.products.find(p => p.id === +q.get("id"));
   const cat = file === "/category.html" && q.get("cat"), brand = file === "/category.html" && !cat && q.get("brand"), info = file === "/page.html" && q.get("p");
@@ -513,7 +530,7 @@ function seoTags(req, url) {
   } else if (file === "/category.html") {
     canonical = brand ? "/products?brand=" + encodeURIComponent(brand) : "/products";
     title = (brand || "All products") + " | Mytekkstore";
-    desc = brand ? "Every " + brand + " television, washing machine and air conditioner at Mytekkstore, with filters for size, price and discount." : "Every Elista and Telefunken television, washing machine and air conditioner at Mytekkstore, with filters for brand, size, price and discount.";
+    desc = (brand ? "All " + brand + " " : "All Elista and Telefunken ") + catWords() + " at Mytekkstore, with filters for " + (brand ? "" : "brand, ") + "size, operating system, price and discount.";
     if (q.has("wish") || q.get("q")) robots = "noindex"; // a personal wishlist and search results are not landing pages
   } else if (info && INFO_TITLES[info]) {
     canonical = "/" + info;
@@ -580,10 +597,10 @@ const server = http.createServer((req, res) => {
   if (pathname === "/robots.txt") { res.writeHead(200, { "Content-Type": "text/plain; charset=utf-8" }); return res.end("User-agent: *\nAllow: /\nAllow: /api/products\nAllow: /api/config\nAllow: /api/me\nDisallow: /api/\nDisallow: /admin\nDisallow: /account\nDisallow: /cart\nDisallow: /checkout\nDisallow: /order\nSitemap: " + siteUrl(req) + "/sitemap.xml\n"); } // Google's renderer may fetch the product data; private pages and the rest of the API stay out
   if (pathname === "/sitemap.xml") {
     // clean addresses only, each with the day its content last changed (products: their last edit; lists: their newest product; pages: the build)
-    const base = siteUrl(req), cats = [...new Set(db.products.map(p => p.cat))], brands = [...new Set(db.products.map(p => p.brand))];
+    const base = siteUrl(req), cats = [...new Set(live().map(p => p.cat))], brands = [...new Set(live().map(p => p.brand))];
     const newest = list => list.map(p => p.updated || "").sort().pop() || BUILT;
-    const urls = [["/", BUILT], ["/products", newest(db.products)], ["/offers", newest(db.products)], ...cats.map(c => [catPath(c), newest(db.products.filter(p => p.cat === c))]),
-      ...brands.map(b => ["/products?brand=" + encodeURIComponent(b), newest(db.products.filter(p => p.brand === b))]), ...db.products.map(p => [productPath(p), p.updated || BUILT]), ...INFO_PAGES.map(p => ["/" + p, BUILT])];
+    const urls = [["/", BUILT], ["/products", newest(live())], ["/offers", newest(live())], ...cats.map(c => [catPath(c), newest(live().filter(p => p.cat === c))]),
+      ...brands.map(b => ["/products?brand=" + encodeURIComponent(b), newest(live().filter(p => p.brand === b))]), ...live().map(p => [productPath(p), p.updated || BUILT]), ...INFO_PAGES.filter(p => !HIDDEN_PAGES.includes(p)).map(p => ["/" + p, BUILT])];
     res.writeHead(200, { "Content-Type": "application/xml; charset=utf-8" });
     return res.end('<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n' + urls.map(([u, d]) => "<url><loc>" + escHtml(base + u) + "</loc><lastmod>" + d.slice(0, 10) + "</lastmod></url>").join("\n") + "\n</urlset>\n");
   }

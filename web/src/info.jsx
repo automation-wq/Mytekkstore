@@ -5,8 +5,8 @@
 import { useEffect, useRef, useState } from "react";
 import { useStore } from "./store.jsx";
 import { api, qs } from "./api.js";
-import { Row, Form, Icon, KvImg } from "./components.jsx";
-import { KV_IMG, CAT_CLIPS, CAT_SIZE, BANK_OFFERS, FAQ, CONTACT, STORES, POLICY, catUrl, brandUrl, listUrl, off, etaText } from "./data.js";
+import { Row, Form, Icon, KvImg, Qa } from "./components.jsx";
+import { KV_IMG, CAT_CLIPS, CAT_SIZE, BANK_OFFERS, FAQ, CONTACT, STORES, POLICY, SHOW_STORES, WARRANTY_QA, catUrl, brandUrl, listUrl, off, etaText } from "./data.js";
 import { countUp } from "./motion.js";
 
 const PAGES = {
@@ -55,7 +55,7 @@ function Cats() {
 
 export function InfoPage() {
   const { P, CATS, BRANDS, money } = useStore();
-  const p = qs.get("p"), page = Object.hasOwn(PAGES, p) ? PAGES[p] : null;
+  const p = qs.get("p"), page = Object.hasOwn(PAGES, p) && (p !== "stores" || SHOW_STORES) ? PAGES[p] : null; // the store locator is hidden (client decision 2026-10-12)
   const numRef = useRef();
   useEffect(() => { document.title = (page ? page[0] : "Page not found") + " | Mytekkstore"; }, []);
   useEffect(() => { if (numRef.current) countUp(numRef.current); }, [P]);
@@ -126,7 +126,8 @@ export function InfoPage() {
       ["Replacements", "If the product arrived damaged or faulty, we replace it with the same model when it is in stock, or refund you in full."],
       ["Warranty after the return window", "Every product carries the brand's warranty. After the return window, service and repairs go through the brand's service network, and we help you reach it."],
     ]} /></section>
-    <Faq list={FAQ.filter(([q]) => /return|genuine|track/i.test(q))} />
+    <Qa title="Warranty" lead="How to claim it, and what to expect." list={WARRANTY_QA} />
+    <Faq list={FAQ.filter(([q]) => /genuine|track/i.test(q))} />
     {cta}</>;
 
   if (p === "terms") return <>{crumbs}{hero}

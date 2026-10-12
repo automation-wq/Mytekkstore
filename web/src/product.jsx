@@ -4,8 +4,8 @@ import { useEffect, useRef, useState } from "react";
 import { m, AnimatePresence } from "motion/react";
 import { useStore } from "./store.jsx";
 import { api, qs, load, save, track } from "./api.js";
-import { Photo, Stars, Buy, Heart, Row, Box, Form, Ico, Icon } from "./components.jsx";
-import { DEFAULT_FEATURES, BANK_OFFERS, GUIDES, SPEC_GROUPS, specIcon, catSizes, catUrl, brandUrl, off, avg, starRow, etaText, emiPlans, productUrl, pic, picSet } from "./data.js";
+import { Photo, Stars, Buy, Heart, Row, Box, Form, Ico, Icon, Qa } from "./components.jsx";
+import { DEFAULT_FEATURES, BANK_OFFERS, WARRANTY_QA, SPEC_GROUPS, osUrl, specIcon, catSizes, catUrl, brandUrl, off, avg, starRow, etaText, emiPlans, productUrl, pic, picSet } from "./data.js";
 
 const $ = (s, el = document) => el.querySelector(s);
 const $$ = (s, el = document) => [...el.querySelectorAll(s)];
@@ -51,6 +51,7 @@ export function Product() {
   // the Specifications tab, grouped (Display, Sound, ...); warranty comes from the product's own specifications
   const groups = [["General", [["Brand", p.brand], ["Category", p.cat]]], ...SPEC_GROUPS.map(([g, re]) => [g, [], re])];
   (p.specs || []).forEach(([k, v]) => (groups.find(([, , re]) => re && re.test(k)) || groups[0])[1].push([k, v]));
+  if (p.os) groups[0][1].unshift(["Operating system", p.os]);
   groups[0][1].push(["Sold by", "Mytekkstore"]);
   const feats = (p.specs || []).slice(0, 6); // feature strip under the photo, from the product's own specifications
   const images = [p.img, ...(p.images || [])]; // more photos come from the admin (one link per line)
@@ -85,7 +86,7 @@ export function Product() {
         <p className="muted hint">Move the pointer over the photo to zoom in</p>
         {feats.length > 0 && <div className="fstrip">{feats.map(([k, v]) => <div className="ft" key={k}><Ico shapes={specIcon(k)} /><span><small>{k}</small><b>{v}</b></span></div>)}</div>}</div>
       <div className="pinfo">
-        <a className="pbrand" href={brandUrl(p.brand)}>{p.brand}</a>
+        <a className="pbrand" href={brandUrl(p.brand)}>{p.brand}</a>{p.os && <a className="ostag" href={osUrl(p.os)}>{p.os}</a>}
         <h1>{p.brand} {p.name}</h1>
         <p className="rating"><Stars p={p} />{!(p.reviews || []).length && <span className="muted" style={{ fontSize: 13 }}>No reviews yet</span>} <a className="alink" href="#t-rev" data-tab="t-rev" style={{ fontSize: 13 }}>See reviews</a></p>
         <div className="price"><b>{money(p.price)}</b>{save$ && <><s>{money(p.mrp)}</s><span className="badge">{off(p)}% off</span></>}</div>
@@ -95,7 +96,7 @@ export function Product() {
             <p className="muted">On participating bank credit cards, subject to the bank's terms. <a className="alink" href="/offers">See all offers</a></p></details></>}
         <p style={{ marginTop: 12 }}>{stock} <span className="muted" style={{ fontSize: 13 }}>· Sold by Mytekkstore</span></p>
         {p.stock > 0 && p.stock <= 10 && <div className="stockbar"><span>Hurry, only {p.stock} left in stock</span><i><b style={{ width: p.stock * 10 + "%" }}></b></i></div>}
-        {sizes.length > 0 && <div className="sizes"><span>{S.by}</span>{sizes.map(({ s, t, on }) => <a className={"chip sw" + (on ? " on" : "")} href={productUrl(t)} aria-current={on ? "page" : undefined} key={s.label}><b>{s.label.replace(/ TVs$/, "")}</b><small>{money(t.price)}</small></a>)}{GUIDES[p.cat] && <a className="alink" href={catUrl(p.cat) + "#guide"}>Not sure? Open the {GUIDES[p.cat].nav} →</a>}</div>}
+        {sizes.length > 0 && <div className="sizes"><span>{S.by}</span>{sizes.map(({ s, t, on }) => <a className={"chip sw" + (on ? " on" : "")} href={productUrl(t)} aria-current={on ? "page" : undefined} key={s.label}><b>{s.label.replace(/ TVs$/, "")}</b><small>{money(t.price)}</small></a>)}</div>}
         <div className="pill"><i></i><b>Free delivery</b> · usually by {etaText()} · cash on delivery available</div>
         <div className="pofs"><b>Offers</b>{BANK_OFFERS.slice(0, 3).map(([bank, big, note, c]) => <div style={{ "--bc": c }} key={bank}><b>{big}</b><span>{note}</span></div>)}<a href="/offers">See all offers →</a></div>
         {picks.length > 0 && <div className="bundle"><b>Complete your home</b><p className="muted small">Pair it with these and add everything in one go.</p>
@@ -106,9 +107,11 @@ export function Product() {
         <form className="pin" id="pincheck" noValidate ref={pinRef} onSubmit={e => { e.preventDefault(); pinCheck(); }}><label>Deliver to <input name="pin" inputMode="numeric" maxLength="6" placeholder="Enter pincode" defaultValue={(me && me.pin) || load("pin", "")} aria-label="Pincode" /></label><button className="btn ghost">Check</button>
           <p id="pinmsg" className="muted" role="status">{typeof pinMsg === "string" ? pinMsg : <><b>Delivery available</b> to {pinMsg.pin} · usually by {etaText()} · cash on delivery available</>}</p></form>
         <div className="perks"><span><Icon k="truck" /> Free delivery</span><span><Icon k="shield" /> Brand warranty</span><span><Icon k="undo" /> Easy returns</span><span><Icon k="check" /> Genuine product</span></div>
+        <details className="qbox"><summary><Icon k="shield" /> Warranty, returns and replacement</summary><div>{WARRANTY_QA.slice(0, 3).map(([q, a]) => <p key={q}><b>{q}</b><br />{a}</p>)}<a className="alink" href="#warranty">All warranty and return questions →</a></div></details>
         <div className="sharerow"><span>Share:</span><a href={`https://wa.me/?text=${shareText}%20${share}`} target="_blank" rel="noopener">WhatsApp</a><a href={`https://www.facebook.com/sharer/sharer.php?u=${share}`} target="_blank" rel="noopener">Facebook</a><a href={`https://twitter.com/intent/tweet?url=${share}&text=${shareText}`} target="_blank" rel="noopener">X</a><button className="link" id="share" type="button" onClick={shareLink}>Copy link</button></div>
       </div>
     </div>
+    {p.story && p.story.length > 0 && <section className="aplus" id="aplus"><h2>About this TV</h2>{p.story.map((b, i) => <div className={"ablock" + (i % 2 ? " flip" : "")} key={i}>{b.img && <img src={pic(b.img, 960)} alt="" loading="lazy" />}<div><h3>{b.title}</h3><p>{b.text}</p></div></div>)}</section>}
     <section id="tabs">
       <div className="tabbar">{[["t-desc", "Description"], ["t-specs", "Specifications"], ["t-del", "Delivery and returns"], ["t-rev", "Reviews (" + (p.reviews || []).length + ")"]].map(([id, label]) => <button className={tab === id ? "on" : undefined} data-tab={id} key={id}>{label}{tab === id && <m.i className="ink" layoutId="tab-ink" transition={INK} />}</button>)}</div>
       <div className="tabpane" id="t-desc" hidden={tab !== "t-desc"}><p>{p.desc || p.brand + " " + p.name}</p><ul>{DEFAULT_FEATURES.map(f => <li key={f}>{f}</li>)}</ul></div>
@@ -126,6 +129,7 @@ export function Product() {
       <div className="tabpane" id="t-del" hidden={tab !== "t-del"}><ul><li>Free delivery on this product, usually by {etaText()} when you order today.</li><li>Check delivery to your area with the pincode box above.</li><li>Pay by cash on delivery.</li><li>See <a className="alink" href="/shipping">Shipping</a> and <a className="alink" href="/returns">Returns</a> for the full policy.</li></ul></div>
     </section>
     <Compare p={p} />
+    <Qa id="warranty" title="Warranty and returns" lead="How a claim works, and what happens if something is wrong with your TV." list={WARRANTY_QA} />
     <Row title={"More in " + p.cat} href={catUrl(p.cat)} list={P.filter(x => x.cat === p.cat && x.id !== p.id)} />
     <Row title="Recently viewed" href="" list={seen.map(byId).filter(Boolean)} />
   </div>;
@@ -149,6 +153,7 @@ function Compare({ p }) {
       <tbody>
         {line("Price", x => <><b className="cprice">{money(x.price)}</b>{x.mrp > x.price && <><s>{money(x.mrp)}</s><span className="badge">{off(x)}% off</span></>}{x.price === cheapest && <><br /><span className="stock">Lowest price</span></>}</>)}
         {line("Rating", x => <Stars p={x} /> && (x.reviews && x.reviews.length ? <Stars p={x} /> : <span className="muted">No reviews yet</span>))}
+        {cols.some(x => x.os) && line("Operating system", x => x.os || "—", new Set(cols.map(x => x.os || "")).size > 1 ? "diff" : "")}
         {keys.map(k => line(k, x => specOf(x, k), new Set(cols.map(x => specOf(x, k))).size > 1 ? "diff" : ""))}
         {line("No Cost EMI", x => x.emi ? <><Icon k="check" /> Available</> : "—")}
         {line("", x => <Buy p={x} />)}
