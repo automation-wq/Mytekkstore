@@ -246,6 +246,24 @@ async function run() {
     assert.equal(picked.bar, "2 of 4"); assert.equal(picked.cols, 2, "the compare table shows the two picks"); assert.equal(picked.h2, "Compare your picks");
     assert.ok(picked.sizes > 0, "size pills on cards"); assert.ok(/\/month/.test(picked.emi), "No Cost EMI per month on cards"); assert.equal(picked.find, 4, "find by size, budget, operating system and resolution");
 
+    step = "campaign page, compare page, the product's own banner, the help bot";
+    await b.goto(base + "/campaigns/festive-tv-days"); await sleep(600);
+    const camp = await b.ev(`({ h1: document.querySelector("main h1").textContent, preset: document.querySelector(".banner").dataset.preset, cards: document.querySelectorAll("#products .card").length, cols: document.querySelectorAll(".cmp .ctable thead th").length - 1, theme: document.querySelector(".campaign").className })`);
+    assert.ok(/Four\s4K\sTVs/.test(camp.h1), "the campaign hero headline: " + camp.h1); assert.equal(camp.preset, "promo"); assert.equal(camp.cards, 4, "the four picks"); assert.equal(camp.cols, 4, "the picks compared"); assert.ok(camp.theme.includes("theme-dark"));
+    await b.goto(base + "/compare?ids=2,11");
+    assert.equal(await b.ev(`document.querySelectorAll(".cmp .ctable thead th").length - 1`), 2, "the compare page shows the two models");
+    await b.goto(base + "/televisions/telefunken-140-cm-55-inch-4k-ultra-hd-google-tv"); await sleep(400);
+    assert.equal(await b.ev(`document.querySelector("main .banner.phero").dataset.preset`), "cinematic", "the product's own banner, before the buy box");
+    assert.equal(await b.ev(`document.querySelectorAll("main h1").length`), 1, "one h1 on the product page");
+    await b.click(...await b.center(".chatfab")); await sleep(500);
+    assert.ok(await b.ev(`document.activeElement === document.querySelector(".chat input")`), "the help panel opens with the question box focused");
+    await b.ev(`document.querySelector(".chat input").value = "What is the resolution?"; document.querySelector(".chat form").requestSubmit()`); await sleep(700);
+    assert.ok(/3840/.test(await b.ev(`[...document.querySelectorAll(".cmsgs .bot p")].pop().textContent`)), "the bot answers from the product's specifications");
+    await b.click(...await b.center(".csugg button", 1)); await sleep(700);
+    assert.ok(/months/.test(await b.ev(`[...document.querySelectorAll(".cmsgs .bot p")].pop().textContent`)) && await b.ev(`document.querySelectorAll(".cmsgs .clinks a").length > 0`), "the EMI answer with a link");
+    await b.key("Escape"); await sleep(900); // the panel animates out
+    assert.ok(await b.ev(`document.querySelector(".chatfab").getAttribute("aria-expanded") === "false" && document.querySelectorAll(".chat").length === 0`), "Escape closes the help panel");
+
     step = "product page: size switcher, delivery check, share, rating bars";
     await b.goto(base + "/televisions/telefunken-140-cm-55-inch-4k-ultra-hd-google-tv");
     assert.deepEqual(await b.ev(`[...document.querySelectorAll(".sizes .chip b")].map(a => a.textContent)`), ["32 inch", "40 inch", "43 inch", "50 inch", "55 inch", "65 inch"]);

@@ -8,6 +8,7 @@ import { useStore } from "./store.jsx";
 import { countUp } from "./motion.js";
 import { Card, Row, BankOffers, Ico, Qa } from "./components.jsx";
 import { DRAW_ICONS, BANK_OFFERS, HOME_BANNERS, FAQ, catSizes, brandUrl, listUrl, off, starRow, productUrl, pic, picSet, osList, osUrl, brandPoints, cutout } from "./data.js";
+import { lines, TONES } from "./banner.jsx";
 
 // hero parts rise in one after another on a spring, and the headline staggers word by word (Motion variants)
 const RISE = { hide: { y: "115%", opacity: 0 }, show: { y: 0, opacity: 1, transition: { type: "spring", stiffness: 280, damping: 28 } } };
@@ -15,14 +16,17 @@ const WORDS = { hide: {}, show: { transition: { staggerChildren: .06, delayChild
 const GROUP = { hide: {}, show: { transition: { staggerChildren: .12 } } };
 
 export function Home() {
-  const { P, CATS, BRANDS, recent, byId, money } = useStore();
+  const { P, CATS, BRANDS, recent, byId, money, banners } = useStore();
   const [cur, setCur] = useState(0);
   const heroRef = useRef(), numRef = useRef();
   const maxOff = Math.max(0, ...P.map(off));
   const biggest = b => [...P].filter(p => p.brand === b).sort((a, c) => c.price - a.price)[0]; // the brand's flagship: its most expensive model
   // the banners: a brand banner shows the brand's flagship and its reasons; the promotion shows the biggest discount
-  const slides = HOME_BANNERS.filter(s => s.kind !== "brand" || biggest(s.brand)).map(s => s.kind === "brand" ? { ...s, pts: brandPoints(P, s.brand), prod: biggest(s.brand), href: brandUrl(s.brand), cta: "Shop " + s.brand, eyebrow: s.brand }
-    : s.kind === "promo" ? { ...s, s: "Up to " + maxOff + "% off, bank offers, and No Cost EMI on the models that carry it." } : s);
+  // the banners the admin keeps in the slot "home", in order; the built-in four are the fallback until any are saved
+  const home = banners.filter(b => b.slot === "home");
+  const raw = home.length ? home.map(b => ({ kind: b.brand ? "brand" : b.preset === "promo" ? "promo" : "photo", preset: b.preset, eyebrow: b.kicker, h: lines(b.title), s: b.text, href: b.href, cta: b.cta, cta2: b.cta2, href2: b.href2, im: b.img, imMobile: b.imgMobile, brand: b.brand, tone: TONES[b.tone] || undefined, prod: b.productId ? byId(b.productId) : null })) : HOME_BANNERS;
+  const slides = raw.filter(s => s.kind !== "brand" || biggest(s.brand)).map(s => s.kind === "brand" ? { ...s, pts: brandPoints(P, s.brand), prod: s.prod || biggest(s.brand), href: s.href || brandUrl(s.brand), cta: s.cta || "Shop " + s.brand, eyebrow: s.eyebrow || s.brand }
+    : s.kind === "promo" ? { ...s, s: s.s || "Up to " + maxOff + "% off, bank offers, and No Cost EMI on the models that carry it." } : s);
   const show = n => setCur((n + slides.length) % slides.length);
   useEffect(() => { const t = setInterval(() => { if (!heroRef.current || !heroRef.current.matches(":hover")) setCur(c => (c + 1) % slides.length); }, 5000); return () => clearInterval(t); }, [slides.length]);
   useEffect(() => countUp(numRef.current), []); // numbers roll up from 0 the first time they scroll into view
@@ -45,13 +49,13 @@ export function Home() {
   const picOf = src => ({ src: pic(src, 960), srcSet: picSet(src) });
   return <>
     <div className="hero" ref={heroRef} onClick={onHero} onPointerMove={onMove}>
-      {slides.map((sl, i) => <m.div className={"slide k-" + sl.kind + (i === cur ? " on" : "")} key={i} initial="hide" animate={i === cur ? "show" : "hide"} variants={GROUP} style={sl.tone ? { background: sl.tone } : undefined}>
-        {sl.im && <div className="bg"><img {...picOf(sl.im)} sizes="100vw" alt="" width="1344" height="752" fetchPriority={i ? "low" : "high"} loading={i ? "lazy" : "eager"} decoding="async" /></div>}
+      {slides.map((sl, i) => <m.div className={"slide k-" + sl.kind + (i === cur ? " on" : "")} data-preset={sl.preset || "cinematic"} key={i} initial="hide" animate={i === cur ? "show" : "hide"} variants={GROUP} style={sl.tone ? { background: sl.tone } : undefined}>
+        {sl.im && <div className="bg"><picture>{sl.imMobile && <source media="(max-width:760px)" srcSet={pic(sl.imMobile, 960)} />}<img {...picOf(sl.im)} sizes="100vw" alt="" width="1344" height="752" fetchPriority={i ? "low" : "high"} loading={i ? "lazy" : "eager"} decoding="async" /></picture></div>}
         {sl.prod && <m.a className={"bigtv" + (cutout(sl.prod.img) ? " cut" : "")} variants={RISE} href={productUrl(sl.prod)}>{cutout(sl.prod.img) ? <img src={cutout(sl.prod.img)} alt={sl.prod.brand + " " + sl.prod.name} loading={i ? "lazy" : "eager"} /> : <img src={pic(sl.prod.img)} srcSet={picSet(sl.prod.img)} sizes="(max-width:760px) 40vw, 30vw" alt={sl.prod.brand + " " + sl.prod.name} width="800" height="800" loading={i ? "lazy" : "eager"} />}</m.a>}
         <m.span className="eyebrow" variants={RISE}>{sl.eyebrow}</m.span>
         <m.h1 variants={WORDS}>{sl.h.map((l, j) => <span className="ln" key={j}>{l.split(" ").map((w, k) => <m.span className="w" variants={RISE} key={k}>{w}&nbsp;</m.span>)}</span>)}</m.h1>
         {sl.pts ? <m.ul className="pts" variants={RISE}>{sl.pts.map(t => <li key={t}>{t}</li>)}</m.ul> : <m.p variants={RISE}>{sl.s}</m.p>}
-        <m.div className="hcta" variants={RISE}><a className="btn" href={sl.href}>{sl.cta}</a><a className="btn ghost" href={listUrl({ cat: "Televisions", sort: "off" })}>See deals</a></m.div>
+        <m.div className="hcta" variants={RISE}><a className="btn" href={sl.href}>{sl.cta}</a><a className="btn ghost" href={sl.href2 || listUrl({ cat: "Televisions", sort: "off" })}>{sl.cta2 || "See deals"}</a></m.div>
       </m.div>)}
       <button className="arrow prev" aria-label="Previous slide">‹</button><button className="arrow next" aria-label="Next slide">›</button>
       <div className="dots">{slides.map((_, i) => <button aria-label={"Slide " + (i + 1)} data-i={i} className={i === cur ? "on" : undefined} key={i}></button>)}</div>

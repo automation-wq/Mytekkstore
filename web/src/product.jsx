@@ -5,6 +5,7 @@ import { m, AnimatePresence } from "motion/react";
 import { useStore } from "./store.jsx";
 import { api, qs, load, save, track } from "./api.js";
 import { Photo, Stars, Buy, Heart, Row, Box, Form, Ico, Icon, Qa } from "./components.jsx";
+import { Banner } from "./banner.jsx";
 import { DEFAULT_FEATURES, BANK_OFFERS, WARRANTY_QA, SPEC_GROUPS, osUrl, autoStory, callouts, cutout, specIcon, catSizes, catUrl, brandUrl, off, avg, starRow, etaText, emiPlans, productUrl, pic, picSet } from "./data.js";
 
 const $ = (s, el = document) => el.querySelector(s);
@@ -12,8 +13,9 @@ const $$ = (s, el = document) => [...el.querySelectorAll(s)];
 const INK = { type: "spring", stiffness: 420, damping: 34 }; // the marker that slides between tabs (Motion layoutId)
 
 export function Product() {
-  const { P, byId, money, qtyOf, setQty, recent, addRecent, updateProduct, toast, openCart, me } = useStore();
+  const { P, byId, money, qtyOf, setQty, recent, addRecent, updateProduct, toast, openCart, me, banners } = useStore();
   const p = byId(qs.get("id"));
+  const hero = p ? banners.find(b => b.slot === "product:" + p.id) : null; // the product's own animated banner, when the admin made one
   const [tab, setTab] = useState("t-desc");
   const [img, setImg] = useState(p ? p.img : "");
   const [pinMsg, setPinMsg] = useState("");
@@ -77,6 +79,7 @@ export function Product() {
 
   return <div onClick={onTab}>
     <div className="crumbs"><a href="/">Home</a> › <a href={catUrl(p.cat)}>{p.cat}</a> › {p.name}</div>
+    {hero && <Banner b={hero} product={p} eager className="phero" />}
     <nav className={"subnav" + (subOn ? " on" : "")} aria-label="Product sections"><div><b>{p.brand} {p.name}</b>
       <div className="stabs">{[["#overview", "Overview", "overview", "t-specs0"], ["#tabs", "Specs", "tabs", "t-specs"], ["#compare", "Compare", "compare"], ["#tabs", "Reviews", "tabs2", "t-rev"]].map(([h, t, key, dt], i) =>
         <a href={h} className={key === spySec ? "on" : undefined} data-tab={dt && dt !== "t-specs0" ? dt : undefined} key={i}>{t}{key === spySec && <m.i className="ink" layoutId="stab-ink" transition={INK} />}</a>)}</div>

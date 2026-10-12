@@ -29,6 +29,11 @@ const GOOGLE = process.env.GOOGLE_CLIENT_ID || "";
 // Microsoft Clarity (free heatmaps and session recordings): set CLARITY_ID to the project id from clarity.microsoft.com and the
 // tag loads on every page except the admin; the privacy page then says so. Typed text is masked by Clarity itself.
 const CLARITY = /^[a-z0-9]{6,32}$/i.test(process.env.CLARITY_ID || "") ? process.env.CLARITY_ID : "";
+// The help bot's assistant: with an Anthropic key the answers come from Claude, fed only the catalogue; without it the browser
+// answers from the same catalogue by rules (web/src/chatbot.js). CHAT_MODEL picks the model.
+const CHAT_KEY = process.env.ANTHROPIC_API_KEY || "", CHAT_MODEL = process.env.CHAT_MODEL || "claude-haiku-4-5-20251001";
+// The Creative Intelligence Agent (creative/): set CREATIVE_URL to its address and the admin's banner editor can ask it for concepts.
+const CREATIVE_URL = (process.env.CREATIVE_URL || "").replace(/\/+$/, "");
 // Email through Brevo (free tier at brevo.com): sign-in codes sent to an email address, and order messages when there is no SMS.
 const BREVO = process.env.BREVO_API_KEY, MAIL_FROM = process.env.MAIL_FROM;
 const mailReady = !!(BREVO && MAIL_FROM);
@@ -69,6 +74,10 @@ if (db.products.some(p => p.os === undefined)) {
   db.products.forEach(p => { if (p.os === undefined) p.os = (seed.find(x => x.id === p.id) || {}).os || ""; });
   write("products");
 }
+// banners (the banner engine: home slides, product heroes, campaign heroes) and campaign pages; SAMPLE content until the admin saves
+const SEED_CONTENT = require("./seed-content.js");
+db.banners = read("banners", null) || SEED_CONTENT.banners;
+db.campaigns = read("campaigns", null) || SEED_CONTENT.campaigns;
 
 // ===== passwords and sessions =====
 const hashPw = (pw, salt) => crypto.scryptSync(pw, salt, 64).toString("hex");
@@ -296,7 +305,7 @@ on("POST", "login/google", async ({ body, req, res }) => {
   return { user: publicUser(u) };
 });
 // what the pages need to know about the optional services
-on("GET", "config", () => ({ google: GOOGLE, sms: smsReady, mail: mailReady, demoCodes: OTP_DEMO, clarity: !!CLARITY }));
+on("GET", "config", () => ({ google: GOOGLE, sms: smsReady, mail: mailReady, demoCodes: OTP_DEMO, clarity: !!CLARITY, chat: !!CHAT_KEY }));
 // Contact form (page.html?p=contact): the message is recorded in the admin outbox ("Customer messages"), so the store sees it
 // even before an email provider is connected. ponytail: no rate limit beyond the body size; add one if the form gets abused.
 on("POST", "contact", ({ body }) => {
@@ -406,6 +415,79 @@ on("DELETE", "admin/products/(\\d+)", ({ params }) => {
   return {};
 }, "admin");
 
+// ===== banners and campaigns =====
+// A banner: a slot (home, product:<id>, category:<name>, campaign:<slug>), a preset (how it animates), a tone (its colours), words,
+// up to two buttons that link inside the site, a desktop image and a phone image with a focus point, and optionally a product.
+const PRESETS = ["cinematic", "layered", "feature", "promo", "scroll"], TONES = ["photo", "paper", "green", "indigo", "dark", "ink"], FOCUS = ["center", "left", "right", "top", "bottom"], THEMES = ["light", "dark", "green", "indigo"];
+const opt = (v, label, max = 200) => v == null || v === "" ? "" : str(v, label, max);
+const oneOf = (v, list, label) => { if (!list.includes(v)) bad(`${label} must be one of ${list.join(", ")}.`); return v; };
+const safeHref = (v, label) => { const h = opt(v, label, 300); if (h && !/^(\/|#)/.test(h)) bad(`${label} must be an address on this site, starting with / or #.`); return h; };
+function bannerFrom(b) {
+  const slot = str(b.slot, "Slot", 80, /^(home|product:\d+|category:[\w .&-]+|campaign:[a-z0-9-]+)$/);
+  const productId = b.productId ? int(b.productId, "Product", 1, 1e9) : 0, slotProduct = /^product:(\d+)$/.exec(slot);
+  if ((productId && !db.products.some(p => p.id === productId)) || (slotProduct && !db.products.some(p => p.id === +slotProduct[1]))) bad("That product does not exist.");
+  return { slot, order: b.order ? int(b.order, "Order", 1, 99) : 1, preset: oneOf(b.preset || "cinematic", PRESETS, "Preset"), kicker: opt(b.kicker, "Kicker", 60), title: str(b.title, "Title", 120), text: opt(b.text, "Text", 300),
+    cta: opt(b.cta, "Button", 40), href: safeHref(b.href, "Button link"), cta2: opt(b.cta2, "Second button", 40), href2: safeHref(b.href2, "Second button link"), img: opt(b.img, "Image", 300), imgMobile: opt(b.imgMobile, "Phone image", 300),
+    focus: oneOf(b.focus || "center", FOCUS, "Focus"), align: oneOf(b.align || "left", ["left", "center"], "Alignment"), badge: opt(b.badge, "Badge", 40), tone: oneOf(b.tone || "photo", TONES, "Tone"), productId, brand: opt(b.brand, "Brand", 60), until: opt(b.until, "Until", 10), live: b.live !== false };
+}
+// A campaign page: address, words, theme, the picks, feature blocks, whether to show the bank offers, questions, search tags.
+function campaignFrom(b, id) {
+  const slug = str(b.slug, "Address", 60, /^[a-z0-9]+(-[a-z0-9]+)*$/);
+  if (db.campaigns.some(c => c.slug === slug && c.id !== id)) bad("Another campaign already uses that address.");
+  const productIds = (Array.isArray(b.productIds) ? b.productIds : []).slice(0, 12).map(x => int(x, "Product", 1, 1e9));
+  productIds.forEach(x => { if (!db.products.some(p => p.id === x)) bad("Product " + x + " does not exist."); });
+  const features = (Array.isArray(b.features) ? b.features : []).slice(0, 8).map(f => ({ title: str(f && f.title, "Feature title", 80), text: str(f && f.text, "Feature text", 300), img: opt(f && f.img, "Feature image", 300) }));
+  const faq = (Array.isArray(b.faq) ? b.faq : []).slice(0, 10).map(x => [str(x && x[0], "Question", 160), str(x && x[1], "Answer", 600)]);
+  const seo = b.seo && typeof b.seo === "object" ? b.seo : {};
+  return { slug, title: str(b.title, "Title", 100), lead: opt(b.lead, "Lead", 300), theme: oneOf(b.theme || "light", THEMES, "Theme"), productIds, features, offers: !!b.offers, faq, seo: { title: opt(seo.title, "Search title", 70), desc: opt(seo.desc, "Search description", 160) }, sample: !!b.sample, live: b.live !== false };
+}
+const nextId = list => Math.max(0, ...list.map(x => x.id)) + 1;
+const liveOrAll = (list, req, user) => user && user.admin && /[?&]all=1\b/.test(req.url) ? list : list.filter(x => x.live);
+on("GET", "banners", ({ req, user }) => ({ banners: [...liveOrAll(db.banners, req, user)].sort((a, b) => a.order - b.order || a.id - b.id) }));
+on("GET", "campaigns", ({ req, user }) => ({ campaigns: liveOrAll(db.campaigns, req, user) }));
+on("POST", "admin/banners", ({ body }) => { const b = { id: nextId(db.banners), ...bannerFrom(body) }; db.banners.push(b); write("banners"); return { banner: b }; }, "admin");
+on("PUT", "admin/banners/(\\d+)", ({ params, body }) => { const b = db.banners.find(x => x.id === +params[0]); if (!b) throw new HttpError(404, "Banner not found."); Object.assign(b, bannerFrom(body)); write("banners"); return { banner: b }; }, "admin");
+on("DELETE", "admin/banners/(\\d+)", ({ params }) => { const i = db.banners.findIndex(x => x.id === +params[0]); if (i < 0) throw new HttpError(404, "Banner not found."); db.banners.splice(i, 1); write("banners"); return {}; }, "admin");
+on("POST", "admin/campaigns", ({ body }) => { const c = { id: nextId(db.campaigns), ...campaignFrom(body, 0), updated: new Date().toISOString() }; db.campaigns.push(c); write("campaigns"); return { campaign: c }; }, "admin");
+on("PUT", "admin/campaigns/(\\d+)", ({ params, body }) => { const c = db.campaigns.find(x => x.id === +params[0]); if (!c) throw new HttpError(404, "Campaign not found."); Object.assign(c, campaignFrom(body, c.id), { updated: new Date().toISOString() }); write("campaigns"); return { campaign: c }; }, "admin");
+on("DELETE", "admin/campaigns/(\\d+)", ({ params }) => { const i = db.campaigns.findIndex(x => x.id === +params[0]); if (i < 0) throw new HttpError(404, "Campaign not found."); db.campaigns.splice(i, 1); write("campaigns"); return {}; }, "admin");
+
+// ===== the Creative Intelligence Agent: a separate app (creative/) reached through CREATIVE_URL; this is the interface, honest about whether it is connected =====
+const creativeFetch = async (p, init) => { const r = await fetch(CREATIVE_URL + p, { ...init, signal: AbortSignal.timeout(8000) }); if (!r.ok) throw new HttpError(502, "The creative agent answered " + r.status + "."); return r.json(); };
+on("GET", "creative/status", async () => {
+  if (!CREATIVE_URL) return { connected: false, how: "Start the Creative Intelligence Agent (creative/ folder, npm start) and set CREATIVE_URL to its address, for example http://localhost:3200." };
+  try { const h = await creativeFetch("/api/health"); return { connected: true, url: CREATIVE_URL, ...h }; } catch (e) { return { connected: false, url: CREATIVE_URL, how: "The agent at CREATIVE_URL did not answer: " + e.message }; }
+}, "admin");
+on("POST", "creative/concepts", async ({ body }) => {
+  if (!CREATIVE_URL) throw new HttpError(503, "The creative agent is not connected. Set CREATIVE_URL.");
+  const p = db.products.find(x => x.id === +body.productId); if (!p) bad("Choose a product.");
+  return creativeFetch("/api/concepts", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ product: publicProduct(p), slot: opt(body.slot, "Slot", 80), objective: opt(body.objective, "Objective", 80) }) });
+}, "admin");
+
+// ===== the help bot's assistant: Claude, fed only the catalogue and the store's facts, answering as JSON with links inside the site =====
+on("POST", "chat", async ({ body }) => {
+  if (!CHAT_KEY) throw new HttpError(503, "No chat provider is configured. Set ANTHROPIC_API_KEY on the server; the site answers from the catalogue meanwhile.");
+  const message = str(body.message, "Message", 500);
+  const page = body.page && typeof body.page === "object" ? body.page : {};
+  const history = (Array.isArray(body.history) ? body.history : []).slice(-8).filter(x => x && (x.role === "user" || x.role === "assistant") && typeof x.text === "string" && x.text.trim()).map(x => ({ role: x.role, content: x.text.slice(0, 500) }));
+  const cur = page.id && live().find(p => p.id === +page.id);
+  const catalogue = live().map(p => ({ id: p.id, brand: p.brand, name: p.name, price: p.price, mrp: p.mrp, inStock: p.stock > 0, noCostEmi: !!p.emi, os: p.os || "", specs: Object.fromEntries(p.specs || []), url: productPath(p) }));
+  const system = `You are the shopping assistant of Mytekkstore, an Indian online store selling ${catWords()}. Answer in plain English in at most 80 words. Use ONLY the facts below. If the facts do not cover the question, say so and point to the right page. Never invent prices, stock, offers, warranty terms or specifications. Prices are in rupees and include taxes.
+FACTS: Delivery is free across India, usually 3 to 5 days, cash on delivery available. Payment: cash on delivery or online at checkout. Warranty: the brand's own warranty on every product; details at /returns. Offers and bank offers: /offers. No Cost EMI over 3, 6 or 9 months on products with noCostEmi true (per month = price / months). Pages: /televisions (all TVs), /compare?ids=1,2 (compare two to four products by id), /offers, /shipping, /returns, /contact, /account (orders).
+CATALOGUE: ${JSON.stringify(catalogue)}
+${cur ? "The customer is looking at product id " + cur.id + "." : "The customer is on the " + (page.page || "home") + " page."}
+Reply as JSON only: {"reply": "...", "links": [{"label": "...", "href": "/..."}]} with at most 3 links whose href is one of the pages or product urls above.`;
+  let r;
+  try { r = await fetch("https://api.anthropic.com/v1/messages", { method: "POST", headers: { "content-type": "application/json", "x-api-key": CHAT_KEY, "anthropic-version": "2023-06-01" }, body: JSON.stringify({ model: CHAT_MODEL, max_tokens: 400, system, messages: [...history, { role: "user", content: message }] }), signal: AbortSignal.timeout(20000) }); }
+  catch { throw new HttpError(502, "The assistant is not available right now."); }
+  if (!r.ok) throw new HttpError(502, "The assistant is not available right now.");
+  const text = ((await r.json()).content || []).map(c => c.text || "").join("");
+  let out; try { out = JSON.parse(text.slice(text.indexOf("{"), text.lastIndexOf("}") + 1)); } catch { out = { reply: text, links: [] }; }
+  const ok = new Set(["/televisions", "/offers", "/shipping", "/returns", "/contact", "/account", "/products", ...catalogue.map(p => p.url)]);
+  const links = (Array.isArray(out.links) ? out.links : []).filter(l => l && typeof l.href === "string" && (ok.has(l.href) || /^\/compare\?ids=[\d,]+$/.test(l.href))).slice(0, 3).map(l => ({ label: String(l.label || "Open").slice(0, 60), href: l.href }));
+  return { reply: String(out.reply || "").slice(0, 800), links, provider: "anthropic" };
+});
+
 // ===== HTTP plumbing =====
 const hits = new Map(); // address -> { n, since }: the write limit above
 function readBody(req, limit) {
@@ -483,8 +565,10 @@ const catPath = c => "/" + slug(c);
 const productPath = p => catPath(p.cat) + "/" + slug(p.brand + " " + p.name);
 const CLEAN = { "/products": "category.html", "/offers": "offers.html", "/cart": "cart.html", "/checkout": "checkout.html", "/account": "account.html", "/order": "order.html", "/admin": "admin.html" };
 function resolveClean(pathname) { // -> { file, params } for a clean address, else null
+  if (pathname === "/compare") return { file: "compare.html", params: {} }; // /compare?ids=2,11
   if (CLEAN[pathname]) return { file: CLEAN[pathname], params: {} };
   const parts = pathname.split("/").filter(Boolean);
+  if (parts[0] === "campaigns" && parts.length === 2) { const c = db.campaigns.find(c => c.live && c.slug === parts[1]); return c ? { file: "campaign.html", params: { slug: c.slug } } : null; }
   if (parts.length === 1 && INFO_PAGES.includes(parts[0]) && !HIDDEN_PAGES.includes(parts[0])) return { file: "page.html", params: { p: parts[0] } };
   const cat = parts.length && [...new Set(live().map(p => p.cat))].find(c => slug(c) === parts[0]);
   if (cat && parts.length === 1) return { file: "category.html", params: { cat } };
@@ -501,6 +585,7 @@ function seoTags(req, url) {
   const p = file === "/product.html" && db.products.find(p => p.id === +q.get("id"));
   const cat = file === "/category.html" && q.get("cat"), brand = file === "/category.html" && !cat && q.get("brand"), info = file === "/page.html" && q.get("p");
   const priv = /^\/(account|cart|checkout|order|admin)\.html$/.exec(file);
+  const camp = file === "/campaign.html" && db.campaigns.find(c => c.slug === q.get("slug"));
   if (p) {
     canonical = productPath(p);
     const here = base + canonical;
@@ -546,6 +631,15 @@ function seoTags(req, url) {
       { "@context": "https://schema.org", "@type": "WebSite", name: "Mytekkstore", url: base + "/", potentialAction: { "@type": "SearchAction", target: base + "/products?q={search_term_string}", "query-input": "required name=search_term_string" } },
       { "@context": "https://schema.org", "@type": "Organization", name: "Mytekkstore", url: base + "/", logo: base + "/favicon.svg" },
     ];
+  } else if (camp) {
+    canonical = "/campaigns/" + camp.slug;
+    title = ((camp.seo && camp.seo.title) || camp.title) + " | Mytekkstore";
+    desc = (camp.seo && camp.seo.desc) || camp.lead || camp.title;
+    const first = db.products.find(p => camp.productIds.includes(p.id)); if (first) img = base + "/" + first.img;
+    if (!camp.live) robots = "noindex";
+  } else if (file === "/compare.html") {
+    canonical = "/compare"; robots = "noindex"; // a personal selection, not a landing page
+    title = "Compare | Mytekkstore"; desc = "Two to four Mytekkstore TVs side by side: price, rating, every specification, No Cost EMI.";
   } else if (priv) {
     const name = priv[1];
     canonical = "/" + name; robots = "noindex, nofollow"; // private pages stay out of search
@@ -606,7 +700,7 @@ const server = http.createServer((req, res) => {
     const base = siteUrl(req), cats = [...new Set(live().map(p => p.cat))], brands = [...new Set(live().map(p => p.brand))];
     const newest = list => list.map(p => p.updated || "").sort().pop() || BUILT;
     const urls = [["/", BUILT], ["/products", newest(live())], ["/offers", newest(live())], ...cats.map(c => [catPath(c), newest(live().filter(p => p.cat === c))]),
-      ...brands.map(b => ["/products?brand=" + encodeURIComponent(b), newest(live().filter(p => p.brand === b))]), ...live().map(p => [productPath(p), p.updated || BUILT]), ...INFO_PAGES.filter(p => !HIDDEN_PAGES.includes(p)).map(p => ["/" + p, BUILT])];
+      ...brands.map(b => ["/products?brand=" + encodeURIComponent(b), newest(live().filter(p => p.brand === b))]), ...live().map(p => [productPath(p), p.updated || BUILT]), ...INFO_PAGES.filter(p => !HIDDEN_PAGES.includes(p)).map(p => ["/" + p, BUILT]), ...db.campaigns.filter(c => c.live).map(c => ["/campaigns/" + c.slug, c.updated || BUILT])];
     res.writeHead(200, { "Content-Type": "application/xml; charset=utf-8" });
     return res.end('<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n' + urls.map(([u, d]) => "<url><loc>" + escHtml(base + u) + "</loc><lastmod>" + d.slice(0, 10) + "</lastmod></url>").join("\n") + "\n</urlset>\n");
   }

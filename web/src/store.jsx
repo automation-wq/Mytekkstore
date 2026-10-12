@@ -9,7 +9,8 @@ export const useStore = () => useContext(Ctx);
 export function StoreProvider({ children }) {
   const [P, setP] = useState([]);
   const [me, setMe] = useState(null);
-  const [CFG, setCFG] = useState({ google: "", sms: false, mail: false, demoCodes: false, clarity: false });
+  const [CFG, setCFG] = useState({ google: "", sms: false, mail: false, demoCodes: false, clarity: false, chat: false });
+  const [banners, setBanners] = useState([]); // the live banners (home slides, product and campaign heroes), kept by the admin
   const [cart, setCart] = useState({});
   const [wish, setWishState] = useState(() => load("wish", []));
   const [recent, setRecentState] = useState(() => load("recent", []));
@@ -26,12 +27,12 @@ export function StoreProvider({ children }) {
   useEffect(() => {
     (async () => {
       // the three startup calls go out together (one round trip, not three); cfg says which optional services (Google sign-in, SMS, email) are on
-      const [{ products }, { user }, cfg] = await Promise.all([api("products"), api("me"), api("config")]);
+      const [{ products }, { user }, cfg, bn] = await Promise.all([api("products"), api("me"), api("config"), api("banners").catch(() => ({ banners: [] }))]);
       const byId = id => products.find(p => p.id === +id);
       // keep only cart items that still exist and are in stock
       setCart(Object.fromEntries(Object.entries(load("cart", {})).filter(([id, q]) => byId(id) && byId(id).stock > 0 && q > 0).map(([id, q]) => [id, Math.min(q, byId(id).stock, 10)])));
       setWishState(w => w.filter(id => byId(id)));
-      setP(products); setMe(user); setCFG(cfg);
+      setP(products); setMe(user); setCFG(cfg); setBanners(bn.banners || []);
       setLoaded(true);
     })().catch(e => setError(e.message || "Please try again."));
   }, []);
@@ -67,7 +68,7 @@ export function StoreProvider({ children }) {
   const addRecent = id => { const next = [id, ...recent.filter(x => x !== id)].slice(0, 10); setRecentState(next); save("recent", next); return next; };
   const updateProduct = product => setP(ps => ps.map(x => x.id === product.id ? { ...x, ...product } : x));
 
-  const value = { P, CATS, BRANDS, me, CFG, cart, wish, recent, loaded, error, country, money, byId, catImg, qtyOf, cartCount, cartTotal, setQty, clearCart,
+  const value = { P, CATS, BRANDS, me, CFG, banners, cart, wish, recent, loaded, error, country, money, byId, catImg, qtyOf, cartCount, cartTotal, setQty, clearCart,
     toggleWish, addRecent, updateProduct, toast, toastState, bump, cartOpen, openCart: () => setCartOpen(true), closeCart: () => setCartOpen(false) };
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }

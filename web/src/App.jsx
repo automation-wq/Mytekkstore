@@ -5,13 +5,14 @@ import { useStore } from "./store.jsx";
 import { track } from "./api.js";
 import { Header, Footer, Chrome, Box } from "./components.jsx";
 import { Home, Offers, Cart, Checkout, Order, InfoPage, NotFound } from "./pages1.jsx";
-import { Category } from "./category.jsx";
+import { Category, ComparePage } from "./category.jsx";
+import { Campaign } from "./campaign.jsx";
 import { Product } from "./product.jsx";
 import { Account } from "./account.jsx";
 import { Admin } from "./admin.jsx";
 import { chrome, reveal, lazyClips, fitStrips, fly } from "./motion.js";
 
-const PAGES = { home: Home, category: Category, product: Product, offers: Offers, cart: Cart, checkout: Checkout, order: Order, account: Account, page: InfoPage, admin: Admin, notfound: NotFound };
+const PAGES = { home: Home, category: Category, product: Product, offers: Offers, cart: Cart, checkout: Checkout, order: Order, account: Account, page: InfoPage, admin: Admin, notfound: NotFound, campaign: Campaign, compare: ComparePage };
 const $ = (s, el = document) => el.querySelector(s);
 
 // a page that fails while drawing shows a message instead of a blank screen

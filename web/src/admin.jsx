@@ -1,5 +1,6 @@
 // Store admin: orders, products (with photo upload and the No Cost EMI flag), customer messages. The server checks admin rights on every request.
 import { pic, TV_OS } from "./data.js";
+import { PRESETS, TONES, FOCUS } from "./banner.jsx";
 import { useEffect, useState } from "react";
 import { useStore } from "./store.jsx";
 import { api } from "./api.js";
@@ -8,14 +9,21 @@ import { reveal } from "./motion.js";
 
 const ALL = ["Placed", "Confirmed", "Shipped", "Delivered", "Cancelled"];
 const EMPTY = { id: "", brand: "", cat: "", name: "", price: "", mrp: "", stock: 10, img: "", desc: "", specs: "", emi: false, images: "", os: "", story: "" };
+const EMPTY_B = { id: "", slot: "home", order: 1, preset: "cinematic", kicker: "", title: "", text: "", cta: "", href: "", cta2: "", href2: "", img: "", imgMobile: "", focus: "center", align: "left", badge: "", tone: "photo", productId: "", brand: "", until: "", live: true };
+const EMPTY_C = { id: "", slug: "", title: "", lead: "", theme: "light", productIds: "", features: "", faq: "", seoTitle: "", seoDesc: "", offers: true, sample: false, live: true };
+const split = (s, n) => s.split("\n").map(l => l.split("|").map(x => x.trim())).filter(parts => parts.slice(0, n).every(Boolean)); // "a | b | c" lines
 
 export function Admin() {
   const { me, CFG, money, CATS, BRANDS, toast } = useStore();
   const [orders, setOrders] = useState([]), [products, setProducts] = useState([]), [outbox, setOutbox] = useState([]);
   const [f, setF] = useState(EMPTY), [sure, setSure] = useState(null), [ready, setReady] = useState(false);
+  const [banners, setBanners] = useState([]), [campaigns, setCampaigns] = useState([]), [bf, setBf] = useState(EMPTY_B), [cf, setCf] = useState(EMPTY_C), [creative, setCreative] = useState(null);
   const allowed = !!(me && me.admin);
   const draw = async () => {
-    setOrders((await api("admin/orders")).orders); setProducts((await api("products?all=1")).products); // the admin also sees the hidden categories setOutbox((await api("admin/outbox")).messages);
+    setOrders((await api("admin/orders")).orders); setProducts((await api("products?all=1")).products); // the admin also sees the hidden categories
+    setOutbox((await api("admin/outbox")).messages);
+    setBanners((await api("banners?all=1")).banners); setCampaigns((await api("campaigns?all=1")).campaigns);
+    api("creative/status").then(setCreative).catch(() => setCreative({ connected: false, how: "" }));
     setF(EMPTY); setReady(true);
   };
   useEffect(() => { document.title = "Store admin | Mytekkstore"; if (allowed) draw(); }, []);
@@ -38,6 +46,24 @@ export function Admin() {
     try { await api("admin/products/" + p.id, "DELETE"); toast("Product deleted"); } catch (ex) { toast(ex.message); }
     draw();
   };
+  // banners and campaigns: the same shape as the product form (edit fills the form, delete takes two clicks)
+  const setB = k => e => setBf(x => ({ ...x, [k]: e.target.type === "checkbox" ? e.target.checked : e.target.value }));
+  const setC = k => e => setCf(x => ({ ...x, [k]: e.target.type === "checkbox" ? e.target.checked : e.target.value }));
+  const saveBanner = async () => {
+    const body = { ...bf, order: +bf.order || 1, productId: +bf.productId || 0, live: !!bf.live }; delete body.id;
+    await (bf.id ? api("admin/banners/" + bf.id, "PUT", body) : api("admin/banners", "POST", body));
+    toast(bf.id ? "Banner updated" : "Banner added"); await draw();
+  };
+  const editB = b => { setBf({ ...EMPTY_B, ...b, productId: b.productId || "" }); document.getElementById("bform").scrollIntoView({ behavior: "smooth", block: "center" }); };
+  const saveCampaign = async () => {
+    const body = { slug: cf.slug.trim(), title: cf.title, lead: cf.lead, theme: cf.theme, productIds: cf.productIds.split(",").map(s => +s.trim()).filter(Boolean), features: split(cf.features, 2).map(([title, text, img]) => ({ title, text, img: img || "" })), faq: split(cf.faq, 2).map(([q, a]) => [q, a]), offers: !!cf.offers, seo: { title: cf.seoTitle, desc: cf.seoDesc }, sample: !!cf.sample, live: !!cf.live };
+    await (cf.id ? api("admin/campaigns/" + cf.id, "PUT", body) : api("admin/campaigns", "POST", body));
+    toast(cf.id ? "Campaign updated" : "Campaign added"); await draw();
+  };
+  const editC = c => { setCf({ id: c.id, slug: c.slug, title: c.title, lead: c.lead || "", theme: c.theme, productIds: c.productIds.join(", "), features: c.features.map(f => [f.title, f.text, f.img].filter(Boolean).join(" | ")).join("\n"), faq: c.faq.map(x => x.join(" | ")).join("\n"), seoTitle: (c.seo || {}).title || "", seoDesc: (c.seo || {}).desc || "", offers: !!c.offers, sample: !!c.sample, live: !!c.live }); document.getElementById("cform").scrollIntoView({ behavior: "smooth", block: "center" }); };
+  const delX = async (kind, x) => { const key = kind + x.id; if (sure !== key) { setSure(key); setTimeout(() => setSure(s => s === key ? null : s), 3000); return; } try { await api("admin/" + (kind === "b" ? "banners" : "campaigns") + "/" + x.id, "DELETE"); toast(kind === "b" ? "Banner deleted" : "Campaign deleted"); } catch (ex) { toast(ex.message); } draw(); };
+  // the Creative Intelligence Agent fills the banner's words from its first concept; the admin reviews, then saves
+  const concept = async () => { try { const r = await api("creative/concepts", "POST", { productId: +bf.productId, slot: bf.slot, objective: "banner" }); const c = (r.concepts || [])[0]; if (!c) return toast("The creative agent returned no concept."); setBf(x => ({ ...x, kicker: c.kicker || x.kicker, title: c.headline || x.title, text: c.supporting || x.text })); toast("Concept filled in. Review it, then save."); } catch (ex) { toast(ex.message); } };
   const status = async (id, s) => { try { await api("admin/orders/" + id, "PATCH", { status: s }); toast("Order updated"); } catch (ex) { toast(ex.message); } draw(); };
   const photo = async e => { // shrink the photo in the browser to a small square-ish JPEG, then upload it
     const file = e.target.files[0]; if (!file) return;
@@ -88,6 +114,53 @@ export function Admin() {
         {products.map(p => <tr key={p.id}><td><img className="thumb" src={pic(p.img, 480)} alt="" /></td><td>{p.brand} {p.name}{p.emi && <> <span className="stock">EMI</span></>}</td><td>{p.cat}</td><td>{money(p.price)}</td><td>{money(p.mrp)}</td>
           <td>{p.stock <= 5 ? <span className={"stock " + (p.stock ? "low" : "out")}>{p.stock}</span> : p.stock}</td>
           <td style={{ whiteSpace: "nowrap" }}><button className="link" data-edit={p.id} onClick={() => edit(p)}>Edit</button> · <button className="link" data-del={p.id} onClick={() => del(p)}>{sure === p.id ? "Sure?" : "Delete"}</button></td></tr>)}
+      </tbody></table></div>
+    </section>
+    <section id="banners"><h2>Banners {creative && (creative.connected ? <span className="stock">creative agent connected</span> : <span className="stock low" title={creative.how || ""}>creative agent not connected</span>)}</h2>
+      <p className="muted">Every big banner on the site: the home slides (slot home, in order), a product's own hero (product:ID), a campaign's hero (campaign:address). The preset is how it moves, the tone its colours; buttons link inside the site; a phone image and a focus point make the phone composition its own.</p>
+      <Form className="pform panel" id="bform" onSubmit={saveBanner} after={busy => <div className="span2"><button className="btn" disabled={busy}>{bf.id ? "Save banner" : "Add banner"}</button> <button type="button" className="btn ghost" hidden={!bf.id} onClick={() => setBf(EMPTY_B)}>Cancel edit</button> <button type="button" className="btn ghost" disabled={!(creative && creative.connected) || !bf.productId} title={creative && creative.connected ? "Fills kicker, headline and text from the agent's first concept" : (creative && creative.how) || "Not connected"} onClick={concept}>Ask the creative agent</button></div>}>
+        <label>Slot<input required list="slots" placeholder="home, product:2, campaign:festive-tv-days" value={bf.slot} onChange={setB("slot")} /></label>
+        <label>Preset<select value={bf.preset} onChange={setB("preset")}>{PRESETS.map(x => <option key={x}>{x}</option>)}</select></label>
+        <label>Tone<select value={bf.tone} onChange={setB("tone")}>{Object.keys(TONES).map(x => <option key={x}>{x}</option>)}</select></label>
+        <label>Order<input type="number" min="1" max="99" value={bf.order} onChange={setB("order")} /></label>
+        <label>Kicker (small line above)<input maxLength="60" value={bf.kicker} onChange={setB("kicker")} /></label>
+        <label className="span2">Headline (a full stop starts a new line)<input required maxLength="120" value={bf.title} onChange={setB("title")} /></label>
+        <label>Badge<input maxLength="40" placeholder="New, Limited time" value={bf.badge} onChange={setB("badge")} /></label>
+        <label className="span2">Text<input maxLength="300" value={bf.text} onChange={setB("text")} /></label>
+        <label>Product (floats on the banner)<select value={bf.productId} onChange={setB("productId")}><option value="">none</option>{products.map(p => <option value={p.id} key={p.id}>{p.brand} {p.name}</option>)}</select></label>
+        <label>Brand (a home brand slide)<input maxLength="60" list="brands" value={bf.brand} onChange={setB("brand")} /></label>
+        <label>Button<input maxLength="40" value={bf.cta} onChange={setB("cta")} /></label>
+        <label>Button link (/televisions or #overview)<input maxLength="300" value={bf.href} onChange={setB("href")} /></label>
+        <label>Second button<input maxLength="40" value={bf.cta2} onChange={setB("cta2")} /></label>
+        <label>Second button link<input maxLength="300" value={bf.href2} onChange={setB("href2")} /></label>
+        <label>Desktop image (img/file.jpg)<input maxLength="300" value={bf.img} onChange={setB("img")} /></label>
+        <label>Phone image<input maxLength="300" value={bf.imgMobile} onChange={setB("imgMobile")} /></label>
+        <label>Image focus<select value={bf.focus} onChange={setB("focus")}>{Object.keys(FOCUS).map(x => <option key={x}>{x}</option>)}</select></label>
+        <label>Text alignment<select value={bf.align} onChange={setB("align")}><option>left</option><option>center</option></select></label>
+        <label className="radio span2"><input type="checkbox" checked={bf.live} onChange={setB("live")} /> Live on the site</label>
+        <datalist id="slots"><option value="home" />{products.map(p => <option value={"product:" + p.id} key={p.id}>{p.brand + " " + p.name}</option>)}{campaigns.map(c => <option value={"campaign:" + c.slug} key={c.slug} />)}</datalist>
+      </Form>
+      <div className="scroll"><table className="tbl"><tbody><tr><th>Slot</th><th>Headline</th><th>Preset</th><th>Tone</th><th>Live</th><th></th></tr>
+        {banners.map(b => <tr key={b.id}><td>{b.slot}</td><td>{b.title}</td><td>{b.preset}</td><td>{b.tone}</td><td>{b.live ? "yes" : <span className="stock low">no</span>}</td><td style={{ whiteSpace: "nowrap" }}><button className="link" onClick={() => editB(b)}>Edit</button> · <button className="link" onClick={() => delX("b", b)}>{sure === "b" + b.id ? "Sure?" : "Delete"}</button></td></tr>)}
+      </tbody></table></div>
+    </section>
+    <section id="campaigns"><h2>Campaign pages</h2>
+      <p className="muted">A campaign is a page of its own at /campaigns/address: its words, a theme, the picks, feature blocks, the bank offers, questions and search tags. Give it a banner in the slot campaign:address for a hero of its own.</p>
+      <Form className="pform panel" id="cform" onSubmit={saveCampaign} after={busy => <div className="span2"><button className="btn" disabled={busy}>{cf.id ? "Save campaign" : "Add campaign"}</button> <button type="button" className="btn ghost" hidden={!cf.id} onClick={() => setCf(EMPTY_C)}>Cancel edit</button> {cf.id && cf.live ? <a className="btn ghost" href={"/campaigns/" + cf.slug} target="_blank" rel="noopener">Open page</a> : null}</div>}>
+        <label>Address (letters, digits, dashes)<input required maxLength="60" pattern="[a-z0-9]+(-[a-z0-9]+)*" placeholder="festive-tv-days" value={cf.slug} onChange={setC("slug")} /></label>
+        <label className="span2">Title<input required maxLength="100" value={cf.title} onChange={setC("title")} /></label>
+        <label>Theme<select value={cf.theme} onChange={setC("theme")}><option>light</option><option>dark</option><option>green</option><option>indigo</option></select></label>
+        <label className="span2">Lead (one or two lines)<input maxLength="300" value={cf.lead} onChange={setC("lead")} /></label>
+        <label className="span2">Products (ids, comma separated)<input placeholder="2, 11, 12" value={cf.productIds} onChange={setC("productIds")} /></label>
+        <label className="span2">Feature blocks (one per line: Title | Text | img/photo.jpg)<textarea rows="3" value={cf.features} onChange={setC("features")}></textarea></label>
+        <label className="span2">Questions (one per line: Question | Answer)<textarea rows="2" value={cf.faq} onChange={setC("faq")}></textarea></label>
+        <label>Search title<input maxLength="70" value={cf.seoTitle} onChange={setC("seoTitle")} /></label>
+        <label className="span2">Search description<input maxLength="160" value={cf.seoDesc} onChange={setC("seoDesc")} /></label>
+        <label className="radio"><input type="checkbox" checked={cf.offers} onChange={setC("offers")} /> Show the bank offers</label>
+        <label className="radio"><input type="checkbox" checked={cf.live} onChange={setC("live")} /> Live on the site</label>
+      </Form>
+      <div className="scroll"><table className="tbl"><tbody><tr><th>Address</th><th>Title</th><th>Theme</th><th>Products</th><th>Live</th><th></th></tr>
+        {campaigns.map(c => <tr key={c.id}><td>{c.live ? <a className="alink" href={"/campaigns/" + c.slug} target="_blank" rel="noopener">{"/campaigns/" + c.slug}</a> : "/campaigns/" + c.slug}{c.sample && <> <span className="stock">sample</span></>}</td><td>{c.title}</td><td>{c.theme}</td><td>{c.productIds.length}</td><td>{c.live ? "yes" : <span className="stock low">no</span>}</td><td style={{ whiteSpace: "nowrap" }}><button className="link" onClick={() => editC(c)}>Edit</button> · <button className="link" onClick={() => delX("c", c)}>{sure === "c" + c.id ? "Sure?" : "Delete"}</button></td></tr>)}
       </tbody></table></div>
     </section>
     <section><h2>Customer messages {CFG.sms || CFG.mail ? <span className="stock">sent by {CFG.sms ? "SMS" : "email"}</span> : <span className="stock low">recorded only until an SMS or email provider is connected</span>}</h2>{outbox.length ? <div className="scroll"><table className="tbl"><tbody>

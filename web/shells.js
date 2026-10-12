@@ -8,6 +8,7 @@ export const PAGES = [
   ["offers", "offers", "Festive offers | Mytekkstore"], ["cart", "cart", "Cart | Mytekkstore"], ["checkout", "checkout", "Checkout | Mytekkstore"],
   ["order", "order", "Order | Mytekkstore"], ["account", "account", "My account | Mytekkstore"], ["page", "page", "Mytekkstore"],
   ["admin", "admin", "Store admin | Mytekkstore"], ["404", "notfound", "Page not found | Mytekkstore"],
+  ["campaign", "campaign", "Campaign | Mytekkstore"], ["compare", "compare", "Compare | Mytekkstore"],
 ];
 const shell = (page, title) => `<!doctype html>
 <html lang="en">

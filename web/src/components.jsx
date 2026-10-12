@@ -277,6 +277,7 @@ function MobileNav() {
 }
 
 // the drawer slides on a spring, the toast pops in and out, and the progress line follows a sprung scroll value (Motion)
+import { ChatWidget } from "./chat.jsx";
 const SPRING = { type: "spring", stiffness: 320, damping: 32 };
 const DRAWER = { open: { x: 0, visibility: "visible" }, closed: { x: "100%", transitionEnd: { visibility: "hidden" } } };
 export function Chrome() {
@@ -292,6 +293,7 @@ export function Chrome() {
       : <div className="empty"><div className="big"><Icon k="cart" /></div><p>Your cart is empty.</p><button className="btn" data-close>Continue shopping</button></div>}</div></m.aside>
     <AnimatePresence>{toastState.msg && <m.div className="toast on" role="status" key="toast" style={{ x: "-50%" }} initial={{ y: 90, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 90, opacity: 0 }} transition={SPRING}><span>{toastState.msg}</span>{toastState.withCart && <button data-drawer>View cart</button>}</m.div>}</AnimatePresence>
     <MobileNav />
+    <ChatWidget />
     <m.div className="progress" style={{ scaleX: progress }}></m.div><button className="totop" aria-label="Back to top" onClick={() => scrollTo({ top: 0, behavior: "smooth" })}>↑</button>
   </>;
 }

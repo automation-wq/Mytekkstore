@@ -1377,3 +1377,51 @@ main > .cols { margin-top:22px }
 .card .emi { white-space:normal; line-height:1.35 }
 @media (max-width:760px) { .cmpbar img { display:none } .cmpbar { gap:10px; padding:8px 10px 8px 16px } .card .emi { font-size:11.5px } }
 
+
+/* ===== banner engine (12 Oct): presets cinematic, layered, feature, promo, scroll; tones; desktop and phone compositions ===== */
+.banner { position:relative; border-radius:32px; overflow:hidden; color:#fff; background:#0d1117; margin:18px 0 40px; isolation:isolate }
+.banner.t-paper { color:var(--text) }
+.banner .binner { position:relative; min-height:clamp(380px, 44vw, 560px); display:grid; grid-template-columns:1.1fr .9fr; align-items:center; gap:clamp(16px,3vw,48px); padding:clamp(28px,5vw,64px) }
+.banner .bg { position:absolute; inset:-10% 0; z-index:-1 } .banner .bg img { width:100%; height:100%; object-fit:cover; display:block }
+.banner.t-photo .bg::after { content:""; position:absolute; inset:0; background:linear-gradient(90deg,#0d1117d9 0%,#0d111780 45%,#0d111720 100%) }
+.banner .btext { position:relative; max-width:620px; display:grid; gap:14px; justify-items:start }
+.banner.a-center .binner { grid-template-columns:1fr; text-align:center } .banner.a-center .btext { justify-self:center; justify-items:center; margin:auto } .banner.a-center .bprod { order:-1 }
+.banner h1, .banner h2 { margin:0; color:inherit; font-size:clamp(32px,4.6vw,64px); letter-spacing:-2px; line-height:1.02 } .banner .ln { display:block; overflow:hidden } .banner .bw { display:inline-block }
+.banner p { margin:0; font-size:clamp(15px,1.3vw,18px); line-height:1.5; max-width:520px; color:inherit; opacity:.92 }
+.banner .eyebrow { display:inline-block; font-size:12px; letter-spacing:1.6px; text-transform:uppercase; font-weight:700; padding:6px 12px; border-radius:999px; border:1px solid currentColor; opacity:.9; color:inherit }
+.banner .bbadge { display:inline-block; background:#fff; color:#0f1115; font-size:12px; font-weight:800; letter-spacing:.6px; text-transform:uppercase; padding:6px 12px; border-radius:999px } .banner.t-paper .bbadge { background:var(--ink); color:#fff }
+.banner .hcta { display:flex; gap:10px; flex-wrap:wrap; margin-top:6px } .banner .hcta .btn:not(.ghost):not([disabled]) { background:#fff; color:#0f1115 } .banner.t-paper .hcta .btn:not(.ghost):not([disabled]) { background:var(--accent); color:#fff } .banner .hcta .btn.ghost { border-color:currentColor; color:inherit }
+.banner .bprod { position:relative; display:grid; place-items:center; order:2; justify-self:center; width:min(100%, 560px) } .banner .bprod img { width:100%; height:auto; filter:drop-shadow(0 50px 60px #000a) } .banner .bprod:not(.cut) img { background:#fff; border-radius:28px; padding:5%; width:min(100%,420px) }
+.banner .blabels { position:absolute; inset:0; pointer-events:none } .blabel { position:absolute; display:grid; gap:1px; padding:8px 12px; border-radius:14px; background:#ffffffeb; color:#0f1115; box-shadow:0 14px 30px -14px #000a; min-width:90px; text-align:left } .blabel b { font-size:20px; letter-spacing:-.5px; line-height:1 } .blabel small { font-size:10.5px; letter-spacing:.6px; text-transform:uppercase; color:#5b6370 }
+.blabel.l0 { left:-4%; top:8% } .blabel.l1 { right:-4%; top:24% } .blabel.l2 { left:-2%; bottom:16% } .blabel.l3 { right:0; bottom:4% }
+.banner.p-scroll { min-height:170vh } .banner.p-scroll .binner { position:sticky; top:var(--hh,150px); min-height:calc(100vh - var(--hh,150px) - 24px) }
+.banner.phero { margin:10px 0 28px } .banner.chero { margin-top:8px }
+@media (max-width:860px) { .banner .binner { grid-template-columns:1fr; min-height:0; padding:24px 20px 28px } .banner .bprod { order:-1; width:min(100%,340px) } .banner .bprod:not(.cut) img { width:min(100%,280px) } .blabel b { font-size:16px } .blabel { padding:6px 9px; min-width:0 } .banner h1, .banner h2 { font-size:clamp(28px,8vw,40px); letter-spacing:-1.2px } .banner.t-photo .bg::after { background:linear-gradient(180deg,#0d111760 0%,#0d1117d0 60%) } .banner.p-scroll { min-height:0 } .banner.p-scroll .binner { position:static; min-height:0 } }
+
+/* ===== campaign pages: a theme changes this page's colours only ===== */
+.campaign .clead { max-width:720px; font-size:18px; margin:-10px 0 34px } .campaign .cend { margin-top:44px }
+.campaign:not(.theme-light) { background:var(--bg); color:var(--text); margin:0 calc(50% - 50vw); padding:0 calc(50vw - 50%) 40px }
+.campaign.theme-dark { --bg:#0d1117; --card:#161b22; --tile:#1f2630; --text:#f3f4f6; --muted:#c9d1d9; --soft:#9aa4b2; --line:#ffffff1f }
+.campaign.theme-green { --bg:#06231b; --card:#0b3d2e; --tile:#0f4a38; --text:#f3faf7; --muted:#cfe9df; --soft:#9fcdbd; --line:#ffffff1f }
+.campaign.theme-indigo { --bg:#0f0c3a; --card:#1e1b4b; --tile:#2a2767; --text:#f5f3ff; --muted:#ddd6fe; --soft:#b4aef0; --line:#ffffff1f }
+.campaign:not(.theme-light) :is(h1,h2,h3,.crumbs,.crumbs a,.card h3,.card .price b,.ctable th,.ctable td,.faq summary,.faq p,.help h2) { color:var(--text) } .campaign:not(.theme-light) .lead { color:var(--muted) } .campaign:not(.theme-light) .card .csizes a, .campaign:not(.theme-light) .card .emi { color:var(--text) } .campaign:not(.theme-light) .csugg button { background:var(--tile) }
+
+/* ===== help bot ===== */
+.chatfab { position:fixed; right:20px; bottom:20px; z-index:15; display:flex; align-items:center; gap:8px; padding:11px 16px 11px 13px; border:0; border-radius:999px; background:var(--accent); color:#fff; font:inherit; font-weight:700; cursor:pointer; box-shadow:0 14px 30px -10px #08805f99; transition:translate .2s, box-shadow .2s } .chatfab:hover { translate:0 -2px } .chatfab svg { width:20px; height:20px }
+.totop { right:auto; left:20px } /* back-to-top moves to the left corner; the help button owns the right one */
+.chat { position:fixed; right:20px; bottom:84px; z-index:16; width:min(380px, calc(100vw - 32px)); max-height:min(600px, calc(100vh - 120px)); display:grid; grid-template-rows:auto 1fr auto auto; background:var(--card); color:var(--text); border-radius:24px; box-shadow:0 30px 60px -20px #0006, 0 0 0 1px var(--line); overflow:hidden }
+.chat header { display:flex; align-items:center; justify-content:space-between; gap:10px; padding:14px 16px; background:var(--ink); color:#fff } .chat header small { display:block; font-size:11.5px; opacity:.7; font-weight:500 } .chat header .x { background:none; border:0; color:#fff; font-size:24px; line-height:1; cursor:pointer; padding:0 2px }
+.cmsgs { overflow-y:auto; padding:14px; display:grid; gap:10px; align-content:start; min-height:160px } .cmsgs .bot, .cmsgs .me { max-width:88%; padding:10px 13px; border-radius:16px; font-size:14px; line-height:1.45 } .cmsgs .bot { background:var(--tile); border-bottom-left-radius:6px } .cmsgs .me { background:var(--accent); color:#fff; justify-self:end; border-bottom-right-radius:6px } .cmsgs p { margin:0 }
+.clinks { display:flex; flex-wrap:wrap; gap:6px; margin-top:8px } .clinks a { font-size:12.5px; font-weight:600; color:var(--accent); background:#fff; padding:4px 10px; border-radius:999px; border:1px solid var(--line) }
+.typing { display:flex; gap:4px; padding:12px 14px } .typing span { width:6px; height:6px; border-radius:50%; background:var(--soft); animation:blink 1s infinite } .typing span:nth-child(2) { animation-delay:.2s } .typing span:nth-child(3) { animation-delay:.4s } @keyframes blink { 0%,80%,100% { opacity:.3 } 40% { opacity:1 } }
+.csugg { display:flex; gap:6px; overflow-x:auto; padding:0 14px 10px; scrollbar-width:none } .csugg button { flex:0 0 auto; font:inherit; font-size:12.5px; font-weight:600; padding:6px 11px; border-radius:999px; border:1px solid var(--line); background:#fff; color:var(--text); cursor:pointer } .csugg button:hover { border-color:var(--accent); color:var(--accent) }
+.chat form { display:flex; gap:8px; padding:10px 14px 14px; border-top:1px solid var(--line) } .chat form input { flex:1; min-width:0; border:1px solid var(--line); border-radius:999px; padding:10px 14px; font:inherit } .chat form .btn { padding:9px 16px }
+@media (max-width:760px) { .chatfab { bottom:84px; padding:11px 13px } .chatfab span { display:none } .totop { left:16px } body:has(.pdp .actions) .chatfab { bottom:154px } .chat { right:0; left:0; bottom:66px; width:auto; max-height:70vh; border-radius:24px 24px 0 0 } .cmpbar .page { display:none } }
+@media (prefers-reduced-motion: reduce) { .typing span { animation:none; opacity:.6 } }
+.pform select { width:100%; font:inherit; padding:8px 10px; border:1px solid var(--line); border-radius:8px; background:#fff }
+/* the banner headline stacks its lines (the page-wide flex headline rule would put them side by side) */
+.banner h1, .banner h2 { display:block } .banner .ln { display:block }
+
+/* the EMI pill wraps inside the card instead of running past its edge */
+.card .emi { width:auto; max-width:100%; white-space:normal }
+

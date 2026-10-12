@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { m, AnimatePresence } from "motion/react";
 import { useStore } from "./store.jsx";
 import { qs } from "./api.js";
-import { Card, Box, Icon, Photo, Stars, Buy, BankOffers, KvImg, OsChart, Qa } from "./components.jsx";
+import { Card, Box, Icon, Photo, Stars, Buy, BankOffers, KvImg, OsChart, Qa, Row } from "./components.jsx";
 import { TOP_FEATURES, CAT_CLIPS, KV_IMG, CAT_SIZE, CAT_KNOW, CAT_FAQ, catSizes, catUrl, listUrl, off, avg, starRow, productUrl, pic, osList, CONTACT } from "./data.js";
 
 const BANDS = [[0, 10000, "Under ₹10,000"], [10000, 25000, "₹10,000 to ₹25,000"], [25000, 50000, "₹25,000 to ₹50,000"], [50000, 0, "Above ₹50,000"]]; // [min, max, label]
@@ -98,7 +98,7 @@ export function Category() {
       {n ? <div className="grid">{list.map((p, i) => <Card p={p} i={i} key={p.id} sizes={sizesOf(p)} compare={[cmp.includes(p.id), toggleCmp]} />)}</div> : wishOnly ? <Box title="Your wishlist is empty" text="Tap the heart on any product to save it here." href="/products" cta="Browse products" />
         : <div className="box"><h1>No products found</h1><p>Try a different size, search or filter.</p>{chips.length ? <button type="button" className="btn" onClick={clear}>Clear filters</button> : <a className="btn" href="/products">See all products</a>}</div>}
     </div>
-    {cmp.length > 0 && <div className="cmpbar" role="region" aria-label="Compare"><span>{cmp.length} of 4</span>{cmp.map(id => { const x = P.find(p => p.id === id); return x && <img src={pic(x.img, 480)} alt={x.name} key={id} />; })}<a className="btn" href="#compare" aria-disabled={cmp.length < 2 ? "true" : undefined}>Compare{cmp.length > 1 ? " " + cmp.length : ""}</a><button type="button" className="link" onClick={() => setCmp([])}>Clear</button></div>}
+    {cmp.length > 0 && <div className="cmpbar" role="region" aria-label="Compare"><span>{cmp.length} of 4</span>{cmp.map(id => { const x = P.find(p => p.id === id); return x && <img src={pic(x.img, 480)} alt={x.name} key={id} />; })}<a className="btn" href="#compare" aria-disabled={cmp.length < 2 ? "true" : undefined}>Compare{cmp.length > 1 ? " " + cmp.length : ""}</a>{cmp.length > 1 && <a className="link page" href={"/compare?ids=" + cmp.join(",")}>Open page</a>}<button type="button" className="link" onClick={() => setCmp([])}>Clear</button></div>}
     {!wishOnly && <CategoryExtras cat={cat} list={catAll} sizes={sizeList} sizeUrl={s => url({ size: s })} picks={cmp.map(id => P.find(p => p.id === id)).filter(Boolean)} />}
   </>;
 }
@@ -131,7 +131,7 @@ function CategoryExtras({ cat, list, sizes, sizeUrl, picks = [] }) {
   </>;
 }
 // every model in the category side by side (up to four): price, rating, each specification, No Cost EMI, add to cart
-function CompareAll({ list, cat, short, picked }) {
+export function CompareAll({ list, cat, short, picked }) {
   const { money } = useStore();
   const cols = list.slice(0, 4), cheapest = Math.min(...cols.map(x => x.price));
   const keys = [...new Set(cols.flatMap(x => (x.specs || []).map(([k]) => k)))];
@@ -169,4 +169,18 @@ function Help() {
   if (!CONTACT.phone && !CONTACT.email) return null;
   const wa = CONTACT.phone.replace(/\D/g, "");
   return <section className="help"><div><h2>Not sure which one?</h2><p>Talk to us before you order{CONTACT.hours ? ", " + CONTACT.hours : ""}.</p></div><div className="btns">{CONTACT.phone && <a className="btn" href={"tel:" + CONTACT.phone}>Call {CONTACT.phone}</a>}{wa && <a className="btn ghost" href={"https://wa.me/" + wa} target="_blank" rel="noopener">WhatsApp</a>}{CONTACT.email && <a className="btn ghost" href={"mailto:" + CONTACT.email}>Email</a>}</div></section>;
+}
+// /compare?ids=2,11: the ticked models on a page of their own (the compare bar links here, and so does the help bot)
+export function ComparePage() {
+  const { P, byId } = useStore();
+  const ids = (qs.get("ids") || "").split(",").map(Number).filter(Boolean).slice(0, 4), list = ids.map(byId).filter(Boolean);
+  useEffect(() => { document.title = "Compare | Mytekkstore"; }, []);
+  if (list.length < 2) return <Box title="Pick two to four TVs to compare" text="Tick Compare on the cards of the Televisions page, then open the comparison here." href="/televisions" cta="Browse TVs" />;
+  const cat = list[0].cat;
+  return <>
+    <div className="crumbs"><a href="/">Home</a> › <a href={catUrl(cat)}>{cat}</a> › Compare</div>
+    <h1>Compare</h1>
+    <CompareAll list={list} cat={cat} short={cat.toLowerCase()} picked />
+    <Row title="More to look at" href={catUrl(cat)} list={P.filter(p => p.cat === cat && !ids.includes(p.id)).slice(0, 6)} />
+  </>;
 }

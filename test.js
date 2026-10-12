@@ -105,7 +105,7 @@ server.listen(0, "127.0.0.1", async () => {
     assert.ok((await call("/api/admin/outbox", "GET", null, admin)).data.messages.some(m => m.text.includes("Do you deliver to Pune?") && m.sent === "received"));
     // Google sign-in and SMS stay off until their keys are set
     assert.equal((await call("/api/login/google", "POST", { credential: "x" })).status, 503);
-    assert.deepEqual((await call("/api/config")).data, { google: "", sms: false, mail: false, demoCodes: false, clarity: false });
+    assert.deepEqual((await call("/api/config")).data, { google: "", sms: false, mail: false, demoCodes: false, clarity: false, chat: false });
     // a code by email signs into the account with that email; a new email gets its own account
     r = await call("/api/otp/send", "POST", { to: "Asha@Example.com" });
     assert.equal(r.status, 200); assert.equal(r.data.via, "demo");
@@ -215,6 +215,31 @@ server.listen(0, "127.0.0.1", async () => {
     const nf = await fetch(base + "/nowhere.html");
     assert.equal(nf.status, 404); assert.ok((await nf.text()).includes('data-page="notfound"'), "unknown pages get the styled 404 page");
     assert.equal((await fetch(base + "/manifest.webmanifest")).headers.get("content-type"), "application/manifest+json");
+
+    // banners and campaigns: public lists carry only live records, the admin edits them, campaign pages are clean addresses
+    r = await call("/api/banners"); assert.ok(r.data.banners.length >= 7 && r.data.banners.every(b => b.live) && r.data.banners.filter(b => b.slot === "home").length === 4, "the seeded banners: four home slides, product and campaign banners");
+    r = await call("/api/campaigns"); assert.equal(r.data.campaigns[0].slug, "festive-tv-days");
+    assert.equal((await call("/api/admin/banners", "POST", { slot: "home", title: "x" })).status, 401, "banners are the admin's");
+    assert.equal((await call("/api/admin/banners", "POST", { slot: "product:999", title: "Nope", preset: "cinematic" }, admin)).status, 400, "a banner needs a real product");
+    assert.equal((await call("/api/admin/banners", "POST", { slot: "home", title: "Nope", href: "https://elsewhere.example" }, admin)).status, 400, "buttons link only inside the site");
+    r = await call("/api/admin/banners", "POST", { slot: "product:3", preset: "feature", title: "Elista 43 inch.", text: "4K.", cta: "Buy", href: "#overview", tone: "green", productId: 3, live: false }, admin);
+    assert.equal(r.status, 200, JSON.stringify(r.data)); const bid = r.data.banner.id;
+    assert.ok(!(await call("/api/banners")).data.banners.some(b => b.id === bid), "a banner that is not live stays off the site");
+    assert.ok((await call("/api/banners?all=1", "GET", null, admin)).data.banners.some(b => b.id === bid), "the admin sees it");
+    assert.equal((await call("/api/admin/banners/" + bid, "PUT", { slot: "product:3", preset: "promo", title: "Elista 43 inch.", productId: 3, live: true }, admin)).data.banner.preset, "promo");
+    assert.equal((await call("/api/admin/banners/" + bid, "DELETE", null, admin)).status, 200);
+    r = await call("/api/admin/campaigns", "POST", { slug: "diwali-week", title: "Diwali Week", lead: "Two picks.", theme: "green", productIds: [2, 3], features: [{ title: "4K", text: "Both are 4K." }], offers: true, faq: [["Q?", "A."]], seo: { title: "Diwali Week", desc: "Two picks." } }, admin);
+    assert.equal(r.status, 200, JSON.stringify(r.data)); const cid = r.data.campaign.id;
+    assert.equal((await call("/api/admin/campaigns", "POST", { slug: "diwali-week", title: "Again", productIds: [] }, admin)).status, 400, "campaign addresses are unique");
+    html = await (await fetch(base + "/campaigns/diwali-week")).text();
+    assert.ok(html.includes("<title>Diwali Week | Mytekkstore</title>") && html.includes('data-slug="diwali-week"') && html.includes('rel="canonical" href="' + base + '/campaigns/diwali-week"'), "a campaign page with its own title");
+    assert.ok((await (await fetch(base + "/sitemap.xml")).text()).includes("/campaigns/diwali-week"), "live campaigns are in the sitemap");
+    assert.equal((await call("/api/admin/campaigns/" + cid, "PUT", { slug: "diwali-week", title: "Diwali Week", productIds: [2], live: false }, admin)).status, 200);
+    assert.equal((await fetch(base + "/campaigns/diwali-week")).status, 404, "a campaign that is not live has no page");
+    assert.equal((await call("/api/admin/campaigns/" + cid, "DELETE", null, admin)).status, 200);
+    assert.ok((await (await fetch(base + "/compare?ids=2,3")).text()).includes('data-page="compare"'), "the compare page");
+    assert.equal((await call("/api/chat", "POST", { message: "Is it 4K?", page: { page: "product", id: 2 } })).status, 503, "no chat provider until ANTHROPIC_API_KEY is set; the browser answers from the catalogue");
+    assert.equal((await call("/api/creative/status", "GET", null, admin)).data.connected, false, "the creative agent is a documented interface until CREATIVE_URL is set");
 
     // data survives on disk and passwords are not stored in plain text
     const users = fs.readFileSync(path.join(process.env.DATA_DIR, "users.json"), "utf8");
