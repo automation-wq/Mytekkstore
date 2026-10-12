@@ -9,9 +9,9 @@ const html = readdirSync(pub).filter(f => f.endsWith(".html")).map(f => readFile
 const linked = readdirSync(dir).filter(f => f !== "builds.json" && html.includes("assets/" + f));
 const scripts = linked.map(f => readFileSync(dir + f, "utf8")).join("\n");
 const current = readdirSync(dir).filter(f => f !== "builds.json" && (html.includes("assets/" + f) || scripts.includes(f))).sort();
-const builds = [current, ...(existsSync(ledger) ? JSON.parse(readFileSync(ledger, "utf8")) : []).filter(b => b.join() !== current.join())].slice(0, 3);
+const builds = [current, ...(existsSync(ledger) ? (JSON.parse(readFileSync(ledger, "utf8")).builds || []) : []).filter(b => b.join() !== current.join())].slice(0, 3);
 const keep = new Set(builds.flat());
 let removed = 0;
 for (const f of readdirSync(dir)) if (f !== "builds.json" && !keep.has(f)) { unlinkSync(dir + f); removed++; }
-writeFileSync(ledger, JSON.stringify(builds));
+writeFileSync(ledger, JSON.stringify({ built: new Date().toISOString(), builds })); // built: the sitemap's date for pages (server.js BUILT)
 console.log("old bundles removed:", removed, "| builds kept:", builds.length);

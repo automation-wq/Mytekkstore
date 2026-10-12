@@ -6,8 +6,8 @@ const HOST = process.env.HOST || "127.0.0.1"; // set HOST=0.0.0.0 on a hosting s
 const PUBLIC = path.join(__dirname, "public");
 const DATA = process.env.DATA_DIR || path.join(__dirname, "data");
 fs.mkdirSync(DATA, { recursive: true });
-// when the pages were last built (the sitemap's lastmod for pages whose content comes from the build)
-const BUILT = (() => { try { return fs.statSync(path.join(PUBLIC, "index.html")).mtime.toISOString(); } catch { return new Date().toISOString(); } })();
+// when the pages were last built: the stamp web/tidy.js writes at build time (file dates are not reliable on Vercel). The sitemap's lastmod for pages.
+const BUILT = (() => { try { return JSON.parse(fs.readFileSync(path.join(PUBLIC, "assets", "builds.json"), "utf8")).built || new Date().toISOString(); } catch { return new Date().toISOString(); } })();
 // the visitor's address: behind a proxy (Vercel, nginx) set TRUST_PROXY=1 to use the forwarded one
 const ipOf = req => (process.env.TRUST_PROXY && String(req.headers["x-forwarded-for"] || "").split(",").pop().trim()) || req.socket.remoteAddress;
 
