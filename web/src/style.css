@@ -1470,3 +1470,27 @@ main > .cols { margin-top:22px }
 @keyframes spinhintfade { 0%,70% { opacity:1 } 100% { opacity:0 } }
 .thumb.spin { position:relative } .thumb.spin span { position:absolute; inset:auto 0 0 0; font-size:9px; font-weight:800; letter-spacing:.4px; background:var(--ink); color:#fff; padding:2px 0; text-align:center }
 @media (prefers-reduced-motion: reduce) { .spinhint { animation:none } }
+
+/* fix (2026-10-12 night): the brand/promo hero slides were ~23px taller than the fixed-height hero on desktop, so the lower CTA
+   was clipped by the hero's overflow:hidden. Smaller headline + tighter rhythm so the whole banner fits. */
+.slide.k-brand h1, .slide.k-promo h1 { font-size:clamp(38px,5.2vw,72px); letter-spacing:-2.5px; margin:2px 0 12px }
+.slide.k-brand .eyebrow, .slide.k-promo .eyebrow { margin-bottom:10px }
+.slide .pts { margin:6px 0 16px; gap:6px }
+.slide .hcta { margin-top:2px }
+/* a touch more: clear the hero on desktop brand slides with room to spare */
+.slide.k-brand h1, .slide.k-promo h1 { font-size:clamp(36px,4.5vw,64px); margin:2px 0 10px }
+.slide .pts { margin:4px 0 12px }
+/* safety margin + balance: tighter headline leading and chips so the brand banner sits comfortably, not pinned to the bottom edge */
+.slide.k-brand h1, .slide.k-promo h1 { line-height:1 }
+.slide .pts li { padding-top:6px; padding-bottom:6px }
+
+/* ===== restrained premium brand tiles (2026-10-12 night): the "Two brands, one promise" names were ~76px and read as oversized;
+   bring them to a composed size with calmer reasons, closer to Samsung/Apple restraint ===== */
+.bbrand { min-height:300px; gap:clamp(20px,3vw,44px); padding:clamp(22px,3.2vw,44px) }
+.bbrand .kicker { font-size:11.5px; letter-spacing:1.6px }
+.bbrand b { font-size:clamp(28px,3.4vw,46px); letter-spacing:-1.5px; margin:8px 0 14px }
+.bbrand ul { font-size:14.5px; gap:7px; margin-bottom:18px }
+.bbrand li::before { content:""; display:inline-block; width:16px; height:16px; margin-right:9px; vertical-align:-3px; border-radius:50%; background:#7ef0d0 url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23052e25' stroke-width='3.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='20 6 9 17 4 12'/%3E%3C/svg%3E") center/10px no-repeat }
+.bbrand u { padding:11px 22px; font-size:14.5px }
+.bbrand img, .bbrand img.cut { width:min(100%, 360px) }
+@media (max-width:860px) { .bbrand b { font-size:clamp(26px,7vw,38px) } }
