@@ -2,3 +2,6 @@ data/
 node_modules/
 .vercel/
 .claude/
+
+# Creative Intelligence Agent records, screenshots, uploads, generated files
+creative/data/

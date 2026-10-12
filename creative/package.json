@@ -1,0 +1,10 @@
+{
+  "name": "creative-intelligence-agent",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Research reference websites, keep what was observed, write original concepts for our products, render and check creatives.",
+  "scripts": {
+    "start": "node server.js",
+    "test": "node test.js"
+  }
+}
