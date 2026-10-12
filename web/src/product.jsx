@@ -10,6 +10,23 @@ import { DEFAULT_FEATURES, BANK_OFFERS, WARRANTY_QA, SPEC_GROUPS, osUrl, autoSto
 
 const $ = (s, el = document) => el.querySelector(s);
 const $$ = (s, el = document) => [...el.querySelectorAll(s)];
+
+// 360-degree viewer: the frames shot around the product, drag left or right (or arrow keys) to rotate. Switches on automatically
+// when a product has 8 or more spin frames (set in the admin); until then the product shows its normal photo with zoom. All frames
+// are preloaded so the spin is smooth, and only the current one is shown. Works with a mouse, touch and the keyboard.
+function Spin({ frames, alt }) {
+  const [i, setI] = useState(0), box = useRef(), drag = useRef(null);
+  useEffect(() => { frames.forEach(src => { const im = new Image(); im.src = pic(src, 960); }); }, [frames]);
+  const rotate = x => { const d = drag.current; if (!d || !box.current) return; const step = Math.max(6, (box.current.clientWidth || 320) / frames.length); const n = Math.round((x - d.x) / step); setI(((d.i - n) % frames.length + frames.length) % frames.length); };
+  const down = e => { drag.current = { x: e.clientX, i }; try { box.current.setPointerCapture(e.pointerId); } catch {} };
+  const move = e => { if (drag.current) { e.preventDefault(); rotate(e.clientX); } };
+  const up = e => { drag.current = null; try { box.current.releasePointerCapture(e.pointerId); } catch {} };
+  const key = e => { if (e.key === "ArrowRight") { e.preventDefault(); setI(x => (x + 1) % frames.length); } if (e.key === "ArrowLeft") { e.preventDefault(); setI(x => (x - 1 + frames.length) % frames.length); } };
+  return <div className="spin360 img" ref={box} onPointerDown={down} onPointerMove={move} onPointerUp={up} onPointerLeave={up} onKeyDown={key} tabIndex={0} role="img" aria-label={alt + " — 360° view, drag to rotate"} style={{ touchAction: "pan-y" }}>
+    {frames.map((src, k) => <img key={src + k} src={pic(src, 960)} alt="" width="800" height="800" draggable="false" loading={k ? "lazy" : "eager"} style={{ opacity: k === i ? 1 : 0 }} />)}
+    <span className="spinbadge">360°</span><span className="spinhint" aria-hidden="true">Drag to rotate</span>
+  </div>;
+}
 const INK = { type: "spring", stiffness: 420, damping: 34 }; // the marker that slides between tabs (Motion layoutId)
 
 export function Product() {
@@ -18,6 +35,7 @@ export function Product() {
   const hero = p ? banners.find(b => b.slot === "product:" + p.id) : null; // the product's own animated banner, when the admin made one
   const [tab, setTab] = useState("t-desc");
   const [img, setImg] = useState(p ? p.img : "");
+  const [spinView, setSpinView] = useState(() => !!(p && p.spin && p.spin.length >= 8)); // the 360° viewer shows first when a product has frames
   const [pinMsg, setPinMsg] = useState("");
   const [seen] = useState(() => recent.filter(id => !p || id !== p.id));
   const [checked, setChecked] = useState(null);
@@ -57,6 +75,7 @@ export function Product() {
   groups[0][1].push(["Sold by", "Mytekkstore"]);
   const feats = (p.specs || []).slice(0, 6); // feature strip under the photo, from the product's own specifications
   const images = [p.img, ...(p.images || [])]; // more photos come from the admin (one link per line)
+  const spin = p.spin && p.spin.length >= 8 ? p.spin : null; // 360° frames turn the viewer on; otherwise the normal photo + zoom
   const story = p.story && p.story.length ? p.story : autoStory(p); // A+ content: the admin's blocks, or blocks built from the specifications
   const save$ = p.mrp > p.price;
   const share = encodeURIComponent(location.href), shareText = encodeURIComponent(p.brand + " " + p.name + " at Mytekkstore");
@@ -85,9 +104,11 @@ export function Product() {
         <a href={h} className={key === spySec ? "on" : undefined} data-tab={dt && dt !== "t-specs0" ? dt : undefined} key={i}>{t}{key === spySec && <m.i className="ink" layoutId="stab-ink" transition={INK} />}</a>)}</div>
       <span className="sprice">{money(p.price)}</span><Buy p={p} /></div></nav>
     <div className="pdp" id="overview">
-      <div className="gallery"><div className="img zoom" ref={zoomRef} onMouseMove={zoomMove}><AnimatePresence initial={false} mode="popLayout"><m.img key={img} src={pic(img)} srcSet={picSet(img)} sizes="(max-width:860px) 100vw, 50vw" alt={p.brand + " " + p.name} width="800" height="800" fetchPriority="high" initial={{ opacity: 0, scale: 1.03 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }} transition={{ duration: .3 }} /></AnimatePresence>{save$ && <span className="badge">{off(p)}% off</span>}</div>
-        {images.length > 1 && <div className="thumbs">{images.map((src, i) => <button className={"thumb" + (src === img ? " on" : "")} data-img={src} aria-label={"Photo " + (i + 1)} onClick={() => setImg(src)} key={src}><img src={pic(src, 480)} alt="" loading="lazy" width="800" height="800" /></button>)}</div>}
-        <p className="muted hint">Move the pointer over the photo to zoom in</p>
+      <div className="gallery">{spin && spinView
+          ? <Spin frames={spin} alt={p.brand + " " + p.name} />
+          : <div className="img zoom" ref={zoomRef} onMouseMove={zoomMove}><AnimatePresence initial={false} mode="popLayout"><m.img key={img} src={pic(img)} srcSet={picSet(img)} sizes="(max-width:860px) 100vw, 50vw" alt={p.brand + " " + p.name} width="800" height="800" fetchPriority="high" initial={{ opacity: 0, scale: 1.03 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }} transition={{ duration: .3 }} /></AnimatePresence>{save$ && <span className="badge">{off(p)}% off</span>}</div>}
+        {(spin || images.length > 1) && <div className="thumbs">{spin && <button className={"thumb spin" + (spinView ? " on" : "")} aria-label="360 degree view" onClick={() => setSpinView(true)}><img src={pic(spin[0], 480)} alt="" loading="lazy" width="800" height="800" /><span>360°</span></button>}{images.map((src, i) => <button className={"thumb" + (!spinView && src === img ? " on" : "")} data-img={src} aria-label={"Photo " + (i + 1)} onClick={() => { setSpinView(false); setImg(src); }} key={src}><img src={pic(src, 480)} alt="" loading="lazy" width="800" height="800" /></button>)}</div>}
+        <p className="muted hint">{spin && spinView ? "Drag the product to rotate it" : "Move the pointer over the photo to zoom in"}</p>
         {feats.length > 0 && <div className="fstrip">{feats.map(([k, v]) => <div className="ft" key={k}><Ico shapes={specIcon(k)} /><span><small>{k}</small><b>{v}</b></span></div>)}</div>}</div>
       <div className="pinfo">
         <a className="pbrand" href={brandUrl(p.brand)}>{p.brand}</a>{p.os && <a className="ostag" href={osUrl(p.os)}>{p.os}</a>}

@@ -1460,3 +1460,13 @@ main > .cols { margin-top:22px }
 /* the product photo: a clean framed stage with a smooth zoom, no border */
 .pdp .img { border-radius:22px; overflow:hidden } .zoom { cursor:zoom-in } .zoom img { transition:scale .35s cubic-bezier(.2,.8,.2,1) } .zoom:hover img { scale:2.1 }
 .pdp .hint { text-align:center; color:var(--soft); font-size:12.5px; margin-top:10px }
+
+/* ===== 360° spin viewer (2026-10-12 night): drag to rotate; ready, switches on when a product has 8+ frames ===== */
+.spin360 { position:relative; aspect-ratio:1; background:var(--tile); border-radius:22px; overflow:hidden; cursor:ew-resize; touch-action:pan-y; user-select:none }
+.spin360 img { position:absolute; inset:0; width:100%; height:100%; object-fit:contain; padding:4%; transition:opacity .05s; pointer-events:none }
+.spin360:focus-visible { outline:2px solid var(--accent); outline-offset:2px }
+.spinbadge { position:absolute; top:12px; left:12px; z-index:2; font-size:12px; font-weight:800; letter-spacing:.5px; background:var(--ink); color:#fff; padding:5px 10px; border-radius:999px }
+.spinhint { position:absolute; bottom:12px; left:50%; translate:-50% 0; z-index:2; font-size:12px; font-weight:600; color:var(--text); background:#ffffffcc; backdrop-filter:blur(6px); padding:6px 12px; border-radius:999px; pointer-events:none; animation:spinhintfade 4s ease forwards }
+@keyframes spinhintfade { 0%,70% { opacity:1 } 100% { opacity:0 } }
+.thumb.spin { position:relative } .thumb.spin span { position:absolute; inset:auto 0 0 0; font-size:9px; font-weight:800; letter-spacing:.4px; background:var(--ink); color:#fff; padding:2px 0; text-align:center }
+@media (prefers-reduced-motion: reduce) { .spinhint { animation:none } }

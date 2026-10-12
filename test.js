@@ -153,6 +153,8 @@ server.listen(0, "127.0.0.1", async () => {
     assert.equal(r.data.product.emi, false);
     assert.equal((await call("/api/admin/products/" + nid, "PUT", { ...np, emi: true }, admin)).data.product.emi, true); // No Cost EMI flag from the admin
     assert.deepEqual((await call("/api/admin/products/" + nid, "PUT", { ...np, images: ["img/p1.jpg", "https://example.com/a.jpg"] }, admin)).data.product.images, ["img/p1.jpg", "https://example.com/a.jpg"]); // gallery photos
+    assert.deepEqual((await call("/api/admin/products/" + nid, "PUT", { ...np, spin: ["img/p0.jpg", "img/p1.jpg", "img/p2.jpg", "img/p3.jpg"] }, admin)).data.product.spin, ["img/p0.jpg", "img/p1.jpg", "img/p2.jpg", "img/p3.jpg"]); // 360-degree spin frames round-trip
+    assert.equal((await call("/api/admin/products/" + nid, "PUT", { ...np, spin: ["javascript:alert(1)"] }, admin)).status, 400, "a spin frame must be an image path or https link");
     assert.equal((await call("/api/admin/products/" + nid, "PUT", { ...np, images: ["javascript:alert(1)"] }, admin)).status, 400);
     assert.equal((await fetch(base + "/img/v-tv.mp4")).headers.get("content-type"), "video/mp4"); // hero clips are served
     r = await call("/api/admin/products/" + nid, "PUT", { ...np, desc: "Nice", specs: [["Power", "20 W"]] }, admin);

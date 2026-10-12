@@ -142,6 +142,8 @@ function productFrom(b) {
     story: Array.isArray(b.story) ? b.story.slice(0, 8).map(x => ({ title: str(x && x.title, "A+ title", 80), text: str(x && x.text, "A+ text", 600), img: x && typeof x.img === "string" && x.img.trim() ? str(x.img, "A+ photo", 300, /^(img\/[\w.-]+|https:\/\/[^\s"'<>]+)$/) : "" })) : [],
     // extra photos for the product page gallery (thumbnails), up to 8 links
     images: Array.isArray(b.images) ? b.images.slice(0, 8).map(s => str(s, "Photo link", 300, /^(img\/[\w.-]+|https:\/\/[^\s"'<>]+)$/)) : [],
+    // 360-degree spin: frames shot around the product (8 to 48), drag to rotate on the product page; empty = the normal photo
+    spin: Array.isArray(b.spin) ? b.spin.slice(0, 48).map(s => str(s, "Spin frame", 300, /^(img\/[\w.-]+|https:\/\/[^\s"'<>]+)$/)) : [],
     specs: [],
   };
   if (p.mrp < p.price) bad("MRP cannot be lower than the price.");

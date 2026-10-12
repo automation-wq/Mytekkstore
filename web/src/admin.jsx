@@ -8,7 +8,7 @@ import { Form, Box } from "./components.jsx";
 import { reveal } from "./motion.js";
 
 const ALL = ["Placed", "Confirmed", "Shipped", "Delivered", "Cancelled"];
-const EMPTY = { id: "", brand: "", cat: "", name: "", price: "", mrp: "", stock: 10, img: "", desc: "", specs: "", emi: false, images: "", os: "", story: "" };
+const EMPTY = { id: "", brand: "", cat: "", name: "", price: "", mrp: "", stock: 10, img: "", desc: "", specs: "", emi: false, images: "", os: "", story: "", spin: "" };
 const EMPTY_B = { id: "", slot: "home", order: 1, preset: "cinematic", kicker: "", title: "", text: "", cta: "", href: "", cta2: "", href2: "", img: "", imgMobile: "", focus: "center", align: "left", badge: "", tone: "photo", productId: "", brand: "", until: "", live: true };
 const EMPTY_C = { id: "", slug: "", title: "", lead: "", theme: "light", productIds: "", features: "", faq: "", seoTitle: "", seoDesc: "", offers: true, sample: false, live: true };
 const split = (s, n) => s.split("\n").map(l => l.split("|").map(x => x.trim())).filter(parts => parts.slice(0, n).every(Boolean)); // "a | b | c" lines
@@ -33,14 +33,14 @@ export function Admin() {
   const live = orders.filter(o => o.status !== "Cancelled");
   const set = k => e => setF(x => ({ ...x, [k]: e.target.type === "checkbox" ? e.target.checked : e.target.value }));
   const saveProduct = async () => {
-    const body = { brand: f.brand, cat: f.cat, name: f.name, price: +f.price, mrp: +f.mrp, stock: +f.stock, img: f.img, desc: f.desc, emi: !!f.emi, images: f.images.split("\n").map(s => s.trim()).filter(Boolean), os: f.os.trim(),
+    const body = { brand: f.brand, cat: f.cat, name: f.name, price: +f.price, mrp: +f.mrp, stock: +f.stock, img: f.img, desc: f.desc, emi: !!f.emi, images: f.images.split("\n").map(s => s.trim()).filter(Boolean), spin: f.spin.split("\n").map(s => s.trim()).filter(Boolean), os: f.os.trim(),
       story: f.story.split("\n").map(l => l.split("|").map(x => x.trim())).filter(([t, x]) => t && x).map(([title, text, img]) => ({ title, text, img: img || "" })),
       specs: f.specs.split("\n").map(l => l.split(/:(.*)/s).slice(0, 2).map(x => x.trim())).filter(([k, v]) => k && v) };
     await (f.id ? api("admin/products/" + f.id, "PUT", body) : api("admin/products", "POST", body));
     toast(f.id ? "Product updated" : "Product added");
     await draw();
   };
-  const edit = p => { setF({ id: p.id, brand: p.brand, cat: p.cat, name: p.name, price: p.price, mrp: p.mrp, stock: p.stock, img: p.img, desc: p.desc || "", specs: (p.specs || []).map(([k, v]) => k + ": " + v).join("\n"), emi: !!p.emi, images: (p.images || []).join("\n"), os: p.os || "", story: (p.story || []).map(b => [b.title, b.text, b.img].filter(Boolean).join(" | ")).join("\n") }); document.getElementById("pform").scrollIntoView({ behavior: "smooth", block: "center" }); };
+  const edit = p => { setF({ id: p.id, brand: p.brand, cat: p.cat, name: p.name, price: p.price, mrp: p.mrp, stock: p.stock, img: p.img, desc: p.desc || "", specs: (p.specs || []).map(([k, v]) => k + ": " + v).join("\n"), emi: !!p.emi, images: (p.images || []).join("\n"), spin: (p.spin || []).join("\n"), os: p.os || "", story: (p.story || []).map(b => [b.title, b.text, b.img].filter(Boolean).join(" | ")).join("\n") }); document.getElementById("pform").scrollIntoView({ behavior: "smooth", block: "center" }); };
   const del = async p => { // two clicks to delete instead of a pop-up
     if (sure !== p.id) { setSure(p.id); setTimeout(() => setSure(s => s === p.id ? null : s), 3000); return; }
     try { await api("admin/products/" + p.id, "DELETE"); toast("Product deleted"); } catch (ex) { toast(ex.message); }
@@ -103,6 +103,7 @@ export function Admin() {
         <label>Image (img/file.jpg or https link)<input name="img" required maxLength="300" placeholder="img/p0.jpg" value={f.img} onChange={set("img")} /></label>
         <label className="span2">Or upload a photo from this computer<input type="file" id="photo" accept="image/*" onChange={photo} /></label>
         <label className="span2">More photos for the gallery (one link per line)<textarea name="images" rows="2" placeholder={"img/p1.jpg\nhttps://..."} value={f.images} onChange={set("images")}></textarea></label>
+        <label className="span2">360° spin frames (8 to 48 links, one per line, in order around the product — turns on the drag-to-rotate viewer)<textarea name="spin" rows="2" placeholder={"img/p1-360/01.jpg\nimg/p1-360/02.jpg\n…"} value={f.spin} onChange={set("spin")}></textarea></label>
         <label className="span2">Description<textarea name="desc" rows="4" maxLength="2000" value={f.desc} onChange={set("desc")}></textarea></label>
         <label className="span2">Specifications (one per line, as Name: Value)<textarea name="specs" rows="4" placeholder={"Screen size: 55 inch\nResolution: 4K Ultra HD"} value={f.specs} onChange={set("specs")}></textarea></label>
         <label className="span2">A+ content for the product page (one block per line: Title | Text | img/photo.jpg)<textarea name="story" rows="3" placeholder={"Cinema at home | A 55 inch 4K picture with Dolby Audio. | img/p1.jpg"} value={f.story} onChange={set("story")}></textarea></label>
