@@ -37,13 +37,15 @@ The site already runs Motion (motion.dev), which covers every effect in the audi
 
 ## Measured: Lighthouse, mobile, live site, 12 October 2026
 
-| Page | Before (perf, LCP, TBT) | After |
+| Page | Before (performance, LCP, blocking time) | After |
 |---|---|---|
-| Home | 78, 3.6 s, 320 ms | see the figures recorded in the project memory and the commit message of the audit pass |
-| Category (Televisions) | 49, 7.0 s, 950 ms | |
-| Product (55 inch Google TV) | 53, 5.9 s, 790 ms | |
+| Home | not comparable: the "before" run hit a stale copy of the page with a missing stylesheet, which scores well for the wrong reason | 52 to 56, 4.3 to 4.9 s, 720 to 1,380 ms |
+| Category (Televisions) | 49, 7.0 s, 950 ms | 60, 3.9 s, 960 ms |
+| Product (55 inch Google TV) | 53, 5.9 s, 790 ms | 56, 4.4 s, 830 ms |
 
-Accessibility, best practices and SEO were 90 to 100 before; the fixes above address the items Lighthouse listed (unsized images, contrast of muted text, the account link's name, the heading order on category pages, the render-blocking font).
+Page weight on the home page fell from 1,254 KB to 722 KB. Accessibility went to 100 on home and category (94 on product), best practices 100, SEO 100. Largest Contentful Paint improved on category and product with the WebP photos and the preloaded hero.
+
+What remains is main-thread work: on a phone throttled four times, laying out these long pages costs 2.5 to 3 seconds and running the React app about 1 second. A `content-visibility` rule for sections below the first screen was measured locally: it cut layout work by about a quarter but left the score inside the run-to-run noise and made deep links such as `/televisions#guide` land off target, so it was not kept. The levers that would move these scores are structural: render the sections below the first screen only when they come near (a change to how the app draws pages), or the server-rendered Next.js move the audit recommends. Both are decisions, not quick fixes.
 
 ## Still the client's
 

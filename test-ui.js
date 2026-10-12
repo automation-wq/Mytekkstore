@@ -70,8 +70,9 @@ async function launch({ port = 9555, width = 1366, height = 800, mobile = false 
     // scrolls the element into view, lets the reveal motion settle (sections and cards rise a little as they appear), then measures
     async center(sel, n = 0) {
       const q = `document.querySelectorAll(${JSON.stringify(sel)})[${n}]`;
-      await ev(`(() => { const el = ${q}; if (!el) throw new Error("No element " + ${JSON.stringify(sel)} + " #${n}"); el.scrollIntoView({ block: "nearest", inline: "nearest", behavior: "instant" }); })()`);
-      await sleep(250);
+      // twice: sections below the first screen are laid out only as they come near (content-visibility), so the first scroll can land
+      // on a placeholder; the second one lands on the rendered element
+      for (const wait of [250, 120]) { await ev(`(() => { const el = ${q}; if (!el) throw new Error("No element " + ${JSON.stringify(sel)} + " #${n}"); el.scrollIntoView({ block: "nearest", inline: "nearest", behavior: "instant" }); })()`); await sleep(wait); }
       return ev(`(() => { const r = ${q}.getBoundingClientRect(); return [Math.round(r.left + r.width / 2), Math.round(r.top + r.height / 2)]; })()`);
     },
     async move(x, y) { at = [x, y]; await mouse("mouseMoved", x, y); },
