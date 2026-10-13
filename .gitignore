@@ -5,3 +5,7 @@ node_modules/
 
 # Creative Intelligence Agent records, screenshots, uploads, generated files
 creative/data/
+
+# the 15-picture generator: key and raw output stay local (the imported pictures live in public/img)
+tools/tv-images/.env
+tools/tv-images/output/

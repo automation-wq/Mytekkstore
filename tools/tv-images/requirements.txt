@@ -1,0 +1,3 @@
+# The generator itself uses only Python's standard library (urllib, json, base64).
+# Pillow is optional: with it every picture is opened, size-checked and cropped to 16:9 when the provider returns another shape.
+pillow>=10.0

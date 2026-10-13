@@ -21,7 +21,7 @@ const shell = (page, title) => `<!doctype html>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Manrope:wght@600;700;800&display=swap" media="print" data-font>
 <link rel="icon" href="/favicon.svg">
 <link rel="manifest" href="/manifest.webmanifest">
-<meta name="theme-color" content="#08805f">${page === "home" ? '\n<link rel="preload" as="image" href="/img/hero0.webp" imagesrcset="/img/hero0-480.webp 480w, /img/hero0-960.webp 960w, /img/hero0.webp 1344w" imagesizes="100vw" fetchpriority="high">' : ""}
+<meta name="theme-color" content="#08805f">${page === "home" ? '\n<link rel="preload" as="image" href="/img/life-room.webp" imagesrcset="/img/life-room-480.webp 480w, /img/life-room-960.webp 960w, /img/life-room.webp 1200w" imagesizes="100vw" fetchpriority="high">' : ""}
 </head>
 <body data-page="${page}">
 <div id="root"></div>

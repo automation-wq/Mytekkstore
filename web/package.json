@@ -6,7 +6,8 @@
     "build": "node shells.js && vite build && node tidy.js",
     "dev": "node shells.js && vite",
     "images": "node images.js",
-    "cutouts": "node cutouts.js"
+    "cutouts": "node cutouts.js",
+    "lifestyle": "node lifestyle.js"
   },
   "dependencies": {
     "motion": "^14.0.0",

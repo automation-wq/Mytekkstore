@@ -545,7 +545,7 @@ const SEED = [
   "mrp": 89990,
   "stock": 12,
   "emi": true,
-  "img": "img/p3-v1.jpg",
+  "img": "img/p34.jpg",
   "os": "Google TV",
   "specs": [
    [

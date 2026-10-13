@@ -1,3 +1,4 @@
+import LIFESTYLE from "./lifestyle.json"; // slot -> generated lifestyle photo (empty until `npm run lifestyle` imports the 15 generated pictures)
 // Static content and lookups. Sample text where marked: replace with the client's own before launch.
 
 // ponytail: hardcoded exchange rates, swap for real per-country prices from the backend
@@ -50,7 +51,7 @@ export function autoStory(p) {
   // Design (client brief, A+ section 5): only what the specifications verify (display type, size, ports); otherwise neutral words
   const disp = spec("display type");
   blocks.push({ kicker: "Design", title: /bezel-?less/i.test(disp) ? "Slim, bezel-less design" : "Slim design", text: (disp ? disp + " panel" : "A slim panel") + (size ? " at " + size : "") + ", flat on the wall or on its stand, so the picture takes the room" + (ports ? ", with " + ports + " at the back for a set-top box, a console and a pen drive." : ".") });
-  const g = galleryOf(p), by = { Picture: g[0], Smart: g[1] || g[0], Sound: g[2] || g[0], Design: g[4] || g[0] };
+  const g = galleryOf(p), by = { Picture: g[0], Smart: g[1] || g[0], Sound: g[4] || g[0], Design: g.length > 1 ? life("aplusDesign", "img/kv-tv.jpg") : g[0] };
   return blocks.map(b => ({ ...b, img: by[b.kicker] }));
 }
 export const osList = P => [...new Set(P.map(p => p.os).filter(Boolean))].sort();
@@ -71,9 +72,7 @@ export function brandPoints(P, brand) {
 // the client supplies the final ones. kind "photo" uses a lifestyle photo, "brand" shows the brand's biggest TV with its reasons
 // (brandPoints), "promo" opens the offers page with the biggest discount.
 export const HOME_BANNERS = [
-  { kind: "photo", eyebrow: "Mytekkstore", h: ["Unbelievable prices.", "Straight from the factory."], s: "Elista and Telefunken Smart TVs at factory prices, delivered free, cash on delivery.", href: "/televisions", cta: "Shop TVs", im: "img/kv-tv.jpg" },
-  { kind: "brand", brand: "Elista", h: ["Elista."], tone: "linear-gradient(120deg,#052e25,#08805f 55%,#0b3d2e)" },
-  { kind: "brand", brand: "Telefunken", h: ["Telefunken."], tone: "linear-gradient(120deg,#0f0c3a,#4338ca 55%,#1e1b4b)" },
+  { kind: "photo", eyebrow: "Mytekkstore", h: ["A Bigger World Awaits."], s: "Elista and Telefunken Smart TVs at factory prices, delivered free, cash on delivery.", href: "/televisions", cta: "Explore TVs", im: "img/life-room.jpg" },
   { kind: "promo", eyebrow: "Limited time", h: ["Festive offers."], href: "/offers", cta: "See the offers", im: "img/hero0.jpg" },
 ];
 // "Good to know" on the home page. Every answer only repeats a promise the site already makes elsewhere: [question, answer, [link, label] or null]
@@ -211,15 +210,18 @@ export const listUrl = ({ cat, ...o }) => { const q = new URLSearchParams(Object
 const hasWebp = src => /^img\/(?!u-)[\w-]+\.jpg$/.test(src || "");
 // always an absolute address: a product page lives at /televisions/<model>, where a relative img/... would point one level too deep
 export const pic = (src, w) => { const s = hasWebp(src) ? src.replace(/\.jpg$/, (w ? "-" + w : "") + ".webp") : src; return /^img\//.test(s || "") ? "/" + s : s; };
-const DIMS = { "img/hero0.jpg": [1344, 752], "img/hero1.jpg": [1344, 752], "img/hero2.jpg": [1344, 752], "img/kv-tv.jpg": [1600, 2350], "img/kv-ac.jpg": [1600, 1074], "img/kv-wash.jpg": [1600, 1067] };
-export const dims = src => DIMS[src] || [800, 800]; // the product photos are square
+const DIMS = { "img/life-room.jpg": [1200, 800], "img/life-cinema.jpg": [1536, 1024], "img/hero0.jpg": [1344, 752], "img/hero1.jpg": [1344, 752], "img/hero2.jpg": [1344, 752], "img/kv-tv.jpg": [1600, 2350], "img/kv-ac.jpg": [1600, 1074], "img/kv-wash.jpg": [1600, 1067] };
+export const dims = src => DIMS[src] || (/^img\/life-\d\d\.jpg$/.test(src || "") ? [1536, 864] : [800, 800]); // the product photos are square
 // floating cutout of a product render (white background made transparent by `npm run cutouts`); only the seeded renders have one
 export const cutout = src => /^img\/p\d+(-v\d+)?\.jpg$/.test(src || "") ? "/" + src.replace(/\.jpg$/, "-cut.webp") : null;
 // The central gallery map (client brief, section 21): six different pictures per TV. The admin's own photos win; otherwise the render,
 // a living-room photo, the render on a dark stage, the screen close-up, the home-cinema photo and the stand close-up (web/gallery-gen.mjs).
-// The two room photos show a TV of this kind, not this exact model; the model's facts stay in the specifications.
+// The two room photos (the client's own) show a TV of this kind, not this exact model; the model's facts stay in the specifications.
+// a lifestyle picture by slot (hero, launch1-5, size32-75, os1-2, res4k/resfhd/reshd, room, cinema, studio, closeup, aplusHero,
+// aplusSmart, aplusSound, aplusDesign, care, category): the generated photo when it exists, otherwise the fallback given here
+export const life = (slot, fallback) => LIFESTYLE[slot] || fallback;
 export const GALLERY_LABELS = ["Front view", "In the living room", "Studio view", "Screen detail", "Home cinema", "Stand detail"];
-export const galleryOf = p => { if (p.images && p.images.length) return [p.img, ...p.images]; const m = p.cat === "Televisions" && /^img\/(p\d+(?:-v\d+)?)\.jpg$/.exec(p.img || ""); if (!m) return [p.img]; const n = m[1]; return [p.img, "img/hero0.jpg", `img/g/${n}-studio.webp`, `img/g/${n}-screen.webp`, "img/kv-tv.jpg", `img/g/${n}-stand.webp`]; };
+export const galleryOf = p => { if (p.images && p.images.length) return [p.img, ...p.images]; const m = p.cat === "Televisions" && /^img\/(p\d+(?:-v\d+)?)\.jpg$/.exec(p.img || ""); if (!m) return [p.img]; const n = m[1]; return [p.img, life("room", "img/life-room.jpg"), `img/g/${n}-studio.webp`, `img/g/${n}-screen.webp`, life("cinema", "img/life-cinema.jpg"), `img/g/${n}-stand.webp`]; };
 export const picSet = src => hasWebp(src) ? `${pic(src, 480)} 480w, ${pic(src, 960)} 960w, ${pic(src)} ${dims(src)[0]}w` : undefined;
 export const off = p => Math.round((1 - p.price / p.mrp) * 100);
 export const avg = p => p.reviews && p.reviews.length ? p.reviews.reduce((t, r) => t + r.rating, 0) / p.reviews.length : 0;
