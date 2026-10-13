@@ -6,10 +6,11 @@ import { useStore } from "./store.jsx";
 import { api, qs, load, save, track } from "./api.js";
 import { Photo, Stars, Buy, Heart, Row, Box, Form, Ico, Icon, Qa } from "./components.jsx";
 import { Banner } from "./banner.jsx";
-import { DEFAULT_FEATURES, BANK_OFFERS, WARRANTY_QA, SPEC_GROUPS, osUrl, autoStory, callouts, cutout, specIcon, catSizes, catUrl, brandUrl, off, avg, starRow, etaText, emiPlans, productUrl, pic, picSet } from "./data.js";
+import { DEFAULT_FEATURES, BANK_OFFERS, WARRANTY_QA, SPEC_GROUPS, osUrl, autoStory, callouts, cutout, galleryOf, GALLERY_LABELS, specIcon, catSizes, catUrl, brandUrl, off, avg, starRow, etaText, emiPlans, productUrl, pic, picSet } from "./data.js";
 
 const $ = (s, el = document) => el.querySelector(s);
 const $$ = (s, el = document) => [...el.querySelectorAll(s)];
+const spec = (p, k) => ((p.specs || []).find(([n]) => n.toLowerCase() === k) || [])[1] || "";
 
 // 360-degree viewer: the frames shot around the product, drag left or right (or arrow keys) to rotate. Switches on automatically
 // when a product has 8 or more spin frames (set in the admin); until then the product shows its normal photo with zoom. All frames
@@ -40,7 +41,7 @@ export function Product() {
   const [seen] = useState(() => recent.filter(id => !p || id !== p.id));
   const [checked, setChecked] = useState(null);
   const [subOn, setSubOn] = useState(false), [spySec, setSpySec] = useState("overview");
-  const zoomRef = useRef(), pinRef = useRef();
+  const zoomRef = useRef(), pinRef = useRef(), fullRef = useRef(), touch = useRef(null);
 
   const pinCheck = async () => {
     const v = pinRef.current.pin.value.trim();
@@ -74,7 +75,12 @@ export function Product() {
   if (p.os) groups[0][1].unshift(["Operating system", p.os]);
   groups[0][1].push(["Sold by", "Mytekkstore"]);
   const feats = (p.specs || []).slice(0, 6); // feature strip under the photo, from the product's own specifications
-  const images = [p.img, ...(p.images || [])]; // more photos come from the admin (one link per line)
+  const images = galleryOf(p); // the admin's photos, or the six-picture gallery built from the render (data.js galleryOf)
+  const labelOf = src => GALLERY_LABELS[images.indexOf(src)] || "Photo";
+  const step = d => { const i = images.indexOf(img); setSpinView(false); setImg(images[(i + d + images.length) % images.length]); };
+  const swipeStart = e => { touch.current = e.touches[0].clientX; };
+  const swipeEnd = e => { const x = touch.current; touch.current = null; if (x === null) return; const dx = e.changedTouches[0].clientX - x; if (Math.abs(dx) > 40) step(dx < 0 ? 1 : -1); };
+  const resName = (/4K/i.test(spec(p, "resolution")) ? "4K Ultra HD" : /Full HD/i.test(spec(p, "resolution")) ? "Full HD" : /HD/i.test(spec(p, "resolution")) ? "HD Ready" : "");
   const spin = p.spin && p.spin.length >= 8 ? p.spin : null; // 360° frames turn the viewer on; otherwise the normal photo + zoom
   const story = p.story && p.story.length ? p.story : autoStory(p); // A+ content: the admin's blocks, or blocks built from the specifications
   const save$ = p.mrp > p.price;
@@ -106,10 +112,11 @@ export function Product() {
     <div className="pdp" id="overview">
       <div className="gallery">{spin && spinView
           ? <Spin frames={spin} alt={p.brand + " " + p.name} />
-          : <div className="img zoom" ref={zoomRef} onMouseMove={zoomMove}><AnimatePresence initial={false} mode="popLayout"><m.img key={img} src={pic(img)} srcSet={picSet(img)} sizes="(max-width:860px) 100vw, 50vw" alt={p.brand + " " + p.name} width="800" height="800" fetchPriority="high" initial={{ opacity: 0, scale: 1.03 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }} transition={{ duration: .3 }} /></AnimatePresence>{save$ && <span className="badge">{off(p)}% off</span>}</div>}
-        {(spin || images.length > 1) && <div className="thumbs">{spin && <button className={"thumb spin" + (spinView ? " on" : "")} aria-label="360 degree view" onClick={() => setSpinView(true)}><img src={pic(spin[0], 480)} alt="" loading="lazy" width="800" height="800" /><span>360°</span></button>}{images.map((src, i) => <button className={"thumb" + (!spinView && src === img ? " on" : "")} data-img={src} aria-label={"Photo " + (i + 1)} onClick={() => { setSpinView(false); setImg(src); }} key={src}><img src={pic(src, 480)} alt="" loading="lazy" width="800" height="800" /></button>)}</div>}
-        <p className="muted hint">{spin && spinView ? "Drag the product to rotate it" : "Move the pointer over the photo to zoom in"}</p>
-        {feats.length > 0 && <div className="fstrip">{feats.map(([k, v]) => <div className="ft" key={k}><Ico shapes={specIcon(k)} /><span><small>{k}</small><b>{v}</b></span></div>)}</div>}</div>
+          : <div className="img zoom" ref={zoomRef} onMouseMove={zoomMove} onTouchStart={swipeStart} onTouchEnd={swipeEnd}><AnimatePresence initial={false} mode="popLayout"><m.img key={img} src={pic(img)} srcSet={picSet(img)} sizes="(max-width:860px) 100vw, 50vw" alt={p.brand + " " + p.name + " — " + labelOf(img)} width="800" height="800" fetchPriority="high" initial={{ opacity: 0, scale: 1.03 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }} transition={{ duration: .3 }} /></AnimatePresence>{save$ && <span className="badge">{off(p)}% off</span>}<button type="button" className="fsbtn" aria-label="View full screen" onClick={() => fullRef.current.showModal()}><Icon k="expand" /></button></div>}
+        {images.length > 1 && <div className="gdots" aria-hidden="true">{images.map(s => <i className={!spinView && s === img ? "on" : undefined} key={s}></i>)}</div>}
+        <dialog className="full" ref={fullRef} onClick={e => { if (e.target === e.currentTarget) e.currentTarget.close(); }} aria-label={p.brand + " " + p.name + " photos"}><button type="button" className="x" onClick={() => fullRef.current.close()} aria-label="Close">×</button><img src={pic(img)} alt={labelOf(img)} /><div className="fnav"><button type="button" onClick={() => step(-1)} aria-label="Previous photo">‹</button><span>{labelOf(img)} · {images.indexOf(img) + 1} / {images.length}</span><button type="button" onClick={() => step(1)} aria-label="Next photo">›</button></div></dialog>
+        {(spin || images.length > 1) && <div className="thumbs">{spin && <button className={"thumb spin" + (spinView ? " on" : "")} aria-label="360 degree view" onClick={() => setSpinView(true)}><img src={pic(spin[0], 480)} alt="" loading="lazy" width="800" height="800" /><span>360°</span></button>}{images.map((src, i) => <button className={"thumb" + (!spinView && src === img ? " on" : "")} data-img={src} aria-label={GALLERY_LABELS[i] || "Photo " + (i + 1)} title={GALLERY_LABELS[i] || undefined} onClick={() => { setSpinView(false); setImg(src); }} key={src}><img src={pic(src, 480)} alt="" loading="lazy" width="800" height="800" /></button>)}</div>}
+        <p className="muted hint">{spin && spinView ? "Drag the product to rotate it" : "Move the pointer over the photo to zoom in, tap to view full screen"}</p></div>
       <div className="pinfo">
         <a className="pbrand" href={brandUrl(p.brand)}>{p.brand}</a>{p.os && <a className="ostag" href={osUrl(p.os)}>{p.os}</a>}
         <h1>{p.brand} {p.name}</h1>
@@ -119,24 +126,26 @@ export function Product() {
         {p.emi && <><p className="emiline">From <b>{money(Math.ceil(p.price / 9))}/month</b> with No Cost EMI over 9 months · <a className="alink" href="/offers">See offers</a></p>
           <details className="emiplans"><summary>View EMI plans</summary><table className="specs"><tbody>{emiPlans(p.price).map(([n, m]) => <tr key={n}><th>{n} months</th><td><b>{money(m)}</b>/month · {money(0)} interest · {money(p.price)} in total</td></tr>)}</tbody></table>
             <p className="muted">On participating bank credit cards, subject to the bank's terms. <a className="alink" href="/offers">See all offers</a></p></details></>}
+        <div className="pofs"><b>Offers</b>{BANK_OFFERS.slice(0, 3).map(([bank, big, note, c]) => <div style={{ "--bc": c }} key={bank}><b>{big}</b><span>{note}</span></div>)}<a href="/offers">See all offers →</a></div>
         <p style={{ marginTop: 12 }}>{stock} <span className="muted" style={{ fontSize: 13 }}>· Sold by Mytekkstore</span></p>
         {p.stock > 0 && p.stock <= 10 && <div className="stockbar"><span>Hurry, only {p.stock} left in stock</span><i><b style={{ width: p.stock * 10 + "%" }}></b></i></div>}
         {sizes.length > 0 && <div className="sizes"><span>{S.by}</span>{sizes.map(({ s, t, on }) => <a className={"chip sw" + (on ? " on" : "")} href={productUrl(t)} aria-current={on ? "page" : undefined} key={s.label}><b>{s.label.replace(/ TVs$/, "")}</b><small>{money(t.price)}</small></a>)}</div>}
+        {feats.length > 0 && <div className="fstrip"><b className="fhead">Key specifications</b>{feats.map(([k, v]) => <div className="ft" key={k}><Ico shapes={specIcon(k)} /><span><small>{k}</small><b>{v}</b></span></div>)}<a className="alink" href="#tabs" data-tab="t-specs">All specifications →</a></div>}
         <div className="pill"><i></i><b>Free delivery</b> · usually by {etaText()} · cash on delivery available</div>
-        <div className="pofs"><b>Offers</b>{BANK_OFFERS.slice(0, 3).map(([bank, big, note, c]) => <div style={{ "--bc": c }} key={bank}><b>{big}</b><span>{note}</span></div>)}<a href="/offers">See all offers →</a></div>
+        <form className="pin" id="pincheck" noValidate ref={pinRef} onSubmit={e => { e.preventDefault(); pinCheck(); }}><label>Deliver to <input name="pin" inputMode="numeric" maxLength="6" placeholder="Enter pincode" defaultValue={(me && me.pin) || load("pin", "")} aria-label="Pincode" /></label><button className="btn ghost">Check</button>
+          <p id="pinmsg" className="muted" role="status">{typeof pinMsg === "string" ? pinMsg : <><b>Delivery available</b> to {pinMsg.pin} · usually by {etaText()} · cash on delivery available</>}</p></form>
         {picks.length > 0 && <div className="bundle"><b>Complete your home</b><p className="muted small">Pair it with these and add everything in one go.</p>
           <label className="brow main"><input type="checkbox" checked disabled readOnly /><img src={pic(p.img, 480)} alt="" width="800" height="800" /><span><small>This product</small>{p.name}</span><b>{money(p.price)}</b></label>
           {picks.map(x => <label className="brow" key={x.id}><input type="checkbox" name="pick" value={x.id} checked={ticked.includes(x.id)} onChange={e => setChecked(e.target.checked ? [...ticked, x.id] : ticked.filter(i => i !== x.id))} /><img src={pic(x.img, 480)} alt="" width="800" height="800" /><span><small>{x.brand} · {x.cat}</small><a href={productUrl(x)}>{x.name}</a></span><b>{money(x.price)}</b></label>)}
           <div className="btot"><span>Total for <i>{pickedList.length + 1}</i> items</span><b>{money(p.price + pickedList.reduce((t, x) => t + x.price, 0))}</b><button className="btn" id="addAll" type="button" onClick={addAll}>Add all to cart</button></div></div>}
         <div className="actions"><b className="aprice">{money(p.price)}</b><Buy p={p} />{p.stock > 0 && <button className="btn ghost" data-buy={p.id}>Buy now</button>}<Heart p={p} /></div>
-        <form className="pin" id="pincheck" noValidate ref={pinRef} onSubmit={e => { e.preventDefault(); pinCheck(); }}><label>Deliver to <input name="pin" inputMode="numeric" maxLength="6" placeholder="Enter pincode" defaultValue={(me && me.pin) || load("pin", "")} aria-label="Pincode" /></label><button className="btn ghost">Check</button>
-          <p id="pinmsg" className="muted" role="status">{typeof pinMsg === "string" ? pinMsg : <><b>Delivery available</b> to {pinMsg.pin} · usually by {etaText()} · cash on delivery available</>}</p></form>
         <div className="perks"><span><Icon k="truck" /> Free delivery</span><span><Icon k="shield" /> Brand warranty</span><span><Icon k="undo" /> Easy returns</span><span><Icon k="check" /> Genuine product</span></div>
         <details className="qbox"><summary><Icon k="shield" /> Warranty, returns and replacement</summary><div>{WARRANTY_QA.slice(0, 3).map(([q, a]) => <p key={q}><b>{q}</b><br />{a}</p>)}<a className="alink" href="#warranty">All warranty and return questions →</a></div></details>
         <div className="sharerow"><span>Share:</span><a href={`https://wa.me/?text=${shareText}%20${share}`} target="_blank" rel="noopener">WhatsApp</a><a href={`https://www.facebook.com/sharer/sharer.php?u=${share}`} target="_blank" rel="noopener">Facebook</a><a href={`https://twitter.com/intent/tweet?url=${share}&text=${shareText}`} target="_blank" rel="noopener">X</a><button className="link" id="share" type="button" onClick={shareLink}>Copy link</button></div>
       </div>
     </div>
     {story.length > 0 && <section className="aplus" id="aplus">
+      <div className="ahero"><img src={pic("img/hero0.jpg", 960)} srcSet={picSet("img/hero0.jpg")} sizes="(max-width:1240px) 100vw, 1240px" alt="" loading="lazy" /><div className="atext"><span className="kicker">{p.brand}{spec(p, "screen size") ? " · " + spec(p, "screen size") : ""}</span><h2>Every Scene. A New Experience.</h2><p>{[spec(p, "screen size"), resName, p.os].filter(Boolean).join(" ") + " television for films, sport and games, built for the living room."}</p></div></div>
       <div className="showcase">{cutout(p.img) ? <img className="cut" src={cutout(p.img)} alt="" loading="lazy" /> : <img className="tilep" src={pic(p.img)} srcSet={picSet(p.img)} sizes="(max-width:860px) 80vw, 40vw" alt="" loading="lazy" width="800" height="800" />}
         <div><span className="kicker">{p.brand}</span><h2>{story[0].title}.</h2><p>{story[0].text}</p>
           <div className="callouts">{callouts(p).map(([big, small]) => <div key={big + small}><b>{big}</b><small>{small}</small></div>)}</div></div></div>

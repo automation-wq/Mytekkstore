@@ -300,9 +300,17 @@ async function run() {
     assert.equal(clips.hero, 4, "four banners: factory prices, Elista, Telefunken, offers"); assert.equal(clips.oss, 2, "shop by operating system on the home page"); assert.equal(clips.brands, 2, "a giant tile per brand");
     assert.equal(clips.arrows, 0, "a row that fits on the screen shows no scroll arrows");
     await b.goto(base + "/category.html?cat=Televisions");
-    assert.deepEqual(await b.ev(`[...document.querySelectorAll(".finder .tile b")].map(b => b.textContent)`), ["TVs by Size", "Elista TVs", "Telefunken TVs", "Google TV", "WebOS"], "a category's explore row shows only that category");
+    assert.deepEqual(await b.ev(`[...document.querySelectorAll(".cdisco .dtabs button")].map(b => b.textContent)`), ["Shop by Size", "Shop by OS", "Screen type / Resolution"], "three-tab discovery under the category banner (client brief)");
+    assert.equal(await b.ev(`document.querySelectorAll(".cdisco .dcard .dimg img").length`), 6, "every size option is a picture card with a from-price");
+    assert.equal(await b.ev(`getComputedStyle(document.querySelector(".plp .grid")).gridTemplateColumns.split(" ").length`), 3, "three product cards per row on desktop");
+    assert.equal(await b.ev(`new Set([...document.querySelectorAll(".plp .grid .card img")].map(i => i.currentSrc || i.src)).size`), 9, "every TV in the list has its own picture");
+    await b.click(...await b.center(".cdisco .dtabs button", 1)); await sleep(300);
+    assert.equal(await b.ev(`document.querySelectorAll(".cdisco .dcard").length`), 2, "the OS tab lists the two operating systems in the catalogue");
+    await b.click(...await b.center(".cdisco .dcard", 0)); await sleep(500);
+    assert.ok(await b.ev(`location.search.includes("os=Google") && document.querySelectorAll(".plp .grid .card").length === 5 && !!document.querySelector(".cdisco .dcard.on")`), "tapping an option filters the list, marks the card and keeps the address");
+    await b.goto(base + "/category.html?cat=Televisions");
     assert.equal(await b.ev(`document.querySelectorAll(".fbar, .ftrack").length`), 0, "no scroll line or arrow buttons under the explore tiles (client decision)");
-    assert.ok(await b.ev(`!!document.querySelector(".kv .kvimg") && document.querySelector(".kv h1").textContent === "Explore TVs"`), "the category headline sits on its lifestyle photo");
+    assert.ok(await b.ev(`!!document.querySelector(".kv .kvimg") && document.querySelector(".kv h1").textContent === "A World of Entertainment Awaits."`), "the category headline sits on its lifestyle photo");
     assert.ok(await b.ev(`!!document.querySelector(".topf video.bvid") && document.querySelectorAll(".tf svg").length === 6`), "the Top features band has its room clip and line icons");
 
     step = "offers page, bank offers and the No Cost EMI tag";

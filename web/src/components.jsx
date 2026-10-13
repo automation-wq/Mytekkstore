@@ -18,6 +18,7 @@ export const Ico = ({ shapes }) => <i className="ico"><svg viewBox="0 0 24 24" f
 // ===== product pieces =====
 // the main photo on a product page loads first; every other photo waits until it scrolls near the screen
 // product photo in its WebP sizes (pic, picSet in data.js), with width and height so the page never shifts while it loads
+// a product photo in the right size; the alt is the product's name
 export const Photo = ({ p, main, sizes = "(max-width:760px) 46vw, 240px" }) => { const [w, h] = dims(p.img); return main
   ? <img src={pic(p.img)} srcSet={picSet(p.img)} sizes="(max-width:860px) 100vw, 50vw" alt={p.brand + " " + p.name} width={w} height={h} fetchPriority="high" decoding="async" />
   : <img src={pic(p.img, 480)} srcSet={picSet(p.img)} sizes={sizes} alt={p.brand + " " + p.name} width={w} height={h} loading="lazy" decoding="async" />; };

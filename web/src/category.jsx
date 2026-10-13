@@ -12,10 +12,33 @@ const BANDS = [[0, 10000, "Under ₹10,000"], [10000, 25000, "₹10,000 to ₹25
 const OFFS = [10, 20, 30];
 // resolution read from the specifications (Samsung and LG both filter by it)
 const RES = ["4K Ultra HD", "Full HD", "HD Ready"];
+const typeOf = p => (((p.specs || []).find(([k]) => k.toLowerCase() === "display type") || [])[1] || "").split(",")[0].trim(); // screen technology (LED, QLED, OLED), kept apart from the resolution
 const resOf = p => { const r = ((p.specs || []).find(([k]) => k.toLowerCase() === "resolution") || [])[1] || ""; return /4K/i.test(r) ? RES[0] : /Full HD/i.test(r) ? RES[1] : /HD/i.test(r) ? RES[2] : ""; };
 // the filters live in the address, so a filtered list can be shared and the menu links keep working; they apply without a reload
-const readFilters = () => ({ brand: (qs.get("brand") || "").split(",").filter(Boolean), size: qs.get("size") || "", os: qs.get("os") || "", res: qs.get("res") || "", min: +qs.get("min") || 0, max: +qs.get("max") || 0,
+const readFilters = () => ({ brand: (qs.get("brand") || "").split(",").filter(Boolean), size: qs.get("size") || "", os: qs.get("os") || "", res: qs.get("res") || "", type: qs.get("type") || "", min: +qs.get("min") || 0, max: +qs.get("max") || 0,
   off: +qs.get("off") || 0, instock: qs.has("instock"), emi: qs.has("emi"), rating: +qs.get("rating") || 0, sort: qs.get("sort") || "" });
+const INK = { type: "spring", stiffness: 420, damping: 34 };
+const SIZE_NOTE = { 32: "Compact spaces", 40: "Bedrooms", 43: "Everyday viewing", 50: "Family rooms", 55: "Living-room favourite", 65: "Cinematic experience", 75: "Go bigger" };
+const OS_NOTE = { "Google TV": "Google Play, Assistant, Chromecast", "WebOS": "Quick card-style home screen", "Android TV": "Google Play apps" };
+const RES_NOTE = { "4K Ultra HD": "Four times the detail of Full HD", "Full HD": "Crisp everyday viewing", "HD Ready": "Great value for smaller rooms" };
+// The three ways in under the category banner (client brief, section 17): Size, OS, Screen type / Resolution. Every option is a picture
+// card with its starting price, built from the catalogue, and a tap applies the matching filter without a reload (the address keeps it).
+function Discover({ list, sizes, sizeOf, f, set, url, money }) {
+  const [tab, setTab] = useState(f.os ? "os" : f.res || f.type ? "res" : "size");
+  const card = (ps, key, label, note, on, patch) => { const c = [...ps].sort((a, b) => a.price - b.price)[0]; return c && { key, label, note, img: c.img, from: c.price, on, patch }; };
+  const tabs = [
+    ["size", "Shop by Size", [...sizes].sort((a, b) => a.n - b.n).map(s => card(list.filter(p => (sizeOf(p) || {}).label === s.label), s.label, s.label.replace(/ TVs$/, "").replace(/ inch$/, '"'), SIZE_NOTE[s.n] || "", f.size === s.label, { size: f.size === s.label ? "" : s.label }))],
+    ["os", "Shop by OS", osList(list).map(o => card(list.filter(p => p.os === o), o, o, OS_NOTE[o] || "Smart apps built in", f.os === o, { os: f.os === o ? "" : o }))],
+    ["res", "Screen type / Resolution", [...[...new Set(list.map(typeOf).filter(Boolean))].sort().map(t => card(list.filter(p => typeOf(p) === t), "type:" + t, t, "Screen technology", f.type === t, { type: f.type === t ? "" : t })),
+      ...RES.map(r => card(list.filter(p => resOf(p) === r), r, r, RES_NOTE[r], f.res === r, { res: f.res === r ? "" : r }))]],
+  ].map(([k, t, cards]) => [k, t, cards.filter(Boolean)]).filter(([, , cards]) => cards.length);
+  const cur = tabs.find(([k]) => k === tab) || tabs[0];
+  if (!cur) return null;
+  return <section className="disco cdisco" aria-label="Find your TV">
+    <div className="dtabs" role="tablist">{tabs.map(([k, t]) => <button type="button" role="tab" aria-selected={cur[0] === k} className={cur[0] === k ? "on" : undefined} onClick={() => setTab(k)} key={k}>{t}{cur[0] === k && <m.i className="ink" layoutId="dtab-ink" transition={INK} />}</button>)}</div>
+    <div className="dgrid auto" role="tabpanel">{cur[2].map(c => <a className={"dcard" + (c.on ? " on" : "")} href={url(c.patch)} aria-current={c.on ? "true" : undefined} onClick={e => { e.preventDefault(); set(c.patch); }} key={c.key}><span className="dimg"><img src={pic(c.img, 480)} alt="" loading="lazy" width="800" height="800" /></span><span className="dbody"><b>{c.label}</b><small>{c.note}</small><em>{c.on ? "Showing now" : "from " + money(c.from)}</em></span><i className="darr" aria-hidden="true">{c.on ? "×" : "→"}</i></a>)}</div>
+  </section>;
+}
 const Group = ({ title, children }) => <fieldset className="fg"><legend>{title}</legend>{children}</fieldset>;
 const Opt = ({ on, onChange, label, n }) => <label className={"fopt" + (on ? " on" : "")}><input type="checkbox" checked={on} onChange={onChange} /><span>{label}</span><small>{n}</small></label>;
 
@@ -27,14 +50,14 @@ export function Category() {
   const [cmp, setCmp] = useState([]); // products ticked for the compare table, up to four (Samsung, LG and Croma all offer this)
   const toggleCmp = id => setCmp(c => c.includes(id) ? c.filter(x => x !== id) : c.length < 4 ? [...c, id] : c);
   const set = patch => setF(x => ({ ...x, ...patch }));
-  const clear = () => setF(x => ({ brand: [], size: "", os: "", res: "", min: 0, max: 0, off: 0, instock: false, emi: false, rating: 0, sort: x.sort }));
+  const clear = () => setF(x => ({ brand: [], size: "", os: "", res: "", type: "", min: 0, max: 0, off: 0, instock: false, emi: false, rating: 0, sort: x.sort }));
   const { S, sizeOf, all: sizeList } = catSizes(P, cat);
   const catAll = P.filter(p => !cat || p.cat === cat);
   // the brand's sizes for a card's size pills: one model per size, this product for its own size, smallest first
   const sizesOf = p => { if (!sizeOf(p)) return null; const m = new Map(); catAll.filter(x => x.brand === p.brand).forEach(x => { const s = sizeOf(x); if (s && (!m.has(s.n) || x.id === p.id)) m.set(s.n, x); }); return [...m.values()].sort((a, b) => sizeOf(a).n - sizeOf(b).n).map(x => [String(sizeOf(x).n), productUrl(x), x.id === p.id]); };
   const base = catAll.filter(p => (!wishOnly || wish.includes(p.id)) && (p.brand + " " + p.cat + " " + p.name).toLowerCase().includes(q.toLowerCase()));
   // skip names one group, so a choice can show how many products it would give
-  const pass = (p, skip) => (skip === "brand" || !f.brand.length || f.brand.includes(p.brand)) && (!f.size || (sizeOf(p) || {}).label === f.size) && (skip === "os" || !f.os || p.os === f.os) && (skip === "res" || !f.res || resOf(p) === f.res)
+  const pass = (p, skip) => (skip === "brand" || !f.brand.length || f.brand.includes(p.brand)) && (!f.size || (sizeOf(p) || {}).label === f.size) && (skip === "os" || !f.os || p.os === f.os) && (skip === "res" || !f.res || resOf(p) === f.res) && (skip === "type" || !f.type || typeOf(p) === f.type)
     && (skip === "price" || ((!f.min || p.price >= f.min) && (!f.max || p.price <= f.max))) && (skip === "off" || !f.off || off(p) >= f.off)
     && (skip === "instock" || !f.instock || p.stock > 0) && (skip === "emi" || !f.emi || p.emi) && (skip === "rating" || !f.rating || avg(p) >= f.rating);
   const list = base.filter(p => pass(p));
@@ -43,7 +66,7 @@ export function Category() {
   if (Object.hasOwn(sorts, f.sort)) list.sort(sorts[f.sort]);
   const title = wishOnly ? "My wishlist" : q ? 'Results for "' + q + '"' : [f.brand.length === 1 ? f.brand[0] : "", cat].filter(Boolean).join(" ") || "All products";
   useEffect(() => { document.title = title + " | Mytekkstore"; }, []);
-  const params = { cat, q, wish: wishOnly ? 1 : "", brand: f.brand.join(","), size: f.size, os: f.os, res: f.res, min: f.min || "", max: f.max || "", off: f.off || "", instock: f.instock ? 1 : "", emi: f.emi ? 1 : "", rating: f.rating || "", sort: f.sort };
+  const params = { cat, q, wish: wishOnly ? 1 : "", brand: f.brand.join(","), size: f.size, os: f.os, res: f.res, type: f.type, min: f.min || "", max: f.max || "", off: f.off || "", instock: f.instock ? 1 : "", emi: f.emi ? 1 : "", rating: f.rating || "", sort: f.sort };
   const url = o => listUrl({ ...params, ...o });
   useEffect(() => { history.replaceState(null, "", url({}) + location.hash); }, [f]);
   useEffect(() => {
@@ -54,26 +77,20 @@ export function Category() {
     return () => removeEventListener("keydown", k);
   }, [open]);
 
-  // tiles: this category first, then each brand in it, then the other categories
-  const tiles = [], brandOn = b => f.brand.length === 1 && f.brand[0] === b;
-  if (S && catAll.length) {
-    tiles.push([S.short + " by " + S.by, S.note, catUrl(cat), catImg(cat), !f.brand.length && !q]);
-    BRANDS.forEach(b => { const ps = catAll.filter(p => p.brand === b); if (ps.length) tiles.push([b + " " + S.short, ps.length + " model" + (ps.length > 1 ? "s" : ""), listUrl({ cat, brand: b }), ps[0].img, brandOn(b)]); });
-    osList(catAll).forEach(os => { const ps = catAll.filter(p => p.os === os); tiles.push([os, ps.length + " model" + (ps.length > 1 ? "s" : ""), listUrl({ cat, os }), ps[0].img, f.os === os]); }); // Shop by OS (client decision 2026-10-12)
-  }
+  // tiles: the categories, only when no category is chosen (a category page has the three-tab discovery instead)
+  const tiles = [];
   if (!cat) CATS.forEach(c => tiles.push([c, P.filter(p => p.cat === c).length + " products", catUrl(c), catImg(c), false])); // category tiles only when no category is chosen
-  const sizes = sizeList.map(s => s.label);
   const band = BANDS.find(([a, b]) => a === f.min && b === f.max);
-  const chips = [...f.brand.map(b => [b, () => set({ brand: f.brand.filter(x => x !== b) })]), ...(f.size ? [[f.size, () => set({ size: "" })]] : []), ...(f.os ? [[f.os, () => set({ os: "" })]] : []), ...(f.res ? [[f.res, () => set({ res: "" })]] : []),
+  const chips = [...f.brand.map(b => [b, () => set({ brand: f.brand.filter(x => x !== b) })]), ...(f.size ? [[f.size, () => set({ size: "" })]] : []), ...(f.os ? [[f.os, () => set({ os: "" })]] : []), ...(f.res ? [[f.res, () => set({ res: "" })]] : []), ...(f.type ? [[f.type, () => set({ type: "" })]] : []),
     ...((f.min || f.max) ? [[band ? band[2] : money(f.min) + " to " + money(f.max), () => set({ min: 0, max: 0 })]] : []), ...(f.off ? [[f.off + "% off or more", () => set({ off: 0 })]] : []),
     ...(f.instock ? [["In stock", () => set({ instock: false })]] : []), ...(f.emi ? [["No Cost EMI", () => set({ emi: false })]] : []), ...(f.rating ? [[f.rating + "★ and above", () => set({ rating: 0 })]] : [])];
   const n = list.length, nText = n + " product" + (n === 1 ? "" : "s");
   return <>
     <div className="crumbs"><a href="/">Home</a> › {title}</div>
-    {wishOnly ? <h1>My wishlist</h1> : S && KV_IMG[cat] ? <div className="kv"><div className="kvimg"><KvImg src={`img/${KV_IMG[cat]}.jpg`} sizes="(max-width:1240px) 100vw, 1240px" eager /></div>{CAT_CLIPS[cat] && <video className="bvid" muted loop playsInline preload="none" data-src={`/img/${CAT_CLIPS[cat]}.mp4`} aria-hidden="true"></video>}<div><span className="eyebrow">{cat}</span><h1 className="explore">Explore {S.short}</h1><p>By size, by brand, or by operating system. {S.note}.</p></div></div>
+    {wishOnly ? <h1>My wishlist</h1> : S && KV_IMG[cat] ? <div className="kv"><div className="kvimg"><KvImg src={`img/${KV_IMG[cat]}.jpg`} sizes="(max-width:1240px) 100vw, 1240px" eager /></div><div><span className="eyebrow">{cat}</span><h1 className="explore">A World of Entertainment Awaits.</h1><p>Discover televisions designed for every room and every moment.</p></div></div>
       : <h1 className="explore">{S ? "Explore " + S.short : title}</h1>}
-    {!wishOnly && <div className="finder"><div className="tiles">{tiles.map(([name, note, href, img, on]) => <a className={"tile" + (on ? " on" : "")} href={href} aria-current={on ? "page" : undefined} key={href}><span><b>{name}</b><small>{note}</small></span><img src={pic(img, 480)} alt="" loading="lazy" width="800" height="800" /></a>)}</div></div>}
-    {sizes.length > 0 && <nav className="sizetabs" aria-label={S.by}><a href={url({ size: "" })} className={f.size ? undefined : "on"} aria-current={f.size ? undefined : "page"}>All</a>{sizes.map(s => <a href={url({ size: s })} className={s === f.size ? "on" : undefined} aria-current={s === f.size ? "page" : undefined} key={s}>{s}</a>)}</nav>}
+    {!wishOnly && S && cat && catAll.length > 0 && <Discover list={catAll} sizes={sizeList} sizeOf={sizeOf} f={f} set={set} url={url} money={money} />}
+    {!wishOnly && tiles.length > 0 && <div className="finder"><div className="tiles">{tiles.map(([name, note, href, img, on]) => <a className={"tile" + (on ? " on" : "")} href={href} aria-current={on ? "page" : undefined} key={href}><span><b>{name}</b><small>{note}</small></span><img src={pic(img, 480)} alt="" loading="lazy" width="800" height="800" /></a>)}</div></div>}
     <div className="ptool"><h2 className="ptotal">{nText}{q ? ' · "' + q + '"' : ""}</h2>
       {!wishOnly && <button type="button" className="btn ghost fbtn" onClick={() => setOpen(true)} aria-expanded={open} aria-controls="filters"><Icon k="sliders" /> Filters{chips.length ? " (" + chips.length + ")" : ""}</button>}
       <label className="sortby">Sort by <select value={f.sort} onChange={e => set({ sort: e.target.value })}><option value="">Featured</option><option value="low">Price: low to high</option><option value="high">Price: high to low</option><option value="off">Biggest discount</option><option value="rating">Customer rating</option></select></label></div>

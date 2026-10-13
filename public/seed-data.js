@@ -410,7 +410,7 @@ const SEED = [
   "mrp": 21990,
   "stock": 22,
   "emi": true,
-  "img": "img/p0.jpg",
+  "img": "img/p0-v1.jpg",
   "os": "WebOS",
   "specs": [
    [
@@ -455,7 +455,7 @@ const SEED = [
   "mrp": 45990,
   "stock": 18,
   "emi": true,
-  "img": "img/p2.jpg",
+  "img": "img/p2-v1.jpg",
   "os": "WebOS",
   "specs": [
    [
@@ -500,7 +500,7 @@ const SEED = [
   "mrp": 39990,
   "stock": 20,
   "emi": true,
-  "img": "img/p1.jpg",
+  "img": "img/p1-v1.jpg",
   "os": "Google TV",
   "specs": [
    [
@@ -545,7 +545,7 @@ const SEED = [
   "mrp": 89990,
   "stock": 12,
   "emi": true,
-  "img": "img/p3.jpg",
+  "img": "img/p3-v1.jpg",
   "os": "Google TV",
   "specs": [
    [
@@ -590,7 +590,7 @@ const SEED = [
   "mrp": 15990,
   "stock": 25,
   "emi": true,
-  "img": "img/p0.jpg",
+  "img": "img/p0-v2.jpg",
   "os": "Google TV",
   "specs": [
    [

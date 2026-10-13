@@ -47,9 +47,11 @@ export function autoStory(p) {
   if (res) blocks.push({ kicker: "Picture", title: /4K/i.test(res) ? "4K Ultra HD picture" : /Full HD/i.test(res) ? "Full HD picture" : "HD Ready picture", text: res + (/4K/i.test(res) ? ": four times the detail of Full HD, so films, sport and games stay sharp" : ": a clear, bright picture") + (size ? " on the " + size + " screen." : ".") });
   if (smart) blocks.push({ kicker: "Smart", title: /google/i.test(smart) ? "Google TV built in" : /webos/i.test(smart) ? "WebOS built in" : /android/i.test(smart) ? "Android TV built in" : "Smart TV built in", text: smart + ". " + (/google/i.test(smart) ? "Apps from Google Play, Google Assistant on the remote and Chromecast built in, with no set-top box." : /webos/i.test(smart) ? "A quick card-style home screen with apps from the webOS store, with no set-top box." : "Streaming apps built in, with no set-top box.") });
   if (sound) blocks.push({ kicker: "Sound", title: /dolby/i.test(sound) ? "Dolby Audio sound" : "Built-in sound", text: sound + (/dolby/i.test(sound) ? ": clearer dialogue and fuller sound straight from the TV." : " from the built-in speakers, for everyday viewing.") });
-  if (ports) blocks.push({ kicker: "Connections", title: "Everything plugs in", text: ports + ": a set-top box, a console and a pen drive, without swapping cables." });
-  const imgs = [p.img, "img/kv-tv.jpg", "img/hero0.jpg", p.img];
-  return blocks.slice(0, 4).map((b, i) => ({ ...b, img: imgs[i] }));
+  // Design (client brief, A+ section 5): only what the specifications verify (display type, size, ports); otherwise neutral words
+  const disp = spec("display type");
+  blocks.push({ kicker: "Design", title: /bezel-?less/i.test(disp) ? "Slim, bezel-less design" : "Slim design", text: (disp ? disp + " panel" : "A slim panel") + (size ? " at " + size : "") + ", flat on the wall or on its stand, so the picture takes the room" + (ports ? ", with " + ports + " at the back for a set-top box, a console and a pen drive." : ".") });
+  const g = galleryOf(p), by = { Picture: g[0], Smart: g[1] || g[0], Sound: g[2] || g[0], Design: g[4] || g[0] };
+  return blocks.map(b => ({ ...b, img: by[b.kicker] }));
 }
 export const osList = P => [...new Set(P.map(p => p.os).filter(Boolean))].sort();
 export const osUrl = os => listUrl({ cat: "Televisions", os });
@@ -76,6 +78,14 @@ export const HOME_BANNERS = [
 ];
 // "Good to know" on the home page. Every answer only repeats a promise the site already makes elsewhere: [question, answer, [link, label] or null]
 export const FAQ = [
+  // the client brief's seven television questions first (home page); policy answers use only what the site already states
+  ["How do I choose the right TV screen size?", "Measure how far you sit from the screen. About 1.5 to 2 metres suits 32 to 43 inch, 2 to 2.5 metres suits 50 to 55 inch, and 65 inch and above is for 3 metres or more. Shop by Size on the Televisions page shows every size we stock with its starting price.", ["/televisions", "Shop by size"]],
+  ["What is the difference between LED, QLED and OLED?", "All three are flat-panel types. LED uses a backlight behind an LCD panel and gives the best value; QLED adds a quantum-dot layer for brighter colour; OLED lights each pixel itself for perfect blacks at a higher price. Every TV we stock lists its display type in the specifications.", null],
+  ["What is the difference between Google TV and Android TV?", "Both run Android and the Google Play apps. Google TV adds a newer home screen that gathers films and shows from your apps, with Google Assistant on the remote and Chromecast built in. Each product page names the system the model runs.", ["/televisions#os", "Compare the operating systems"]],
+  ["How can I check delivery availability?", "Enter your pincode in the Deliver to box on any product page. Every order is delivered free, usually within 3 to 5 days, and cash on delivery is available.", null],
+  ["How do warranty and installation work?", "Every TV carries the brand's own warranty. To claim it, write to us from the Contact page with your order number and we connect you with the brand's service centre. Wall mounting is arranged with the delivery partner where the brand offers it; ask us before you order.", ["/returns", "Warranty and returns"]],
+  ["Can I compare different television models?", "Yes. Tick Compare on up to four products in any list to see them side by side, or open the comparison table on a product page.", ["/televisions#compare", "Compare the models"]],
+  ["What payment offers are available?", "No Cost EMI over 3, 6 or 9 months on participating bank credit cards, plus the bank offers on the Offers page. Cash on delivery is available on every order.", ["/offers", "See the offers"]],
   ["Is delivery free?", "Yes. Every order is delivered free, usually within 3 to 5 days. Enter your pincode on any product page to check your area.", null],
   ["Can I pay when the order arrives?", "Yes. Cash on delivery is available on every order.", null],
   ["How does No Cost EMI work?", "On products marked No Cost EMI, the price is split over 3, 6 or 9 months on participating bank credit cards with no extra interest. The plans are listed on each product page.", ["/offers", "See the offers"]],
@@ -119,6 +129,7 @@ export const ICONS = {
   home: '<path d="M3 11l9-8 9 8v9a1 1 0 01-1 1h-5v-6h-6v6H4a1 1 0 01-1-1z"/>',
   tag: '<path d="M3 12V4h8l9 9-8 8z"/><circle cx="7.5" cy="8.5" r="1.5"/>',
   lock: '<rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 018 0v3"/>',
+  expand: '<path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/>',
   sliders: '<path d="M4 6h8M16 6h4M4 12h2M10 12h10M4 18h10M18 18h2"/><circle cx="14" cy="6" r="2"/><circle cx="8" cy="12" r="2"/><circle cx="16" cy="18" r="2"/>',
 };
 // self-drawing icons (pathLength lets the stroke draw in with CSS)
@@ -203,7 +214,12 @@ export const pic = (src, w) => { const s = hasWebp(src) ? src.replace(/\.jpg$/, 
 const DIMS = { "img/hero0.jpg": [1344, 752], "img/hero1.jpg": [1344, 752], "img/hero2.jpg": [1344, 752], "img/kv-tv.jpg": [1600, 2350], "img/kv-ac.jpg": [1600, 1074], "img/kv-wash.jpg": [1600, 1067] };
 export const dims = src => DIMS[src] || [800, 800]; // the product photos are square
 // floating cutout of a product render (white background made transparent by `npm run cutouts`); only the seeded renders have one
-export const cutout = src => /^img\/p\d+\.jpg$/.test(src || "") ? "/" + src.replace(/\.jpg$/, "-cut.webp") : null;
+export const cutout = src => /^img\/p\d+(-v\d+)?\.jpg$/.test(src || "") ? "/" + src.replace(/\.jpg$/, "-cut.webp") : null;
+// The central gallery map (client brief, section 21): six different pictures per TV. The admin's own photos win; otherwise the render,
+// a living-room photo, the render on a dark stage, the screen close-up, the home-cinema photo and the stand close-up (web/gallery-gen.mjs).
+// The two room photos show a TV of this kind, not this exact model; the model's facts stay in the specifications.
+export const GALLERY_LABELS = ["Front view", "In the living room", "Studio view", "Screen detail", "Home cinema", "Stand detail"];
+export const galleryOf = p => { if (p.images && p.images.length) return [p.img, ...p.images]; const m = p.cat === "Televisions" && /^img\/(p\d+(?:-v\d+)?)\.jpg$/.exec(p.img || ""); if (!m) return [p.img]; const n = m[1]; return [p.img, "img/hero0.jpg", `img/g/${n}-studio.webp`, `img/g/${n}-screen.webp`, "img/kv-tv.jpg", `img/g/${n}-stand.webp`]; };
 export const picSet = src => hasWebp(src) ? `${pic(src, 480)} 480w, ${pic(src, 960)} 960w, ${pic(src)} ${dims(src)[0]}w` : undefined;
 export const off = p => Math.round((1 - p.price / p.mrp) * 100);
 export const avg = p => p.reviews && p.reviews.length ? p.reviews.reduce((t, r) => t + r.rating, 0) / p.reviews.length : 0;
