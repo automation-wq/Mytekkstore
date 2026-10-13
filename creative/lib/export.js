@@ -50,4 +50,16 @@ function reportMd() {
 }
 const reportHtml = () => `<!doctype html><meta charset="utf-8"><title>Creative strategy report</title><style>body{font:15px/1.5 Segoe UI,Arial,sans-serif;max-width:900px;margin:40px auto;padding:0 20px;color:#0f1115}h1,h2,h3{letter-spacing:-.5px}li{margin:3px 0}code{background:#f1f3f5;padding:1px 4px}</style><body>${reportMd().split("\n").map(l => /^### /.test(l) ? `<h3>${esc(l.slice(4))}</h3>` : /^## /.test(l) ? `<h2>${esc(l.slice(3))}</h2>` : /^# /.test(l) ? `<h1>${esc(l.slice(2))}</h1>` : /^- /.test(l) ? `<li>${esc(l.slice(2)).replace(/\*\*(.+?)\*\*/g, "<b>$1</b>")}</li>` : l ? `<p>${esc(l)}</p>` : "").join("\n")}</body>`;
 const esc = s => String(s).replace(/[&<>]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
-module.exports = { referencesCsv, productsCsv, productsJson, approvedZip, reportMd, reportHtml, zip, crc32 };
+// one product's Amazon A+ modules (PNGs) plus a module-by-module copy document
+function aplusZip(productId) {
+  const mods = db.assets.filter(a => a.kind === "aplus" && a.productId === +productId);
+  const files = mods.map(a => { const abs = path.join(ASSETS, a.path); return fs.existsSync(abs) ? { name: a.module + "-" + a.width + "x" + a.height + ".png", data: fs.readFileSync(abs) } : null; }).filter(Boolean);
+  const p = db.products.find(x => x.id === +productId) || {};
+  const md = ["# A+ Content — " + (p.brand || "") + " " + (p.name || ""), "", "Amazon standard modules (970 px wide). Copy is drawn from the product's verified facts only; no invented features, claims or reviews.", ""]
+    .concat(mods.flatMap(a => ["## " + a.name + "  (" + a.module + ", " + a.width + "×" + a.height + ")  — QC " + (a.qc ? a.qc.score : "-") + "/100",
+      "- Headline: " + a.copy.headline, a.copy.sub ? "- Supporting: " + a.copy.sub : "", a.copy.callouts ? "- Callouts: " + a.copy.callouts.map(c => c.join(" ")).join(", ") : "",
+      "- Image brief: " + (a.copy.imageBrief || "-"), "- File: " + a.path, ""].filter(Boolean))).join("\n");
+  files.push({ name: "aplus-copy.md", data: Buffer.from(md) });
+  return zip(files);
+}
+module.exports = { referencesCsv, productsCsv, productsJson, approvedZip, aplusZip, reportMd, reportHtml, zip, crc32 };

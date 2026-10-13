@@ -87,6 +87,16 @@ shop.listen(0, "127.0.0.1", () => agent.listen(AGENT_PORT, "127.0.0.1", async ()
     r = await call("/api/export/report.md"); assert.ok(r.data.includes("Elista 126 cm") && r.data.includes("hypothes") && r.data.includes("Difference:"), "the strategy report");
     r = await call("/api/export/products.json"); assert.equal((typeof r.data === "string" ? JSON.parse(r.data) : r.data).length, 3);
 
+    step = "Amazon A+ Content studio";
+    r = await call(`/api/products/${product.id}/aplus/plan`); assert.ok(r.data.plan.modules.length >= 4 && r.data.plan.modules.some(m => m.type === "specs") && r.data.plan.dimensions.includes("970"), "the A+ plan lists the standard modules");
+    r = await call(`/api/products/${product.id}/aplus?wait=1`, "POST"); const mods = r.data.modules;
+    assert.ok(mods.length >= 4 && mods.every(m => m.width === 970 && m.kind === "aplus"), "every A+ module renders at 970 px: " + mods.map(m => m.module + " " + m.width).join(", "));
+    for (const m of mods) { const abs = path.join(process.env.CREATIVE_DATA_DIR, "assets", m.path); assert.ok(fs.existsSync(abs) && fs.statSync(abs).size > 3000, "a real file for " + m.module); assert.ok(m.qc && m.qc.score >= 100, m.module + " QC " + (m.qc && m.qc.score) + ": " + (m.qc ? m.qc.checks.filter(c => !c.pass).map(c => c.name) : "")); }
+    assert.ok(mods.some(m => m.module === "comparison") && mods.some(m => m.module === "features" && m.copy.callouts.length), "comparison and feature-callout modules present with verified callouts");
+    r = await call(`/api/products/${product.id}/aplus?wait=1`, "POST"); assert.equal((await call(`/api/aplus?productId=${product.id}`)).data.modules.length, mods.length, "re-running replaces the modules, does not duplicate");
+    const zres = await fetch(base + `/api/export/aplus-${product.id}.zip`); const zbuf = Buffer.from(await zres.arrayBuffer());
+    assert.ok(zbuf.slice(0, 2).toString() === "PK" && zbuf.includes("aplus-copy.md") && zbuf.includes("brand-970x300.png"), "the A+ export zip has the module PNGs and the copy document");
+
     step = "the shop's hook";
     r = await call("/api/concepts", "POST", { product: { brand: "Telefunken", name: "108 cm (43 inch) 4K Ultra HD Google TV", price: 26990, emi: true, img: "img/p1.jpg", os: "Google TV", specs: [["Screen size", "108 cm (43 inch)"], ["Resolution", "4K Ultra HD, 3840 x 2160"], ["Smart TV", "Google TV with voice remote"], ["Sound output", "24 W, Dolby Audio"]] }, slot: "product:12", objective: "banner" });
     assert.ok(r.data.concepts.length >= 3 && r.data.concepts[0].headline && r.data.concepts[0].kicker.startsWith("Telefunken"), "concepts for a product sent by the shop");
