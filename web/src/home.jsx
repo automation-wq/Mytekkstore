@@ -47,6 +47,26 @@ export function Home() {
     [100, "%", "Genuine", "brand warranty on everything"],
   ];
   const picOf = src => ({ src: pic(src, 960), srcSet: picSet(src) });
+  // premium discovery sections (MASTER PROMPT redesign): image-led cards for size, operating system and resolution, an editorial
+  // Latest Launches grid, and a product-care banner. Prototype imagery reuses the store's renders and lifestyle shots; copy is
+  // aspirational marketing only, no invented specs, prices or model names.
+  const spec = (p, k) => ((p.specs || []).find(([n]) => n.toLowerCase().includes(k)) || [])[1] || "";
+  const resOf = p => { const r = spec(p, "resolution"); return /4K/i.test(r) ? "4K Ultra HD" : /Full HD/i.test(r) ? "Full HD" : /HD/i.test(r) ? "HD Ready" : ""; };
+  const inchOf = p => +((/\((\d+)\s*inch\)/.exec(p.name) || [])[1] || 0);
+  const minP = ps => ps.length ? Math.min(...ps.map(p => p.price)) : 0;
+  const SHOTS = ["img/p1.jpg", "img/p3.jpg", "img/p0.jpg", "img/p2.jpg"], LIFE = ["img/hero0.jpg", "img/kv-tv.jpg"];
+  const tvs = P.filter(p => p.cat === "Televisions");
+  const sizeCards = [[32, "Compact spaces"], [43, "Everyday viewing"], [55, "Living-room favourite"], [65, "Cinematic experience"], [75, "Go bigger"]].map(([inch, desc], i) => ({ inch, desc, img: SHOTS[i % SHOTS.length], from: minP(tvs.filter(p => inchOf(p) === inch)) }));
+  const osBenefit = { "Google TV": "Every app on one home screen, with Google Assistant and Chromecast.", "WebOS": "A quick card-style home screen with apps built in — no set-top box.", "Android TV": "Google Play apps and Chromecast, built in." };
+  const osCards = oss.map((o, i) => ({ os: o, text: osBenefit[o] || "Smart apps built in.", img: LIFE[i % LIFE.length], from: minP(tvs.filter(p => p.os === o)) }));
+  const resCards = [["4K Ultra HD", "Four times the detail of Full HD."], ["Full HD", "Crisp, clear everyday viewing."], ["HD Ready", "Great value for smaller rooms."]].map(([res, text]) => { const ps = tvs.filter(p => resOf(p) === res).sort((a, b) => a.price - b.price); return { res, text, img: ps[0] && (cutout(ps[0].img) || ps[0].img), from: minP(ps) }; }).filter(c => c.from);
+  const LAUNCHES = [
+    { kicker: "Elista", title: "Elista 4K Smart TV Collection", text: "Brilliant 4K entertainment, beautifully yours.", href: brandUrl("Elista"), img: "img/hero0.jpg", dark: true },
+    { kicker: "Telefunken", title: "Cinematic Viewing, Reimagined", text: "Big-screen Google TV with Dolby Audio.", href: brandUrl("Telefunken"), img: "img/kv-tv.jpg", dark: true },
+    { kicker: "Smart entertainment", title: "Smart Entertainment", text: "Every app built in, no set-top box.", href: "/televisions#os", img: "img/p2.jpg" },
+    { kicker: "Big screen", title: "The Big-Screen Experience", text: "Made for movie nights.", href: listUrl({ cat: "Televisions", size: "65 inch TVs" }), img: "img/p3.jpg" },
+    { kicker: "New", title: "Next-Generation Smart TVs", text: "Discover the latest from Elista and Telefunken.", href: "/televisions", img: "img/p0.jpg" },
+  ];
   return <>
     <div className="hero" ref={heroRef} onClick={onHero} onPointerMove={onMove}>
       {slides.map((sl, i) => <m.div className={"slide k-" + sl.kind + (i === cur ? " on" : "")} data-preset={sl.preset || "cinematic"} key={i} initial="hide" animate={i === cur ? "show" : "hide"} variants={GROUP} style={sl.tone ? { background: sl.tone } : undefined}>
@@ -65,29 +85,36 @@ export function Home() {
     </div>
     <div className="num" ref={numRef}>{nums.map(([n, suf, t, s]) => <div key={t}><b><i data-n={n}>0</i>{suf}</b><span>{t}</span><small>{s}</small></div>)}</div>
 
-    <section className="find"><h2>Find your TV</h2><p className="lead">Pick the size you want, or the operating system you know, and go straight to the models.</p>
-      {CATS.map(c => { const { S, all, sizeOf } = catSizes(P, c); if (!S || !all.length) return null;
-        const from = s => Math.min(...P.filter(p => p.cat === c && (sizeOf(p) || {}).n === s.n).map(p => p.price));
-        return <div className="frow" key={c}><b>By {S.by.toLowerCase()}</b>{[...all].sort((a, b) => a.n - b.n).map(s => <a className="chip sw" href={listUrl({ cat: c, size: s.label })} key={s.label}><b>{s.label.replace(/ TVs$/, "")}</b><small>from {money(from(s))}</small></a>)}</div>; })}
-      {oss.length > 0 && <div className="frow"><b>By operating system</b>{oss.map(o => { const ps = P.filter(p => p.os === o); return <a className="chip sw os" href={osUrl(o)} key={o}><b>{o}</b><small>{ps.length} model{ps.length === 1 ? "" : "s"} · from {money(Math.min(...ps.map(p => p.price)))}</small></a>; })}{oss.length > 1 && <a className="alink" href="/televisions#os">Compare the operating systems →</a>}</div>}
-    </section>
-    <section><h2>Deals of the Day <a href="/products?sort=off">View all</a></h2><p className="lead">The biggest discounts right now.</p><div className="grid">{deals.map((p, i) => <Card p={p} i={i} key={p.id} />)}</div></section>
+    <BankOffers />
 
-    <section className="bigbrands"><h2>Two brands, one promise</h2><p className="lead">Genuine {BRANDS.join(" and ")} TVs with the brand's own warranty, at factory prices.</p>
+    <section className="launches"><h2>Latest Launches</h2><p className="lead">Discover what's new in home entertainment.</p>
+      <div className="launchgrid">{LAUNCHES.map((l, i) => <a className={"launch" + (i < 2 ? " big" : "") + (l.dark ? " dark" : "") + (cutout(l.img) ? " stage" : "")} href={l.href} key={l.title}>{cutout(l.img) ? <img src={cutout(l.img)} alt="" loading="lazy" /> : <img src={pic(l.img, 960)} srcSet={picSet(l.img)} sizes="(max-width:760px) 92vw, 46vw" alt="" loading="lazy" />}<span className="lshade"></span><span className="ltext"><span className="kicker">{l.kicker}</span><h3>{l.title}</h3><p>{l.text}</p><u>Explore now →</u></span></a>)}</div></section>
+
+    <section className="disco"><h2>Every room. The right screen.</h2><p className="lead">Find the perfect screen size for every space.</p>
+      <div className="dgrid five">{sizeCards.map(s => <a className="dcard" href={listUrl({ cat: "Televisions", size: s.inch + " inch TVs" })} key={s.inch}><span className="dimg"><img src={pic(s.img, 480)} srcSet={picSet(s.img)} sizes="240px" alt="" loading="lazy" width="800" height="800" /></span><span className="dbody"><b>{s.inch}"</b><small>{s.desc}</small><em>{s.from ? "from " + money(s.from) : "Coming soon"}</em></span><i className="darr" aria-hidden="true">→</i></a>)}</div></section>
+
+    {osCards.length > 0 && <section className="disco"><h2>Entertainment, your way.</h2><p className="lead">Choose the smart TV experience that fits your lifestyle.</p>
+      <div className="dgrid land">{osCards.map(c => <a className="dcard os" href={osUrl(c.os)} key={c.os}><span className="dimg"><img src={pic(c.img, 960)} srcSet={picSet(c.img)} sizes="(max-width:760px) 92vw, 46vw" alt="" loading="lazy" /></span><span className="dbody"><b>{c.os}</b><small>{c.text}</small><em>{c.from ? "from " + money(c.from) : ""}</em></span><i className="darr" aria-hidden="true">→</i></a>)}</div></section>}
+
+    {resCards.length > 0 && <section className="disco"><h2>See every detail differently.</h2><p className="lead">Explore the resolutions built for exceptional viewing.</p>
+      <div className="dgrid three">{resCards.map(c => <a className="dcard tall dark" href={listUrl({ cat: "Televisions", res: c.res })} key={c.res}><span className="dimg"><img src={c.img} alt="" loading="lazy" /></span><span className="lshade"></span><span className="dbody"><b>{c.res}</b><small>{c.text}</small><em>from {money(c.from)}</em></span></a>)}</div></section>}
+
+    <section className="bigbrands"><h2>Featured brands</h2><p className="lead">Flagship collections from {BRANDS.join(" and ")}, with the brand's own warranty.</p>
       {BRANDS.map((b, i) => { const prod = biggest(b), pts = brandPoints(P, b), n = P.filter(p => p.brand === b).length, tone = (HOME_BANNERS.find(s => s.brand === b) || {}).tone;
         return prod ? <a className={"bbrand" + (i % 2 ? " flip" : "")} href={brandUrl(b)} key={b} style={tone ? { background: tone } : undefined}>
           <div className="btext"><span className="kicker">{n} model{n === 1 ? "" : "s"}</span><b>{b}</b><ul>{pts.map(t => <li key={t}>{t}</li>)}</ul><u>Shop {b} →</u></div>
           {cutout(prod.img) ? <img className="cut" src={cutout(prod.img)} alt={prod.brand + " " + prod.name} loading="lazy" /> : <img src={pic(prod.img)} srcSet={picSet(prod.img)} sizes="(max-width:860px) 100vw, 46vw" alt={prod.brand + " " + prod.name} width="800" height="800" loading="lazy" />}</a> : null; })}</section>
-    {quotes.length > 0 && <section><h2>What customers say</h2><p className="lead">The newest reviews from across the catalogue.</p><div className="quotes">{quotes.map((r, i) => <a className="quote" href={productUrl(r.p)} key={i}>
-      <div className="stars"><span>{starRow(r.rating)}</span></div><p>“{r.text}”</p><b>{r.name}</b><small>{r.p.brand} {r.p.name}</small></a>)}</div></section>}
-    <BankOffers />
-    <section><h2>Why Mytekkstore?</h2><p className="lead">What comes with every order.</p><div className="why">
+    <section><h2>Deals of the Day <a href="/products?sort=off">View all</a></h2><p className="lead">The biggest discounts right now.</p><div className="grid">{deals.map((p, i) => <Card p={p} i={i} key={p.id} />)}</div></section>
+    <section><h2>Why Mytekkstore?</h2><p className="lead">More confidence in every purchase.</p><div className="why">
       <div><Ico shapes={DRAW_ICONS.truck} /><b>Fast delivery</b><p>Doorstep delivery across the country.</p></div>
       <div><Ico shapes={DRAW_ICONS.shield} /><b>Genuine products</b><p>Brand warranty on everything we sell.</p></div>
       <div><Ico shapes={DRAW_ICONS.cash} /><b>Cash on delivery</b><p>Pay when your order arrives.</p></div>
       <div><Ico shapes={DRAW_ICONS.box} /><b>Order tracking</b><p>Follow every order from your account.</p></div>
     </div></section>
-    <Qa title="Good to know" lead="Short answers before you order, warranty and returns included." list={FAQ} />
+    <section className="care"><span className="ctext"><span className="kicker">Product care</span><h2>{"Your entertainment. Our priority."}</h2><p>Brand warranty, free delivery and support on every Mytekkstore order. Warranty, returns and replacement, explained in plain words.</p><a className="btn" href="/returns">Explore product care</a></span></section>
+    {quotes.length > 0 && <section><h2>What customers say</h2><p className="lead">The newest reviews from across the catalogue.</p><div className="quotes">{quotes.map((r, i) => <a className="quote" href={productUrl(r.p)} key={i}>
+      <div className="stars"><span>{starRow(r.rating)}</span></div><p>“{r.text}”</p><b>{r.name}</b><small>{r.p.brand} {r.p.name}</small></a>)}</div></section>}
+    <Qa title="Frequently asked questions" lead="Short answers before you order, warranty and returns included." list={FAQ} />
     <Row title="Recently viewed" href="" list={recent.map(byId).filter(Boolean)} />
   </>;
 }

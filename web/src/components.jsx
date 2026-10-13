@@ -119,7 +119,7 @@ function navItems(P, CATS, BRANDS, catImg) {
       ...CATS.filter(c => P.some(p => p.brand === b && p.cat === c)).map(c => [b + " " + (CAT_SIZE[c] ? CAT_SIZE[c].short : c), listUrl({ cat: c, brand: b }), P.find(p => p.brand === b && p.cat === c).img])]),
     links: [["All products", "/products"], ["Deals of the day", "/products?sort=off"], ["My wishlist", "/products?wish=1"], ["About Mytekkstore", "/about"], ["Contact us", "/contact"]],
   });
-  items.push({ label: "Deals", href: "/offers", cur: page === "offers" }); // a plain link to the festive offers page, no panel
+  items.push({ label: "Best Deals", href: "/offers", cur: page === "offers" }); // a plain link to the festive offers page, no panel
   return items;
 }
 
@@ -184,6 +184,8 @@ function flyOut(panel) { if (panel && !reduced()) animate(panel, { opacity: 0, y
 export function Header() {
   const { P, CATS, BRANDS, catImg, me, money, country, wish, cartCount, bump, closeCart } = useStore();
   const items = navItems(P, CATS, BRANDS, catImg);
+  // bar order (redesign brief): the categories on sale, then the categories coming (placeholders, no page), then Brands and Best Deals
+  const ordered = [...items.slice(0, CATS.length).map((it, i) => ({ it, i })), ...COMING_SOON.map(soon => ({ soon })), ...items.slice(CATS.length).map((it, k) => ({ it, i: CATS.length + k }))];
   const page = document.body.dataset.page;
   const navRef = useRef();
 
@@ -242,13 +244,13 @@ export function Header() {
       <a className="hlink" href="/products?wish=1" aria-label="Wishlist"><Icon k="heart" /> <span id="wishN" className="count" hidden={!wish.length}>{wish.length}</span></a>
       <a className="hlink" href="/cart" data-drawer aria-label="Cart"><Icon k="cart" /> <span id="cartN" className={"count" + (bump ? " bump" : "")} key={bump} hidden={!n}>{n}</span></a>
     </div>
-    <nav className="gnav" aria-label="Shop" ref={navRef}><ul className="gbar">{items.map((it, i) => <li className={"l0" + (it.cur ? " cur" : "")} key={it.label}>
+    <nav className="gnav" aria-label="Shop" ref={navRef}><ul className="gbar">{ordered.map(({ it, i, soon }) => soon ? <li className="soon" key={soon}><span>{soon}</span></li> : <li className={"l0" + (it.cur ? " cur" : "")} key={it.label}>
       <a className="l0link" href={it.href} aria-current={it.cur && page === "category" ? "page" : undefined} {...(it.tiles ? { "aria-haspopup": "true", "aria-expanded": "false", "aria-controls": "nav" + i } : {})}>{it.label}</a>{it.tiles &&
       <div className="npanel" id={"nav" + i}><div className="ngrid">
         <div><p className="nhead">{it.head}</p><div className="ntiles">{it.tiles.map(([t, h, img]) => <a className="ntile" href={h} key={h}><img src={pic(img, 480)} alt="" loading="lazy" width="800" height="800" /><span>{t}</span></a>)}</div></div>
         <div><p className="nhead">{it.prodHead}</p><div className="nprods">{it.prods.map(p => <a className="nprod" href={productUrl(p)} key={p.id}><img src={pic(p.img, 480)} alt="" loading="lazy" width="800" height="800" /><span><small>{p.brand}</small><b>{p.name}</b><i>{money(p.price)}</i></span></a>)}</div></div>
         <div className="ndisc"><p className="nhead">Discover</p>{it.links.map(([t, h]) => <a href={h} key={t}>{t}</a>)}{it.promo && <a className="npromo" href={it.promo[2]}><b>{it.promo[0]}</b><span>{it.promo[1]}</span><u>Open the guide →</u></a>}</div>
-      </div></div>}</li>)}{COMING_SOON.map(c => <li className="soon" key={c}><span>{c}</span></li>)}</ul></nav>
+      </div></div>}</li>)}</ul></nav>
   </header>;
 }
 

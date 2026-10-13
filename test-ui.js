@@ -105,7 +105,7 @@ async function run() {
     step = "bar contents";
     await b.goto(base + "/");
     assert.equal(await b.ev(`document.querySelector("#hdr").innerText.includes("Menu")`), false, "the old Menu button is gone");
-    assert.deepEqual(await b.ev(`[...document.querySelectorAll(".l0link")].map(a => a.textContent)`), ["Televisions", "Brands", "Deals"]);
+    assert.deepEqual(await b.ev(`[...document.querySelectorAll(".l0link")].map(a => a.textContent)`), ["Televisions", "Brands", "Best Deals"]);
     assert.equal(await open(), "", "no menu is open at the start");
 
     step = "hover opens after a short delay";
@@ -296,7 +296,7 @@ async function run() {
     assert.equal(await b.ev(`document.querySelector(".stabs a.on").textContent`), "Compare", "the sub-nav marks the section in view");
     assert.equal(await b.ev(`getComputedStyle(document.querySelector(".pdp .actions .btn")).borderRadius`), "999px", "pill buttons");
     await b.goto(base + "/");
-    const clips = await b.ev(`({ hero: document.querySelectorAll(".slide").length, oss: document.querySelectorAll(".find .chip.os").length, brands: document.querySelectorAll(".bbrand").length, arrows: [...document.querySelectorAll(".strip")].filter(x => !x.classList.contains("nos") && x.querySelector(".row").scrollWidth <= x.querySelector(".row").clientWidth + 2).length })`);
+    const clips = await b.ev(`({ hero: document.querySelectorAll(".slide").length, oss: document.querySelectorAll(".disco .dcard.os").length, brands: document.querySelectorAll(".bbrand").length, arrows: [...document.querySelectorAll(".strip")].filter(x => !x.classList.contains("nos") && x.querySelector(".row").scrollWidth <= x.querySelector(".row").clientWidth + 2).length })`);
     assert.equal(clips.hero, 4, "four banners: factory prices, Elista, Telefunken, offers"); assert.equal(clips.oss, 2, "shop by operating system on the home page"); assert.equal(clips.brands, 2, "a giant tile per brand");
     assert.equal(clips.arrows, 0, "a row that fits on the screen shows no scroll arrows");
     await b.goto(base + "/category.html?cat=Televisions");
@@ -311,7 +311,7 @@ async function run() {
     assert.equal(await b.ev(`document.querySelectorAll(".ftile").length`), 0, "the offers-by-category tiles appear only with more than one category on sale");
     assert.equal(await b.ev(`document.querySelectorAll(".offer").length`), 4, "bank offer cards");
     assert.ok(await b.ev(`document.querySelectorAll(".card .emi").length`) > 0, "No Cost EMI tags on deal cards");
-    assert.equal(await b.ev(`document.querySelector(".l0.cur .l0link").textContent`), "Deals", "Deals is marked current in the bar");
+    assert.equal(await b.ev(`document.querySelector(".l0.cur .l0link").textContent`), "Best Deals", "Deals is marked current in the bar");
     await b.goto(base + "/");
     assert.equal(await b.ev(`document.querySelectorAll("#bank .offer").length`), 4, "bank offers on the home page");
     assert.equal(await b.ev(`document.querySelectorAll(".sizerow").length`), 0, "no shop-by-size rows on the home page (client decision 2026-10-09; sizes live on the category pages)");
