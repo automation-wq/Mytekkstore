@@ -1564,3 +1564,19 @@ dialog.full .x { position:absolute; right:12px; top:12px; width:40px; height:40p
 /* a discovery card with a room photo instead of a render */
 .dcard.photo .dimg { aspect-ratio:4/3; background:var(--ink) } .dcard.photo .dimg img { object-fit:cover; padding:0 }
 .dcard.tall.photo .dimg { background:none } .dcard.tall.photo .dimg img { object-fit:cover; padding:0; filter:none }
+
+/* four detail cards (display technology + resolutions) */
+.dgrid.four { grid-template-columns:repeat(4,1fr) }
+@media (max-width:1000px) { .dgrid.four { grid-template-columns:repeat(2,1fr) } }
+@media (max-width:760px) { .dgrid.four { display:flex; overflow-x:auto; scroll-snap-type:x mandatory; gap:12px; padding-bottom:6px; scrollbar-width:none; margin:0 -16px; padding-left:16px; padding-right:16px } }
+/* brand showcases on a room photo (client brief, section 12): the words sit on a scrim; photo and words alternate sides */
+.bbrand.photo { position:relative; overflow:hidden; grid-template-columns:1fr; min-height:440px; align-items:end; background:#0d1117 }
+.bbrand .bphoto { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; transition:scale 1.2s cubic-bezier(.2,.8,.2,1) } .bbrand.photo:hover .bphoto { scale:1.04 }
+.bbrand.photo::before { content:""; position:absolute; inset:0; background:linear-gradient(90deg,#0d1117e6 0%,#0d1117b0 40%,#0d111722 72%), linear-gradient(0deg,#0d111799,transparent 50%) }
+.bbrand.photo.flip::before { background:linear-gradient(270deg,#0d1117e6 0%,#0d1117b0 40%,#0d111722 72%), linear-gradient(0deg,#0d111799,transparent 50%) }
+.bbrand.photo .btext { position:relative; max-width:600px; order:0 } .bbrand.photo.flip .btext { justify-self:end }
+.bbrand.photo b { font-size:clamp(30px,3.6vw,50px); letter-spacing:-1.8px } .bbrand.photo p { margin:0 0 16px; color:#ffffffd9; font-size:clamp(15px,1.3vw,18px) }
+@media (max-width:860px) { .bbrand.photo { min-height:380px } .bbrand.photo::before, .bbrand.photo.flip::before { background:linear-gradient(0deg,#0d1117f2 0%,#0d1117a8 55%,#0d111733 100%) } .bbrand.photo.flip .btext { justify-self:start } }
+/* the showcase photo must not inherit the render-tile treatment (white tile, padding, square ratio) */
+.bigbrands .bbrand.photo img.bphoto { padding:0; background:none; border-radius:0; box-shadow:none; aspect-ratio:auto; max-width:none; width:100%; height:100%; justify-self:stretch; filter:none }
+.bbrand.photo .btext { z-index:1 } .bbrand.photo b { max-width:100%; overflow-wrap:anywhere }

@@ -52,6 +52,13 @@ export function Home() {
   const osBenefit = { "Google TV": "Every app on one home screen, with Google Assistant and Chromecast.", "WebOS": "A quick card-style home screen with apps built in — no set-top box.", "Android TV": "Google Play apps and Chromecast, built in." };
   const osCards = oss.map((o, i) => ({ os: o, text: osBenefit[o] || "Smart apps built in.", img: LIFE[i % LIFE.length], from: minP(tvs.filter(p => p.os === o)) }));
   const resCards = [["4K Ultra HD", "Four times the detail of Full HD."], ["Full HD", "Crisp, clear everyday viewing."], ["HD Ready", "Great value for smaller rooms."]].map(([res, text], i) => { const ps = tvs.filter(p => resOf(p) === res).sort((a, b) => a.price - b.price); return { res, text, img: life(["res4k", "resfhd", "reshd"][i], ps[0] && (cutout(ps[0].img) || ps[0].img)), from: minP(ps) }; }).filter(c => c.from);
+  // display technology from the specifications (LED today; QLED/OLED appear when the catalogue has them), kept apart from resolution
+  const typeOf = p => spec(p, "display type").split(",")[0].trim();
+  const TECH_NOTE = { LED: "LED backlight on every model we stock", QLED: "Quantum-dot colour", OLED: "Self-lit pixels, perfect blacks" };
+  const techCards = [...new Set(tvs.map(typeOf).filter(Boolean))].sort().map(t => { const ps = tvs.filter(p => typeOf(p) === t).sort((a, b) => a.price - b.price); return { res: t, text: TECH_NOTE[t] || "Screen technology", img: life("tech" + t, ps[0] && (cutout(ps[0].img) || ps[0].img)), from: minP(ps), href: listUrl({ cat: "Televisions", type: t }) }; });
+  const detailCards = [...techCards, ...resCards.map(c => ({ ...c, href: listUrl({ cat: "Televisions", res: c.res }) }))];
+  // the two brand showcases (client brief, section 12): the brief's headlines, a bright room for Elista, a cinematic room for Telefunken
+  const BRAND_SHOW = { Elista: { title: "Brilliant Entertainment. Beautifully Yours.", text: "Discover the Elista television collection.", cta: "Explore Elista TVs", img: life("brandElista", "img/life-room.jpg") }, Telefunken: { title: "Bring Every Moment to Life.", text: "Explore immersive entertainment with Telefunken.", cta: "Explore Telefunken TVs", img: life("brandTelefunken", "img/life-cinema.jpg") } };
   const LAUNCHES = [
     { kicker: "Elista", title: "Elista 4K Smart TV Collection", text: "Brilliant 4K entertainment, beautifully yours.", href: brandUrl("Elista"), img: life("launch1", "img/hero0.jpg"), dark: true },
     { kicker: "Telefunken", title: "Cinematic Viewing, Reimagined", text: "Big-screen Google TV with Dolby Audio.", href: brandUrl("Telefunken"), img: life("launch2", "img/life-cinema.jpg"), dark: true },
@@ -87,14 +94,15 @@ export function Home() {
     {osCards.length > 0 && <section className="disco"><h2>Entertainment, your way.</h2><p className="lead">Choose the smart TV experience that fits your lifestyle.</p>
       <div className="dgrid land">{osCards.map(c => <a className="dcard os" href={osUrl(c.os)} key={c.os}><span className="dimg"><img src={pic(c.img, 960)} srcSet={picSet(c.img)} sizes="(max-width:760px) 92vw, 46vw" alt="" loading="lazy" /></span><span className="dbody"><b>{c.os}</b><small>{c.text}</small><em>{c.from ? "from " + money(c.from) : ""}</em></span><i className="darr" aria-hidden="true">→</i></a>)}</div></section>}
 
-    {resCards.length > 0 && <section className="disco"><h2>See every detail differently.</h2><p className="lead">Explore the resolutions built for exceptional viewing.</p>
-      <div className="dgrid three">{resCards.map(c => <a className={"dcard tall dark" + (/-cut\.webp$/.test(c.img) ? "" : " photo")} href={listUrl({ cat: "Televisions", res: c.res })} key={c.res}><span className="dimg"><img src={pic(c.img, 960)} srcSet={picSet(c.img)} sizes="(max-width:760px) 70vw, 30vw" alt="" loading="lazy" /></span><span className="lshade"></span><span className="dbody"><b>{c.res}</b><small>{c.text}</small><em>from {money(c.from)}</em></span></a>)}</div></section>}
+    {detailCards.length > 0 && <section className="disco"><h2>See every detail differently.</h2><p className="lead">Explore display technologies built for exceptional viewing.</p>
+      <div className={"dgrid " + (detailCards.length > 3 ? "four" : "three")}>{detailCards.map(c => <a className={"dcard tall dark" + (/-cut\.webp$/.test(c.img) ? "" : " photo")} href={c.href} key={c.res}><span className="dimg"><img src={pic(c.img, 960)} srcSet={picSet(c.img)} sizes="(max-width:760px) 70vw, 30vw" alt="" loading="lazy" /></span><span className="lshade"></span><span className="dbody"><b>{c.res}</b><small>{c.text}</small><em>from {money(c.from)}</em></span></a>)}</div></section>}
 
     <section className="bigbrands"><h2>Featured brands</h2><p className="lead">Flagship collections from {BRANDS.join(" and ")}, with the brand's own warranty.</p>
-      {BRANDS.map((b, i) => { const prod = biggest(b), pts = brandPoints(P, b), n = P.filter(p => p.brand === b).length, tone = (HOME_BANNERS.find(s => s.brand === b) || {}).tone;
-        return prod ? <a className={"bbrand" + (i % 2 ? " flip" : "")} href={brandUrl(b)} key={b} style={tone ? { background: tone } : undefined}>
-          <div className="btext"><span className="kicker">{n} model{n === 1 ? "" : "s"}</span><b>{b}</b><ul>{pts.map(t => <li key={t}>{t}</li>)}</ul><u>Shop {b} →</u></div>
-          {cutout(prod.img) ? <img className="cut" src={cutout(prod.img)} alt={prod.brand + " " + prod.name} loading="lazy" /> : <img src={pic(prod.img)} srcSet={picSet(prod.img)} sizes="(max-width:860px) 100vw, 46vw" alt={prod.brand + " " + prod.name} width="800" height="800" loading="lazy" />}</a> : null; })}</section>
+      {BRANDS.map((b, i) => { const prod = biggest(b), pts = brandPoints(P, b), n = P.filter(p => p.brand === b).length, tone = (HOME_BANNERS.find(s => s.brand === b) || {}).tone, show = BRAND_SHOW[b] || { title: b + ".", text: "Discover the " + b + " television collection.", cta: "Explore " + b + " TVs", img: "" };
+        return prod ? <a className={"bbrand" + (i % 2 ? " flip" : "") + (show.img ? " photo" : "")} href={brandUrl(b)} key={b} style={tone && !show.img ? { background: tone } : undefined}>
+          {show.img && <img className="bphoto" src={pic(show.img, 960)} srcSet={picSet(show.img)} sizes="(max-width:1240px) 100vw, 1240px" alt="" loading="lazy" />}
+          <div className="btext"><span className="kicker">{b} · {n} model{n === 1 ? "" : "s"}</span><b>{show.title}</b><p>{show.text}</p><ul>{pts.map(t => <li key={t}>{t}</li>)}</ul><u>{show.cta} →</u></div>
+          {show.img ? null : cutout(prod.img) ? <img className="cut" src={cutout(prod.img)} alt={prod.brand + " " + prod.name} loading="lazy" /> : <img src={pic(prod.img)} srcSet={picSet(prod.img)} sizes="(max-width:860px) 100vw, 46vw" alt={prod.brand + " " + prod.name} width="800" height="800" loading="lazy" />}</a> : null; })}</section>
     <section><h2>Deals of the Day <a href="/products?sort=off">View all</a></h2><p className="lead">The biggest discounts right now.</p><div className="grid">{deals.map((p, i) => <Card p={p} i={i} key={p.id} />)}</div></section>
     <section><h2>Why Mytekkstore?</h2><p className="lead">More confidence in every purchase.</p><div className="why">
       <div><Ico shapes={DRAW_ICONS.truck} /><b>Fast delivery</b><p>Doorstep delivery across the country.</p></div>
@@ -102,7 +110,7 @@ export function Home() {
       <div><Ico shapes={DRAW_ICONS.cash} /><b>Cash on delivery</b><p>Pay when your order arrives.</p></div>
       <div><Ico shapes={DRAW_ICONS.box} /><b>Order tracking</b><p>Follow every order from your account.</p></div>
     </div></section>
-    <section className="care"><span className="ctext"><span className="kicker">Product care</span><h2>{"Your entertainment. Our priority."}</h2><p>Brand warranty, free delivery and support on every Mytekkstore order. Warranty, returns and replacement, explained in plain words.</p><a className="btn" href="/returns">Explore product care</a></span></section>
+    <section className="care"><span className="ctext"><span className="kicker">Product care</span><h2>{"Your entertainment. Our priority."}</h2><p>Explore product support, warranty and care information. Brand warranty, free delivery and easy returns on every Mytekkstore order.</p><a className="btn" href="/returns">Explore product care</a></span></section>
     {quotes.length > 0 && <section><h2>What customers say</h2><p className="lead">The newest reviews from across the catalogue.</p><div className="quotes">{quotes.map((r, i) => <a className="quote" href={productUrl(r.p)} key={i}>
       <div className="stars"><span>{starRow(r.rating)}</span></div><p>“{r.text}”</p><b>{r.name}</b><small>{r.p.brand} {r.p.name}</small></a>)}</div></section>}
     <Qa title="Frequently asked questions" lead="Short answers before you order, warranty and returns included." list={FAQ} />

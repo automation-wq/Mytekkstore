@@ -9,7 +9,7 @@ import { fileURLToPath } from "node:url";
 const here = s => fileURLToPath(new URL(s, import.meta.url));
 const src = here("../tools/tv-images/output/tv_lifestyle_images/"), dir = here("../public/img/"), json = here("./src/lifestyle.json");
 // which generated picture serves which slot (the numbers are the prompt ids in tools/tv-images/prompts.json)
-const SLOTS = { hero: 2, launch1: 14, launch2: 3, launch3: 6, launch4: 11, launch5: 5, size32: 7, size43: 4, size55: 8, size65: 15, size75: 13, os1: 10, os2: 12, res4k: 11, resfhd: 4, reshd: 15, room: 2, cinema: 3, studio: 1, closeup: 9, aplusHero: 14, aplusSmart: 10, aplusSound: 11, aplusDesign: 9, care: 6, category: 5 };
+const SLOTS = { hero: 2, launch1: 14, launch2: 3, launch3: 6, launch4: 11, launch5: 5, size32: 7, size43: 4, size55: 8, size65: 15, size75: 13, os1: 10, os2: 12, res4k: 11, resfhd: 4, reshd: 15, room: 2, cinema: 3, studio: 1, closeup: 9, aplusHero: 14, aplusSmart: 10, aplusSound: 11, aplusDesign: 9, care: 6, category: 5, techLED: 9, brandElista: 15, brandTelefunken: 6 };
 const pad = n => String(n).padStart(2, "0"), found = new Set();
 for (let n = 1; n <= 15; n++) {
   const png = src + "tv_lifestyle_" + pad(n) + ".png";
