@@ -1494,3 +1494,12 @@ main > .cols { margin-top:22px }
 .bbrand u { padding:11px 22px; font-size:14.5px }
 .bbrand img, .bbrand img.cut { width:min(100%, 360px) }
 @media (max-width:860px) { .bbrand b { font-size:clamp(26px,7vw,38px) } }
+
+/* ===== cinematic hero (2026-10-13, Claude design, no external images): a screen-coloured glow behind the floating TV and a
+   real mirrored reflection on the dark stage, plus a soft vignette for depth — the Sony Bravia / Samsung showcase feel, in code ===== */
+.slide.k-brand .bigtv.cut, .slide.k-promo .bigtv.cut { display:block; overflow:visible; background:none; box-shadow:none; padding:0 }
+.slide .bigtv.cut .tvmain { position:relative; z-index:1; display:block; width:100%; height:auto; filter:drop-shadow(0 48px 46px #000a) }
+.slide .bigtv.cut .tvglow { position:absolute; inset:6% 4% 22% 4%; z-index:0; border-radius:50%; background:radial-gradient(ellipse at 50% 45%, #2aa9ff5c, #1e5bff22 46%, transparent 72%); filter:blur(48px); pointer-events:none }
+.slide .bigtv.cut .tvrefl { position:absolute; left:0; top:100%; width:100%; height:auto; transform:scaleY(-1); transform-origin:top center; opacity:.16; -webkit-mask-image:linear-gradient(#000, transparent 55%); mask-image:linear-gradient(#000, transparent 55%); pointer-events:none; z-index:0 }
+.slide.k-brand::before, .slide.k-promo::before { content:""; position:absolute; inset:0; z-index:0; pointer-events:none; box-shadow:inset 0 0 180px 50px #0000005c }
+@media (max-width:760px) { .slide .bigtv.cut .tvrefl { opacity:.1 } .slide.k-brand::before, .slide.k-promo::before { box-shadow:inset 0 0 90px 24px #00000055 } }
