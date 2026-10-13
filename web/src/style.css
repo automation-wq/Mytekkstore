@@ -1556,8 +1556,8 @@ dialog.full .x { position:absolute; right:12px; top:12px; width:40px; height:40p
 .kv .kvimg > img { object-position:center 46% }
 .pinfo .fstrip .fhead { background:none; padding:0; box-shadow:none; border:0 }
 /* the client brief hero photo is bright on the left: a soft left scrim keeps the headline readable without hiding the room */
-.slide.k-photo .bg::before { content:""; position:absolute; inset:0; z-index:1; background:linear-gradient(90deg,#0d1117b8 0%,#0d11178c 34%,#0d111700 64%), linear-gradient(0deg,#0d111780,transparent 40%) }
-@media (max-width:760px) { .slide.k-photo .bg::before { background:linear-gradient(0deg,#0d1117c8 0%,#0d111766 55%,#0d111726 100%) } }
+.slide.k-photo .bg::before { content:""; position:absolute; inset:0; z-index:1; background:linear-gradient(90deg,#0a0d13f2 0%,#0a0d13e0 38%,#0a0d1366 66%,#0a0d1300 100%), linear-gradient(0deg,#0a0d13c0 0%,#0a0d1300 48%) }
+@media (max-width:760px) { .slide.k-photo .bg::before { background:linear-gradient(0deg,#0a0d13f2 0%,#0a0d13c0 48%,#0a0d1340 100%) } }
 /* a brand or promo slide with a photo: the photo stays behind the words (the > * rule above made it in-flow and pushed the words out of the hero) */
 .slide.k-brand .bg, .slide.k-promo .bg { position:absolute; z-index:0 }
 
