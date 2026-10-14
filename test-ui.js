@@ -313,6 +313,13 @@ async function run() {
     assert.ok(await b.ev(`!!document.querySelector(".kv .kvimg") && document.querySelector(".kv h1").textContent === "A World of Entertainment Awaits."`), "the category headline sits on its lifestyle photo");
     assert.ok(await b.ev(`!!document.querySelector(".topf video.bvid") && document.querySelectorAll(".tf svg").length === 6`), "the Top features band has its room clip and line icons");
 
+    step = "quick view opens from a card, shows the product and closes";
+    await b.ev(`document.querySelector(".plp .grid .card .qview").click()`); await sleep(500);
+    const qv = await b.ev(`(() => { const q = document.querySelector(".quick"); if (!q) return { open:false }; return { open:true, name:q.querySelector("h2").textContent, specs:q.querySelectorAll(".qspecs li").length, buy:!!q.querySelector(".qactions [data-add],.qactions [data-q]"), more:(q.querySelector(".qmore")||{}).getAttribute && q.querySelector(".qmore").getAttribute("href") }; })()`);
+    assert.ok(qv.open && /inch/.test(qv.name) && qv.specs > 0 && qv.buy && /televisions\//.test(qv.more), "quick view shows the product, its specs, an add button and a details link");
+    await b.key("Escape"); await sleep(900);
+    assert.equal(await b.ev(`!document.querySelector(".quickwrap")`), true, "Escape closes quick view");
+
     step = "offers page, bank offers and the No Cost EMI tag";
     await b.goto(base + "/offers.html");
     assert.ok(await b.ev(`document.querySelectorAll(".fest .sparks i").length`) > 10, "festive sparks");

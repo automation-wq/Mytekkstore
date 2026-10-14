@@ -1580,3 +1580,22 @@ dialog.full .x { position:absolute; right:12px; top:12px; width:40px; height:40p
 /* the showcase photo must not inherit the render-tile treatment (white tile, padding, square ratio) */
 .bigbrands .bbrand.photo img.bphoto { padding:0; background:none; border-radius:0; box-shadow:none; aspect-ratio:auto; max-width:none; width:100%; height:100%; justify-self:stretch; filter:none }
 .bbrand.photo .btext { z-index:1 } .bbrand.photo b { max-width:100%; overflow-wrap:anywhere }
+
+/* Quick view button on product cards (hover devices only) + the Quick View modal */
+.card .qview { position:absolute; left:50%; bottom:10px; translate:-50% 8px; z-index:2; opacity:0; padding:9px 18px; border-radius:999px; border:0; background:#0d1117e8; color:#fff; font:inherit; font-weight:700; font-size:13px; cursor:pointer; white-space:nowrap; box-shadow:0 10px 24px -12px #000a; transition:opacity .25s, translate .25s, background .2s }
+.card:hover .qview { opacity:1; translate:-50% 0 } .card .qview:hover { background:#397FE8 } .card .qview:focus-visible { opacity:1; translate:-50% 0; outline:2px solid #397FE8; outline-offset:2px }
+@media (hover:none) { .card .qview { display:none } }
+.quickwrap { position:fixed; inset:0; z-index:60; display:grid; place-items:center; padding:20px; background:#0a0d13cc; backdrop-filter:blur(4px); -webkit-backdrop-filter:blur(4px) }
+.quick { position:relative; width:min(900px,100%); max-height:90vh; overflow:auto; display:grid; grid-template-columns:1fr 1fr; gap:0; background:var(--card); border-radius:22px; box-shadow:0 40px 90px -40px #000c }
+.quick .x { position:absolute; right:12px; top:12px; z-index:2; width:38px; height:38px; border-radius:50%; border:0; background:#ffffffe6; color:#0f1115; font-size:22px; line-height:1; cursor:pointer; box-shadow:0 6px 16px -8px #0007 }
+.quick .qimg { position:relative; background:var(--tile); display:grid; place-items:center; padding:28px; border-radius:22px 0 0 22px } .quick .qimg img { width:100%; height:auto; object-fit:contain; max-height:420px }
+.quick .qinfo { padding:clamp(22px,3vw,34px); display:grid; gap:10px; align-content:start } .quick .qinfo h2 { margin:0; font-size:clamp(20px,2.2vw,26px); letter-spacing:-.6px }
+.quick .qbrand { color:var(--accent); font-weight:700; font-size:13px; text-transform:uppercase; letter-spacing:.04em; text-decoration:none }
+.quick .qinfo .price { display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-top:2px } .quick .qinfo .price b { font-size:26px }
+.quick .qspecs { list-style:none; margin:8px 0 2px; padding:0; display:grid; gap:0; border-radius:14px; overflow:hidden; background:var(--tile) }
+.quick .qspecs li { display:flex; justify-content:space-between; gap:16px; padding:9px 14px; font-size:13.5px } .quick .qspecs li:not(:last-child) { border-bottom:1px solid var(--line) } .quick .qspecs span { color:var(--soft) } .quick .qspecs b { text-align:right }
+.quick .qactions { display:flex; gap:10px; align-items:center; margin-top:8px; flex-wrap:wrap } .quick .qactions .buy { flex:1; min-width:150px } .quick .qactions .heart { position:static; opacity:1; translate:none; width:46px; height:46px; border:1px solid var(--line) }
+.quick .qmore { margin-top:4px; font-weight:600 }
+body.quick-open { overflow:hidden }
+@media (max-width:720px) { .quick { grid-template-columns:1fr; max-height:92vh } .quick .qimg { border-radius:22px 22px 0 0; padding:20px } .quick .qimg img { max-height:240px } }
+.quick .qimg .badge { position:absolute; left:16px; top:16px; bottom:auto }

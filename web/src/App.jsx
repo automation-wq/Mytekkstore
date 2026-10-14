@@ -40,6 +40,7 @@ export default function App() {
       }
       else if ((b = t.closest("[data-q]"))) st.setQty(b.dataset.q, +b.dataset.n);
       else if ((b = t.closest("[data-buy]"))) { if (!st.qtyOf(b.dataset.buy)) st.setQty(b.dataset.buy, 1); location.href = "/checkout"; }
+      else if ((b = t.closest("[data-quick]"))) { e.preventDefault(); st.openQuick(b.dataset.quick); }
       else if ((b = t.closest("[data-wish]"))) st.toggleWish(+b.dataset.wish);
       else if ((b = t.closest("[data-scroll]"))) { const r = $(".row", b.parentNode); r.scrollBy({ left: +b.dataset.scroll * r.clientWidth * 0.8, behavior: "smooth" }); }
       else if ((b = t.closest("[data-drawer]"))) { e.preventDefault(); st.openCart(); }

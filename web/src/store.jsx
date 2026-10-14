@@ -17,6 +17,7 @@ export function StoreProvider({ children }) {
   const [loaded, setLoaded] = useState(false);
   const [error, setError] = useState(null);
   const [cartOpen, setCartOpen] = useState(false);
+  const [quick, setQuick] = useState(null); // the product shown in the Quick View modal, or null
   const [toastState, setToastState] = useState({ msg: "", withCart: false, n: 0 });
   const [bump, setBump] = useState(0);
   const toastTimer = useRef();
@@ -69,6 +70,7 @@ export function StoreProvider({ children }) {
   const updateProduct = product => setP(ps => ps.map(x => x.id === product.id ? { ...x, ...product } : x));
 
   const value = { P, CATS, BRANDS, me, CFG, banners, cart, wish, recent, loaded, error, country, money, byId, catImg, qtyOf, cartCount, cartTotal, setQty, clearCart,
-    toggleWish, addRecent, updateProduct, toast, toastState, bump, cartOpen, openCart: () => setCartOpen(true), closeCart: () => setCartOpen(false) };
+    toggleWish, addRecent, updateProduct, toast, toastState, bump, cartOpen, openCart: () => setCartOpen(true), closeCart: () => setCartOpen(false),
+    quick, openQuick: id => setQuick(+id), closeQuick: () => setQuick(null) };
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }
