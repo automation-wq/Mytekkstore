@@ -65,7 +65,16 @@ export function Category() {
   const sorts = { low: (a, b) => a.price - b.price, high: (a, b) => b.price - a.price, off: (a, b) => off(b) - off(a), rating: (a, b) => avg(b) - avg(a) };
   if (Object.hasOwn(sorts, f.sort)) list.sort(sorts[f.sort]);
   const title = wishOnly ? "My wishlist" : q ? 'Results for "' + q + '"' : [f.brand.length === 1 ? f.brand[0] : "", cat].filter(Boolean).join(" ") || "All products";
-  useEffect(() => { document.title = title + " | Mytekkstore"; }, []);
+  // a single-facet view reads as a landing page: "TVs under ₹20,000", "43-inch TVs", "4K Ultra HD TVs"
+  const short = cat ? (S ? S.short : cat) : "products";
+  const coll = (wishOnly || q || f.brand.length) ? "" :
+    (f.max && !f.min ? short + " under " + money(f.max)
+      : f.min && f.max ? short + " from " + money(f.min) + " to " + money(f.max)
+      : f.min && !f.max ? short + " above " + money(f.min)
+      : f.size ? f.size.replace(/ TVs$/, "").replace(/ inch$/, "-inch") + " " + short
+      : f.res ? f.res + " " + short
+      : f.type ? f.type + " " + short : "");
+  useEffect(() => { document.title = (coll || title) + " | Mytekkstore"; }, [coll]);
   const params = { cat, q, wish: wishOnly ? 1 : "", brand: f.brand.join(","), size: f.size, os: f.os, res: f.res, type: f.type, min: f.min || "", max: f.max || "", off: f.off || "", instock: f.instock ? 1 : "", emi: f.emi ? 1 : "", rating: f.rating || "", sort: f.sort };
   const url = o => listUrl({ ...params, ...o });
   useEffect(() => { history.replaceState(null, "", url({}) + location.hash); }, [f]);
@@ -91,7 +100,7 @@ export function Category() {
       : <h1 className="explore">{S ? "Explore " + S.short : title}</h1>}
     {!wishOnly && S && cat && catAll.length > 0 && <Discover list={catAll} sizes={sizeList} sizeOf={sizeOf} f={f} set={set} url={url} money={money} />}
     {!wishOnly && tiles.length > 0 && <div className="finder"><div className="tiles">{tiles.map(([name, note, href, img, on]) => <a className={"tile" + (on ? " on" : "")} href={href} aria-current={on ? "page" : undefined} key={href}><span><b>{name}</b><small>{note}</small></span><img src={pic(img, 480)} alt="" loading="lazy" width="800" height="800" /></a>)}</div></div>}
-    <div className="ptool"><h2 className="ptotal">{nText}{q ? ' · "' + q + '"' : ""}</h2>
+    <div className="ptool"><h2 className="ptotal">{coll || nText}{coll ? <small className="pcount"> · {nText}</small> : q ? ' · "' + q + '"' : ""}</h2>
       {!wishOnly && <button type="button" className="btn ghost fbtn" onClick={() => setOpen(true)} aria-expanded={open} aria-controls="filters"><Icon k="sliders" /> Filters{chips.length ? " (" + chips.length + ")" : ""}</button>}
       <label className="sortby">Sort by <select value={f.sort} onChange={e => set({ sort: e.target.value })}><option value="">Featured</option><option value="low">Price: low to high</option><option value="high">Price: high to low</option><option value="off">Biggest discount</option><option value="rating">Customer rating</option></select></label></div>
     {chips.length > 0 && <div className="chips" aria-label="Applied filters"><AnimatePresence>{chips.map(([t, rm]) => <m.button type="button" className="fchip" onClick={rm} aria-label={"Remove " + t} key={t} layout initial={{ opacity: 0, scale: .8 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: .8 }} transition={{ type: "spring", stiffness: 400, damping: 30 }}>{t} <span aria-hidden="true">×</span></m.button>)}</AnimatePresence><button type="button" className="link" onClick={clear}>Clear all</button></div>}
