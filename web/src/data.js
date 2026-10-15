@@ -72,8 +72,8 @@ export function brandPoints(P, brand) {
 // the client supplies the final ones. kind "photo" uses a lifestyle photo, "brand" shows the brand's biggest TV with its reasons
 // (brandPoints), "promo" opens the offers page with the biggest discount.
 export const HOME_BANNERS = [
-  { kind: "photo", eyebrow: "Mytekkstore", h: ["A Bigger World Awaits."], s: "Elista and Telefunken Smart TVs at factory prices, delivered free, cash on delivery.", href: "/televisions", cta: "Explore TVs", im: "img/life-room.jpg" },
-  { kind: "promo", eyebrow: "Limited time", h: ["Festive offers."], href: "/offers", cta: "See the offers", im: "img/hero0.jpg" },
+  { kind: "photo", eyebrow: "Mytekkstore", h: ["A Bigger World Awaits."], s: "Elista and Telefunken Smart TVs at factory prices, delivered free, cash on delivery.", href: "/televisions", cta: "Explore TVs", im: "img/hero-a.jpg" },
+  { kind: "promo", eyebrow: "Limited time", h: ["Festive offers."], href: "/offers", cta: "See the offers", im: "img/hero-b.jpg" },
 ];
 // "Good to know" on the home page. Every answer only repeats a promise the site already makes elsewhere: [question, answer, [link, label] or null]
 export const FAQ = [
@@ -210,7 +210,7 @@ export const listUrl = ({ cat, ...o }) => { const q = new URLSearchParams(Object
 const hasWebp = src => /^img\/(?!u-)[\w-]+\.jpg$/.test(src || "");
 // always an absolute address: a product page lives at /televisions/<model>, where a relative img/... would point one level too deep
 export const pic = (src, w) => { const s = hasWebp(src) ? src.replace(/\.jpg$/, (w ? "-" + w : "") + ".webp") : src; return /^img\//.test(s || "") ? "/" + s : s; };
-const DIMS = { "img/life-room.jpg": [1200, 800], "img/life-cinema.jpg": [1536, 1024], "img/hero0.jpg": [1344, 752], "img/hero1.jpg": [1344, 752], "img/hero2.jpg": [1344, 752], "img/kv-tv.jpg": [1600, 2350], "img/kv-ac.jpg": [1600, 1074], "img/kv-wash.jpg": [1600, 1067] };
+const DIMS = { "img/hero-a.jpg": [1376, 768], "img/hero-b.jpg": [1376, 768], "img/show-elista.jpg": [1376, 768], "img/show-telefunken.jpg": [1376, 768], "img/life-room.jpg": [1200, 800], "img/life-cinema.jpg": [1536, 1024], "img/hero0.jpg": [1344, 752], "img/hero1.jpg": [1344, 752], "img/hero2.jpg": [1344, 752], "img/kv-tv.jpg": [1600, 2350], "img/kv-ac.jpg": [1600, 1074], "img/kv-wash.jpg": [1600, 1067] };
 export const dims = src => DIMS[src] || (/^img\/life-\d\d\.jpg$/.test(src || "") ? [1536, 864] : [800, 800]); // the product photos are square
 // floating cutout of a product render (white background made transparent by `npm run cutouts`); only the seeded renders have one
 export const cutout = src => /^img\/p\d+(-v\d+)?\.jpg$/.test(src || "") ? "/" + src.replace(/\.jpg$/, "-cut.webp") : null;

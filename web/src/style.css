@@ -1556,7 +1556,7 @@ dialog.full .x { position:absolute; right:12px; top:12px; width:40px; height:40p
 .kv .kvimg > img { object-position:center 46% }
 .pinfo .fstrip .fhead { background:none; padding:0; box-shadow:none; border:0 }
 /* the client brief hero photo is bright on the left: a soft left scrim keeps the headline readable without hiding the room */
-.slide.k-photo .bg::before { content:""; position:absolute; inset:0; z-index:1; background:linear-gradient(90deg,#0a0d13f2 0%,#0a0d13e0 38%,#0a0d1366 66%,#0a0d1300 100%), linear-gradient(0deg,#0a0d13c0 0%,#0a0d1300 48%) }
+.slide.k-photo .bg::before { content:""; position:absolute; inset:0; z-index:1; background:linear-gradient(90deg,#0a0d13f0 0%,#0a0d13cc 40%,#0a0d1352 68%,#0a0d1300 100%), linear-gradient(0deg,#0a0d13b0 0%,#0a0d1300 46%) }
 @media (max-width:760px) { .slide.k-photo .bg::before { background:linear-gradient(0deg,#0a0d13f2 0%,#0a0d13c0 48%,#0a0d1340 100%) } }
 /* a brand or promo slide with a photo: the photo stays behind the words (the > * rule above made it in-flow and pushed the words out of the hero) */
 .slide.k-brand .bg, .slide.k-promo .bg { position:absolute; z-index:0 }
@@ -1572,8 +1572,8 @@ dialog.full .x { position:absolute; right:12px; top:12px; width:40px; height:40p
 /* brand showcases on a room photo (client brief, section 12): the words sit on a scrim; photo and words alternate sides */
 .bbrand.photo { position:relative; overflow:hidden; grid-template-columns:1fr; min-height:440px; align-items:end; background:#0d1117 }
 .bbrand .bphoto { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; transition:scale 1.2s cubic-bezier(.2,.8,.2,1) } .bbrand.photo:hover .bphoto { scale:1.04 }
-.bbrand.photo::before { content:""; position:absolute; inset:0; background:linear-gradient(90deg,#0d1117e6 0%,#0d1117b0 40%,#0d111722 72%), linear-gradient(0deg,#0d111799,transparent 50%) }
-.bbrand.photo.flip::before { background:linear-gradient(270deg,#0d1117e6 0%,#0d1117b0 40%,#0d111722 72%), linear-gradient(0deg,#0d111799,transparent 50%) }
+.bbrand.photo::before { content:""; position:absolute; inset:0; background:linear-gradient(90deg,#0a0d13f2 0%,#0a0d13cc 38%,#0a0d1352 66%,#0a0d1300 100%), linear-gradient(0deg,#0a0d1399,transparent 50%) }
+.bbrand.photo.flip::before { background:linear-gradient(270deg,#0a0d13f2 0%,#0a0d13cc 38%,#0a0d1352 66%,#0a0d1300 100%), linear-gradient(0deg,#0a0d1399,transparent 50%) }
 .bbrand.photo .btext { position:relative; max-width:600px; order:0 } .bbrand.photo.flip .btext { justify-self:end }
 .bbrand.photo b { font-size:clamp(30px,3.6vw,50px); letter-spacing:-1.8px } .bbrand.photo p { margin:0 0 16px; color:#ffffffd9; font-size:clamp(15px,1.3vw,18px) }
 @media (max-width:860px) { .bbrand.photo { min-height:380px } .bbrand.photo::before, .bbrand.photo.flip::before { background:linear-gradient(0deg,#0d1117f2 0%,#0d1117a8 55%,#0d111733 100%) } .bbrand.photo.flip .btext { justify-self:start } }
@@ -1634,3 +1634,13 @@ body.quick-open { overflow:hidden }
 .qq > b { background:var(--ink); color:#fff } .qa > b { background:var(--done-bg,#e3f5ec); color:var(--accent) }
 .qq span { font-weight:600 } .qa span { color:var(--soft) }
 .qansf { display:flex; gap:10px; margin-top:12px; padding-top:12px; border-top:1px solid var(--line); align-items:center } .qansf input { flex:1; padding:9px 12px; border-radius:10px; border:1px solid var(--line); background:var(--bg); color:var(--text); font:inherit; font-size:13.5px }
+/* Shop by budget — premium treatment */
+.budget .bgrid { grid-template-columns:repeat(4,1fr) }
+.budget .bcard { position:relative; align-items:flex-start; gap:14px; padding:22px 22px 20px; overflow:hidden; background:linear-gradient(160deg, var(--card) 0%, var(--tile) 140%) }
+.budget .bcard .bk { font-family:Manrope,Inter,system-ui,sans-serif; font-weight:800; font-size:22px; line-height:1; color:var(--soft); opacity:.5; letter-spacing:-1px; margin-top:2px }
+.budget .bcard .bbd { display:grid; gap:4px } .budget .bcard .bbd b { font-family:Manrope,Inter,system-ui,sans-serif; font-size:17px; letter-spacing:-.4px; line-height:1.15 } .budget .bcard .bbd small { color:var(--muted); font-size:12.5px } .budget .bcard .bt em { font-style:normal; color:var(--accent); font-weight:700; font-size:12.5px; margin-top:3px }
+.budget .bcard .darr { position:absolute; right:16px; bottom:16px }
+.budget .bcard::after { content:""; position:absolute; left:0; top:0; bottom:0; width:3px; background:linear-gradient(#397FE8,#83BDFF); opacity:0; transition:opacity .25s } .budget .bcard:hover::after { opacity:1 }
+@media (max-width:1000px) { .budget .bgrid { grid-template-columns:repeat(2,1fr) } }
+@media (max-width:480px) { .budget .bgrid { grid-template-columns:1fr } }
+.budget .bcard .bbd em { padding-right:46px }

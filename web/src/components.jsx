@@ -116,8 +116,8 @@ function navItems(P, CATS, BRANDS, catImg) {
   });
   items.push({
     label: "Brands", href: "/products", cur: page === "category" && !curCat && !!qs.get("brand"), head: "Shop by brand", prodHead: "Top deals", prods: top(P),
-    tiles: BRANDS.flatMap(b => [["All " + b, brandUrl(b), P.find(p => p.brand === b).img],
-      ...CATS.filter(c => P.some(p => p.brand === b && p.cat === c)).map(c => [b + " " + (CAT_SIZE[c] ? CAT_SIZE[c].short : c), listUrl({ cat: c, brand: b }), P.find(p => p.brand === b && p.cat === c).img])]),
+    tiles: BRANDS.flatMap(b => { const cats = CATS.filter(c => P.some(p => p.brand === b && p.cat === c)); // one tile per brand-category; when the brand is in only one category, "All <brand>" already covers it, so skip the duplicate
+      return [["All " + b, brandUrl(b), P.find(p => p.brand === b).img], ...(cats.length > 1 ? cats.map(c => [b + " " + (CAT_SIZE[c] ? CAT_SIZE[c].short : c), listUrl({ cat: c, brand: b }), P.find(p => p.brand === b && p.cat === c).img]) : [])]; }),
     links: [["All products", "/products"], ["Deals of the day", "/products?sort=off"], ["My wishlist", "/products?wish=1"], ["About Mytekkstore", "/about"], ["Contact us", "/contact"]],
   });
   items.push({ label: "Best Deals", href: "/offers", cur: page === "offers" }); // a plain link to the festive offers page, no panel
