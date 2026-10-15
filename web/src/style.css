@@ -356,7 +356,7 @@ header { transition:box-shadow .3s }
 /* hero */
 .hero { height:480px; border-radius:22px; box-shadow:0 34px 60px -34px #0b3d2e99 }
 .slide { background:#0d1117; overflow:hidden }
-.slide .bg { position:absolute; inset:0; background-size:cover; background-position:right center }
+.slide .bg { position:absolute; inset:-28px; background-size:cover; background-position:right center }
 .slide.on .bg { animation:kenburns 9s ease-out forwards }
 @keyframes kenburns { from { scale:1.02 } to { scale:1.15 } }
 .slide::after { content:""; position:absolute; inset:0; background:linear-gradient(90deg,rgba(10,12,16,.95),rgba(10,12,16,.6) 42%,transparent 72%) }
