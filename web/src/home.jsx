@@ -88,7 +88,6 @@ export function Home() {
       {slides.length > 1 && <><button className="arrow prev" aria-label="Previous slide">‹</button><button className="arrow next" aria-label="Next slide">›</button>
       <div className="dots">{slides.map((_, i) => <button aria-label={"Slide " + (i + 1)} data-i={i} className={i === cur ? "on" : undefined} key={i}></button>)}</div></>}
     </div>
-    <div className="herotrust">{[["truck", "Free delivery across India"], ["cash", "No Cost EMI available"], ["shield", "Genuine, brand warranty"], ["undo", "Easy returns"]].map(([ic, t]) => <span key={t}><Icon k={ic} />{t}</span>)}</div>
 
 
     <BankOffers />
