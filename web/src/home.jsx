@@ -89,6 +89,13 @@ export function Home() {
     </div>
     <div className="herotrust">{[["truck", "Free delivery across India"], ["cash", "No Cost EMI available"], ["shield", "Genuine, brand warranty"], ["undo", "Easy returns"]].map(([ic, t]) => <span key={t}><Icon k={ic} />{t}</span>)}</div>
 
+    <section className="fxband"><div className="fxrow">
+      <div className="fxc"><span className="fxart a-4k" aria-hidden="true">{Array.from({ length: 24 }, (_, i) => <i style={{ "--d": i }} key={i}></i>)}<b>4K</b></span><b className="fxl">4K Ultra HD</b><small>Four times the detail</small></div>
+      <div className="fxc"><span className="fxart a-eq" aria-hidden="true">{Array.from({ length: 7 }, (_, i) => <i style={{ "--d": i }} key={i}></i>)}</span><b className="fxl">Immersive sound</b><small>Room-filling audio</small></div>
+      <div className="fxc"><span className="fxart a-apps" aria-hidden="true">{Array.from({ length: 6 }, (_, i) => <i style={{ "--d": i }} key={i}></i>)}</span><b className="fxl">Smart TV built in</b><small>Every app, no set-top box</small></div>
+      <div className="fxc"><span className="fxart a-big" aria-hidden="true"><i></i><i></i></span><b className="fxl">Big-screen ready</b><small>32&quot; to 75&quot;</small></div>
+    </div></section>
+
     <BankOffers />
 
     <section className="launches"><h2>Latest Launches</h2><p className="lead">Discover what's new in home entertainment.</p>
