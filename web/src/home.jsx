@@ -5,7 +5,7 @@
 import { useEffect, useRef, useState } from "react";
 import { m } from "motion/react";
 import { useStore } from "./store.jsx";
-import { Card, Row, BankOffers, Ico, Qa } from "./components.jsx";
+import { Card, Row, BankOffers, Ico, Icon, Qa } from "./components.jsx";
 import { DRAW_ICONS, BANK_OFFERS, HOME_BANNERS, FAQ, catSizes, brandUrl, listUrl, off, starRow, productUrl, pic, picSet, osList, osUrl, brandPoints, cutout, life } from "./data.js";
 import { lines, TONES } from "./banner.jsx";
 
@@ -27,11 +27,14 @@ export function Home() {
   const slides = raw.filter(s => s.kind !== "brand" || biggest(s.brand)).map(s => s.kind === "brand" ? { ...s, pts: brandPoints(P, s.brand), prod: s.prod || biggest(s.brand), href: s.href || brandUrl(s.brand), cta: s.cta || "Shop " + s.brand, eyebrow: s.eyebrow || s.brand }
     : s.kind === "promo" ? { ...s, s: s.s || "Up to " + maxOff + "% off, bank offers, and No Cost EMI on the models that carry it." } : s);
   const show = n => setCur((n + slides.length) % slides.length);
-  useEffect(() => { const t = setInterval(() => { if (!heroRef.current || !heroRef.current.matches(":hover")) setCur(c => (c + 1) % slides.length); }, 6000); return () => clearInterval(t); }, [slides.length]);
+  const [auto, setAuto] = useState(true); // autoplay stops for good once the visitor takes control (arrow/dot)
+  useEffect(() => { if (!auto) return; const t = setInterval(() => { if (!heroRef.current || !heroRef.current.matches(":hover")) setCur(c => (c + 1) % slides.length); }, 6000); return () => clearInterval(t); }, [slides.length, auto]);
   const deals = [...P].sort((a, b) => off(b) - off(a)).slice(0, 5);
   const quotes = P.flatMap(p => (p.reviews || []).map(r => ({ ...r, p }))).sort((a, b) => new Date(b.at) - new Date(a.at)).slice(0, 6); // newest reviews across the catalogue
   const oss = osList(P);
   const onHero = e => {
+    const nav = e.target.dataset.i || e.target.classList.contains("prev") || e.target.classList.contains("next");
+    if (nav) setAuto(false); // the visitor is driving now; stop the autoplay
     if (e.target.dataset.i) show(+e.target.dataset.i);
     else if (e.target.classList.contains("prev")) show(cur - 1);
     else if (e.target.classList.contains("next")) show(cur + 1);
@@ -67,7 +70,7 @@ export function Home() {
     { kicker: "New", title: "Next-Generation Smart TVs", text: "Discover the latest from Elista and Telefunken.", href: "/televisions", img: life("launch5", "img/p0.jpg") },
   ].map(l => ({ ...l, dark: l.dark || !cutout(l.img) })); // a room photo gets the darker shade; a render sits on its own dark stage
   return <>
-    <div className="hero" ref={heroRef} onClick={onHero} onPointerMove={onMove}>
+    <div className={"hero" + (auto ? " auto" : "")} ref={heroRef} onClick={onHero} onPointerMove={onMove}>
       {slides.map((sl, i) => <m.div className={"slide k-" + sl.kind + (i === cur ? " on" : "")} data-preset={sl.preset || "cinematic"} key={i} initial="hide" animate={i === cur ? "show" : "hide"} variants={GROUP} style={sl.tone ? { background: sl.tone } : undefined}>
         {(sl.brand || sl.kind === "promo") && <span className="ghostmark" aria-hidden="true">{sl.brand || "Offers"}</span>}
         {sl.im && <div className="bg"><picture>{sl.imMobile && <source media="(max-width:760px)" srcSet={pic(sl.imMobile, 960)} />}<img {...picOf(sl.im)} sizes="100vw" alt="" width="1344" height="752" fetchPriority={i ? "low" : "high"} loading={i ? "lazy" : "eager"} decoding="async" /></picture></div>}
@@ -82,6 +85,7 @@ export function Home() {
       <button className="arrow prev" aria-label="Previous slide">‹</button><button className="arrow next" aria-label="Next slide">›</button>
       <div className="dots">{slides.map((_, i) => <button aria-label={"Slide " + (i + 1)} data-i={i} className={i === cur ? "on" : undefined} key={i}></button>)}</div>
     </div>
+    <div className="herotrust">{[["truck", "Free delivery across India"], ["cash", "No Cost EMI available"], ["shield", "Genuine, brand warranty"], ["undo", "Easy returns"]].map(([ic, t]) => <span key={t}><Icon k={ic} />{t}</span>)}</div>
 
     <BankOffers />
 
@@ -115,7 +119,7 @@ export function Home() {
     <section className="care"><span className="ctext"><span className="kicker">Product care</span><h2>{"Your entertainment. Our priority."}</h2><p>Explore product support, warranty and care information. Brand warranty, free delivery and easy returns on every Mytekkstore order.</p><a className="btn" href="/returns">Explore product care</a></span></section>
     {quotes.length > 0 && <section><h2>What customers say</h2><p className="lead">The newest reviews from across the catalogue.</p><div className="quotes">{quotes.map((r, i) => <a className="quote" href={productUrl(r.p)} key={i}>
       <div className="stars"><span>{starRow(r.rating)}</span></div><p>“{r.text}”</p><b>{r.name}</b><small>{r.p.brand} {r.p.name}</small></a>)}</div></section>}
-    <Qa title="Frequently asked questions" lead="Short answers before you order, warranty and returns included." list={FAQ} />
+    <Qa title="Frequently asked questions" lead="The questions buyers ask most, answered in short." list={FAQ.slice(0, 6)} more={["/buying-guide", "More about choosing a TV"]} />
     <Row title="Recently viewed" href="" list={recent.map(byId).filter(Boolean)} />
   </>;
 }

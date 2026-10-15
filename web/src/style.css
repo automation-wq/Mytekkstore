@@ -1644,3 +1644,17 @@ body.quick-open { overflow:hidden }
 @media (max-width:1000px) { .budget .bgrid { grid-template-columns:repeat(2,1fr) } }
 @media (max-width:480px) { .budget .bgrid { grid-template-columns:1fr } }
 .budget .bcard .bbd em { padding-right:46px }
+/* hero: segmented progress-bar indicators (fill over the autoplay), a trust strip under the hero, FAQ "more" link */
+.hero .dots { left:clamp(24px,5vw,72px); right:auto; bottom:24px; gap:7px }
+.hero .dots button { width:38px; height:4px; border-radius:3px; background:#ffffff45; padding:0; overflow:hidden; position:relative; transition:background .2s }
+.hero .dots button::after { display:none }
+.hero .dots button.on::before { content:""; position:absolute; inset:0; background:#fff; transform:scaleX(1); transform-origin:left }
+.hero.auto .dots button.on::before { transform:scaleX(0); animation:hfill 6s linear forwards }
+.hero.auto:hover .dots button.on::before { animation-play-state:paused }
+@keyframes hfill { from { transform:scaleX(0) } to { transform:scaleX(1) } }
+@media (prefers-reduced-motion: reduce) { .hero.auto .dots button.on::before { animation:none; transform:scaleX(1) } }
+.herotrust { display:flex; flex-wrap:wrap; justify-content:center; gap:10px 34px; margin-top:16px; padding:15px 22px; border-radius:16px; background:var(--card); box-shadow:0 1px 3px #0f111508, 0 16px 34px -26px #0f111540 }
+.herotrust span { display:inline-flex; align-items:center; gap:9px; font-size:14px; font-weight:600; color:var(--text) }
+.herotrust svg { width:19px; height:19px; color:var(--accent); flex:none }
+.faqmore { display:inline-block; margin-top:16px; font-weight:700 }
+@media (max-width:760px) { .herotrust { gap:9px 16px; padding:12px 14px } .herotrust span { font-size:12px } .herotrust svg { width:16px; height:16px } .hero .dots { bottom:16px } }

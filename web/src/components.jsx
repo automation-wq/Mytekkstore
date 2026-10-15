@@ -345,4 +345,4 @@ export function OsChart({ P, id = "os", lead }) {
       </tbody></table></div></section>;
 }
 // a question-and-answer list (warranty, returns), in the same shape as Good to know
-export const Qa = ({ title, lead, list, id }) => <section className="faq" id={id}><h2>{title}</h2>{lead && <p className="lead">{lead}</p>}<div className="faqs">{list.map(([q, a, link]) => <details key={q}><summary>{q}</summary><p>{a}{link && <> <a className="alink" href={link[0]}>{link[1]} →</a></>}</p></details>)}</div></section>;
+export const Qa = ({ title, lead, list, id, more }) => <section className="faq" id={id}><h2>{title}</h2>{lead && <p className="lead">{lead}</p>}<div className="faqs">{list.map(([q, a, link]) => <details key={q}><summary>{q}</summary><p>{a}{link && <> <a className="alink" href={link[0]}>{link[1]} →</a></>}</p></details>)}</div>{more && <a className="alink faqmore" href={more[0]}>{more[1]} →</a>}</section>;
