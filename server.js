@@ -191,7 +191,7 @@ function notify(o, text) {
 const routes = [];
 const on = (method, pattern, fn, need) => routes.push({ method, re: new RegExp("^/api/" + pattern + "$"), fn, need });
 
-const publicProduct = p => ({ ...p, reviews: (p.reviews || []).map(({ userId, ...r }) => r) });
+const publicProduct = p => ({ ...p, reviews: (p.reviews || []).map(({ userId, ...r }) => r), questions: (p.questions || []).map(({ userId, answers, ...q }) => ({ ...q, answers: (answers || []).map(({ userId: u, ...a }) => a) })) });
 on("GET", "products", ({ req, user }) => ({ products: (user && user.admin && /[?&]all=1\b/.test(req.url) ? db.products : live()).map(publicProduct) })); // the admin asks for all=1 to see hidden categories
 // one review per customer per product; a new review replaces the old one
 on("POST", "products/(\\d+)/reviews", ({ params, body, user }) => {
@@ -200,6 +200,24 @@ on("POST", "products/(\\d+)/reviews", ({ params, body, user }) => {
   const r = { name: user.name, userId: user.id, rating: int(body.rating, "Rating", 1, 5), text: str(body.text, "Review", 500), at: new Date().toISOString() };
   p.reviews = (p.reviews || []).filter(x => x.userId !== user.id);
   p.reviews.push(r);
+  write("products");
+  return { product: publicProduct(p) };
+}, "user");
+// questions and answers: anyone signed in can ask a question or answer one; stored on the product, newest question first
+on("POST", "products/(\\d+)/questions", ({ params, body, user }) => {
+  const p = db.products.find(p => p.id === +params[0]);
+  if (!p) throw new HttpError(404, "Product not found.");
+  const q = { id: Math.max(0, ...(p.questions || []).map(x => x.id)) + 1, name: user.name, userId: user.id, text: str(body.text, "Question", 300), at: new Date().toISOString(), answers: [] };
+  p.questions = [q, ...(p.questions || [])];
+  write("products");
+  return { product: publicProduct(p) };
+}, "user");
+on("POST", "products/(\\d+)/questions/(\\d+)/answers", ({ params, body, user }) => {
+  const p = db.products.find(p => p.id === +params[0]);
+  if (!p) throw new HttpError(404, "Product not found.");
+  const q = (p.questions || []).find(x => x.id === +params[1]);
+  if (!q) throw new HttpError(404, "Question not found.");
+  q.answers.push({ name: user.name, userId: user.id, text: str(body.text, "Answer", 300), at: new Date().toISOString() });
   write("products");
   return { product: publicProduct(p) };
 }, "user");

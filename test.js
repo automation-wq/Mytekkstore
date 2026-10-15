@@ -128,6 +128,18 @@ server.listen(0, "127.0.0.1", async () => {
     const mine = r.data.product.reviews.filter(x => x.name === "Asha");
     assert.equal(mine.length, 1); assert.equal(mine[0].rating, 5); assert.equal(mine[0].userId, undefined);
     assert.ok(!JSON.stringify((await call("/api/products")).data).includes("userId"));
+    // questions and answers: sign-in needed, newest first, answers nested, user ids never exposed
+    assert.equal((await call("/api/products/1/questions", "POST", { text: "Does it support Netflix?" })).status, 401);
+    r = await call("/api/products/1/questions", "POST", { text: "Does it support Netflix in 4K?" }, user);
+    assert.equal(r.status, 200);
+    const qid = r.data.product.questions[0].id;
+    assert.equal(r.data.product.questions[0].text, "Does it support Netflix in 4K?");
+    assert.equal(r.data.product.questions[0].userId, undefined);
+    r = await call("/api/products/1/questions/" + qid + "/answers", "POST", { text: "Yes, 4K streaming works." }, user);
+    assert.equal(r.status, 200);
+    const q = r.data.product.questions.find(x => x.id === qid);
+    assert.equal(q.answers.length, 1); assert.equal(q.answers[0].text, "Yes, 4K streaming works."); assert.equal(q.answers[0].userId, undefined);
+    assert.equal((await call("/api/products/1/questions/99999/answers", "POST", { text: "x" }, user)).status, 404);
     // photo upload: must be a small JPEG
     assert.equal((await call("/api/admin/upload", "POST", { data: "data:image/jpeg;base64," + Buffer.from("not a jpeg at all, just text").toString("base64") }, admin)).status, 400);
     const jpeg = Buffer.concat([Buffer.from([0xff, 0xd8, 0xff, 0xe0]), Buffer.alloc(200)]);

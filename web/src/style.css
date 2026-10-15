@@ -1615,3 +1615,22 @@ body.quick-open { overflow:hidden }
 .gtable tbody tr:not(:last-child) td { border-bottom:1px solid var(--line) } .gtable td:first-child { font-weight:700; font-family:Manrope,Inter,system-ui,sans-serif }
 .srecent { padding:4px 0 2px } .srecent .shead { margin:0 14px 6px } .schips { display:flex; flex-wrap:wrap; gap:7px; padding:0 14px 10px; border-bottom:1px solid var(--line); margin-bottom:6px }
 .schip { font-size:13px; font-weight:600; padding:6px 12px; border-radius:999px; background:var(--tile); color:var(--text); white-space:nowrap } .schip:hover { background:var(--accent); color:#fff }
+
+/* exchange estimator on the product page */
+.exch { background:var(--card); border-radius:16px; box-shadow:0 1px 3px #0f111508, 0 14px 30px -24px #0f111533; margin-top:4px; overflow:hidden }
+.exch > summary { list-style:none; cursor:pointer; display:flex; align-items:center; gap:9px; padding:14px 18px; font-weight:700; font-size:14.5px } .exch > summary::-webkit-details-marker { display:none }
+.exch > summary svg { width:18px; height:18px; color:var(--accent) } .exch > summary::after { content:"+"; margin-left:auto; color:var(--muted); font-weight:700; font-size:18px } .exch[open] > summary::after { content:"–" }
+.exbody { padding:0 18px 16px; display:grid; gap:12px } .exrow { display:grid; grid-template-columns:1fr 1fr; gap:10px }
+.exbody label { display:grid; gap:5px; font-size:12.5px; color:var(--muted); font-weight:600 } .exbody select { padding:10px 12px; border-radius:10px; border:1px solid var(--line); background:var(--bg); color:var(--text); font:inherit; font-size:14px }
+.exres { display:grid; gap:6px; padding:12px 14px; border-radius:12px; background:var(--tile) } .exline { display:flex; justify-content:space-between; align-items:baseline; gap:12px; font-size:14px } .exline span { color:var(--muted) } .exval { color:var(--accent) }
+.exline.exeff { border-top:1px solid var(--line); padding-top:8px; margin-top:2px; font-size:15px } .exline.exeff b { font-family:Manrope,Inter,system-ui,sans-serif; font-size:19px }
+@media (max-width:420px) { .exrow { grid-template-columns:1fr } }
+
+/* product questions and answers */
+.qna .qform { margin:14px 0 20px; max-width:620px } .qna .qform label { display:grid; gap:6px }
+.qnalist { display:grid; gap:14px } .qitem { background:var(--card); border-radius:16px; padding:16px 18px; box-shadow:0 1px 3px #0f111508, 0 14px 30px -24px #0f111533 }
+.qq, .qa { display:flex; gap:12px; align-items:flex-start; margin:0 } .qq + .qa, .qa + .qa { margin-top:8px }
+.qq > b, .qa > b { flex:none; width:24px; height:24px; border-radius:7px; display:grid; place-items:center; font-family:Manrope,Inter,system-ui,sans-serif; font-size:12px; font-weight:800 }
+.qq > b { background:var(--ink); color:#fff } .qa > b { background:var(--done-bg,#e3f5ec); color:var(--accent) }
+.qq span { font-weight:600 } .qa span { color:var(--soft) }
+.qansf { display:flex; gap:10px; margin-top:12px; padding-top:12px; border-top:1px solid var(--line); align-items:center } .qansf input { flex:1; padding:9px 12px; border-radius:10px; border:1px solid var(--line); background:var(--bg); color:var(--text); font:inherit; font-size:13.5px }
