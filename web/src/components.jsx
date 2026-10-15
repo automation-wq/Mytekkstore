@@ -128,6 +128,8 @@ function navItems(P, CATS, BRANDS, catImg) {
 function Search() {
   const { P, CATS, BRANDS, money } = useStore();
   const [q, setQ] = useState(qs.get("q") || ""), [open, setOpen] = useState(false), [sel, setSel] = useState(-1);
+  const [recent, setRecent] = useState(() => load("recentq", [])); // the last few searches, remembered in this browser
+  const remember = term => { term = (term || "").trim(); if (!term) return; const next = [term, ...recent.filter(x => x.toLowerCase() !== term.toLowerCase())].slice(0, 6); setRecent(next); save("recentq", next); };
   const t = q.trim().toLowerCase(), typing = t.length >= 2;
   const hits = typing ? P.filter(p => (p.brand + " " + p.cat + " " + p.name).toLowerCase().includes(t)).slice(0, 6) : [...P].sort((a, b) => off(b) - off(a)).slice(0, 4);
   const links = typing ? [...CATS.filter(c => c.toLowerCase().includes(t)).map(c => [c, catUrl(c)]), ...BRANDS.filter(b => b.toLowerCase().includes(t)).map(b => ["All " + b, brandUrl(b)])].slice(0, 4) : [];
@@ -140,11 +142,12 @@ function Search() {
     else if (e.key === "Enter" && sel >= 0) { e.preventDefault(); location.href = items[sel].href; }
     else if (e.key === "Escape") setOpen(false);
   };
-  return <form role="search" action="/products" className="sbox" onSubmit={e => { if (!q.trim()) e.preventDefault(); }}>
+  return <form role="search" action="/products" className="sbox" onSubmit={e => { if (!q.trim()) e.preventDefault(); else remember(q); }}>
     <input type="search" name="q" value={q} placeholder="What are you looking for?" aria-label="Search products" autoComplete="off"
       role="combobox" aria-expanded={show} aria-controls="sugg" aria-autocomplete="list" aria-activedescendant={sel >= 0 ? "sg" + sel : undefined}
       onChange={e => { setQ(e.target.value); setSel(-1); setOpen(true); }} onFocus={() => setOpen(true)} onBlur={() => setOpen(false)} onKeyDown={onKey} />
     {show && <div className="sugg" id="sugg" role="listbox" onMouseDown={e => e.preventDefault()}>
+      {!typing && recent.length > 0 && <div className="srecent"><p className="shead">Recent searches</p><div className="schips">{recent.map(term => <a className="schip" href={"/products?q=" + encodeURIComponent(term)} onClick={() => remember(term)} key={term}>{term}</a>)}</div></div>}
       <p className="shead">{typing ? "Suggestions" : "Popular right now"}</p>
       {items.map((it, i) => <a href={it.href} className={"sg" + (it.p ? " sp" : "") + (i === sel ? " on" : "")} id={"sg" + i} role="option" aria-selected={i === sel} key={it.href}>
         {it.p ? <><img src={pic(it.p.img, 480)} alt="" loading="lazy" width="800" height="800" /><span><small>{it.p.brand} · {it.p.cat}</small><b>{it.p.name}</b></span><i>{money(it.p.price)}</i></> : <><Icon k="search" /><b>{it.label}</b></>}</a>)}
@@ -262,7 +265,7 @@ export function Footer() {
     <div className="fcols">
       <div><b>Shop</b>{CATS.slice(0, 6).map(c => <a href={catUrl(c)} key={c}>{c}</a>)}</div>
       <div><b>Brands</b>{BRANDS.slice(0, 6).map(b => <a href={brandUrl(b)} key={b}>{b}</a>)}</div>
-      <div><b>Help</b><a href="/contact">Contact</a><a href="/shipping">Shipping</a><a href="/returns">Warranty and returns</a>{SHOW_STORES && <a href="/stores">Store locator</a>}</div>
+      <div><b>Help</b><a href="/buying-guide">How to choose a TV</a><a href="/contact">Contact</a><a href="/shipping">Shipping</a><a href="/returns">Warranty and returns</a>{SHOW_STORES && <a href="/stores">Store locator</a>}</div>
       <div><b>Mytekkstore</b><a href="/about">About</a><a href="/account">My account</a><a href="/terms">Terms</a><a href="/privacy">Privacy</a></div>
     </div>
     <div className="copy">© 2026 Mytekkstore. All rights reserved.</div>

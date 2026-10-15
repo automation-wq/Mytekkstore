@@ -335,6 +335,15 @@ async function run() {
     assert.ok(await b.ev(`!!document.querySelector(".pdp .emiline") && document.querySelectorAll(".pofs div").length === 3`), "EMI line and offers box on the product page");
     assert.ok(await b.ev(`document.querySelectorAll("#t-specs .grp").length >= 2`), "grouped specifications on the product page");
 
+    step = "buying guide page and recent searches";
+    await b.goto(base + "/buying-guide");
+    assert.ok(await b.ev(`document.title.startsWith("How to choose a TV") && document.querySelectorAll(".gtable tbody tr").length === 5 && !!document.querySelector(".bgrid .bcard")`), "the buying guide has its size table and budget cards");
+    await b.goto(base + "/");
+    await b.ev(`localStorage.setItem("recentq", JSON.stringify(["55 inch","telefunken"]))`);
+    await b.goto(base + "/");
+    await b.click(...await b.center(".sbox input", 0)); await sleep(500);
+    assert.deepEqual(await b.ev(`[...document.querySelectorAll(".schip")].map(c => c.textContent)`), ["55 inch", "telefunken"], "recent searches show as chips in the search dropdown");
+
     step = "every link on the main pages opens a real page";
     const seen = new Set(), skip = /\/(checkout|order|admin)(\.html|\?|$)|#/; // pages that need a sign-in or an order, and in-page anchors
     for (const start of ["/", "/offers.html", "/televisions/telefunken-140-cm-55-inch-4k-ultra-hd-google-tv", "/account.html", "/shipping"]) {

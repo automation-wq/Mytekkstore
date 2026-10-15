@@ -546,7 +546,7 @@ const SECURITY = {
 };
 const escHtml = s => String(s).replace(/[&<>"']/g, c => "&#" + c.charCodeAt(0) + ";");
 const siteUrl = req => (req.headers["x-forwarded-proto"] || "http") + "://" + (req.headers.host || "localhost:" + PORT);
-const INFO_PAGES = ["about", "contact", "stores", "shipping", "returns", "terms", "privacy"];
+const INFO_PAGES = ["about", "contact", "stores", "shipping", "returns", "terms", "privacy", "buying-guide"];
 // title and description of each info page (the page itself is drawn by web/src/info.jsx)
 const INFO_TITLES = {
   about: ["About Mytekkstore", "Mytekkstore sells genuine Elista and Telefunken electronics at factory prices, delivered free with cash on delivery and the brand's warranty."],
@@ -556,6 +556,7 @@ const INFO_TITLES = {
   returns: ["Returns and refunds", "How returns work at Mytekkstore: tell us within the return window, we pick the product up, and the refund goes back the way you paid."],
   terms: ["Terms of use", "The terms that apply when you order from Mytekkstore: prices, payment, delivery, cancellation, returns and warranty."],
   privacy: ["Privacy policy", "What Mytekkstore stores about you, why, and what it never does: no card details, one sign-in cookie, no tracking cookies."],
+  "buying-guide": ["How to choose a TV", "A plain-words TV buying guide: pick the right screen size for your room, understand HD vs 4K, choose Google TV or WebOS, and match a TV to your budget."],
 };
 
 // ===== clean addresses =====

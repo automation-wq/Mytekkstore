@@ -17,6 +17,7 @@ const PAGES = {
   returns: ["Returns and refunds", "Returns", "Easy returns, no drama.", `Tell us within ${POLICY.returnDays} days of delivery and we take it from there.`, "Washing Machines"],
   terms: ["Terms of use", "Terms", "The short version, in plain words.", "What you agree to when you order from Mytekkstore.", "Air Conditioners"],
   privacy: ["Privacy policy", "Privacy", "Your data, kept to a minimum.", "What we store, why we store it, and what we never do with it.", "Televisions"],
+  "buying-guide": ["How to choose a TV", "Buying guide", "How to choose the right TV.", "Size, resolution, operating system and connections — in plain words, so you buy once and buy right.", "Televisions"],
 };
 
 // the opener every info page starts with: the category photo with its room clip, an eyebrow, a headline and one line
@@ -128,6 +129,32 @@ export function InfoPage() {
     ]} /></section>
     <Qa title="Warranty" lead="How to claim it, and what to expect." list={WARRANTY_QA} />
     <Faq list={FAQ.filter(([q]) => /genuine|track/i.test(q))} />
+    {cta}</>;
+
+  if (p === "buying-guide") return <>{crumbs}{hero}
+    <section><h2>Start with the size</h2><p className="lead">The right screen size depends on how far you sit from it — here is a rough guide.</p>
+      <div className="scroll"><table className="gtable"><thead><tr><th>Screen size</th><th>Best viewing distance</th><th>Good for</th></tr></thead><tbody>
+        {[["32 inch", "1.2 – 1.8 m", "Bedrooms, kitchens, compact rooms"], ["43 inch", "1.8 – 2.2 m", "Everyday living-room viewing"], ["50 – 55 inch", "2.0 – 2.6 m", "The living-room favourite"], ["65 inch", "2.5 – 3.0 m", "A cinematic main TV"], ["75 inch and up", "3.0 m and more", "Large rooms and home cinema"]].map(r => <tr key={r[0]}>{r.map((c, i) => <td key={i}>{c}</td>)}</tr>)}
+      </tbody></table></div>
+      <p className="muted">Sit too close to a big screen and you notice the pixels; sit too far from a small one and you miss the detail. When in doubt, go one size up.</p>
+      <a className="alink" href="/televisions">Shop TVs by size →</a></section>
+    <section><h2>Resolution: how sharp the picture is</h2><Policy sections={[
+      ["HD Ready (1366 × 768)", "The most affordable. Good for smaller screens around 32 inch and for normal TV channels."],
+      ["Full HD (1920 × 1080)", "Sharper, a good match for 40 to 43 inch and for most streaming."],
+      ["4K Ultra HD (3840 × 2160)", "Four times the detail of Full HD. The standard for 50 inch and above, and the one to pick for films, sport and gaming."],
+    ]} /></section>
+    <section><h2>The operating system</h2><p className="lead">The smart system is how you find apps like YouTube and your streaming services.</p>
+      <div className="why"><div><i className="kico"><Icon k="check" /></i><b>Google TV</b><p>Apps from Google Play, Google Assistant on the remote and Chromecast built in — one home screen that gathers your shows.</p></div>
+        <div><i className="kico"><Icon k="check" /></i><b>WebOS</b><p>A quick card-style home screen with the streaming apps built in, and no set-top box needed.</p></div></div>
+      <a className="alink" href="/televisions#os">Compare the operating systems side by side →</a></section>
+    <section><h2>Connections to check</h2><Policy sections={[
+      ["HDMI ports", "For a set-top box, a game console and a soundbar. Two covers most homes; three leaves room to grow."],
+      ["USB ports", "For a pen drive or hard disk, to play your own films and photos."],
+      ["Sound", "Built-in speakers are fine for everyday viewing; look for Dolby Audio, or add a soundbar, for a fuller sound."],
+    ]} /></section>
+    <section><h2>Match it to your budget</h2><p className="lead">Every range we stock, at a glance.</p>
+      <div className="bgrid">{[[0, 10000, "Under " + money(10000)], [10000, 25000, money(10000) + " – " + money(25000)], [25000, 50000, money(25000) + " – " + money(50000)], [50000, 0, "Above " + money(50000)]].map(([mn, mx, label]) => { const c = P.filter(x => x.cat === "Televisions" && (!mn || x.price >= mn) && (!mx || x.price <= mx)).length; return <a className="bcard" href={listUrl({ cat: "Televisions", min: mn || "", max: mx || "" })} key={label}><span><b>{label}</b><small>{c} TV{c === 1 ? "" : "s"}</small></span><i aria-hidden="true">→</i></a>; })}</div></section>
+    <Faq list={FAQ.filter(([q]) => /size|LED|Google TV|choose|difference/i.test(q))} lead="More questions before you buy." />
     {cta}</>;
 
   if (p === "terms") return <>{crumbs}{hero}
