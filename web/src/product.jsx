@@ -128,7 +128,7 @@ export function Product() {
     <nav className={"subnav" + (subOn ? " on" : "")} aria-label="Product sections"><div><b>{p.brand} {p.name}</b>
       <div className="stabs">{[["#overview", "Overview", "overview", "t-specs0"], ["#tabs", "Specs", "tabs", "t-specs"], ["#compare", "Compare", "compare"], ["#tabs", "Reviews", "tabs2", "t-rev"]].map(([h, t, key, dt], i) =>
         <a href={h} className={key === spySec ? "on" : undefined} data-tab={dt && dt !== "t-specs0" ? dt : undefined} key={i}>{t}{key === spySec && <m.i className="ink" layoutId="stab-ink" transition={INK} />}</a>)}</div>
-      <span className="sprice">{money(p.price)}</span><Buy p={p} /></div></nav>
+      <span className="sprice">{money(p.price)}</span><Buy p={p} />{p.stock > 0 && <button className="btn ghost sbuy" data-buy={p.id}>Buy now</button>}<Heart p={p} /></div></nav>
     <div className="pdp" id="overview">
       <div className="gallery">{spin && spinView
           ? <Spin frames={spin} alt={p.brand + " " + p.name} />

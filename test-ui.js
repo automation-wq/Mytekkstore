@@ -297,7 +297,7 @@ async function run() {
     assert.equal(await b.ev(`getComputedStyle(document.querySelector(".pdp .actions .btn")).borderRadius`), "999px", "pill buttons");
     await b.goto(base + "/");
     const clips = await b.ev(`({ hero: document.querySelectorAll(".slide").length, oss: document.querySelectorAll(".disco .dcard.os").length, brands: document.querySelectorAll(".bbrand").length, arrows: [...document.querySelectorAll(".strip")].filter(x => !x.classList.contains("nos") && x.querySelector(".row").scrollWidth <= x.querySelector(".row").clientWidth + 2).length })`);
-    assert.equal(clips.hero, 2, "two banners (client brief): A Bigger World Awaits, offers"); assert.equal(clips.oss, 2, "shop by operating system on the home page"); assert.equal(clips.brands, 2, "a giant tile per brand");
+    assert.equal(clips.hero, 1, "one clean hero slide (promo slide removed per client): A Bigger World Awaits"); assert.equal(clips.oss, 2, "shop by operating system on the home page"); assert.equal(clips.brands, 2, "a giant tile per brand");
     assert.equal(clips.arrows, 0, "a row that fits on the screen shows no scroll arrows");
     await b.goto(base + "/category.html?cat=Televisions");
     assert.deepEqual(await b.ev(`[...document.querySelectorAll(".cdisco .dtabs button")].map(b => b.textContent)`), ["Shop by Size", "Shop by OS", "Screen type / Resolution"], "three-tab discovery under the category banner (client brief)");
