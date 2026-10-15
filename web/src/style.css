@@ -1744,3 +1744,16 @@ body.quick-open { overflow:hidden }
   animation:hpglow 14s ease-in-out infinite alternate }
 @keyframes hpglow { 0% { transform:translate(0,0) scale(1) } 100% { transform:translate(5%,-4%) scale(1.15) } }
 @media (prefers-reduced-motion:reduce) { .slide .hpanel::before { animation:none } }
+
+/* brand-showcase cinematic video: desktop-only loop under the scrim, over the still photo */
+.bigbrands .bbrand.photo .bphoto { z-index:0 }
+.bigbrands .bbrand.photo .bvid { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; opacity:0; transition:opacity 1.2s; z-index:0 }
+.bigbrands .bbrand.photo .bvid.playing { opacity:1 }
+.bigbrands .bbrand.photo::before { z-index:1 }
+.bigbrands .bbrand.photo .btext { z-index:2 }
+
+/* PDP A+ hero cinematic video: desktop-only loop under the bottom scrim */
+.ahero > .bvid { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; opacity:0; transition:opacity 1.2s; z-index:0 }
+.ahero > .bvid.playing { opacity:1 }
+.ahero::before { z-index:1 }
+.ahero .atext { z-index:2 }
