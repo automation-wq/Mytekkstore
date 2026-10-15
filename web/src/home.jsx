@@ -25,7 +25,8 @@ export function Home() {
   const home = banners.filter(b => b.slot === "home");
   const raw = home.length ? home.map(b => ({ kind: b.brand ? "brand" : b.preset === "promo" ? "promo" : "photo", preset: b.preset, eyebrow: b.kicker, h: lines(b.title), s: b.text, href: b.href, cta: b.cta, cta2: b.cta2, href2: b.href2, im: b.img, imMobile: b.imgMobile, brand: b.brand, tone: TONES[b.tone] || undefined, prod: b.productId ? byId(b.productId) : null })) : HOME_BANNERS;
   const slides = raw.filter(s => s.kind !== "brand" || biggest(s.brand)).map(s => s.kind === "brand" ? { ...s, pts: brandPoints(P, s.brand), prod: s.prod || biggest(s.brand), href: s.href || brandUrl(s.brand), cta: s.cta || "Shop " + s.brand, eyebrow: s.eyebrow || s.brand }
-    : s.kind === "promo" ? { ...s, s: s.s || "Up to " + maxOff + "% off, bank offers, and No Cost EMI on the models that carry it." } : s);
+    : s.kind === "promo" ? { ...s, s: s.s || "Up to " + maxOff + "% off, bank offers, and No Cost EMI on the models that carry it." }
+    : s.im === "img/hero-a.jpg" ? { ...s, vid: "/img/hero-a.mp4" } : s); // the lead photo slide carries a desktop-only cinematic loop
   const show = n => setCur((n + slides.length) % slides.length);
   const [auto, setAuto] = useState(true); // autoplay stops for good once the visitor takes control (arrow/dot)
   useEffect(() => { if (!auto) return; const t = setInterval(() => { if (!heroRef.current || !heroRef.current.matches(":hover")) setCur(c => (c + 1) % slides.length); }, 6000); return () => clearInterval(t); }, [slides.length, auto]);
@@ -73,7 +74,7 @@ export function Home() {
     <div className={"hero" + (auto ? " auto" : "")} ref={heroRef} onClick={onHero} onPointerMove={onMove}>
       {slides.map((sl, i) => <m.div className={"slide k-" + sl.kind + (i === cur ? " on" : "")} data-preset={sl.preset || "cinematic"} key={i} initial="hide" animate={i === cur ? "show" : "hide"} variants={GROUP} style={sl.tone ? { background: sl.tone } : undefined}>
         {(sl.brand || sl.kind === "promo") && <span className="ghostmark" aria-hidden="true">{sl.brand || "Offers"}</span>}
-        {sl.im && <div className="bg"><picture>{sl.imMobile && <source media="(max-width:760px)" srcSet={pic(sl.imMobile, 960)} />}<img {...picOf(sl.im)} sizes="100vw" alt="" width="1344" height="752" fetchPriority={i ? "low" : "high"} loading={i ? "lazy" : "eager"} decoding="async" /></picture></div>}
+        {sl.im && <div className="bg"><picture>{sl.imMobile && <source media="(max-width:760px)" srcSet={pic(sl.imMobile, 960)} />}<img {...picOf(sl.im)} sizes="100vw" alt="" width="1344" height="752" fetchPriority={i ? "low" : "high"} loading={i ? "lazy" : "eager"} decoding="async" /></picture>{sl.vid && <video className="vid" muted loop playsInline preload="none" data-src={sl.vid} aria-hidden="true"></video>}</div>}
         {sl.prod && <m.a className={"bigtv" + (cutout(sl.prod.img) ? " cut" : "")} variants={RISE} href={productUrl(sl.prod)}>{cutout(sl.prod.img)
           ? <><span className="tvglow" aria-hidden="true"></span><img className="tvmain" src={cutout(sl.prod.img)} alt={sl.prod.brand + " " + sl.prod.name} loading={i ? "lazy" : "eager"} /><img className="tvrefl" src={cutout(sl.prod.img)} alt="" aria-hidden="true" loading="lazy" /></>
           : <img src={pic(sl.prod.img)} srcSet={picSet(sl.prod.img)} sizes="(max-width:760px) 40vw, 30vw" alt={sl.prod.brand + " " + sl.prod.name} width="800" height="800" loading={i ? "lazy" : "eager"} />}</m.a>}

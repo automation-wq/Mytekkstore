@@ -59,7 +59,7 @@ export function playClip(v) {
 let clipIO;
 export function lazyClips() {
   clipIO = clipIO || new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { playClip(e.target); clipIO.unobserve(e.target); } }), { rootMargin: "200px" });
-  $$("video.tvid:not([data-seen]), video.bvid:not([data-seen])").forEach(v => { v.dataset.seen = "1"; clipIO.observe(v); });
+  $$("video.tvid:not([data-seen]), video.bvid:not([data-seen]), video.vid:not([data-seen])").forEach(v => { v.dataset.seen = "1"; clipIO.observe(v); });
 }
 
 // rows that fit on the screen need no scroll arrows

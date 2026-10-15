@@ -1668,6 +1668,7 @@ body.quick-open { overflow:hidden }
 .slide .hpanel > * { max-width:100% }
 .slide .bg { position:relative; inset:0; grid-column:2; grid-row:1; width:100%; height:100%; overflow:hidden; translate:none }
 .slide .bg > img { object-position:center }
+.slide .vid { object-position:center; z-index:1 }
 .slide.on .bg { animation:kenburns 11s ease-out forwards }
 /* soft seam blending the photo into the panel's edge */
 .slide .bg::before { content:""; position:absolute; inset:0; z-index:1; background:linear-gradient(90deg,#0b0e14 0%,#0b0e1400 16%) }
