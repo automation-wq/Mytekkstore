@@ -659,8 +659,9 @@ h2 a { transition:letter-spacing .2s } h2 a:hover { letter-spacing:.5px }
 .aimg { position:absolute; inset:0; background-size:cover; background-position:center; animation:kenburns 16s ease-out forwards }
 .aside::after { content:""; position:absolute; inset:0; background:linear-gradient(180deg,#0d111700 25%,#0d1117e6) }
 .atext { position:relative; z-index:1; padding:32px }
-.atext .kicker { color:#5eead4 }
-.atext h2 { color:#fff; font-size:28px; margin-bottom:12px; display:block }
+.atext .kicker { color:#5eead4; text-shadow:0 1px 10px rgba(0,0,0,.55) }
+.atext h2 { color:#fff; font-size:28px; margin-bottom:12px; display:block; text-shadow:0 2px 20px rgba(0,0,0,.4) }
+.atext p { text-shadow:0 1px 14px rgba(0,0,0,.35) }
 .atext ul { list-style:none; padding:0; display:grid; gap:6px; color:#ffffffd0 }
 .acard { padding:28px; display:grid; gap:16px; align-content:start }
 .acard h1 { font-size:24px; margin-bottom:6px }
@@ -830,7 +831,7 @@ input[type=search] { border-radius:999px; padding-left:18px }
 .slide .bg { translate:calc(var(--px,0) * -18px) calc(var(--py,0) * -12px); transition:translate .6s ease-out }
 .slide h1 .ln { display:block }
 /* gradient per word, not on the h1: Chrome drops background-clip:text on a parent whose children move (the Motion word rise) */
-.slide h1 .w { display:inline-block; background:linear-gradient(100deg,#fff 35%,#7ef0d0 65%,#9ec5ff); background-size:200% 100%; -webkit-background-clip:text; background-clip:text; color:transparent }
+.slide h1 .w { display:inline-block; background:linear-gradient(100deg,#fff 60%,#d6ecff); background-size:200% 100%; -webkit-background-clip:text; background-clip:text; color:transparent; text-shadow:0 2px 24px rgba(0,0,0,.25) }
 .hcta { display:flex; gap:12px; flex-wrap:wrap }
 .slide .btn.ghost { color:#fff; border-color:#ffffff66; background:#ffffff14; backdrop-filter:blur(8px); padding:13px 26px; border-radius:30px }
 .slide .btn.ghost:hover { border-color:#fff; color:#fff; background:#ffffff26; filter:none }
