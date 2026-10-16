@@ -31,8 +31,6 @@ export function Home() {
   const [auto, setAuto] = useState(true); // autoplay stops for good once the visitor takes control (arrow/dot)
   useEffect(() => { if (!auto) return; const t = setInterval(() => { if (!heroRef.current || !heroRef.current.matches(":hover")) setCur(c => (c + 1) % slides.length); }, 6000); return () => clearInterval(t); }, [slides.length, auto]);
   const deals = [...P].sort((a, b) => off(b) - off(a)).slice(0, 5);
-  const [left, setLeft] = useState(""); // Deals of the Day: live time left until the daily reset at midnight
-  useEffect(() => { const z = n => String(n).padStart(2, "0"); const tick = () => { const now = new Date(), mid = new Date(now); mid.setHours(24, 0, 0, 0); const s = Math.max(0, (mid - now) / 1000 | 0); setLeft(z(s / 3600 | 0) + ":" + z(s / 60 % 60 | 0) + ":" + z(s % 60)); }; tick(); const t = setInterval(tick, 1000); return () => clearInterval(t); }, []);
   const quotes = P.flatMap(p => (p.reviews || []).map(r => ({ ...r, p }))).sort((a, b) => new Date(b.at) - new Date(a.at)).slice(0, 6); // newest reviews across the catalogue
   const oss = osList(P);
   const onHero = e => {
@@ -120,7 +118,7 @@ export function Home() {
           {show.img && /show-(elista|telefunken)/.test(show.img) && <video className="bvid" muted loop playsInline preload="none" data-src={"/" + show.img.replace(".jpg", ".mp4")} aria-hidden="true"></video>}
           <div className="btext"><span className="kicker">{b} · {n} model{n === 1 ? "" : "s"}</span><b>{show.title}</b><p>{show.text}</p><ul>{pts.map(t => <li key={t}>{t}</li>)}</ul><u>{show.cta} →</u></div>
           {show.img ? null : cutout(prod.img) ? <img className="cut" src={cutout(prod.img)} alt={prod.brand + " " + prod.name} loading="lazy" /> : <img src={pic(prod.img)} srcSet={picSet(prod.img)} sizes="(max-width:860px) 100vw, 46vw" alt={prod.brand + " " + prod.name} width="800" height="800" loading="lazy" />}</a> : null; })}</section>
-    <section className="deals"><h2>Deals of the Day {left && <time className="dtimer" aria-label={"Resets in " + left}>{left}</time>} <a href="/products?sort=off">View all</a></h2><p className="lead">Ends tonight — the biggest discounts right now.</p><div className="grid">{deals.map((p, i) => <Card p={p} i={i} key={p.id} />)}</div></section>
+    <section><h2>Deals of the Day <a href="/products?sort=off">View all</a></h2><p className="lead">The biggest discounts right now.</p><div className="grid">{deals.map((p, i) => <Card p={p} i={i} key={p.id} />)}</div></section>
     <section><h2>Why Mytekkstore?</h2><p className="lead">More confidence in every purchase.</p><div className="why">
       <div><Ico shapes={DRAW_ICONS.truck} /><b>Fast delivery</b><p>Doorstep delivery across the country.</p></div>
       <div><Ico shapes={DRAW_ICONS.shield} /><b>Genuine products</b><p>Brand warranty on everything we sell.</p></div>

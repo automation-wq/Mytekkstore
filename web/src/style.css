@@ -1775,5 +1775,4 @@ body.quick-open { overflow:hidden }
 .btile:hover { translate:0 -4px; box-shadow:0 26px 46px -28px #0f111566; outline-color:#397FE8 }
 .btile:hover .darr { background:#397FE8; color:#fff; translate:3px 0 }
 
-.deals h2 .dtimer { display:inline-block; margin-left:10px; padding:3px 12px; border-radius:999px; background:#397FE8; color:#fff; font-family:Manrope,Inter,system-ui,sans-serif; font-size:15px; font-weight:700; letter-spacing:.5px; font-variant-numeric:tabular-nums; vertical-align:middle }
 @media (prefers-color-scheme:dark){ :root:not([data-theme="light"]) .crail, :root:not([data-theme="light"]) .btile { background:var(--card) } }
