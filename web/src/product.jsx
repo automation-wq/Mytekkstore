@@ -29,24 +29,6 @@ function Spin({ frames, alt }) {
   </div>;
 }
 const INK = { type: "spring", stiffness: 420, damping: 34 }; // the marker that slides between tabs (Motion layoutId)
-// Exchange estimator (prototype): pick the old TV's size and condition to see an estimated exchange value off the price. The
-// values are samples, like the store's offers; the pickup team confirms the final value when they inspect the old TV.
-const EX_SIZES = [["s", "Up to 32 inch", 1500], ["m", "40 – 43 inch", 2500], ["l", "50 – 55 inch", 4000], ["xl", "65 inch and up", 6000]];
-function Exchange({ price, money }) {
-  const [size, setSize] = useState(""), [cond, setCond] = useState("working");
-  const row = EX_SIZES.find(r => r[0] === size);
-  const value = row ? Math.min(Math.round(cond === "working" ? row[2] : row[2] * 0.45), Math.round(price * 0.2)) : 0;
-  return <details className="exch"><summary><Icon k="undo" /> Exchange your old TV and pay less</summary>
-    <div className="exbody">
-      <div className="exrow">
-        <label>Old TV size<select value={size} onChange={e => setSize(e.target.value)} aria-label="Old TV size"><option value="">Select size</option>{EX_SIZES.map(r => <option value={r[0]} key={r[0]}>{r[1]}</option>)}</select></label>
-        <label>Condition<select value={cond} onChange={e => setCond(e.target.value)} aria-label="Old TV condition"><option value="working">Working</option><option value="dead">Not working</option></select></label>
-      </div>
-      {value > 0
-        ? <div className="exres"><div className="exline"><span>Estimated exchange value</span><b className="exval">− {money(value)}</b></div><div className="exline exeff"><span>Effective price</span><b>{money(price - value)}</b></div><p className="muted small">An estimate. The final value is confirmed by the pickup team when they see your old TV, and adjusted on the invoice.</p></div>
-        : <p className="muted small">Choose your old TV's size to see an estimated exchange value.</p>}
-    </div></details>;
-}
 
 export function Product() {
   const { P, byId, money, qtyOf, setQty, recent, addRecent, updateProduct, toast, openCart, me, banners } = useStore();
@@ -150,7 +132,6 @@ export function Product() {
           <details className="emiplans"><summary>View EMI plans</summary><table className="specs"><tbody>{emiPlans(p.price).map(([n, m]) => <tr key={n}><th>{n} months</th><td><b>{money(m)}</b>/month · {money(0)} interest · {money(p.price)} in total</td></tr>)}</tbody></table>
             <p className="muted">On participating bank credit cards, subject to the bank's terms. <a className="alink" href="/offers">See all offers</a></p></details></>}
         <div className="pofs"><b>Offers</b>{BANK_OFFERS.slice(0, 3).map(([bank, big, note, c]) => <div style={{ "--bc": c }} key={bank}><b>{big}</b><span>{note}</span></div>)}<a href="/offers">See all offers →</a></div>
-        <Exchange price={p.price} money={money} />
         <p style={{ marginTop: 12 }}>{stock} <span className="muted" style={{ fontSize: 13 }}>· Sold by Mytekkstore</span></p>
         {p.stock > 0 && p.stock <= 10 && <div className="stockbar"><span>Hurry, only {p.stock} left in stock</span><i><b style={{ width: p.stock * 10 + "%" }}></b></i></div>}
         {sizes.length > 0 && <div className="sizes"><span>{S.by}</span>{sizes.map(({ s, t, on }) => <a className={"chip sw" + (on ? " on" : "")} href={productUrl(t)} aria-current={on ? "page" : undefined} key={s.label}><b>{s.label.replace(/ TVs$/, "")}</b><small>{money(t.price)}</small></a>)}</div>}
