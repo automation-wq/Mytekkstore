@@ -101,6 +101,9 @@ export function Product() {
   const resName = (/4K/i.test(spec(p, "resolution")) ? "4K Ultra HD" : /Full HD/i.test(spec(p, "resolution")) ? "Full HD" : /HD/i.test(spec(p, "resolution")) ? "HD Ready" : "");
   const spin = p.spin && p.spin.length >= 8 ? p.spin : null; // 360° frames turn the viewer on; otherwise the normal photo + zoom
   const story = p.story && p.story.length ? p.story : autoStory(p); // A+ content: the admin's blocks, or blocks built from the specifications
+  const inch = +((/\((\d+) inch\)/.exec(p.name) || [])[1] || 0); // A+ hero headline varies by screen size so it never reads templated
+  const aheroTitle = inch >= 55 ? "The big screen, done right." : inch >= 43 ? "Made for the way you watch." : "Smart entertainment, made simple.";
+  const aheroLead = p.brand + (spec(p, "screen size") ? " " + spec(p, "screen size") : "") + " — designed around films, sport and games for the whole family.";
   const save$ = p.mrp > p.price;
   const share = encodeURIComponent(location.href), shareText = encodeURIComponent(p.brand + " " + p.name + " at Mytekkstore");
   // the other sizes of this kind of product (TVs by inch, washing machines by kg, ACs by ton): same brand first, else any brand
@@ -166,10 +169,10 @@ export function Product() {
       </div>
     </div>
     {story.length > 0 && <section className="aplus" id="aplus">
-      <div className="ahero"><img src={pic(life("aplusHero", "img/hero0.jpg"), 960)} srcSet={picSet(life("aplusHero", "img/hero0.jpg"))} sizes="(max-width:1240px) 100vw, 1240px" alt="" loading="lazy" /><video className="bvid" muted loop playsInline preload="none" data-src="/img/hero0.mp4" aria-hidden="true"></video><div className="atext"><span className="kicker">{p.brand}{spec(p, "screen size") ? " · " + spec(p, "screen size") : ""}</span><h2>Every Scene. A New Experience.</h2><p>{[spec(p, "screen size"), resName, p.os].filter(Boolean).join(" ") + " television for films, sport and games, built for the living room."}</p></div></div>
+      <div className="ahero"><img src={pic(life("aplusHero", "img/hero0.jpg"), 960)} srcSet={picSet(life("aplusHero", "img/hero0.jpg"))} sizes="(max-width:1240px) 100vw, 1240px" alt="" loading="lazy" /><video className="bvid" muted loop playsInline preload="none" data-src="/img/hero0.mp4" aria-hidden="true"></video><div className="atext"><span className="kicker">{p.brand}{spec(p, "screen size") ? " · " + spec(p, "screen size") : ""}</span><h2>{aheroTitle}</h2><p>{aheroLead}</p>
+        <div className="astats">{callouts(p).map(([big, small]) => <div key={big + small}><b>{big}</b><small>{small}</small></div>)}</div></div></div>
       <div className="showcase">{cutout(p.img) ? <img className="cut" src={cutout(p.img)} alt="" loading="lazy" /> : <img className="tilep" src={pic(p.img)} srcSet={picSet(p.img)} sizes="(max-width:860px) 80vw, 40vw" alt="" loading="lazy" width="800" height="800" />}
-        <div><span className="kicker">{p.brand}</span><h2>{story[0].title}.</h2><p>{story[0].text}</p>
-          <div className="callouts">{callouts(p).map(([big, small]) => <div key={big + small}><b>{big}</b><small>{small}</small></div>)}</div></div></div>
+        <div><span className="kicker">{story[0].kicker}</span><h2>{story[0].title}.</h2><p>{story[0].text}</p></div></div>
       {story.slice(1).map((b, i) => <div className={"ablock" + (i % 2 ? " flip" : "") + (i === 1 ? " dark" : "")} key={i}>{b.img && (cutout(b.img) ? <img className="cut" src={cutout(b.img)} alt="" loading="lazy" /> : <img src={pic(b.img, 960)} srcSet={picSet(b.img)} sizes="(max-width:860px) 100vw, 50vw" alt="" loading="lazy" />)}<div>{b.kicker && <span className="kicker">{b.kicker}</span>}<h3>{b.title}</h3><p>{b.text}</p></div></div>)}
     </section>}
     <section id="tabs">
