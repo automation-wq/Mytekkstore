@@ -1757,3 +1757,23 @@ body.quick-open { overflow:hidden }
 .ahero > .bvid.playing { opacity:1 }
 .ahero::before { z-index:1 }
 .ahero .atext { z-index:2 }
+
+/* Homepage quick-nav (2026-10-16): category rail + shop-by-brand strip + Deals-of-the-Day countdown.
+   Low-dependency top-of-page entry points; data read from the catalogue, no invented figures. */
+.catrail { display:flex; flex-wrap:wrap; gap:10px; margin-top:28px }
+.crail { display:grid; gap:2px; padding:12px 18px; border-radius:14px; background:var(--card); border:1px solid var(--line); text-decoration:none; color:var(--text); transition:translate .2s, box-shadow .2s, border-color .2s }
+.crail b { font-family:Manrope,Inter,system-ui,sans-serif; font-size:16px; letter-spacing:-.3px }
+.crail small { color:var(--muted); font-size:12px }
+.crail:hover { translate:0 -3px; border-color:#397FE8; box-shadow:0 18px 32px -26px #0f111566 }
+
+.brandstrip .bstrip { display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:16px }
+.btile { position:relative; display:flex; flex-direction:column; gap:3px; padding:22px 24px; border-radius:16px; background:var(--card); box-shadow:0 1px 3px #0f111508, 0 14px 30px -24px #0f111533; text-decoration:none; color:var(--text); outline:2px solid transparent; outline-offset:-2px; transition:translate .25s, box-shadow .25s, outline-color .25s }
+.btile b { font-family:Manrope,Inter,system-ui,sans-serif; font-size:22px; letter-spacing:-.5px }
+.btile small { color:var(--muted); font-size:13px }
+.btile em { font-style:normal; font-weight:600; font-size:14px; margin-top:4px }
+.btile .darr { position:absolute; right:18px; top:18px; width:32px; height:32px; border-radius:50%; display:grid; place-items:center; background:var(--tile); color:var(--text); font-style:normal; font-weight:700; transition:background .25s, color .25s, translate .25s }
+.btile:hover { translate:0 -4px; box-shadow:0 26px 46px -28px #0f111566; outline-color:#397FE8 }
+.btile:hover .darr { background:#397FE8; color:#fff; translate:3px 0 }
+
+.deals h2 .dtimer { display:inline-block; margin-left:10px; padding:3px 12px; border-radius:999px; background:#397FE8; color:#fff; font-family:Manrope,Inter,system-ui,sans-serif; font-size:15px; font-weight:700; letter-spacing:.5px; font-variant-numeric:tabular-nums; vertical-align:middle }
+@media (prefers-color-scheme:dark){ :root:not([data-theme="light"]) .crail, :root:not([data-theme="light"]) .btile { background:var(--card) } }
