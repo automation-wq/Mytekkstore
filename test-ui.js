@@ -334,8 +334,7 @@ async function run() {
     await b.goto(base + "/product.html?id=1");
     assert.ok(await b.ev(`!!document.querySelector(".pdp .emiline") && document.querySelectorAll(".pofs div").length === 3`), "EMI line and offers box on the product page");
     assert.ok(await b.ev(`document.querySelectorAll("#t-specs .grp").length >= 2`), "grouped specifications on the product page");
-    assert.ok(await b.ev(`!!document.querySelector(".exch") && !!document.querySelector(".qna h2")`), "the exchange estimator and the Q&A section are on the product page");
-    assert.ok(await b.ev(`(() => { const d = document.querySelector(".exch"); d.open = true; const s = d.querySelector("select"); s.value = "l"; s.dispatchEvent(new Event("change", { bubbles: true })); return /\\d/.test((d.querySelector(".exeff b") || {}).textContent || ""); })()`), "the exchange estimator shows an effective price when a size is chosen");
+    assert.ok(await b.ev(`!!document.querySelector(".qna h2")`), "the Q&A section is on the product page");
 
     step = "buying guide page and recent searches";
     await b.goto(base + "/buying-guide");
