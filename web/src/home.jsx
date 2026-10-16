@@ -92,7 +92,7 @@ export function Home() {
     </div>
 
 
-    <nav className="catrail" aria-label="Shop by category">{CATS.map(c => { const n = P.filter(p => p.cat === c).length; return <a className="crail" href={listUrl({ cat: c })} key={c}><b>{c}</b><small>{n} model{n === 1 ? "" : "s"}</small></a>; })}</nav>
+    {CATS.length > 1 && <nav className="catrail" aria-label="Shop by category">{CATS.map(c => { const n = P.filter(p => p.cat === c).length; return <a className="crail" href={listUrl({ cat: c })} key={c}><b>{c}</b><small>{n} model{n === 1 ? "" : "s"}</small></a>; })}</nav>}
 
     <section className="brandstrip"><h2>Shop by brand</h2><p className="lead">Go straight to the brand you came for.</p>
       <div className="bstrip">{BRANDS.map(b => { const ps = P.filter(p => p.brand === b), from = minP(ps); return <a className="btile" href={brandUrl(b)} key={b}><b>{b}</b><small>{ps.length} model{ps.length === 1 ? "" : "s"}</small><em>{from ? "from " + money(from) : ""}</em><i className="darr" aria-hidden="true">→</i></a>; })}</div></section>
