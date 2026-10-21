@@ -1810,3 +1810,7 @@ body.quick-open { overflow:hidden }
   .slide .hpanel::before { animation:auroraDrift 20s ease-in-out infinite alternate }
   .slide .hpanel::after  { animation:gridPan 26s linear infinite }
 }
+
+/* Premium display typeface (2026-10-21): Space Grotesk on the big headlines for a distinct brand voice;
+   Manrope stays for smaller headings/labels. Falls back to Manrope if the font fails to load. */
+.slide h1, main h2, .atext h2, .fest h1 { font-family:"Space Grotesk", Manrope, Inter, system-ui, sans-serif }
