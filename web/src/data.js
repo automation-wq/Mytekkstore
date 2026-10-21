@@ -73,7 +73,7 @@ export function brandPoints(P, brand) {
 // the client supplies the final ones. kind "photo" uses a lifestyle photo, "brand" shows the brand's biggest TV with its reasons
 // (brandPoints), "promo" opens the offers page with the biggest discount.
 export const HOME_BANNERS = [
-  { kind: "photo", eyebrow: "Mytekkstore", h: ["A Bigger World Awaits."], s: "Elista and Telefunken Smart TVs at factory prices, delivered free, cash on delivery.", href: "/televisions", cta: "Explore TVs", im: "img/hero-a.jpg" },
+  { kind: "photo", eyebrow: "", h: ["A Bigger World Awaits."], s: "Elista and Telefunken Smart TVs at factory prices, delivered free, cash on delivery.", href: "/televisions", cta: "Explore TVs", im: "img/hero-a.jpg" },
   { kind: "promo", eyebrow: "Limited time", h: ["Festive offers."], href: "/offers", cta: "See the offers", im: "img/hero-b.jpg" },
 ];
 // "Good to know" on the home page. Every answer only repeats a promise the site already makes elsewhere: [question, answer, [link, label] or null]

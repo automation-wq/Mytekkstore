@@ -1792,23 +1792,13 @@ body.quick-open { overflow:hidden }
 .slide .hpanel::before {
   content:""; position:absolute; inset:-30%; z-index:-1; pointer-events:none; will-change:transform;
   background:
-    radial-gradient(40% 50% at 20% 28%, rgba(94,234,212,.24), transparent 70%),
-    radial-gradient(34% 44% at 82% 24%, rgba(94,152,255,.22), transparent 70%),
-    radial-gradient(46% 56% at 64% 82%, rgba(126,240,208,.16), transparent 72%);
-  filter:blur(6px);
+    radial-gradient(42% 52% at 18% 26%, rgba(8,128,95,.30), transparent 70%),
+    radial-gradient(40% 50% at 78% 78%, rgba(16,185,129,.16), transparent 72%);
+  filter:blur(8px);
 }
-.slide .hpanel::after {
-  content:""; position:absolute; inset:0; z-index:-1; pointer-events:none; opacity:.05;
-  background-image:linear-gradient(#fff 1px, transparent 1px), linear-gradient(90deg,#fff 1px, transparent 1px);
-  background-size:46px 46px;
-  -webkit-mask-image:radial-gradient(75% 75% at 28% 38%, #000, transparent 76%);
-  mask-image:radial-gradient(75% 75% at 28% 38%, #000, transparent 76%);
-}
-@keyframes auroraDrift { 0%{transform:translate3d(-4%,-2%,0) scale(1.06)} 50%{transform:translate3d(3%,2%,0) scale(1.13)} 100%{transform:translate3d(-2%,3%,0) scale(1.09)} }
-@keyframes gridPan { to { background-position:46px 46px } }
+@keyframes auroraDrift { 0%{transform:translate3d(-3%,-2%,0) scale(1.05)} 50%{transform:translate3d(3%,2%,0) scale(1.1)} 100%{transform:translate3d(-2%,2%,0) scale(1.07)} }
 @media (min-width:900px) and (prefers-reduced-motion:no-preference){
-  .slide .hpanel::before { animation:auroraDrift 20s ease-in-out infinite alternate }
-  .slide .hpanel::after  { animation:gridPan 26s linear infinite }
+  .slide .hpanel::before { animation:auroraDrift 22s ease-in-out infinite alternate }
 }
 
 /* Premium display typeface (2026-10-21): Space Grotesk on the big headlines for a distinct brand voice;
