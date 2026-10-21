@@ -86,6 +86,7 @@ export function Checkout() {
         <label className="radio"><input type="radio" name="pay" value="cod" defaultChecked /> Cash on delivery</label>
         {["UPI", "Card", "Net banking"].map(m => <label className="radio" key={m}><input type="radio" name="pay" value={m} /> {m} <span className="stock low">demo</span></label>)}
         <p className="muted" style={{ fontSize: 13 }}>Online payment is a demo for now. No real money is taken.</p>
+        <div className="perks paytrust"><span><Icon k="shield" /> Secure checkout</span><span><Icon k="check" /> 100% genuine</span><span><Icon k="undo" /> Easy returns</span></div>
       </Form>
       <aside className="panel sum"><h3>Order summary</h3><div id="sum">
         <div className="lines">{Object.keys(cart).map(id => <Line p={byId(id)} key={id} />)}</div>
