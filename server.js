@@ -705,7 +705,9 @@ function serveStatic(req, res, url, clean) {
     fs.readFile(p, (err, buf) => {
       if (err) return notFound();
       // every file is revalidated (304 when unchanged), so a replaced photo shows at once; the built bundles carry a content hash in
-      // their name (and three builds are kept, web/tidy.js), so they are cached for a year and a click to the next page never re-asks for them
+      // their name (and three builds are kept, web/tidy.js), so they are cached for a year and a click to the next page never re-asks for them.
+      // (On Vercel the bundles are served by the CDN from public/, not through this function: routed through the function, Vercel's
+      // builder transpiles them to CommonJS and the browser gets "exports is not defined". Seen live on 22 Oct 2026, route removed.)
       const headers = { "Content-Type": TYPES[ext], "Last-Modified": mtime, "Cache-Control": pathname.startsWith("/assets/") ? "public, max-age=31536000, s-maxage=31536000, immutable" : "no-cache" };
       if (ext === ".html") {
         if (clean) { url = new URL(url); url.pathname = "/" + clean.file; for (const [k, v] of Object.entries(clean.params)) url.searchParams.set(k, v); }

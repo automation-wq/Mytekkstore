@@ -2,7 +2,6 @@
   "regions": ["bom1"],
   "routes": [
     { "src": "^/(|.*\\.html|robots\\.txt|sitemap\\.xml)$", "dest": "/api/index" },
-    { "src": "^/assets/.*", "dest": "/api/index" },
     { "handle": "filesystem" },
     { "src": "/(.*)", "dest": "/api/index" }
   ],
