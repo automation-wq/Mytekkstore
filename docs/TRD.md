@@ -24,7 +24,7 @@ What is real today:
 - Customers create an account and sign in to order, and see their own orders. An order page is private to its customer; the admin can open any order.
 - Sign-in by mobile number with a one-time code, sign-in with Google, and SMS order confirmations work through Twilio and Google once their keys are set (section 11). Without the keys, phone sign-in still works on localhost for testing and every message is recorded in the outbox.
 - A festive offers page, bank offers and a No Cost EMI tag per product (sample offers until the client supplies the real terms).
-- Ratings and reviews, wishlist and recently viewed, explore-by-size category pages, category menus, and the TV size guide.
+- Ratings and reviews, wishlist and recently viewed, a country selector with sample exchange rates, explore-by-size category pages, category menus, and the TV size guide.
 - Passwords are stored hashed (scrypt). Sign-in uses an HttpOnly cookie. Admin pages and admin API calls are checked on the server.
 - Payment is cash on delivery; online payment is a demo (see below).
 

@@ -1,6 +1,7 @@
-// Shared state: catalogue, signed-in customer, optional services, cart, wishlist, recently viewed, toast and cart drawer.
+// Shared state: catalogue, signed-in customer, optional services, cart, wishlist, recently viewed, country, toast and cart drawer.
 import { createContext, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { api, load, save } from "./api.js";
+import { COUNTRIES } from "./data.js";
 
 const Ctx = createContext(null);
 export const useStore = () => useContext(Ctx);
@@ -21,7 +22,8 @@ export function StoreProvider({ children }) {
   const [bump, setBump] = useState(0);
   const toastTimer = useRef();
 
-  const money = n => "₹" + Math.round(n).toLocaleString("en-IN"); // prices are in Indian rupees only: the store sells and delivers in India
+  const country = useMemo(() => { const c = load("country", "India"); return Object.hasOwn(COUNTRIES, c) ? c : "India"; }, []);
+  const money = n => { const [s, l, r] = COUNTRIES[country]; return s + Math.round(n * r).toLocaleString(l); };
 
   useEffect(() => {
     (async () => {
@@ -67,7 +69,7 @@ export function StoreProvider({ children }) {
   const addRecent = id => { const next = [id, ...recent.filter(x => x !== id)].slice(0, 10); setRecentState(next); save("recent", next); return next; };
   const updateProduct = product => setP(ps => ps.map(x => x.id === product.id ? { ...x, ...product } : x));
 
-  const value = { P, CATS, BRANDS, me, CFG, banners, cart, wish, recent, loaded, error, money, byId, catImg, qtyOf, cartCount, cartTotal, setQty, clearCart,
+  const value = { P, CATS, BRANDS, me, CFG, banners, cart, wish, recent, loaded, error, country, money, byId, catImg, qtyOf, cartCount, cartTotal, setQty, clearCart,
     toggleWish, addRecent, updateProduct, toast, toastState, bump, cartOpen, openCart: () => setCartOpen(true), closeCart: () => setCartOpen(false),
     quick, openQuick: id => setQuick(+id), closeQuick: () => setQuick(null) };
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;

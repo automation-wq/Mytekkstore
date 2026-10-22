@@ -1,6 +1,8 @@
 import LIFESTYLE from "./lifestyle.json"; // slot -> generated lifestyle photo (empty until `npm run lifestyle` imports the 15 generated pictures)
 // Static content and lookups. Sample text where marked: replace with the client's own before launch.
 
+// ponytail: hardcoded exchange rates, swap for real per-country prices from the backend
+export const COUNTRIES = { India: ["₹", "en-IN", 1], UAE: ["AED ", "en-AE", 0.044], USA: ["$", "en-US", 0.012] };
 // bullets under the description on every product page; the real details come from each product's own specifications
 export const DEFAULT_FEATURES = ["Genuine product with brand warranty", "Quality checked before dispatch", "Cash on delivery available"];
 // Info pages (web/src/info.jsx). Fill these in and they appear on the Contact and Store locator pages; empty = not shown.

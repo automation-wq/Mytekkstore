@@ -549,6 +549,7 @@ h2 a { transition:letter-spacing .2s } h2 a:hover { letter-spacing:.5px }
   header > .wrap { gap:10px 14px; padding-block:10px }
   .logo { font-size:21px; letter-spacing:1px; margin-right:auto }
   header form { order:5; flex:1 1 55% }
+  #country { order:6 }
   .gbar { gap:0; padding:0 8px; overflow-x:auto; scrollbar-width:none }
   .gbar::-webkit-scrollbar { display:none }
   .ngrid { grid-template-columns:1fr; gap:22px; padding:20px 16px 28px }

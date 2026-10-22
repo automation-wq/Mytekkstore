@@ -173,7 +173,7 @@ export function InfoPage() {
 
   if (p === "privacy") return <>{crumbs}{hero}
     <section><h2>Privacy policy</h2><p className="lead">The whole story of what this site keeps about you.</p><Policy sections={[
-      ["What we collect", "Your name, email address or mobile number, delivery address and pincode, your orders, and the reviews you write. Your cart, wishlist and pincode are kept in your own browser, not on our servers, until you order."],
+      ["What we collect", "Your name, email address or mobile number, delivery address and pincode, your orders, and the reviews you write. Your cart, wishlist, pincode and country choice are kept in your own browser, not on our servers, until you order."],
       ["Why we collect it", "To deliver your orders, to send order updates and sign-in codes by SMS or email, and to show you your order history."],
       ["Payments", "No card details are stored by Mytekkstore. Online payments are handled by the payment provider shown at checkout."],
       ["Cookies", "One cookie keeps you signed in. There are no advertising cookies." + (CFG.clarity ? " Microsoft Clarity records how pages are used (clicks, scrolling, time on page) to improve the site; anything you type is masked. See Microsoft's privacy statement for how Microsoft handles that data." : " There are no tracking cookies.")],
