@@ -5,8 +5,8 @@ import { useEffect, useState } from "react";
 import { m, AnimatePresence } from "motion/react";
 import { useStore } from "./store.jsx";
 import { qs, track } from "./api.js";
-import { Card, Box, Icon, Photo, Stars, Buy, BankOffers, KvImg, OsChart, Qa, Row } from "./components.jsx";
-import { TOP_FEATURES, CAT_CLIPS, KV_IMG, CAT_SIZE, CAT_KNOW, CAT_FAQ, catSizes, catUrl, listUrl, off, avg, starRow, productUrl, pic, osList, life, CONTACT } from "./data.js";
+import { Card, Box, Icon, Photo, Stars, Buy, BankOffers, KvImg, OsChart, Qa, Row, TrustLine } from "./components.jsx";
+import { TOP_FEATURES, KV_IMG, CAT_SIZE, CAT_KNOW, CAT_FAQ, BRAND_BLURB, catSizes, catUrl, listUrl, off, avg, starRow, productUrl, pic, osList, life, brandImg, brandPoints, CONTACT } from "./data.js";
 
 export const BANDS = [[0, 10000, "Under ₹10,000"], [10000, 25000, "₹10,000 to ₹25,000"], [25000, 50000, "₹25,000 to ₹50,000"], [50000, 0, "Above ₹50,000"]]; // [min, max, label]
 const OFFS = [10, 20, 30];
@@ -89,7 +89,7 @@ export function Category() {
 
   // tiles: the categories, only when no category is chosen (a category page has the three-tab discovery instead)
   const tiles = [];
-  if (!cat) CATS.forEach(c => tiles.push([c, P.filter(p => p.cat === c).length + " products", catUrl(c), catImg(c), false])); // category tiles only when no category is chosen
+  if (!cat && !f.brand.length) CATS.forEach(c => tiles.push([c, P.filter(p => p.cat === c).length + " products", catUrl(c), catImg(c), false])); // category tiles only when no category is chosen
   const band = BANDS.find(([a, b]) => a === f.min && b === f.max);
   const chips = [...f.brand.map(b => [b, () => set({ brand: f.brand.filter(x => x !== b) })]), ...(f.size ? [[f.size, () => set({ size: "" })]] : []), ...(f.os ? [[f.os, () => set({ os: "" })]] : []), ...(f.res ? [[f.res, () => set({ res: "" })]] : []), ...(f.type ? [[f.type, () => set({ type: "" })]] : []),
     ...((f.min || f.max) ? [[band ? band[2] : money(f.min) + " to " + money(f.max), () => set({ min: 0, max: 0 })]] : []), ...(f.off ? [[f.off + "% off or more", () => set({ off: 0 })]] : []),
@@ -98,12 +98,14 @@ export function Category() {
   return <>
     <div className="crumbs"><a href="/">Home</a> › {title}</div>
     {wishOnly ? <h1>My wishlist</h1> : S && KV_IMG[cat] ? <div className="kv"><div className="kvimg"><KvImg src={cat === "Televisions" ? life("category", "img/kv-tv.jpg") : `img/${KV_IMG[cat]}.jpg`} sizes="(max-width:1240px) 100vw, 1240px" eager /></div><div><span className="eyebrow">{cat}</span><h1 className="explore">A World of Entertainment Awaits.</h1><p>Discover televisions designed for every room and every moment.</p></div></div>
+      : !cat && f.brand.length === 1 && !q ? <BrandStrip brand={f.brand[0]} P={P} />
       : <h1 className="explore">{S ? "Explore " + S.short : title}</h1>}
     {!wishOnly && S && cat && catAll.length > 0 && <Discover list={catAll} sizes={sizeList} sizeOf={sizeOf} f={f} set={set} url={url} money={money} />}
     {!wishOnly && tiles.length > 0 && <div className="finder"><div className="tiles">{tiles.map(([name, note, href, img, on]) => <a className={"tile" + (on ? " on" : "")} href={href} aria-current={on ? "page" : undefined} key={href}><span><b>{name}</b><small>{note}</small></span><img src={pic(img, 480)} alt="" loading="lazy" width="800" height="800" /></a>)}</div></div>}
     <div className="ptool"><h2 className="ptotal">{coll || nText}{coll ? <small className="pcount"> · {nText}</small> : q ? ' · "' + q + '"' : ""}</h2>
       {!wishOnly && <button type="button" className="btn ghost fbtn" onClick={() => setOpen(true)} aria-expanded={open} aria-controls="filters"><Icon k="sliders" /> Filters{chips.length ? " (" + chips.length + ")" : ""}</button>}
       <label className="sortby">Sort by <select value={f.sort} onChange={e => set({ sort: e.target.value })}><option value="">Featured</option><option value="low">Price: low to high</option><option value="high">Price: high to low</option><option value="off">Biggest discount</option><option value="rating">Customer rating</option></select></label></div>
+    {!wishOnly && n > 0 && <TrustLine />}
     {chips.length > 0 && <div className="chips" aria-label="Applied filters"><AnimatePresence>{chips.map(([t, rm]) => <m.button type="button" className="fchip" onClick={rm} aria-label={"Remove " + t} key={t} layout initial={{ opacity: 0, scale: .8 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: .8 }} transition={{ type: "spring", stiffness: 400, damping: 30 }}>{t} <span aria-hidden="true">×</span></m.button>)}</AnimatePresence><button type="button" className="link" onClick={clear}>Clear all</button></div>}
     <div className="plp">
       <div className="foverlay" onClick={() => setOpen(false)}></div>
@@ -210,4 +212,12 @@ export function ComparePage() {
     <CompareAll list={list} cat={cat} short={cat.toLowerCase()} picked />
     <Row title="More to look at" href={catUrl(cat)} list={P.filter(p => p.cat === cat && !ids.includes(p.id)).slice(0, 6)} />
   </>;
+}
+
+// a brand list opens like a category page: the brand's room photo, its name, what it stands for (data.js BRAND_BLURB) and the
+// reasons read from its own models (brandPoints); the logo file goes here once the brand supplies it
+function BrandStrip({ brand, P }) {
+  const n = P.filter(p => p.brand === brand).length, pts = brandPoints(P, brand);
+  return <div className="kv"><div className="kvimg"><KvImg src={brandImg(brand)} sizes="(max-width:1240px) 100vw, 1240px" eager /></div>
+    <div><span className="eyebrow">{brand} · {n} model{n === 1 ? "" : "s"}</span><h1 className="explore">{brand}</h1><p>{BRAND_BLURB[brand] || "Every " + brand + " model we stock, with the brand's own warranty."}{pts.length ? " " + pts.join(" · ") + "." : ""}</p></div></div>;
 }

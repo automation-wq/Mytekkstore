@@ -679,7 +679,8 @@ function staticHome() {
   const b = db.banners.filter(x => x.live && x.slot === "home").sort((a, c) => a.order - c.order || a.id - c.id)[0];
   const webp = /^img\/(?!u-)[\w-]+\.jpg$/.test((b && b.img) || ""); // the seeded photos have WebP copies (web/images.js); uploads do not
   const v = w => "/" + b.img.replace(/\.jpg$/, (w ? "-" + w : "") + ".webp");
-  const img = !b || !b.img ? "" : webp ? `<img src="${v(960)}" srcset="${v(480)} 480w, ${v(960)} 960w, ${v()} 1376w" sizes="100vw" alt="" width="1344" height="752" fetchpriority="high" decoding="async">` : `<img src="/${escHtml(b.img)}" alt="" width="1344" height="752" fetchpriority="high">`;
+  const mobile = b && /^img\/(?!u-)[\w-]+\.jpg$/.test(b.imgMobile || "") ? `<source media="(max-width:760px)" srcset="/${b.imgMobile.replace(/\.jpg$/, "-960.webp")}">` : ""; // the portrait crop for phones
+  const img = !b || !b.img ? "" : mobile + (webp ? `<img src="${v(960)}" srcset="${v(480)} 480w, ${v(960)} 960w, ${v()} 1376w" sizes="100vw" alt="" width="1344" height="752" fetchpriority="high" decoding="async">` : `<img src="/${escHtml(b.img)}" alt="" width="1344" height="752" fetchpriority="high">`);
   const words = t => String(t || "").split(/(?<=[.!?])\s+/).filter(Boolean).map(l => `<span class="ln">${l.split(" ").map(w => `<span class="w">${escHtml(w)}&nbsp;</span>`).join("")}</span>`).join("");
   const icon = d => `<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d}</svg>`;
   const li = (label, href) => `<li class="l0"><a class="l0link" href="${href}">${escHtml(label)}</a></li>`;

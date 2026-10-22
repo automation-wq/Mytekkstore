@@ -65,7 +65,7 @@ The site is then at `https://<project-name>.vercel.app`, and every push to `main
 | Storefront | `web/src` (React 19: components, pages, store, stylesheet; animations with Motion from motion.dev in `motion.js`, `home.jsx` and `components.jsx`), built into `public/` | Home, category pages with explore-by-size tiles and the TV size guide, product pages, festive offers page with bank offers and No Cost EMI, cart drawer, checkout, sign-in page (mobile code, email, Google), account, order page, info pages. The header category menus open by hovering (mouse), one tap (phone) or Tab (keyboard) |
 | Admin | `web/src/admin.jsx` | Orders and order status, products with photo upload and the No Cost EMI flag, outbox of customer messages with their sent status |
 | Sample catalogue | `public/seed-data.js` | 9 sample products. Loaded into `data/products.json` on first start |
-| Clips | `public/img/v-*.mp4` | Three free Pexels clips behind the hero slides and category tiles (free licence, commercial use) |
+| Clips | `public/img/hero-a.mp4`, `show-*.mp4` | The home hero loop and the two brand showcases (free licence, commercial use); nothing else loops |
 | Web standards | `server.js` | Server-written SEO and sharing tags, schema.org product data, sitemap and robots files, gzip and caching, security headers, web app manifest (see TRD section 10) |
 | Tests | `test.js`, `test-ui.js`, `test-vercel.js` | `node test.js` checks the API (orders, stock, accounts, admin, request safety). `node test-vercel.js` checks the Vercel entry. `node test-ui.js` drives a real headless Edge or Chrome through the menus, cart, keyboard and phone taps |
 

@@ -6,7 +6,7 @@ import { useEffect, useRef, useState } from "react";
 import { useStore } from "./store.jsx";
 import { api, qs } from "./api.js";
 import { Row, Form, Icon, KvImg, Qa } from "./components.jsx";
-import { KV_IMG, CAT_CLIPS, CAT_SIZE, BANK_OFFERS, FAQ, CONTACT, STORES, POLICY, SHOW_STORES, WARRANTY_QA, catSizes, catUrl, brandUrl, listUrl, off, etaText } from "./data.js";
+import { KV_IMG, CAT_SIZE, BANK_OFFERS, FAQ, CONTACT, STORES, POLICY, SHOW_STORES, WARRANTY_QA, BRAND_BLURB, catSizes, catUrl, brandUrl, listUrl, off, etaText } from "./data.js";
 import { countUp } from "./motion.js";
 
 const PAGES = {
@@ -63,8 +63,7 @@ export function InfoPage() {
   const [title, eyebrow, head, sub, cat] = page;
   const deals = [...P].sort((a, b) => off(b) - off(a)).slice(0, 5);
   const maxOff = Math.max(0, ...P.map(off));
-  const brandBlurb = { Elista: "An Indian consumer electronics brand making Smart TVs and home appliances for Indian homes, each with the brand's own warranty.",
-    Telefunken: "A German electronics name since 1903, sold in India under licence, with televisions and home appliances built to the brand's standard." };
+  const brandBlurb = BRAND_BLURB;
   const crumbs = <div className="crumbs"><a href="/">Home</a> › {title}</div>;
   const hero = <Hero eyebrow={eyebrow} title={head} sub={sub} cat={cat} />;
   const cta = <section><a className="cban" href="/offers"><KvImg className="cph" src={`img/${KV_IMG[cat]}.jpg`} sizes="(max-width:1240px) 100vw, 1240px" /><div><span className="kicker">Festive offers</span><h2>Up to {maxOff}% off</h2><p>Bank offers and No Cost EMI on the models that carry it · free delivery · cash on delivery</p><u>See the deals →</u></div></a></section>;

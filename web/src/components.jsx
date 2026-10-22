@@ -21,7 +21,9 @@ export const Ico = ({ shapes }) => <i className="ico"><svg viewBox="0 0 24 24" f
 // a product photo in the right size; the alt is the product's name
 export const Photo = ({ p, main, sizes = "(max-width:760px) 46vw, 240px" }) => { const [w, h] = dims(p.img); return main
   ? <img src={pic(p.img)} srcSet={picSet(p.img)} sizes="(max-width:860px) 100vw, 50vw" alt={p.brand + " " + p.name} width={w} height={h} fetchPriority="high" decoding="async" />
-  : <img src={pic(p.img, 480)} srcSet={picSet(p.img)} sizes={sizes} alt={p.brand + " " + p.name} width={w} height={h} loading="lazy" decoding="async" />; };
+  : <img src={pic(p.img, 480)} srcSet={picSet(p.img)} sizes={sizes} alt={p.brand + " " + p.name} width={w} height={h} loading="lazy" decoding="async" onError={noPhoto} />; };
+// a photo that fails to load (deleted upload, bad link) shows the "photo coming soon" tile instead of a broken image
+const noPhoto = e => { const im = e.currentTarget; im.onerror = null; im.removeAttribute("srcset"); im.src = "/img/placeholder.svg"; };
 // a big photo (hero, category banner, tile) in its WebP sizes; eager for the one at the top of the page
 export const KvImg = ({ src, sizes, className, eager }) => { const [w, h] = dims(src); return <img className={className} src={pic(src, 960)} srcSet={picSet(src)} sizes={sizes} alt="" width={w} height={h} loading={eager ? "eager" : "lazy"} fetchPriority={eager ? "high" : undefined} decoding="async" />; };
 export const Stars = ({ p }) => p.reviews && p.reviews.length ? <span className="stars" title={avg(p).toFixed(1) + " out of 5"}><span>{starRow(Math.round(avg(p)))}</span> <small>{avg(p).toFixed(1)} ({p.reviews.length})</small></span> : null;
@@ -58,7 +60,7 @@ export function Card({ p, i = 0, sizes, compare }) {
     initial={{ opacity: 0, y: 10 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: "0px 0px -40px" }} transition={{ type: "spring", stiffness: 220, damping: 26, delay: (i % 6) * .06 }}><Heart p={p} />
     <a href={productUrl(p)}><div className="img"><Photo p={p} />{off(p) > 0 && <span className="badge">{off(p)}% off</span>}<button type="button" className="qview" data-quick={p.id} aria-label={"Quick view " + p.brand + " " + p.name}>Quick view</button></div><small>{p.brand}{p.os ? " · " + p.os : ""}</small><h3>{p.name}</h3><Stars p={p} /></a>
     {sizes && sizes.length > 1 && <span className="csizes"><small>Sizes</small>{sizes.map(([l, href, on]) => on ? <b key={l}>{l}</b> : <a href={href} key={l}>{l}</a>)}</span>}
-    <div className="price"><b>{money(p.price)}</b>{p.mrp > p.price && <><s>{money(p.mrp)}</s><em className="save">Save {money(p.mrp - p.price)}</em></>}</div>{p.emi && <span className="emi">No Cost EMI · {money(emiPlans(p.price)[2][1])}/month</span>}<span className="geta"><Icon k="truck" /> Free delivery · get it by {eta()[1]}</span><Buy p={p} />{compare && <label className="ccmp"><input type="checkbox" checked={compare[0]} onChange={() => compare[1](p.id)} /> Compare</label>}</m.div>;
+    <div className="price"><b>{money(p.price)}</b>{p.mrp > p.price && <><s>{money(p.mrp)}</s><em className="save">Save {money(p.mrp - p.price)}</em></>}</div>{p.emi && <span className="emi">No Cost EMI · {money(emiPlans(p.price)[2][1])}/month</span>}<Buy p={p} />{compare && <label className="ccmp"><input type="checkbox" checked={compare[0]} onChange={() => compare[1](p.id)} /> Compare</label>}</m.div>;
 }
 export function Line({ p }) {
   const { money, qtyOf } = useStore();
@@ -69,6 +71,8 @@ export function Line({ p }) {
 }
 // a sideways-scrolling strip with arrow buttons (hidden when the row fits on the screen)
 export const Strip = ({ children }) => <div className="strip"><button className="sarrow" data-scroll="-1" aria-label="Scroll left">‹</button><div className="row">{children}</div><button className="sarrow" data-scroll="1" aria-label="Scroll right">›</button></div>;
+// one line of the store's promises above a product list, in place of repeating "free delivery" on every card
+export const TrustLine = () => <p className="trustline"><Icon k="truck" /> Free delivery on every order, usually by {eta()[1]} <span>·</span> <Icon k="cash" /> Cash on delivery <span>·</span> <Icon k="shield" /> Brand warranty</p>;
 export const Row = ({ title, href, list }) => list.length ? <section><h2>{title} {href ? <a href={href}>View all</a> : null}</h2><Strip>{list.map((p, i) => <Card key={p.id} p={p} i={i} />)}</Strip></section> : null;
 export const Box = ({ title, text, href, cta }) => <div className="box"><h1>{title}</h1><p>{text}</p><a className="btn" href={href}>{cta}</a></div>;
 export function OrderItems({ o }) {
