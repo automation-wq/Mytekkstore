@@ -1770,16 +1770,6 @@ body.quick-open { overflow:hidden }
    Manrope stays for smaller headings/labels. Falls back to Manrope if the font fails to load. */
 .slide h1, main h2, .atext h2, .fest h1 { font-family:"Space Grotesk", "Space Grotesk Fallback", Manrope, "Manrope Fallback", Inter, "Inter Fallback", system-ui, sans-serif }
 
-/* the guided finder under the discovery tabs (home.jsx Finder): a question per row, answers as chips, one button */
-.finder { margin-top:28px; padding:clamp(18px,3vw,30px); border-radius:22px; background:var(--card); border:1px solid var(--line); display:grid; gap:18px }
-.finder h3 { margin:2px 0 4px; font-size:22px; letter-spacing:-.6px } .finder > div > p { margin:0; font-size:14px }
-.fq { display:grid; gap:8px } .fq > b { font-size:14px }
-.fchips { display:flex; flex-wrap:wrap; gap:8px }
-.qchip { display:grid; text-align:left; padding:9px 14px; border-radius:999px; border:1px solid var(--line); background:var(--tile,#f1efe9); color:var(--text); font:inherit; font-size:14px; font-weight:500; cursor:pointer; transition:border-color .15s, background .15s, color .15s }
-.qchip small { font-size:11.5px; color:var(--muted) }
-.qchip:hover { border-color:var(--accent) }
-.qchip.on { background:var(--ink,#0f1115); color:#fff; border-color:var(--ink,#0f1115) } .qchip.on small { color:#ffffffb3 }
-.fgo { display:flex; align-items:center; gap:18px; flex-wrap:wrap; padding-top:4px } .fgo .link { background:none; border:0; color:var(--accent); font:inherit; cursor:pointer; text-decoration:underline; text-underline-offset:3px }
 
 
 /* Motion is for arrivals, not for idling (owner, 22 Oct 2026: "why is the same vibrating motion on every banner?"). Nothing pulses,

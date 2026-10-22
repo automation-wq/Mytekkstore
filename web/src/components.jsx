@@ -114,7 +114,7 @@ function navItems(P, CATS, BRANDS, catImg) {
         ...BRANDS.filter(b => inCat.some(p => p.brand === b)).map(b => [b + " " + short, listUrl({ cat, brand: b }), inCat.find(p => p.brand === b).img]),
         ...oss.map(os => [os, listUrl({ cat, os }), inCat.find(p => p.os === os).img])],
       links: [...(oss.length > 1 ? [["Compare operating systems", catUrl(cat) + "#os"]] : []), ...(TOP_FEATURES[cat] ? [["Top features", catUrl(cat) + "#features"]] : []),
-        ["Deals on " + short, listUrl({ cat, sort: "off" })], ["Delivery", "/shipping"], ["Warranty and returns", "/returns"], ...(SHOW_STORES ? [["Store locator", "/stores"]] : [])],
+        ["Deals on " + short, listUrl({ cat, sort: "off" })], ["How to choose a TV", "/buying-guide"], ["Delivery", "/shipping"], ["Warranty and returns", "/returns"], ...(SHOW_STORES ? [["Store locator", "/stores"]] : [])],
       promo: oss.length > 1 ? [oss.join(" or ") + "?", "See what each one gives you, side by side.", catUrl(cat) + "#os"] : null,
     };
   });

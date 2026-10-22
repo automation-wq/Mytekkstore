@@ -4,12 +4,10 @@
 // warranty and returns. Every figure and reason is read from the catalogue, so nothing here claims what the products do not carry.
 import { useEffect, useRef, useState } from "react";
 import { m } from "motion/react";
-import { track } from "./api.js";
 import { useStore } from "./store.jsx";
 import { Card, Row, BankOffers, Ico, Icon, Qa } from "./components.jsx";
 import { DRAW_ICONS, HOME_BANNERS, FAQ, catSizes, brandUrl, listUrl, off, starRow, productUrl, pic, picSet, osList, osUrl, brandPoints, cutout, life } from "./data.js";
 import { lines, TONES } from "./banner.jsx";
-import { BANDS, SIZE_NOTE, resOf } from "./category.jsx";
 
 // hero parts rise in one after another on a spring, and the headline staggers word by word (Motion variants)
 const RISE = { hide: { y: "115%", opacity: 0 }, show: { y: 0, opacity: 1, transition: { type: "spring", stiffness: 280, damping: 28 } } };
@@ -46,7 +44,6 @@ export function Home() {
   const onMove = e => { const h = heroRef.current, r = h.getBoundingClientRect(); h.style.setProperty("--px", ((e.clientX - r.left) / r.width - .5).toFixed(3)); h.style.setProperty("--py", ((e.clientY - r.top) / r.height - .5).toFixed(3)); };
   const picOf = src => ({ src: pic(src, 960), srcSet: picSet(src) });
   const tvs = P.filter(p => p.cat === "Televisions");
-  const { sizeOf, all: sizeList } = catSizes(P, "Televisions");
   // premium discovery sections (MASTER PROMPT redesign): image-led cards for size, operating system and resolution, an editorial
   // Latest Launches grid, and a product-care banner. Prototype imagery reuses the store's renders and lifestyle shots; copy is
   // aspirational marketing only, no invented specs, prices or model names.
@@ -110,9 +107,6 @@ export function Home() {
     {detailCards.length > 0 && <section className="disco"><h2>See every detail differently.</h2><p className="lead">Explore display technologies built for exceptional viewing.</p>
       <div className={"dgrid " + (detailCards.length > 3 ? "four" : "three")}>{detailCards.map(c => <a className={"dcard tall dark" + (/-cut\.webp$/.test(c.img) ? "" : " photo")} href={c.href} key={c.res}><span className="dimg"><img src={pic(c.img, 960)} srcSet={picSet(c.img)} sizes="(max-width:760px) 70vw, 30vw" alt="" loading="lazy" /></span><span className="lshade"></span><span className="dbody"><b>{c.res}</b><small>{c.text}</small><em>from {money(c.from)}</em></span></a>)}</div></section>}
 
-    {tvs.length > 0 && <section className="disco" id="find"><h2>Help me choose</h2><p className="lead">Four quick questions, answered in any order, and the TVs that fit.</p>
-      <Finder tvs={tvs} sizes={sizeList} sizeOf={sizeOf} /></section>}
-
     <section className="bigbrands"><h2>Featured brands</h2><p className="lead">Flagship collections from {BRANDS.join(" and ")}, with the brand's own warranty.</p>
       {BRANDS.map((b, i) => { const prod = biggest(b), pts = brandPoints(P, b), n = P.filter(p => p.brand === b).length, tone = (HOME_BANNERS.find(s => s.brand === b) || {}).tone, show = BRAND_SHOW[b] || { title: b + ".", text: "Discover the " + b + " television collection.", cta: "Explore " + b + " TVs", img: "" };
         return prod ? <a className={"bbrand" + (i % 2 ? " flip" : "") + (show.img ? " photo" : "")} href={brandUrl(b)} key={b} style={tone && !show.img ? { background: tone } : undefined}>
@@ -133,26 +127,4 @@ export function Home() {
     <Qa title="Frequently asked questions" lead="The questions buyers ask most, answered in short." list={FAQ.slice(0, 6)} more={["/buying-guide", "More about choosing a TV"]} />
     <Row title="Recently viewed" href="" list={recent.map(byId).filter(Boolean)} />
   </>;
-}
-
-// Guided finder (brief, section 10): four questions as chips, answered in any order, with a live count from the catalogue. The
-// answers map to the same filters the Televisions page uses (budget band, size, resolution, operating system), so the result page
-// explains itself with its chips. Nothing is invented: "films and sport" means 4K, the room sizes are the screen sizes we stock.
-const USES = [["Films and sport", { res: "4K Ultra HD" }], ["Everyday TV and streaming", {}], ["The lowest price that is still smart", { res: "HD Ready" }]];
-function Finder({ tvs, sizes, sizeOf }) {
-  const [a, setA] = useState({ band: "", size: "", use: "", os: "" });
-  const pick = (k, v) => setA(x => ({ ...x, [k]: x[k] === v ? "" : v }));
-  const band = BANDS.find(([, , l]) => l === a.band), use = (USES.find(([u]) => u === a.use) || [])[1] || {};
-  const patch = { ...(band ? { min: band[0] || "", max: band[1] || "" } : {}), ...(a.size ? { size: a.size } : {}), ...(a.os ? { os: a.os } : {}), ...use };
-  const match = tvs.filter(p => (!patch.min || p.price >= patch.min) && (!patch.max || p.price <= patch.max) && (!patch.size || (sizeOf(p) || {}).label === patch.size) && (!patch.os || p.os === patch.os) && (!patch.res || resOf(p) === patch.res));
-  const answered = Object.values(a).filter(Boolean).length;
-  const q = (k, title, options) => <div className="fq" key={k}><b>{title}</b><div className="fchips">{options.map(([v, note]) => <button type="button" className={"qchip" + (a[k] === v ? " on" : "")} aria-pressed={a[k] === v} onClick={() => pick(k, v)} key={v}>{v}{note && <small>{note}</small>}</button>)}</div></div>;
-  return <div className="finder">
-    <p className="muted">Pick what you know. Skip the rest.</p>
-    {q("band", "Your budget", BANDS.map(([, , l]) => [l, ""]))}
-    {q("size", "The room", [...sizes].sort((x, y) => x.n - y.n).map(s => [s.label, SIZE_NOTE[s.n] || ""]))}
-    {q("use", "What you watch most", USES.map(([u]) => [u, ""]))}
-    {osList(tvs).length > 1 && q("os", "Smart system", osList(tvs).map(o => [o, ""]))}
-    <div className="fgo">{match.length ? <a className="btn" href={listUrl({ cat: "Televisions", ...patch })} onClick={() => track("finder", { ...a, matches: match.length })}>Show {match.length} TV{match.length === 1 ? "" : "s"} →</a> : <span className="muted">No TV matches all of those yet. Change one answer.</span>}{answered > 0 && <button type="button" className="link" onClick={() => setA({ band: "", size: "", use: "", os: "" })}>Start again</button>}</div>
-  </div>;
 }
