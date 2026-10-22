@@ -4,30 +4,31 @@
 import { useEffect, useState } from "react";
 import { m, AnimatePresence } from "motion/react";
 import { useStore } from "./store.jsx";
-import { qs } from "./api.js";
+import { qs, track } from "./api.js";
 import { Card, Box, Icon, Photo, Stars, Buy, BankOffers, KvImg, OsChart, Qa, Row } from "./components.jsx";
 import { TOP_FEATURES, CAT_CLIPS, KV_IMG, CAT_SIZE, CAT_KNOW, CAT_FAQ, catSizes, catUrl, listUrl, off, avg, starRow, productUrl, pic, osList, life, CONTACT } from "./data.js";
 
-const BANDS = [[0, 10000, "Under ₹10,000"], [10000, 25000, "₹10,000 to ₹25,000"], [25000, 50000, "₹25,000 to ₹50,000"], [50000, 0, "Above ₹50,000"]]; // [min, max, label]
+export const BANDS = [[0, 10000, "Under ₹10,000"], [10000, 25000, "₹10,000 to ₹25,000"], [25000, 50000, "₹25,000 to ₹50,000"], [50000, 0, "Above ₹50,000"]]; // [min, max, label]
 const OFFS = [10, 20, 30];
 // resolution read from the specifications (Samsung and LG both filter by it)
 const RES = ["4K Ultra HD", "Full HD", "HD Ready"];
 const typeOf = p => (((p.specs || []).find(([k]) => k.toLowerCase() === "display type") || [])[1] || "").split(",")[0].trim(); // screen technology (LED, QLED, OLED), kept apart from the resolution
-const resOf = p => { const r = ((p.specs || []).find(([k]) => k.toLowerCase() === "resolution") || [])[1] || ""; return /4K/i.test(r) ? RES[0] : /Full HD/i.test(r) ? RES[1] : /HD/i.test(r) ? RES[2] : ""; };
+export const resOf = p => { const r = ((p.specs || []).find(([k]) => k.toLowerCase() === "resolution") || [])[1] || ""; return /4K/i.test(r) ? RES[0] : /Full HD/i.test(r) ? RES[1] : /HD/i.test(r) ? RES[2] : ""; };
 // the filters live in the address, so a filtered list can be shared and the menu links keep working; they apply without a reload
 const readFilters = () => ({ brand: (qs.get("brand") || "").split(",").filter(Boolean), size: qs.get("size") || "", os: qs.get("os") || "", res: qs.get("res") || "", type: qs.get("type") || "", min: +qs.get("min") || 0, max: +qs.get("max") || 0,
   off: +qs.get("off") || 0, instock: qs.has("instock"), emi: qs.has("emi"), rating: +qs.get("rating") || 0, sort: qs.get("sort") || "" });
 const INK = { type: "spring", stiffness: 420, damping: 34 };
-const SIZE_NOTE = { 32: "Compact spaces", 40: "Bedrooms", 43: "Everyday viewing", 50: "Family rooms", 55: "Living-room favourite", 65: "Cinematic experience", 75: "Go bigger" };
+export const SIZE_NOTE = { 32: "Compact spaces", 40: "Bedrooms", 43: "Everyday viewing", 50: "Family rooms", 55: "Living-room favourite", 65: "Cinematic experience", 75: "Go bigger" };
 const OS_NOTE = { "Google TV": "Google Play, Assistant, Chromecast", "WebOS": "Quick card-style home screen", "Android TV": "Google Play apps" };
 const RES_NOTE = { "4K Ultra HD": "Four times the detail of Full HD", "Full HD": "Crisp everyday viewing", "HD Ready": "Great value for smaller rooms" };
 // The three ways in under the category banner (client brief, section 17): Size, OS, Screen type / Resolution. Every option is a picture
 // card with its starting price, built from the catalogue, and a tap applies the matching filter without a reload (the address keeps it).
-function Discover({ list, sizes, sizeOf, f, set, url, money }) {
+export function Discover({ list, sizes, sizeOf, f, set, url, money }) {
   const [tab, setTab] = useState(f.os ? "os" : f.res || f.type ? "res" : "size");
   const card = (ps, key, label, note, on, patch) => { const c = [...ps].sort((a, b) => a.price - b.price)[0]; return c && { key, label, note, img: c.img, from: c.price, on, patch }; };
   const tabs = [
     ["size", "Shop by Size", [...sizes].sort((a, b) => a.n - b.n).map(s => card(list.filter(p => (sizeOf(p) || {}).label === s.label), s.label, s.label.replace(/ TVs$/, "").replace(/ inch$/, '"'), SIZE_NOTE[s.n] || "", f.size === s.label, { size: f.size === s.label ? "" : s.label }))],
+    ["budget", "Shop by Budget", BANDS.map(([a, b, l]) => { const on = f.min === a && f.max === b, ps = list.filter(p => (!a || p.price >= a) && (!b || p.price <= b)); return card(ps, "band:" + l, l, ps.length + " model" + (ps.length === 1 ? "" : "s"), on, on ? { min: 0, max: 0 } : { min: a, max: b }); })],
     ["os", "Shop by OS", osList(list).map(o => card(list.filter(p => p.os === o), o, o, OS_NOTE[o] || "Smart apps built in", f.os === o, { os: f.os === o ? "" : o }))],
     ["res", "Screen type / Resolution", [...[...new Set(list.map(typeOf).filter(Boolean))].sort().map(t => card(list.filter(p => typeOf(p) === t), "type:" + t, t, "Screen technology", f.type === t, { type: f.type === t ? "" : t })),
       ...RES.map(r => card(list.filter(p => resOf(p) === r), r, r, RES_NOTE[r], f.res === r, { res: f.res === r ? "" : r }))]],
@@ -48,8 +49,8 @@ export function Category() {
   const [f, setF] = useState(readFilters);
   const [open, setOpen] = useState(false); // the filter drawer on phones
   const [cmp, setCmp] = useState([]); // products ticked for the compare table, up to four (Samsung, LG and Croma all offer this)
-  const toggleCmp = id => setCmp(c => c.includes(id) ? c.filter(x => x !== id) : c.length < 4 ? [...c, id] : c);
-  const set = patch => setF(x => ({ ...x, ...patch }));
+  const toggleCmp = id => { if (!cmp.includes(id)) track("compare_add", { id }); setCmp(c => c.includes(id) ? c.filter(x => x !== id) : c.length < 4 ? [...c, id] : c); };
+  const set = patch => { track("filter", patch); setF(x => ({ ...x, ...patch })); };
   const clear = () => setF(x => ({ brand: [], size: "", os: "", res: "", type: "", min: 0, max: 0, off: 0, instock: false, emi: false, rating: 0, sort: x.sort }));
   const { S, sizeOf, all: sizeList } = catSizes(P, cat);
   const catAll = P.filter(p => !cat || p.cat === cat);

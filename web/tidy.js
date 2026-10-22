@@ -5,10 +5,22 @@ import { readdirSync, readFileSync, writeFileSync, unlinkSync, existsSync } from
 import { fileURLToPath } from "node:url";
 
 const pub = fileURLToPath(new URL("../public/", import.meta.url)), dir = pub + "assets/", ledger = dir + "builds.json";
+// The page script runs one frame after the HTML and stylesheet have painted, not before: the shell's own content (the home page's
+// header and first banner, written by server.js) reaches the screen first, so the first paint does not wait for 500 KB of script.
+// Vite writes <script type="module" src="main-X.js">; it becomes a one-line boot file that imports the bundle after two animation frames. An inline script would need a CSP change; a file does not.
+for (const f of readdirSync(pub).filter(f => f.endsWith(".html"))) {
+  const page = readFileSync(pub + f, "utf8");
+  const out = page.replace(/<script type="module" crossorigin src="\/assets\/(main-[\w-]+)\.js"><\/script>/, (m, main) => {
+    writeFileSync(dir + main.replace(/^main-/, "boot-") + ".js", `requestAnimationFrame(() => requestAnimationFrame(() => import("./${main}.js")));\n`);
+    return `<script type="module" crossorigin src="/assets/${main.replace(/^main-/, "boot-")}.js"></script>`; // no modulepreload: Lighthouse counts a preloaded module against the first paint, and the import starts two frames later anyway
+  });
+  if (out !== page) writeFileSync(pub + f, out);
+}
 const html = readdirSync(pub).filter(f => f.endsWith(".html")).map(f => readFileSync(pub + f, "utf8")).join("\n");
-const linked = readdirSync(dir).filter(f => f !== "builds.json" && html.includes("assets/" + f));
-const scripts = linked.map(f => readFileSync(dir + f, "utf8")).join("\n");
-const current = readdirSync(dir).filter(f => f !== "builds.json" && (html.includes("assets/" + f) || scripts.includes(f))).sort();
+// the files of this build: what the pages link, then what those files import, and so on (boot -> main -> motion features, admin)
+let linked = readdirSync(dir).filter(f => f !== "builds.json" && html.includes("assets/" + f));
+for (let pass = 0; pass < 3; pass++) { const text = linked.map(f => readFileSync(dir + f, "utf8")).join("\n"); linked = readdirSync(dir).filter(f => f !== "builds.json" && (linked.includes(f) || text.includes(f))); }
+const current = [...linked].sort();
 const builds = [current, ...(existsSync(ledger) ? (JSON.parse(readFileSync(ledger, "utf8")).builds || []) : []).filter(b => b.join() !== current.join())].slice(0, 3);
 const keep = new Set(builds.flat());
 let removed = 0;

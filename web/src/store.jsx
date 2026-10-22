@@ -1,6 +1,6 @@
 // Shared state: catalogue, signed-in customer, optional services, cart, wishlist, recently viewed, country, toast and cart drawer.
 import { createContext, useContext, useEffect, useMemo, useRef, useState } from "react";
-import { api, load, save } from "./api.js";
+import { api, load, save, track } from "./api.js";
 import { COUNTRIES } from "./data.js";
 
 const Ctx = createContext(null);
@@ -57,6 +57,7 @@ export function StoreProvider({ children }) {
     if (!p) return;
     const max = Math.min(p.stock, 10);
     if (q > max) { toast(p.stock < 10 ? `Only ${p.stock} in stock` : "Maximum 10 per order"); q = max; }
+    if (q <= 0 && cart[p.id]) track("remove_from_cart", { id: p.id });
     setCart(c => { const n = { ...c }; if (q > 0) n[p.id] = q; else delete n[p.id]; save("cart", n); return n; });
     setBump(b => b + 1);
   };

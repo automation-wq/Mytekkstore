@@ -4,7 +4,7 @@ import { m, AnimatePresence, useScroll, useSpring, useReducedMotion } from "moti
 import { animate, stagger } from "motion";
 import { reduced } from "./motion.js";
 import { useStore } from "./store.jsx";
-import { api, qs, load, save } from "./api.js";
+import { api, qs, load, save, track } from "./api.js";
 import { ICONS, DRAW_ICONS, COUNTRIES, BANK_OFFERS, TOP_FEATURES, CAT_SIZE, TV_OS, OS_ROWS, SHOW_STORES, COMING_SOON, catSizes, emiPlans, catUrl, brandUrl, listUrl, off, avg, starRow, eta, productUrl, pic, picSet, dims, osList, osUrl } from "./data.js";
 
 const $ = (s, el = document) => el.querySelector(s);
@@ -142,7 +142,7 @@ function Search() {
     else if (e.key === "Enter" && sel >= 0) { e.preventDefault(); location.href = items[sel].href; }
     else if (e.key === "Escape") setOpen(false);
   };
-  return <form role="search" action="/products" className="sbox" onSubmit={e => { if (!q.trim()) e.preventDefault(); else remember(q); }}>
+  return <form role="search" action="/products" className="sbox" onSubmit={e => { if (!q.trim()) e.preventDefault(); else { remember(q); track("search", { q: q.trim() }); } }}>
     <input type="search" name="q" value={q} placeholder="What are you looking for?" aria-label="Search products" autoComplete="off"
       role="combobox" aria-expanded={show} aria-controls="sugg" aria-autocomplete="list" aria-activedescendant={sel >= 0 ? "sg" + sel : undefined}
       onChange={e => { setQ(e.target.value); setSel(-1); setOpen(true); }} onFocus={() => setOpen(true)} onBlur={() => setOpen(false)} onKeyDown={onKey} />

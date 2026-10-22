@@ -57,7 +57,7 @@ export function Checkout() {
   const { me, cart, byId, money, cartCount, cartTotal, clearCart } = useStore();
   const [place, setPlace] = useState("");
   useEffect(() => { document.title = "Checkout | Mytekkstore"; }, []);
-  useEffect(() => { if (cartCount() && !me) location.replace("/account?next=/checkout"); }, []); // customers must sign in before checkout
+  useEffect(() => { if (cartCount()) track("begin_checkout", { value: cartTotal(), signedIn: !!me }); if (cartCount() && !me) location.replace("/account?next=/checkout"); }, []); // customers must sign in before checkout
   if (!cartCount()) return <Box title="Nothing to check out" text="Your cart is empty." href="/" cta="Continue shopping" />;
   if (!me) return null;
   // the delivery place under the pincode, from India Post (the field still accepts any pincode)

@@ -671,6 +671,22 @@ function seoTags(req, url) {
   const head = `<meta name="description" content="${escHtml(desc)}"><link rel="canonical" href="${escHtml(here)}">${robots ? `<meta name="robots" content="${robots}">` : ""}${tag("og:type", p ? "product" : "website")}${tag("og:site_name", "Mytekkstore")}${tag("og:title", title)}${tag("og:description", desc)}${tag("og:image", img)}${tag("og:url", here)}<meta name="twitter:card" content="summary_large_image">${ld ? `<script type="application/ld+json">${JSON.stringify(ld).replace(/</g, "\\u003c")}</script>` : ""}${CLARITY && file !== "/admin.html" ? `<script src="https://www.clarity.ms/tag/${CLARITY}" async></script>` : ""}`;
   return { title, head, robots };
 }
+// The home page's header and first banner, written into the HTML shell so the first paint and the biggest paint (Lighthouse LCP)
+// come from the HTML and the stylesheet instead of waiting for the 500 KB script to run (5 s on a phone, about 1.5 s with this).
+// Same classes as the React markup (Header in web/src/components.jsx, the hero in web/src/home.jsx), which replaces it on mount
+// without a shift. Keep the two in step. Only the plain photo banner is reproduced; a brand or promo banner first means no static hero.
+function staticHome() {
+  const b = db.banners.filter(x => x.live && x.slot === "home").sort((a, c) => a.order - c.order || a.id - c.id)[0];
+  const webp = /^img\/(?!u-)[\w-]+\.jpg$/.test((b && b.img) || ""); // the seeded photos have WebP copies (web/images.js); uploads do not
+  const v = w => "/" + b.img.replace(/\.jpg$/, (w ? "-" + w : "") + ".webp");
+  const img = !b || !b.img ? "" : webp ? `<img src="${v(960)}" srcset="${v(480)} 480w, ${v(960)} 960w, ${v()} 1376w" sizes="100vw" alt="" width="1344" height="752" fetchpriority="high" decoding="async">` : `<img src="/${escHtml(b.img)}" alt="" width="1344" height="752" fetchpriority="high">`;
+  const words = t => String(t || "").split(/(?<=[.!?])\s+/).filter(Boolean).map(l => `<span class="ln">${l.split(" ").map(w => `<span class="w">${escHtml(w)}&nbsp;</span>`).join("")}</span>`).join("");
+  const icon = d => `<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d}</svg>`;
+  const li = (label, href) => `<li class="l0"><a class="l0link" href="${href}">${escHtml(label)}</a></li>`;
+  const header = `<a class="skip" href="#main">Skip to content</a><header id="hdr"><div class="wrap"><a class="logo" href="/"><svg viewBox="0 0 32 32" width="30" height="30" aria-hidden="true"><rect width="32" height="32" rx="9" fill="#08805f"/><path d="M18 5 9 18h6l-2 9 10-14h-6z" fill="#ffffff"/></svg><span>mytekk<b>store</b></span></a><form role="search" action="/products" class="sbox"><input type="search" name="q" placeholder="What are you looking for?" aria-label="Search products" autocomplete="off"></form><details class="deliver"><summary>${icon('<path d="M12 21s-6-5.3-6-11a6 6 0 0112 0c0 5.7-6 11-6 11z"/><circle cx="12" cy="10" r="2.5"/>')}<span><small>Deliver to</small><b>Enter pincode</b></span></summary></details><select id="country" aria-label="Country"><option>India</option></select><a class="hlink" href="/account" aria-label="Sign in">${icon('<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0116 0"/>')} <span>Sign in</span></a><a class="hlink" href="/products?wish=1" aria-label="Wishlist">${icon('<path d="M12 20s-7-4.4-7-10a4 4 0 017-2.6A4 4 0 0119 10c0 5.6-7 10-7 10z"/>')}</a><a class="hlink" href="/cart" aria-label="Cart">${icon('<path d="M3 4h2l2.4 11h11l2-7H7"/><circle cx="9" cy="20" r="1.5"/><circle cx="17" cy="20" r="1.5"/>')}</a></div><nav class="gnav" aria-label="Shop"><ul class="gbar">${[...new Set(live().map(p => p.cat))].map(c => li(c, catPath(c))).join("")}${HIDDEN_CATS.map(c => `<li class="soon"><span>${escHtml(c)}</span></li>`).join("")}${li("Brands", "/products")}${li("Best Deals", "/offers")}</ul></nav></header>`;
+  const hero = !b || b.brand || b.productId || b.preset === "promo" ? "" : `<div class="hero auto"><div class="slide k-photo on" data-preset="${escHtml(b.preset || "cinematic")}"><div class="bg"><picture>${img}</picture></div><div class="hpanel"><h1>${words(b.title)}</h1><p>${escHtml(b.text || "")}</p><div class="hcta"><a class="btn" href="${escHtml(b.href || "/televisions")}">${escHtml(b.cta || "Explore TVs")}</a><a class="btn ghost" href="${escHtml(b.href2 || "/televisions?sort=off")}">${escHtml(b.cta2 || "See deals")}</a></div></div></div></div>`;
+  return header + '<main id="main" class="wrap">' + hero + "</main>";
+}
 function serveStatic(req, res, url, clean) {
   const pathname = clean ? "/" + clean.file : url.pathname; // clean: a clean address resolved to its page (resolveClean)
   let p;
@@ -697,7 +713,9 @@ function serveStatic(req, res, url, clean) {
         headers["Cache-Control"] = robots ? "no-store" : "public, max-age=0, s-maxage=60, stale-while-revalidate=600";
         // a clean address also tells the app which category, product or info page this is (web/src/api.js reads it from <body>)
         const data = clean ? Object.entries(clean.params).map(([k, v]) => ` data-${k}="${escHtml(v)}"`).join("") : "";
-        buf = Buffer.from(buf.toString().replace(/<title>[^<]*<\/title>/, "<title>" + escHtml(title) + "</title>").replace("</head>", head + "\n</head>").replace("<body", "<body" + data));
+        let html = buf.toString().replace(/<title>[^<]*<\/title>/, "<title>" + escHtml(title) + "</title>").replace("</head>", head + "\n</head>").replace("<body", "<body" + data);
+        if (!clean && (pathname === "/" || pathname === "/index.html")) html = html.replace('<div id="root"></div>', '<div id="static">' + staticHome() + '</div><div id="root"></div>'); // the home page paints before the script runs; App.jsx removes #static once the real page is drawn
+        buf = Buffer.from(html);
       }
       // text goes out gzipped; photos are already compressed. ponytail: gzipSync per request is fine for a small store; pre-compress if traffic grows
       if (/^(text\/|application\/)/.test(TYPES[ext]) && /\bgzip\b/.test(req.headers["accept-encoding"] || "")) { buf = zlib.gzipSync(buf); headers["Content-Encoding"] = "gzip"; headers.Vary = "Accept-Encoding"; }

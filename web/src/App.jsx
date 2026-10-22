@@ -1,6 +1,6 @@
 // The app: shared layout around the page that the HTML shell names in data-page. Clicks on the pieces that appear
 // everywhere (add to cart, quantity, wishlist, strips, cart drawer) are handled once here.
-import { Component, useEffect, useRef } from "react";
+import { Component, Suspense, lazy, useEffect, useLayoutEffect, useRef } from "react";
 import { useStore } from "./store.jsx";
 import { track } from "./api.js";
 import { Header, Footer, Chrome, Box } from "./components.jsx";
@@ -9,9 +9,12 @@ import { Category, ComparePage } from "./category.jsx";
 import { Campaign } from "./campaign.jsx";
 import { Product } from "./product.jsx";
 import { Account } from "./account.jsx";
-import { Admin } from "./admin.jsx";
+const Admin = lazy(() => import("./admin.jsx").then(m => ({ default: m.Admin }))); // its own file, loaded only on /admin
 import { chrome, reveal, lazyClips, fitStrips, fly } from "./motion.js";
 
+// the web fonts (Inter, Manrope, Space Grotesk) are asked for only once the page is drawn, so the first paint and the biggest paint
+// never wait for Google Fonts; the system font shows for a moment and swaps (display=swap). Cached after the first page.
+const FONT_CSS = "https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Manrope:wght@600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap";
 const PAGES = { home: Home, category: Category, product: Product, offers: Offers, cart: Cart, checkout: Checkout, order: Order, account: Account, page: InfoPage, admin: Admin, notfound: NotFound, campaign: Campaign, compare: ComparePage };
 const $ = (s, el = document) => el.querySelector(s);
 
@@ -54,20 +57,24 @@ export default function App() {
   useEffect(() => {
     if (!s.loaded && !s.error) return;
     document.body.classList.add("loaded");
+    if (!document.querySelector('link[href^="https://fonts.googleapis.com"]')) document.head.append(Object.assign(document.createElement("link"), { rel: "stylesheet", href: FONT_CSS }));
     reveal(); lazyClips(); fitStrips();
     const anchor = /^#[\w-]+$/.test(location.hash) && document.getElementById(location.hash.slice(1));
     if (anchor) anchor.scrollIntoView();
     window.__resolveReady();
   }, [s.loaded, s.error]);
   useEffect(() => { if (s.loaded) { reveal(); lazyClips(); fitStrips(); } }); // pages that draw more after their data arrives
+  // the home page arrives with its header and first banner already in the HTML (#static, written by server.js) so it paints before
+  // this script runs; it goes the moment the real page is drawn, in the same frame, so nothing shows twice and nothing jumps
+  useLayoutEffect(() => { if (s.loaded || s.error) document.getElementById("static")?.remove(); }, [s.loaded, s.error]);
 
   if (s.error) return <main id="main" className="wrap"><Box title="Something went wrong" text={s.error} href="/" cta="Back to home" /></main>;
-  if (!s.loaded) return <main id="main" className="wrap"><div className="skel" style={{ height: 300, marginTop: 20 }}></div><div className="grid" style={{ marginTop: 32 }}>{[0, 1, 2, 3, 4].map(i => <div className="skel" style={{ height: 320 }} key={i}></div>)}</div></main>;
+  if (!s.loaded) return document.getElementById("static") ? null : <main id="main" className="wrap"><div className="skel" style={{ height: 300, marginTop: 20 }}></div><div className="grid" style={{ marginTop: 32 }}>{[0, 1, 2, 3, 4].map(i => <div className="skel" style={{ height: 320 }} key={i}></div>)}</div></main>;
   const Page = PAGES[page] || NotFound;
   return <>
     <a className="skip" href="#main">Skip to content</a>
     <Header />
-    <main id="main" className="wrap"><Safe><Page /></Safe></main>
+    <main id="main" className="wrap"><Safe><Suspense fallback={null}><Page /></Suspense></Safe></main>
     <Footer />
     <Chrome />
   </>;

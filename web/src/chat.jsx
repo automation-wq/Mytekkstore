@@ -32,7 +32,7 @@ export function ChatWidget() {
   };
   const sugg = suggestions(ctx, p);
   return <>
-    <button type="button" className="chatfab" aria-expanded={open} aria-controls="chat" onClick={() => setOpen(o => !o)}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 21l1.9-5.4A8 8 0 1 1 21 12z" /></svg><span>Help</span></button>
+    <button type="button" className="chatfab" aria-label="Help" aria-expanded={open} aria-controls="chat" onClick={() => setOpen(o => !o)}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 21l1.9-5.4A8 8 0 1 1 21 12z" /></svg><span>Help</span></button>
     <AnimatePresence>{open && <m.aside id="chat" className="chat" role="dialog" aria-label="Mytekkstore help" key="chat" initial={{ opacity: 0, y: 24, scale: .98 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 24, scale: .98 }} transition={{ type: "spring", stiffness: 320, damping: 30 }}>
       <header><div><b>Mytekkstore help</b><small>{CFG.chat ? "Assistant · answers from the catalogue" : "Answers from the catalogue"}</small></div><button type="button" className="x" onClick={() => setOpen(false)} aria-label="Close help">×</button></header>
       <div className="cmsgs" ref={list}>
