@@ -1786,8 +1786,9 @@ body, body::before, body::after, .slide .bg::after, .slide.on .w, .img .badge, .
 
 
 /* budget cards: the cheapest TV of the band floats at the right edge (home.jsx), so the four cards read as products, not labels */
-.budget .bcard { padding-right:128px; min-height:132px }
-.budget .bcard .bcut { position:absolute; right:-10px; bottom:-14px; width:140px; height:auto; pointer-events:none; filter:drop-shadow(0 14px 18px #0f111533); transition:translate .25s }
+.budget .bcard { padding:22px 22px 100px; min-height:0 } .budget .bbd b { font-size:17px; white-space:nowrap } /* the TV sits below the text, bottom right, so nothing overlaps at four columns */
+.budget .bcard .bcut { position:absolute; right:16px; bottom:6px; width:94px; height:auto; pointer-events:none; filter:drop-shadow(0 14px 18px #0f111533); transition:translate .25s }
 .budget .bcard:hover .bcut { translate:0 -4px }
+.budget .bbd em { white-space:nowrap; font-size:13px } .budget .bcard .darr { display:none } /* the TV is the pointer now */
 @media (max-width:760px) { .budget .bcard { padding-right:104px } .budget .bcard .bcut { width:112px } }
 

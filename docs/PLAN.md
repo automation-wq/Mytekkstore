@@ -320,3 +320,10 @@ Not started from the backlog: the shared store, keys, payment, photos and sheets
 - The help bot's rules load in their own chunk the first time the panel opens (verified: intro, four suggestions, an answer).
 - The "Help me choose" question block was removed from the home page at the owner's request; the Televisions page keeps its picture tabs including Budget.
 - Tests: API, Vercel entry and headless browser suites passed on this build.
+
+## 16. Home polish, 22 October (commits 20a37d8 and after)
+
+- Regression found and fixed within minutes: removing the question block also removed an import the screen-type cards use, so the home page drew the error box after its static shell on one build (1a6af14). Fixed in 20a37d8; the browser suite now asserts that the home page draws its sections and never the error box.
+- "Shop by budget" cards carry the cheapest TV of each band as a cut-out below the text, so the row reads as products rather than labels.
+- The "Product care" banner (a third repeat of the four promises) is gone.
+- Live Lighthouse mobile after batch 2: home 91 (LCP 1.6 s, FCP 1.3 s), product 73 (LCP 2.6 s), Televisions 67 (LCP 3.1 s); layout shift 0 and accessibility 100 on all three.
