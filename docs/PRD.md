@@ -46,7 +46,6 @@ The sheet also asks for two things by name: **Multi Categories** and **Multi Bra
 | Payments | Online payment (cards, UPI, net banking) and cash on delivery **[CONFIRM]** |
 | Account | Sign up and sign in by email and password, by mobile number with a one-time code (SMS through Twilio), or with a Google account. Saved address, order history |
 | Orders | Confirmation SMS when the order is placed and on every status change (Twilio; recorded in the admin outbox until Twilio is connected), order status page |
-| Country selector | Shopper picks a country; prices show in that country's currency **[CONFIRM which countries]** |
 | Info pages | About, Contact, Store locator, Terms, Privacy, Returns, Shipping |
 | Offers | Festive offers page (Deals in the bar and the home banner open it): offers by category, top deals, bank offers and No Cost EMI. Bank offers on the home page and every product page. A No Cost EMI tag per product, set in the admin |
 | Admin | Manage products, prices, stock, photos, orders and order status. Banners: later |

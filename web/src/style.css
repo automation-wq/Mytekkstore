@@ -549,7 +549,6 @@ h2 a { transition:letter-spacing .2s } h2 a:hover { letter-spacing:.5px }
   header > .wrap { gap:10px 14px; padding-block:10px }
   .logo { font-size:21px; letter-spacing:1px; margin-right:auto }
   header form { order:5; flex:1 1 55% }
-  #country { order:6 }
   .gbar { gap:0; padding:0 8px; overflow-x:auto; scrollbar-width:none }
   .gbar::-webkit-scrollbar { display:none }
   .ngrid { grid-template-columns:1fr; gap:22px; padding:20px 16px 28px }
@@ -1148,7 +1147,7 @@ header select { background:var(--tile); border-color:transparent; border-radius:
 .spot em { background:var(--ink) }
 /* numbers band: figures, not boxes */
 .num { gap:28px; border-top:1px solid var(--line); padding-top:6px }
-.num div { background:transparent; border:0; padding:22px 0 0; box-shadow:none } .num div::before { display:none } .num div:hover { translate:none; box-shadow:none }
+.num div { background:transparent; border:0; padding:22px 0 0; box-shadow:none; overflow:visible } /* no card any more, so nothing to clip: with the padding gone, overflow:hidden cut the first letter of each caption */ .num div::before { display:none } .num div:hover { translate:none; box-shadow:none }
 .num b { font-weight:800; letter-spacing:-2.2px }
 /* soft, borderless surfaces */
 .sizerow { border:0; box-shadow:none }

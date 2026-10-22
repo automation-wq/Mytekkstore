@@ -31,7 +31,6 @@ Home
 | Logo | Home |
 | Category bar | Televisions, Washing Machines, Air Conditioners, Brands, Deals (opens the Offers page). Hovering a name (desktop) or tapping it once (phone) opens that category's menu: sizes or capacities, both brands, four popular models, deals, and the TV size guide. A click, or a second tap, opens the category page. There is no separate menu button or arrow |
 | Search box | Suggestions appear as you type: matching products with photo and price, categories and brands, then "See all results". Before typing it shows the biggest deals. Arrow keys and Enter pick one; Enter on the text opens the search results |
-| Country selector | Same page, prices change to that country's currency |
 | Deliver to (desktop) | A pincode chip beside the search box. The pincode typed here is remembered for every product page and the checkout |
 | Account icon | Sign in, or Account if already signed in |
 | Cart icon with count | Cart |
@@ -125,7 +124,6 @@ Sign in with the admin account (data/ADMIN_LOGIN.txt) → admin.html
 | Ratings and reviews | Working. Signed-in customers can rate 1 to 5 stars and write a review; cards and product pages show the average |
 | Wishlist and recently viewed | Working, saved in the browser |
 | Admin: orders, order status, products, stock, EMI flag, photo upload, customer messages | Working at /admin.html. Messages are recorded, and sent by SMS once Twilio is connected |
-| Country selector | Working with fixed sample exchange rates |
 | Opened by double-click (no server) | Not supported since the React build; the pages need the server, so run start.bat |
 | Real online payment | Demo. Needs the client's payment gateway account |
 | Real SMS, email and Google sign-in | Built; switched on by the Twilio, Brevo and Google keys (TRD section 11). Email through Brevo is free |

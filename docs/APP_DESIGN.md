@@ -42,7 +42,7 @@ The visual rules for every page. Layout follows the recommended reference, Croma
 
 | Component | Design |
 |---|---|
-| Header | Sticky, frosted white. Offer ticker, logo, search box with live suggestions (products with photo and price, categories, brands; the biggest deals before typing), "Deliver to" pincode chip, country selector, account, wishlist and cart with counts |
+| Header | Sticky, frosted white. Offer ticker, logo, search box with live suggestions (products with photo and price, categories, brands; the biggest deals before typing), "Deliver to" pincode chip, account, wishlist and cart with counts |
 | Category bar | Light strip under the header: Televisions, Washing Machines, Air Conditioners, Brands, Deals. The name itself is the control; there are no arrow buttons. Scrolls sideways on phones |
 | Category menu | Opens under the bar when a name is hovered (desktop), tapped once (phone) or reached with Tab. Size or capacity tiles and brand tiles, four popular models, a Discover list, and a promo card for the TV size guide. The page behind is dimmed |
 | Explore tiles | Sideways-scrolling tiles at the top of a category page (TVs by Size, each brand, 4K Ultra HD, Google TV, the other categories) that wrap on desktop and swipe on phones (no scroll line or arrow buttons: the client rejected them); size tabs below |

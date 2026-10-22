@@ -5,7 +5,7 @@ import { animate, stagger } from "motion";
 import { reduced } from "./motion.js";
 import { useStore } from "./store.jsx";
 import { api, qs, load, save } from "./api.js";
-import { ICONS, DRAW_ICONS, COUNTRIES, BANK_OFFERS, TOP_FEATURES, CAT_SIZE, TV_OS, OS_ROWS, SHOW_STORES, COMING_SOON, catSizes, emiPlans, catUrl, brandUrl, listUrl, off, avg, starRow, eta, productUrl, pic, picSet, dims, osList, osUrl } from "./data.js";
+import { ICONS, DRAW_ICONS, BANK_OFFERS, TOP_FEATURES, CAT_SIZE, TV_OS, OS_ROWS, SHOW_STORES, COMING_SOON, catSizes, emiPlans, catUrl, brandUrl, listUrl, off, avg, starRow, eta, productUrl, pic, picSet, dims, osList, osUrl } from "./data.js";
 
 const $ = (s, el = document) => el.querySelector(s);
 const $$ = (s, el = document) => [...el.querySelectorAll(s)];
@@ -95,7 +95,7 @@ export const Form = forwardRef(function Form({ onSubmit, after, children, ...res
   return <form {...rest} ref={ref} onSubmit={submit}>{children}<p className="err" role="alert">{err}</p>{after ? after(busy) : <button className="btn" disabled={busy}>Submit</button>}</form>;
 });
 
-// ===== header: ticker, search, country, links and the category menus =====
+// ===== header: ticker, search, links and the category menus =====
 function navItems(P, CATS, BRANDS, catImg) {
   const page = document.body.dataset.page;
   const byId = id => P.find(p => p.id === +id);
@@ -186,7 +186,7 @@ function flyIn(panel) {
 function flyOut(panel) { if (panel && !reduced()) animate(panel, { opacity: 0, y: -6 }, { duration: .15 }); }
 
 export function Header() {
-  const { P, CATS, BRANDS, catImg, me, money, country, wish, cartCount, bump, closeCart } = useStore();
+  const { P, CATS, BRANDS, catImg, me, money, wish, cartCount, bump, closeCart } = useStore();
   const items = navItems(P, CATS, BRANDS, catImg);
   // bar order (redesign brief): the categories on sale, then the categories coming (placeholders, no page), then Brands and Best Deals
   const ordered = [...items.slice(0, CATS.length).map((it, i) => ({ it, i })), ...COMING_SOON.map(soon => ({ soon })), ...items.slice(CATS.length).map((it, k) => ({ it, i: CATS.length + k }))];
@@ -243,7 +243,6 @@ export function Header() {
     <div className="wrap">
       <a className="logo" href="/"><svg viewBox="0 0 32 32" width="30" height="30" aria-hidden="true"><rect width="32" height="32" rx="9" fill="#08805f" /><path d="M18 5 9 18h6l-2 9 10-14h-6z" fill="#ffffff" /></svg><span>mytekk<b>store</b></span></a>
       <Search /><Deliver />
-      <select id="country" aria-label="Country" defaultValue={country} onChange={e => { save("country", e.target.value); location.reload(); }}>{Object.keys(COUNTRIES).map(c => <option value={c} key={c}>{c}</option>)}</select>
       <a className="hlink" href="/account" aria-label={me ? "My account" : "Sign in"}><Icon k="user" /> <span>{me ? me.name.split(" ")[0] : "Sign in"}</span></a>
       <a className="hlink" href="/products?wish=1" aria-label="Wishlist"><Icon k="heart" /> <span id="wishN" className="count" hidden={!wish.length}>{wish.length}</span></a>
       <a className="hlink" href="/cart" data-drawer aria-label="Cart"><Icon k="cart" /> <span id="cartN" className={"count" + (bump ? " bump" : "")} key={bump} hidden={!n}>{n}</span></a>

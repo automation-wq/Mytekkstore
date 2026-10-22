@@ -6,11 +6,11 @@ import { useEffect, useRef, useState } from "react";
 import { useStore } from "./store.jsx";
 import { api, qs } from "./api.js";
 import { Row, Form, Icon, KvImg, Qa } from "./components.jsx";
-import { KV_IMG, CAT_CLIPS, CAT_SIZE, BANK_OFFERS, FAQ, CONTACT, STORES, POLICY, SHOW_STORES, WARRANTY_QA, catUrl, brandUrl, listUrl, off, etaText } from "./data.js";
+import { KV_IMG, CAT_CLIPS, CAT_SIZE, BANK_OFFERS, FAQ, CONTACT, STORES, POLICY, SHOW_STORES, WARRANTY_QA, catSizes, catUrl, brandUrl, listUrl, off, etaText } from "./data.js";
 import { countUp } from "./motion.js";
 
 const PAGES = {
-  about: ["About Mytekkstore", "Mytekkstore", "Good electronics, made simple.", "Televisions, washing machines and air conditioners from Elista and Telefunken, delivered free with cash on delivery.", "Televisions"],
+  about: ["About Mytekkstore", "Mytekkstore", "Good electronics, made simple.", "Elista and Telefunken Smart TVs at factory prices, delivered free with cash on delivery and the brand's own warranty.", "Televisions"],
   contact: ["Contact us", "Help", "We are here to help.", "Orders, delivery, returns and service. Write to us and we reply by email.", "Washing Machines"],
   stores: ["Store locator", "Visit us", "Find a store.", "Store addresses are being added. Until then, every product ships free to your door.", "Air Conditioners"],
   shipping: ["Shipping and delivery", "Delivery", "Free delivery, every order.", "Across India, usually in 3 to 5 days, with cash on delivery if you prefer.", "Televisions"],
@@ -64,16 +64,17 @@ export function InfoPage() {
   const [title, eyebrow, head, sub, cat] = page;
   const deals = [...P].sort((a, b) => off(b) - off(a)).slice(0, 5);
   const maxOff = Math.max(0, ...P.map(off));
-  const brandBlurb = { Elista: "An Indian consumer electronics brand making televisions, washing machines and air conditioners for Indian homes, each with the brand's own warranty.",
+  const brandBlurb = { Elista: "An Indian consumer electronics brand making Smart TVs and home appliances for Indian homes, each with the brand's own warranty.",
     Telefunken: "A German electronics name since 1903, sold in India under licence, with televisions and home appliances built to the brand's standard." };
   const crumbs = <div className="crumbs"><a href="/">Home</a> › {title}</div>;
   const hero = <Hero eyebrow={eyebrow} title={head} sub={sub} cat={cat} />;
   const cta = <section><a className="cban" href="/offers"><KvImg className="cph" src={`img/${KV_IMG[cat]}.jpg`} sizes="(max-width:1240px) 100vw, 1240px" /><div><span className="kicker">Festive offers</span><h2>Up to {maxOff}% off</h2><p>Bank offers and No Cost EMI on the models that carry it · free delivery · cash on delivery</p><u>See the deals →</u></div></a></section>;
 
+  const one = CATS.length === 1 ? CATS[0] : "", sizes = one ? catSizes(P, one).all : [];
   if (p === "about") return <>{crumbs}{hero}
-    <div className="num" ref={numRef}>{[[P.length, "", "Products", "across " + CATS.length + " categories"], [BRANDS.length, "", "Brands", BRANDS.join(" and ")], [BANK_OFFERS.length, "", "Bank offers", "plus No Cost EMI"], [100, "%", "Genuine", "brand warranty on everything"]]
+    <div className="num" ref={numRef}>{[[P.length, "", "Models", one ? one.toLowerCase() + (sizes.length > 1 ? ", " + sizes.length + " sizes" : "") : "across " + CATS.length + " categories"], [BRANDS.length, "", "Brands", BRANDS.join(" and ")], [BANK_OFFERS.length, "", "Bank offers", "plus No Cost EMI"], [100, "%", "Genuine", "brand warranty on everything"]]
       .map(([n, suf, t, s]) => <div key={t}><b><i data-n={n}>0</i>{suf}</b><span>{t}</span><small>{s}</small></div>)}</div>
-    <section><h2>What we sell</h2><p className="lead">Three categories, every size we stock, from two brands.</p><Cats /></section>
+    <section><h2>What we sell</h2><p className="lead">{one ? "Every " + one.toLowerCase().replace(/s$/, "") + " we stock, in every size, from " + BRANDS.join(" and ") + "." : CATS.length + " categories, every size we stock, from " + BRANDS.join(" and ") + "."}</p><Cats /></section>
     <section><h2>The brands</h2><p className="lead">{BRANDS.join(" and ")}, side by side on every category page.</p>
       <div className="why brands2">{BRANDS.map(b => { const ps = P.filter(x => x.brand === b); return <div key={b}><b className="bigb">{b}</b><p>{brandBlurb[b] || `${ps.length} products in our range.`}</p><a className="alink" href={brandUrl(b)}>Shop {b} · {ps.length} product{ps.length === 1 ? "" : "s"} →</a></div>; })}</div></section>
     <section><h2>How we work</h2><p className="lead">The same four promises on every order.</p><Promises /></section>
@@ -172,7 +173,7 @@ export function InfoPage() {
 
   if (p === "privacy") return <>{crumbs}{hero}
     <section><h2>Privacy policy</h2><p className="lead">The whole story of what this site keeps about you.</p><Policy sections={[
-      ["What we collect", "Your name, email address or mobile number, delivery address and pincode, your orders, and the reviews you write. Your cart, wishlist, pincode and country choice are kept in your own browser, not on our servers, until you order."],
+      ["What we collect", "Your name, email address or mobile number, delivery address and pincode, your orders, and the reviews you write. Your cart, wishlist and pincode are kept in your own browser, not on our servers, until you order."],
       ["Why we collect it", "To deliver your orders, to send order updates and sign-in codes by SMS or email, and to show you your order history."],
       ["Payments", "No card details are stored by Mytekkstore. Online payments are handled by the payment provider shown at checkout."],
       ["Cookies", "One cookie keeps you signed in. There are no advertising cookies." + (CFG.clarity ? " Microsoft Clarity records how pages are used (clicks, scrolling, time on page) to improve the site; anything you type is masked. See Microsoft's privacy statement for how Microsoft handles that data." : " There are no tracking cookies.")],
