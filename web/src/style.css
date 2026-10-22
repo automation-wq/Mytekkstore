@@ -1784,3 +1784,10 @@ body, body::before, body::after, .slide .bg::after, .slide.on .w, .img .badge, .
 .trustline { display:flex; flex-wrap:wrap; align-items:center; gap:6px 10px; margin:4px 0 14px; font-size:13.5px; color:var(--soft) } .trustline .ic { width:18px; height:18px; color:var(--accent) } .trustline span { color:var(--muted) }
 .sizes .chip.sw small { font-size:12px } .sizes .chip.sw.on small { color:#ffffffe6 }
 
+
+/* budget cards: the cheapest TV of the band floats at the right edge (home.jsx), so the four cards read as products, not labels */
+.budget .bcard { padding-right:128px; min-height:132px }
+.budget .bcard .bcut { position:absolute; right:-10px; bottom:-14px; width:140px; height:auto; pointer-events:none; filter:drop-shadow(0 14px 18px #0f111533); transition:translate .25s }
+.budget .bcard:hover .bcut { translate:0 -4px }
+@media (max-width:760px) { .budget .bcard { padding-right:104px } .budget .bcard .bcut { width:112px } }
+

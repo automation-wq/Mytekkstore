@@ -312,3 +312,11 @@ Implemented, built, tested (API, Vercel entry and headless browser suites) and v
 - Last contrast spot on the product page (the price under a selected size chip) fixed.
 
 Not started from the backlog: the shared store, keys, payment, photos and sheets, offers and reviews, contact (all need the 13 facts); guest checkout and the router or SSR (need the owner's decision); buying-guide illustrations.
+
+## 15. Gate 4, batch 2, done 22 October (commit 1a6af14)
+
+- Product pages: the first screen (breadcrumbs, main photo, brand, name, rating, price) is written into the HTML like the home page, so the photo paints before the script; skipped when an admin banner sits above the fold. Layout shift measured 0 locally.
+- "How to choose a TV" added to the Televisions menu's Discover links.
+- The help bot's rules load in their own chunk the first time the panel opens (verified: intro, four suggestions, an answer).
+- The "Help me choose" question block was removed from the home page at the owner's request; the Televisions page keeps its picture tabs including Budget.
+- Tests: API, Vercel entry and headless browser suites passed on this build.
