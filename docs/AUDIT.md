@@ -28,7 +28,7 @@ Scores describe what exists today, with the evidence that sets them. Targets for
 | Product information | 6 | Seven specification rows per TV, grouped tabs, EMI plans, pincode check, warranty box, auto-built A+ blocks. Missing: model numbers, warranty period per model, port counts, HDR, energy label, real descriptions. |
 | Product imagery | 4 | Nine TVs share five renders (p0, p1, p2, p3, p34; the "-v" files are the same renders with another screen). No model has its own photo set (`images[]` is empty on all nine); the gallery pads with two shared room photos and generated studio, screen and stand crops. |
 | Motion and video | 7 | Motion library, reduced-motion respected everywhere, hero loop with a static fallback, category feature band loop, A+ hero loop. Restrained. |
-| Mobile usability | 8 | No horizontal overflow at any of the six widths; bottom navigation; filter drawer; sticky buy bar on the product page. One or two captions at 10.5 px on the listing and product pages. |
+| Mobile usability | 6, corrected in the second pass | No horizontal overflow at any of the six widths; bottom navigation; filter drawer; sticky buy bar. Found in the second pass: the hero collapsed to 0 px below 760 px, so phones never saw the banner at all (fixed the same day, see section 9). |
 | Trust and credibility | 5 | Bank offers are sample text, the two reviews are sample, the warranty Q&A is a draft, the contact page has no phone or email, no company name, GST or address anywhere, and the delivery promise ("3 to 5 days, across India") is unconfirmed. |
 | Cart and checkout | 7 | Works end to end; prices and stock are re-checked on the server; cash on delivery is real; online payment is a clearly labelled demo; sign-in is required before checkout (no guest checkout). |
 | Accessibility | 7 | Skip link, labelled icons, visible focus, Escape closes menus and dialogs, reduced motion. Lighthouse accessibility 91 (home) and 89 (product): buttons without an accessible name, some text below contrast, links in text not distinguishable without colour. Screen-reader run not done. |
@@ -58,7 +58,8 @@ Priority: P1 do first, P2 next, P3 later. Effort: S under a day, M a few days, L
 | Footer | Shop, Brands, Help and Mytekkstore columns, trust row | components.jsx Footer | No company name, address, GST, support hours, social links or payment marks | Add once the business supplies them | Medium: credibility | S, blocked (Q9) | P2 |
 | Announcement strip | Exists in code, hidden by the studio theme | style.css `.ticker { display:none }` | Brief section 1 wants one verified announcement | Show one line once a real offer or service message is confirmed; otherwise leave hidden | Low | S, blocked (Q12) | P3 |
 | Google sign-in | Button hidden until a client id exists | live /api/config `google: ""` | Fewer sign-in options | Add GOOGLE_CLIENT_ID on Vercel | Low to medium | S, blocked (Q10) | P3 |
-| Tiny text | 10.5 px captions in the delivery chip and kicker labels | probe at six widths | Below the 11 px comfort line | Raise to 12 px | Low | S | P3 |
+| Tiny text | 10.5 px captions in the delivery chip and kicker labels | probe at six widths | Below the 11 px comfort line | Raise to 12 px | Low | S | P3, done |
+| Phone hero | Collapsed to 0 px below 760 px: the hero had auto height while its slides stayed absolutely positioned, so the first thing a phone showed was Latest Launches | headless probe at 412 px, hero rect height 0, launch grid at y 230 | Phones never saw the banner, the headline or the two calls to action | The slide in view sits in the flow; the photo row is 54vw so it stays the largest element on the first screen | High: most shoppers are on phones | S | P1, done |
 | Dead bar items | Washing Machines and Air Conditioners are plain text | components.jsx `.soon` | A tap does nothing | Client decision of 12 October (no badge, no page); revisit when those categories go live | Low | none | Keep |
 | Country switcher | India, UAE, USA with sample rates | data.js COUNTRIES | Converted prices are not real prices; checkout stays in rupees | Keep (owner decision of 22 October); real export pricing would need prices per country in the admin | Low | none | Keep |
 
@@ -123,3 +124,28 @@ The brief's sections 2 to 15 are largely present: header with mega menus and sea
 ## 8. Limitations
 
 No field performance data exists (no analytics connected). Lighthouse numbers are lab runs from one machine on the mobile preset. Reference sites were not re-verified today. Payment, SMS, email and Google sign-in cannot be tested until keys exist. Screen-reader testing was not done.
+
+## 9. Second pass, same day (commits 8f29a56 and 8309e01)
+
+The owner said the research was done and the implementation was what they still needed, so the "now" items of section 6 were built, tested and deployed. Measured again with the same Lighthouse 12 mobile preset.
+
+| Page | Before (live) | After (live) |
+|---|---|---|
+| Home | performance 47, LCP 5.0 s, FCP 4.3 s, accessibility 91 | home 73 (LCP 2.4 s, FCP 1.7 s, CLS 0, accessibility 100), product page 68 (LCP 2.9 s, CLS 0), Televisions 66 (LCP 3.1 s, CLS 0); best practices and SEO 100 on all three |
+| Local lab, home | 50 | 76 |
+| Local lab, product | 46 | 75 |
+| Local lab, Televisions | not measured | 69 |
+
+What changed:
+
+1. **First paint from the HTML.** The home page's header and first banner are written into the HTML shell by the server (a block beside the React root that the app removes in the same frame it draws the real page), so the page paints before the 500 KB script runs. The script itself is started two animation frames after the HTML, by a one-line boot file, so the browser always gets a frame in first. Web fonts are requested once the page is drawn rather than from the shell. The admin page is its own chunk. First paint went from 4.3 s to 1.6 s on the lab run.
+2. **Phone hero bug fixed.** See the new finding in section 3. It had been live since the split-hero theme.
+3. **One finder instead of four grids.** The home page's size, budget, OS and screen-type grids became the tabbed finder the Televisions page already had (now with a Budget tab), plus a four-question "Help me choose" finder with a live match count that opens the filtered Televisions page. Use cases are inside it ("Films and sport" means 4K; the room sizes are the sizes in stock), so nothing is invented.
+4. **Accessibility 91 to 100** on the home page: the accent a shade darker so text in it passes 4.5:1, in-text links underlined, the help button named, A+ stat captions brighter, 10.5 px captions raised to 12 px.
+5. **Analytics events** search, filter, compare_add, begin_checkout, remove_from_cart and finder, on the same dataLayer hook as before. Still nothing is connected (Q11).
+6. **Cleanup step** now follows imports, after it removed the motion and admin chunks of a build.
+7. **Fonts without a shift.** Web fonts are requested once the page is drawn (a font link in the shell cost 2 s of LCP in the lab model; requesting them at script start pushed the product page first paint to 4.9 s). Width-matched fallback faces for Inter, Manrope and Space Grotesk keep the text from reflowing when the fonts arrive: CLS 0 on all three pages, where a plain fallback gave 0.19 on the product page.
+
+What is left of the "now" list: guest checkout (needs the owner's decision, since sign-in is also how the phone number gets verified before an order), the bundle itself (React and Motion are most of it; the next step would be server rendering, a larger change). The remaining LCP on the home page is the headline's font swap and React's render.
+
+Not done and still waiting on section 4: everything in "after confirmation".
