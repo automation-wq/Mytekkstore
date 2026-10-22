@@ -710,6 +710,11 @@ function serveStatic(req, res, url, clean) {
       // builder transpiles them to CommonJS and the browser gets "exports is not defined". Seen live on 22 Oct 2026, route removed.)
       const headers = { "Content-Type": TYPES[ext], "Last-Modified": mtime, "Cache-Control": pathname.startsWith("/assets/") ? "public, max-age=31536000, s-maxage=31536000, immutable" : "no-cache" };
       if (ext === ".html") {
+        // A page is generated per request (SEO tags, the bundle names of this build), so the shell file's date is no validator for it: a
+        // browser or Vercel's edge answering If-Modified-Since with 304 would keep serving a page that names the bundles of an older
+        // build (seen live on 22 Oct 2026). The build stamp is the validator instead: a new build is a new page, the same build is a 304.
+        delete headers["Last-Modified"]; headers.ETag = 'W/"' + BUILT.replace(/[^0-9A-Za-z]/g, "") + '"';
+        if (req.headers["if-none-match"] === headers.ETag) { res.writeHead(304, { ETag: headers.ETag, "Cache-Control": "no-cache" }); return res.end(); }
         if (clean) { url = new URL(url); url.pathname = "/" + clean.file; for (const [k, v] of Object.entries(clean.params)) url.searchParams.set(k, v); }
         const { title, head, robots } = seoTags(req, url);
         // public pages may be kept at the CDN edge for a minute and served stale while a fresh copy is fetched, so a traffic spike
