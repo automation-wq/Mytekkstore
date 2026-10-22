@@ -6,7 +6,14 @@ export const save = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v))
 const search = new URLSearchParams(location.search), given = document.body.dataset;
 export const qs = { get: k => search.has(k) ? search.get(k) : (k in given ? given[k] : null), has: k => search.has(k) || k in given };
 // analytics hook: events go to window.dataLayer, where Google Tag Manager or GA4 picks them up once the client's tag snippet is added
-export const track = (event, data) => (window.dataLayer = window.dataLayer || []).push({ event, ...data });
+// a page the browser prerendered (speculation rules in the shell) runs this script before anyone sees it: whenShown waits for that
+export const whenShown = fn => document.prerendering ? document.addEventListener("prerenderingchange", fn, { once: true }) : fn();
+export const track = (event, data) => whenShown(() => (window.dataLayer = window.dataLayer || []).push({ event, ...data }));
+// The four startup answers (products, me, config, banners), kept in this tab for 90 s: the next page draws from them at once and
+// asks the server again behind (store.jsx). Any request that changes data clears them, so a sign-in or an order shows at once.
+const BOOT = "boot";
+export const bootCache = { read: () => { try { const c = JSON.parse(sessionStorage.getItem(BOOT)); return c && Date.now() - c.at < 90000 ? c : null; } catch { return null; } },
+  write: data => { try { sessionStorage.setItem(BOOT, JSON.stringify({ ...data, at: Date.now() })); } catch {} }, clear: () => { try { sessionStorage.removeItem(BOOT); } catch {} } };
 
 export async function api(path, method = "GET", body) {
   let r = null, data = null;
@@ -16,6 +23,7 @@ export async function api(path, method = "GET", body) {
   } catch {}
   if (!r || !data) throw new Error("Cannot reach the store. Please check your connection and try again.");
   if (!r.ok) throw new Error(data.error || "Something went wrong. Please try again.");
+  if (method !== "GET") bootCache.clear();
   return data;
 }
 

@@ -560,7 +560,7 @@ const TYPES = { ".html": "text/html; charset=utf-8", ".css": "text/css; charset=
 const SECURITY = {
   "X-Content-Type-Options": "nosniff", "X-Frame-Options": "DENY", "Referrer-Policy": "strict-origin-when-cross-origin",
   "Permissions-Policy": "camera=(), microphone=(), geolocation=()",
-  "Content-Security-Policy": `default-src 'self'; script-src 'self'${GOOGLE ? " https://accounts.google.com" : ""}${CLARITY ? " https://www.clarity.ms" : ""}; connect-src 'self'${GOOGLE ? " https://accounts.google.com" : ""}${CLARITY ? " https://*.clarity.ms" : ""}; frame-src ${GOOGLE ? "https://accounts.google.com" : "'none'"}; img-src 'self' data: https:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com${GOOGLE ? " https://accounts.google.com" : ""}; font-src https://fonts.gstatic.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self'`,
+  "Content-Security-Policy": `default-src 'self'; script-src 'self' 'inline-speculation-rules'${GOOGLE ? " https://accounts.google.com" : ""}${CLARITY ? " https://www.clarity.ms" : ""}; connect-src 'self'${GOOGLE ? " https://accounts.google.com" : ""}${CLARITY ? " https://*.clarity.ms" : ""}; frame-src ${GOOGLE ? "https://accounts.google.com" : "'none'"}; img-src 'self' data: https:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com${GOOGLE ? " https://accounts.google.com" : ""}; font-src https://fonts.gstatic.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self'`,
 };
 const escHtml = s => String(s).replace(/[&<>"']/g, c => "&#" + c.charCodeAt(0) + ";");
 const siteUrl = req => (req.headers["x-forwarded-proto"] || "http") + "://" + (req.headers.host || "localhost:" + PORT);
@@ -704,7 +704,9 @@ function serveStatic(req, res, url, clean) {
     if (ext !== ".html" && req.headers["if-modified-since"] === mtime) { res.writeHead(304); return res.end(); }
     fs.readFile(p, (err, buf) => {
       if (err) return notFound();
-      const headers = { "Content-Type": TYPES[ext], "Last-Modified": mtime, "Cache-Control": "no-cache" }; // every file is revalidated (304 when unchanged), so a replaced photo shows at once
+      // every file is revalidated (304 when unchanged), so a replaced photo shows at once; the built bundles carry a content hash in
+      // their name (and three builds are kept, web/tidy.js), so they are cached for a year and a click to the next page never re-asks for them
+      const headers = { "Content-Type": TYPES[ext], "Last-Modified": mtime, "Cache-Control": pathname.startsWith("/assets/") ? "public, max-age=31536000, s-maxage=31536000, immutable" : "no-cache" };
       if (ext === ".html") {
         if (clean) { url = new URL(url); url.pathname = "/" + clean.file; for (const [k, v] of Object.entries(clean.params)) url.searchParams.set(k, v); }
         const { title, head, robots } = seoTags(req, url);

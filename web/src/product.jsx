@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { m, AnimatePresence } from "motion/react";
 import { useStore } from "./store.jsx";
-import { api, qs, load, save, track } from "./api.js";
+import { api, qs, load, save, track, whenShown } from "./api.js";
 import { Photo, Stars, Buy, Heart, Row, Box, Form, Ico, Icon, Qa } from "./components.jsx";
 import { Banner } from "./banner.jsx";
 import { DEFAULT_FEATURES, BANK_OFFERS, WARRANTY_QA, SPEC_GROUPS, osUrl, autoStory, callouts, cutout, galleryOf, GALLERY_LABELS, life, specIcon, catSizes, catUrl, brandUrl, off, avg, starRow, etaText, emiPlans, productUrl, pic, picSet } from "./data.js";
@@ -56,7 +56,7 @@ export function Product() {
   useEffect(() => {
     if (!p) return;
     document.title = `${p.brand} ${p.name} | Mytekkstore`;
-    addRecent(p.id);
+    whenShown(() => addRecent(p.id));
     track("view_item", { id: p.id, name: p.brand + " " + p.name, price: p.price });
     if (pinRef.current.pin.value) pinCheck();
     // the sub-nav appears once the main Add to cart button has scrolled out of view, and marks the section in view

@@ -1,6 +1,6 @@
 // Shared state: catalogue, signed-in customer, optional services, cart, wishlist, recently viewed, country, toast and cart drawer.
 import { createContext, useContext, useEffect, useMemo, useRef, useState } from "react";
-import { api, load, save, track } from "./api.js";
+import { api, load, save, track, bootCache } from "./api.js";
 import { COUNTRIES } from "./data.js";
 
 const Ctx = createContext(null);
@@ -26,16 +26,24 @@ export function StoreProvider({ children }) {
   const money = n => { const [s, l, r] = COUNTRIES[country]; return s + Math.round(n * r).toLocaleString(l); };
 
   useEffect(() => {
-    (async () => {
-      // the three startup calls go out together (one round trip, not three); cfg says which optional services (Google sign-in, SMS, email) are on
-      const [{ products }, { user }, cfg, bn] = await Promise.all([api("products"), api("me"), api("config"), api("banners").catch(() => ({ banners: [] }))]);
+    const apply = ({ products, user, cfg, banners }) => {
       const byId = id => products.find(p => p.id === +id);
       // keep only cart items that still exist and are in stock
       setCart(Object.fromEntries(Object.entries(load("cart", {})).filter(([id, q]) => byId(id) && byId(id).stock > 0 && q > 0).map(([id, q]) => [id, Math.min(q, byId(id).stock, 10)])));
       setWishState(w => w.filter(id => byId(id)));
-      setP(products); setMe(user); setCFG(cfg); setBanners(bn.banners || []);
+      setP(products); setMe(user); setCFG(cfg); setBanners(banners);
       setLoaded(true);
-    })().catch(e => setError(e.message || "Please try again."));
+    };
+    // the answers kept from the last page (api.js bootCache) draw the page at once; the server's fresh ones replace them a moment later
+    const kept = bootCache.read();
+    if (kept) apply(kept);
+    (async () => {
+      // the four startup calls go out together (one round trip, not four); cfg says which optional services (Google sign-in, SMS, email) are on
+      const [{ products }, { user }, cfg, bn] = await Promise.all([api("products"), api("me"), api("config"), api("banners").catch(() => ({ banners: [] }))]);
+      const fresh = { products, user, cfg, banners: bn.banners || [] };
+      bootCache.write(fresh);
+      apply(fresh);
+    })().catch(e => { if (!kept) setError(e.message || "Please try again."); });
   }, []);
 
   const CATS = useMemo(() => [...new Set(P.map(p => p.cat))], [P]);

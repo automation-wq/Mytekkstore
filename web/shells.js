@@ -24,6 +24,7 @@ const shell = (page, title) => `<!doctype html>
 </head>
 <body data-page="${page}">
 <div id="root"></div>
+<script type="speculationrules">{"prerender":[{"where":{"and":[{"href_matches":"/*"},{"not":{"href_matches":["/cart","/checkout","/account*","/order*","/admin*","/api/*","/products?*wish=*"]}}]},"eagerness":"moderate"}]}</script>
 <script type="module" src="/src/main.jsx"></script>
 </body>
 </html>
