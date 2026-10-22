@@ -9,7 +9,7 @@ import { useStore } from "./store.jsx";
 import { Card, Row, BankOffers, Ico, Icon, Qa } from "./components.jsx";
 import { DRAW_ICONS, HOME_BANNERS, FAQ, catSizes, brandUrl, listUrl, off, starRow, productUrl, pic, picSet, osList, osUrl, brandPoints, cutout, life } from "./data.js";
 import { lines, TONES } from "./banner.jsx";
-import { Discover, BANDS, SIZE_NOTE, resOf } from "./category.jsx";
+import { BANDS, SIZE_NOTE, resOf } from "./category.jsx";
 
 // hero parts rise in one after another on a spring, and the headline staggers word by word (Motion variants)
 const RISE = { hide: { y: "115%", opacity: 0 }, show: { y: 0, opacity: 1, transition: { type: "spring", stiffness: 280, damping: 28 } } };
@@ -47,6 +47,22 @@ export function Home() {
   const picOf = src => ({ src: pic(src, 960), srcSet: picSet(src) });
   const tvs = P.filter(p => p.cat === "Televisions");
   const { sizeOf, all: sizeList } = catSizes(P, "Televisions");
+  // premium discovery sections (MASTER PROMPT redesign): image-led cards for size, operating system and resolution, an editorial
+  // Latest Launches grid, and a product-care banner. Prototype imagery reuses the store's renders and lifestyle shots; copy is
+  // aspirational marketing only, no invented specs, prices or model names.
+  const spec = (p, k) => ((p.specs || []).find(([n]) => n.toLowerCase().includes(k)) || [])[1] || "";
+  const inchOf = p => +((/\((\d+)\s*inch\)/.exec(p.name) || [])[1] || 0);
+  const minP = ps => ps.length ? Math.min(...ps.map(p => p.price)) : 0;
+  const SHOTS = ["img/p1.jpg", "img/p3.jpg", "img/p0.jpg", "img/p2.jpg"], LIFE = [life("os1", "img/life-room.jpg"), life("os2", "img/hero0.jpg")];
+  const sizeCards = [[32, "Compact spaces"], [43, "Everyday viewing"], [55, "Living-room favourite"], [65, "Cinematic experience"], [75, "Go bigger"]].map(([inch, desc], i) => ({ inch, desc, img: life("size" + inch, SHOTS[i % SHOTS.length]), from: minP(tvs.filter(p => inchOf(p) === inch)) }));
+  const osBenefit = { "Google TV": "Every app on one home screen, with Google Assistant and Chromecast.", "WebOS": "A quick card-style home screen with apps built in — no set-top box.", "Android TV": "Google Play apps and Chromecast, built in." };
+  const osCards = oss.map((o, i) => ({ os: o, text: osBenefit[o] || "Smart apps built in.", img: LIFE[i % LIFE.length], from: minP(tvs.filter(p => p.os === o)) }));
+  const resCards = [["4K Ultra HD", "Four times the detail of Full HD."], ["Full HD", "Crisp, clear everyday viewing."], ["HD Ready", "Great value for smaller rooms."]].map(([res, text], i) => { const ps = tvs.filter(p => resOf(p) === res).sort((a, b) => a.price - b.price); return { res, text, img: life(["res4k", "resfhd", "reshd"][i], ps[0] && (cutout(ps[0].img) || ps[0].img)), from: minP(ps) }; }).filter(c => c.from);
+  // display technology from the specifications (LED today; QLED/OLED appear when the catalogue has them), kept apart from resolution
+  const typeOf = p => spec(p, "display type").split(",")[0].trim();
+  const TECH_NOTE = { LED: "LED backlight on every model we stock", QLED: "Quantum-dot colour", OLED: "Self-lit pixels, perfect blacks" };
+  const techCards = [...new Set(tvs.map(typeOf).filter(Boolean))].sort().map(t => { const ps = tvs.filter(p => typeOf(p) === t).sort((a, b) => a.price - b.price); return { res: t, text: TECH_NOTE[t] || "Screen technology", img: life("tech" + t, ps[0] && (cutout(ps[0].img) || ps[0].img)), from: minP(ps), href: listUrl({ cat: "Televisions", type: t }) }; });
+  const detailCards = [...techCards, ...resCards.map(c => ({ ...c, href: listUrl({ cat: "Televisions", res: c.res }) }))];
   // the two brand showcases (client brief, section 12): the brief's headlines, a bright room for Elista, a cinematic room for Telefunken
   const BRAND_SHOW = { Elista: { title: "Brilliant Entertainment. Beautifully Yours.", text: "Discover the Elista television collection.", cta: "Explore Elista TVs", img: life("brandElista", "img/life-room.jpg") }, Telefunken: { title: "Bring Every Moment to Life.", text: "Explore immersive entertainment with Telefunken.", cta: "Explore Telefunken TVs", img: life("brandTelefunken", "img/life-cinema.jpg") } };
   const LAUNCHES = [
@@ -83,8 +99,18 @@ export function Home() {
 
     <section><h2>Deals of the Day <a href="/products?sort=off">View all</a></h2><p className="lead">The biggest discounts right now.</p><div className="grid">{deals.map((p, i) => <Card p={p} i={i} key={p.id} />)}</div></section>
 
-    {tvs.length > 0 && <section className="disco" id="find"><h2>Find your TV</h2><p className="lead">By size, budget, operating system or screen type. Every card opens the matching models.</p>
-      <Discover list={tvs} sizes={sizeList} sizeOf={sizeOf} f={NO_FILTER} set={patch => { location.href = listUrl({ cat: "Televisions", ...patch }); }} url={patch => listUrl({ cat: "Televisions", ...patch })} money={money} />
+    <section className="disco"><h2>Every room. The right screen.</h2><p className="lead">Find the perfect screen size for every space.</p>
+      <div className="dgrid five">{sizeCards.map(s => <a className={"dcard" + (cutout(s.img) ? "" : " photo")} href={listUrl({ cat: "Televisions", size: s.inch + " inch TVs" })} key={s.inch}><span className="dimg"><img src={pic(s.img, 480)} srcSet={picSet(s.img)} sizes="240px" alt="" loading="lazy" width="800" height="800" /></span><span className="dbody"><b>{s.inch}"</b><small>{s.desc}</small><em>{s.from ? "from " + money(s.from) : "Coming soon"}</em></span><i className="darr" aria-hidden="true">→</i></a>)}</div></section>
+    {tvs.length > 0 && <section className="disco budget"><h2>Shop by budget</h2><p className="lead">Straight to the TVs in your range.</p>
+      <div className="bgrid">{[[0, 10000, "Under " + money(10000), "Smart TVs for a first home"], [10000, 25000, money(10000) + " – " + money(25000), "The value sweet spot"], [25000, 50000, money(25000) + " – " + money(50000), "Big-screen 4K favourites"], [50000, 0, "Above " + money(50000), "The premium large screens"]].map(([mn, mx, label, note], i) => { const ps = tvs.filter(p => (!mn || p.price >= mn) && (!mx || p.price <= mx)); const c = ps.length, from = c ? Math.min(...ps.map(p => p.price)) : 0; return <a className="bcard" href={listUrl({ cat: "Televisions", min: mn || "", max: mx || "" })} key={label}><span className="bk" aria-hidden="true">{String(i + 1).padStart(2, "0")}</span><span className="bbd"><b>{label}</b><small>{note}</small><em>{c} model{c === 1 ? "" : "s"}{from ? " · from " + money(from) : ""}</em></span><i className="darr" aria-hidden="true">→</i></a>; })}</div></section>}
+
+    {osCards.length > 0 && <section className="disco"><h2>Entertainment, your way.</h2><p className="lead">Choose the smart TV experience that fits your lifestyle.</p>
+      <div className="dgrid land">{osCards.map(c => <a className="dcard os" href={osUrl(c.os)} key={c.os}><span className="dimg"><img src={pic(c.img, 960)} srcSet={picSet(c.img)} sizes="(max-width:760px) 92vw, 46vw" alt="" loading="lazy" /></span><span className="dbody"><b>{c.os}</b><small>{c.text}</small><em>{c.from ? "from " + money(c.from) : ""}</em></span><i className="darr" aria-hidden="true">→</i></a>)}</div></section>}
+
+    {detailCards.length > 0 && <section className="disco"><h2>See every detail differently.</h2><p className="lead">Explore display technologies built for exceptional viewing.</p>
+      <div className={"dgrid " + (detailCards.length > 3 ? "four" : "three")}>{detailCards.map(c => <a className={"dcard tall dark" + (/-cut\.webp$/.test(c.img) ? "" : " photo")} href={c.href} key={c.res}><span className="dimg"><img src={pic(c.img, 960)} srcSet={picSet(c.img)} sizes="(max-width:760px) 70vw, 30vw" alt="" loading="lazy" /></span><span className="lshade"></span><span className="dbody"><b>{c.res}</b><small>{c.text}</small><em>from {money(c.from)}</em></span></a>)}</div></section>}
+
+    {tvs.length > 0 && <section className="disco" id="find"><h2>Help me choose</h2><p className="lead">Four quick questions, answered in any order, and the TVs that fit.</p>
       <Finder tvs={tvs} sizes={sizeList} sizeOf={sizeOf} /></section>}
 
     <section className="bigbrands"><h2>Featured brands</h2><p className="lead">Flagship collections from {BRANDS.join(" and ")}, with the brand's own warranty.</p>
@@ -109,7 +135,6 @@ export function Home() {
   </>;
 }
 
-const NO_FILTER = { size: "", os: "", res: "", type: "", min: 0, max: 0 };
 // Guided finder (brief, section 10): four questions as chips, answered in any order, with a live count from the catalogue. The
 // answers map to the same filters the Televisions page uses (budget band, size, resolution, operating system), so the result page
 // explains itself with its chips. Nothing is invented: "films and sport" means 4K, the room sizes are the screen sizes we stock.
@@ -123,7 +148,7 @@ function Finder({ tvs, sizes, sizeOf }) {
   const answered = Object.values(a).filter(Boolean).length;
   const q = (k, title, options) => <div className="fq" key={k}><b>{title}</b><div className="fchips">{options.map(([v, note]) => <button type="button" className={"qchip" + (a[k] === v ? " on" : "")} aria-pressed={a[k] === v} onClick={() => pick(k, v)} key={v}>{v}{note && <small>{note}</small>}</button>)}</div></div>;
   return <div className="finder">
-    <div><span className="kicker">Not sure? Answer a few questions</span><h3>Help me choose</h3><p className="muted">Pick what you know. Skip the rest.</p></div>
+    <p className="muted">Pick what you know. Skip the rest.</p>
     {q("band", "Your budget", BANDS.map(([, , l]) => [l, ""]))}
     {q("size", "The room", [...sizes].sort((x, y) => x.n - y.n).map(s => [s.label, SIZE_NOTE[s.n] || ""]))}
     {q("use", "What you watch most", USES.map(([u]) => [u, ""]))}

@@ -142,7 +142,7 @@ function CategoryExtras({ cat, list, sizes, sizeUrl, picks = [] }) {
   const low = rich ? Math.min(...list.map(p => p.price)) : 0, maxOff = rich ? Math.max(0, ...list.map(off)) : 0;
   return <>
     {rich && list.length > 1 && <CompareAll list={picks.length > 1 ? picks : list} cat={cat} short={short} picked={picks.length > 1} />}
-    {feats && <section className="topf" id="features">{CAT_CLIPS[cat] && <video className="bvid" muted loop playsInline preload="none" data-src={`/img/${CAT_CLIPS[cat]}.mp4`} aria-hidden="true"></video>}<p className="kicker">Top features</p><h2>{"What makes these " + cat.toLowerCase() + " stand out"}</h2>
+    {feats && <section className="topf" id="features"><p className="kicker">Top features</p><h2>{"What makes these " + cat.toLowerCase() + " stand out"}</h2>
       <div className="tfgrid">{feats.map(([icon, title, text]) => <div className="tf" key={title}><i><Icon k={icon} /></i><b>{title}</b><span>{text}</span></div>)}</div></section>}
     {know && <section id="know"><h2>Know before you buy</h2><p className="lead">{short} explained in plain words, so you can choose with confidence.</p>
       <div className="why">{know.map(([icon, title, text]) => <div key={title}><i className="kico"><Icon k={icon} /></i><b>{title}</b><p>{text}</p></div>)}</div></section>}

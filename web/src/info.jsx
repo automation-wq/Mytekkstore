@@ -23,7 +23,6 @@ const PAGES = {
 // the opener every info page starts with: the category photo with its room clip, an eyebrow, a headline and one line
 function Hero({ eyebrow, title, sub, cat }) {
   return <div className="kv pagehero"><div className="kvimg"><KvImg src={`img/${KV_IMG[cat]}.jpg`} sizes="(max-width:1240px) 100vw, 1240px" eager /></div>
-    {CAT_CLIPS[cat] && <video className="bvid" muted loop playsInline preload="none" data-src={`/img/${CAT_CLIPS[cat]}.mp4`} aria-hidden="true"></video>}
     <div><span className="eyebrow">{eyebrow}</span><h1 className="explore">{title}</h1><p>{sub}</p></div></div>;
 }
 // the four promises the whole site makes (ticker, footer, FAQ): one source of truth for the info pages

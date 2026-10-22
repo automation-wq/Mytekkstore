@@ -85,7 +85,8 @@ export function Product() {
   const story = p.story && p.story.length ? p.story : autoStory(p); // A+ content: the admin's blocks, or blocks built from the specifications
   const inch = +((/\((\d+) inch\)/.exec(p.name) || [])[1] || 0); // A+ hero headline varies by screen size so it never reads templated
   const aheroTitle = inch >= 55 ? "The big screen, done right." : inch >= 43 ? "Made for the way you watch." : "Smart entertainment, made simple.";
-  const aheroLead = p.brand + (spec(p, "screen size") ? " " + spec(p, "screen size") : "") + " — designed around films, sport and games for the whole family.";
+  // the banner line is built from this TV's own specifications: picture, sound, system, then the store's three promises
+  const aheroLead = [p.brand + (spec(p, "screen size") ? " " + spec(p, "screen size") : "") + ": " + (resName || "a clear") + " picture", spec(p, "sound output") ? spec(p, "sound output") + " sound" : "", p.os ? p.os + " with your apps built in" : ""].filter(Boolean).join(", ") + ". Free delivery, cash on delivery and the brand's own warranty.";
   const save$ = p.mrp > p.price;
   const share = encodeURIComponent(location.href), shareText = encodeURIComponent(p.brand + " " + p.name + " at Mytekkstore");
   // the other sizes of this kind of product (TVs by inch, washing machines by kg, ACs by ton): same brand first, else any brand
@@ -150,7 +151,7 @@ export function Product() {
       </div>
     </div>
     {story.length > 0 && <section className="aplus" id="aplus">
-      <div className="ahero"><img src={pic(life("aplusHero", "img/hero0.jpg"), 960)} srcSet={picSet(life("aplusHero", "img/hero0.jpg"))} sizes="(max-width:1240px) 100vw, 1240px" alt="" loading="lazy" /><video className="bvid" muted loop playsInline preload="none" data-src="/img/hero0.mp4" aria-hidden="true"></video><div className="atext"><span className="kicker">{p.brand}{spec(p, "screen size") ? " · " + spec(p, "screen size") : ""}</span><h2>{aheroTitle}</h2><p>{aheroLead}</p>
+      <div className="ahero"><img src={pic(life("aplusHero", "img/hero0.jpg"), 960)} srcSet={picSet(life("aplusHero", "img/hero0.jpg"))} sizes="(max-width:1240px) 100vw, 1240px" alt="" loading="lazy" /><div className="atext"><span className="kicker">{p.brand}{spec(p, "screen size") ? " · " + spec(p, "screen size") : ""}</span><h2>{aheroTitle}</h2><p>{aheroLead}</p>
         <div className="astats">{callouts(p).map(([big, small]) => <div key={big + small}><b>{big}</b><small>{small}</small></div>)}</div></div></div>
       <div className="showcase">{cutout(p.img) ? <img className="cut" src={cutout(p.img)} alt="" loading="lazy" /> : <img className="tilep" src={pic(p.img)} srcSet={picSet(p.img)} sizes="(max-width:860px) 80vw, 40vw" alt="" loading="lazy" width="800" height="800" />}
         <div><span className="kicker">{story[0].kicker}</span><h2>{story[0].title}.</h2><p>{story[0].text}</p></div></div>
