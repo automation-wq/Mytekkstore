@@ -12,8 +12,9 @@ import { Account } from "./account.jsx";
 const Admin = lazy(() => import("./admin.jsx").then(m => ({ default: m.Admin }))); // its own file, loaded only on /admin
 import { chrome, reveal, lazyClips, fitStrips, fly } from "./motion.js";
 
-// the web fonts (Inter, Manrope, Space Grotesk) are asked for only once the page is drawn, so the first paint and the biggest paint
-// never wait for Google Fonts; the system font shows for a moment and swaps (display=swap). Cached after the first page.
+// The web fonts (Inter, Manrope, Space Grotesk) are asked for only once the page is drawn, so neither the first paint nor the
+// biggest paint waits for Google Fonts (a font link in the shell, even as media=print, cost 2 s of LCP in Lighthouse). Until they
+// arrive the page uses the width-matched fallbacks in style.css, so the swap does not reflow the text (display=swap).
 const FONT_CSS = "https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Manrope:wght@600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap";
 const PAGES = { home: Home, category: Category, product: Product, offers: Offers, cart: Cart, checkout: Checkout, order: Order, account: Account, page: InfoPage, admin: Admin, notfound: NotFound, campaign: Campaign, compare: ComparePage };
 const $ = (s, el = document) => el.querySelector(s);
