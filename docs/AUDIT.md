@@ -149,3 +149,28 @@ What changed:
 What is left of the "now" list: guest checkout (needs the owner's decision, since sign-in is also how the phone number gets verified before an order), the bundle itself (React and Motion are most of it; the next step would be server rendering, a larger change). The remaining LCP on the home page is the headline's font swap and React's render.
 
 Not done and still waiting on section 4: everything in "after confirmation".
+
+## 10. Third pass, same day: page-to-page speed (commits def1c39 to f5b73af)
+
+The owner asked for fast navigation between pages and fast data, not only a fast first load.
+
+What changed:
+
+1. **Startup answers kept for 90 seconds.** The catalogue, session, config and banners are kept in the tab (sessionStorage), so the next page draws from them at once and refreshes from the server behind. Any request that changes data clears them, so a sign-in or an order shows at once. Verified live: sign-in updates the header immediately.
+2. **Year-long cache for the hashed bundles** on the Node server. On Vercel the bundles stay on its CDN with its default revalidation (one 304 per file per click), because routing them through the function broke the site (below).
+3. **Prerender on hover or touch** through speculation rules in the shell, with cart, checkout, account, order and admin excluded, and a guard so a prerendered product page is not counted as viewed. Deployed; whether a given browser prerenders could not be confirmed from this machine.
+4. **Pages are validated by build stamp.** A page is generated per request and names the bundles of its build; browsers and the edge had been answering If-Modified-Since with 304 and serving pages that named an older build. Now a weak ETag from the build stamp decides.
+
+Measured on the live site, throttled phone (4x CPU, slow 4G), click to page drawn, single runs so noisy:
+
+| Hop | Before | After |
+|---|---|---|
+| Home to Televisions | 783 ms | 432 ms |
+| Televisions to a product | 868 ms | 1,267 ms |
+| Product to home | 1,024 ms | 1,089 ms |
+| Home to a product | 739 ms | 1,140 ms |
+| Product to Televisions | 850 ms | 1,129 ms |
+
+Only the first hop clearly improved. The rest is within run-to-run noise: the cost of a navigation is React starting again on every page (a multi-page site), not the network. The next lever is a client-side router or server rendering, a larger change.
+
+**Incident, 22 October, about eight minutes.** The route that sent the bundles through the Vercel function made Vercel's builder transpile them to CommonJS, and every page failed with "exports is not defined". Found during verification, route reverted, bundle renamed so browsers that had cached the bad file fetch a good one, page validator fixed so no cached page keeps naming the bad file. Recorded in the project notes so it is not repeated.
