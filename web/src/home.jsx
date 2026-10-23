@@ -5,7 +5,7 @@
 import { useEffect, useRef, useState } from "react";
 import { m } from "motion/react";
 import { useStore } from "./store.jsx";
-import { Card, Row, BankOffers, Ico, Icon, Qa } from "./components.jsx";
+import { Card, Row, BankOffers, Ico, Icon, Qa, OsChart } from "./components.jsx";
 import { DRAW_ICONS, HOME_BANNERS, FAQ, catSizes, brandUrl, listUrl, off, starRow, productUrl, pic, picSet, osList, osUrl, brandPoints, cutout, life } from "./data.js";
 import { lines, TONES } from "./banner.jsx";
 import { resOf } from "./category.jsx"; // resolution of a TV from its specifications, for the screen-type cards
@@ -99,11 +99,10 @@ export function Home() {
 
     <section className="disco"><h2>Every room. The right screen.</h2><p className="lead">Find the perfect screen size for every space.</p>
       <div className="dgrid five">{sizeCards.map(s => <a className={"dcard" + (cutout(s.img) ? "" : " photo")} href={listUrl({ cat: "Televisions", size: s.inch + " inch TVs" })} key={s.inch}><span className="dimg"><img src={pic(s.img, 480)} srcSet={picSet(s.img)} sizes="240px" alt="" loading="lazy" width="800" height="800" /></span><span className="dbody"><b>{s.inch}"</b><small>{s.desc}</small><em>{s.from ? "from " + money(s.from) : "Coming soon"}</em></span><i className="darr" aria-hidden="true">→</i></a>)}</div></section>
-    {tvs.length > 0 && <section className="disco budget"><h2>Shop by budget</h2><p className="lead">Straight to the TVs in your range.</p>
-      <div className="bgrid">{[[0, 10000, "Under " + money(10000), "Smart TVs for a first home"], [10000, 25000, money(10000) + " – " + money(25000), "The value sweet spot"], [25000, 50000, money(25000) + " – " + money(50000), "Big-screen 4K favourites"], [50000, 0, "Above " + money(50000), "The premium large screens"]].map(([mn, mx, label, note], i) => { const ps = tvs.filter(p => (!mn || p.price >= mn) && (!mx || p.price <= mx)); const c = ps.length, from = c ? Math.min(...ps.map(p => p.price)) : 0, cheap = [...ps].sort((a, b) => a.price - b.price)[0]; return <a className="bcard" href={listUrl({ cat: "Televisions", min: mn || "", max: mx || "" })} key={label}>{cheap && cutout(cheap.img) && <img className="bcut" src={cutout(cheap.img)} alt="" loading="lazy" />}<span className="bk" aria-hidden="true">{String(i + 1).padStart(2, "0")}</span><span className="bbd"><b>{label}</b><small>{note}</small><em>{c} model{c === 1 ? "" : "s"}{from ? " · from " + money(from) : ""}</em></span><i className="darr" aria-hidden="true">→</i></a>; })}</div></section>}
-
     {osCards.length > 0 && <section className="disco"><h2>Entertainment, your way.</h2><p className="lead">Choose the smart TV experience that fits your lifestyle.</p>
       <div className="dgrid land">{osCards.map(c => <a className="dcard os" href={osUrl(c.os)} key={c.os}><span className="dimg"><img src={pic(c.img, 960)} srcSet={picSet(c.img)} sizes="(max-width:760px) 92vw, 46vw" alt="" loading="lazy" /></span><span className="dbody"><b>{c.os}</b><small>{c.text}</small><em>{c.from ? "from " + money(c.from) : ""}</em></span><i className="darr" aria-hidden="true">→</i></a>)}</div></section>}
+
+    <OsChart P={tvs} lead="Not sure which operating system to pick? Here is what each one gives you, side by side." />
 
     {detailCards.length > 0 && <section className="disco"><h2>See every detail differently.</h2><p className="lead">Explore display technologies built for exceptional viewing.</p>
       <div className={"dgrid " + (detailCards.length > 3 ? "four" : "three")}>{detailCards.map(c => <a className={"dcard tall dark" + (/-cut\.webp$/.test(c.img) ? "" : " photo")} href={c.href} key={c.res}><span className="dimg"><img src={pic(c.img, 960)} srcSet={picSet(c.img)} sizes="(max-width:760px) 70vw, 30vw" alt="" loading="lazy" /></span><span className="lshade"></span><span className="dbody"><b>{c.res}</b><small>{c.text}</small><em>from {money(c.from)}</em></span></a>)}</div></section>}

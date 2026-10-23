@@ -17,7 +17,7 @@ export const POLICY = { returnDays: 7, refundDays: 7 };
 // The store locator is hidden (the business is B2C only); set SHOW_STORES to true and remove "stores" from HIDDEN_PAGES in server.js to bring it back.
 export const SHOW_STORES = false;
 // Shown in the category bar like any category, but with no link and no page: the client wants the two hidden categories seen, not sold. Empty to remove.
-export const COMING_SOON = ["Washing Machines", "Air Conditioners"];
+export const COMING_SOON = []; // client MOM: TV only for now, no "coming soon" chips. Re-add ["Washing Machines", "Air Conditioners"] to show them again.
 // Warranty and returns, asked the way customers ask; shown on every product page, the home page and the Returns page.
 // DRAFT: the claim steps describe how the store handles a claim today (contact page, order number, the brand's service centre); the client confirms the wording.
 export const WARRANTY_QA = [
@@ -79,7 +79,9 @@ export function brandPoints(P, brand) {
 // the client supplies the final ones. kind "photo" uses a lifestyle photo, "brand" shows the brand's biggest TV with its reasons
 // (brandPoints), "promo" opens the offers page with the biggest discount.
 export const HOME_BANNERS = [
-  { kind: "photo", eyebrow: "", h: ["A Bigger World Awaits."], s: "Elista and Telefunken Smart TVs at factory prices, delivered free, cash on delivery.", href: "/televisions", cta: "Explore TVs", im: "img/hero-a.jpg" },
+  { kind: "photo", eyebrow: "", h: ["Unbelievable prices,", "straight from the factory."], s: "Elista and Telefunken Smart TVs, delivered free, cash on delivery.", href: "/televisions", cta: "Explore TVs", im: "img/hero-a.jpg" },
+  { kind: "brand", brand: "Elista", h: ["Brilliant entertainment.", "Beautifully yours."], im: "img/life-room.jpg" },
+  { kind: "brand", brand: "Telefunken", h: ["Bring every moment", "to life."], im: "img/life-cinema.jpg" },
   { kind: "promo", eyebrow: "Limited time", h: ["Festive offers."], href: "/offers", cta: "See the offers", im: "img/hero-b.jpg" },
 ];
 // "Good to know" on the home page. Every answer only repeats a promise the site already makes elsewhere: [question, answer, [link, label] or null]

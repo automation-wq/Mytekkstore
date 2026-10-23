@@ -231,7 +231,7 @@ server.listen(0, "127.0.0.1", async () => {
     assert.equal((await fetch(base + "/manifest.webmanifest")).headers.get("content-type"), "application/manifest+json");
 
     // banners and campaigns: public lists carry only live records, the admin edits them, campaign pages are clean addresses
-    r = await call("/api/banners"); assert.ok(r.data.banners.length >= 5 && r.data.banners.every(b => b.live) && r.data.banners.filter(b => b.slot === "home").length === 2, "the seeded banners: two home slides (client brief), product and campaign banners");
+    r = await call("/api/banners"); assert.ok(r.data.banners.length >= 5 && r.data.banners.every(b => b.live) && r.data.banners.filter(b => b.slot === "home").length === 4, "the seeded banners: four home slides (factory, Elista, Telefunken, promo), product and campaign banners");
     r = await call("/api/campaigns"); assert.equal(r.data.campaigns[0].slug, "festive-tv-days");
     assert.equal((await call("/api/admin/banners", "POST", { slot: "home", title: "x" })).status, 401, "banners are the admin's");
     assert.equal((await call("/api/admin/banners", "POST", { slot: "product:999", title: "Nope", preset: "cinematic" }, admin)).status, 400, "a banner needs a real product");
