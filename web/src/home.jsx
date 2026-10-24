@@ -62,7 +62,7 @@ export function Home() {
   const techCards = [...new Set(tvs.map(typeOf).filter(Boolean))].sort().map(t => { const ps = tvs.filter(p => typeOf(p) === t).sort((a, b) => a.price - b.price); return { res: t, text: TECH_NOTE[t] || "Screen technology", img: life("tech" + t, ps[0] && (cutout(ps[0].img) || ps[0].img)), from: minP(ps), href: listUrl({ cat: "Televisions", type: t }) }; });
   const detailCards = [...techCards, ...resCards.map(c => ({ ...c, href: listUrl({ cat: "Televisions", res: c.res }) }))];
   // the two brand showcases (client brief, section 12): the brief's headlines, a bright room for Elista, a cinematic room for Telefunken
-  const BRAND_SHOW = { Elista: { title: "Brilliant Entertainment. Beautifully Yours.", text: "Discover the Elista television collection.", cta: "Explore Elista TVs", img: life("brandElista", "img/life-room.jpg") }, Telefunken: { title: "Bring Every Moment to Life.", text: "Explore immersive entertainment with Telefunken.", cta: "Explore Telefunken TVs", img: life("brandTelefunken", "img/life-cinema.jpg") } };
+  const BRAND_SHOW = { Elista: { title: "Brilliant Entertainment. Beautifully Yours.", text: "Discover the Elista television collection.", cta: "Explore Elista TVs", img: life("brandElista", "img/brand-elista.webp") }, Telefunken: { title: "Bring Every Moment to Life.", text: "Explore immersive entertainment with Telefunken.", cta: "Explore Telefunken TVs", img: life("brandTelefunken", "img/brand-telefunken.webp") } }; // brand rooms from the client's tv-store-design export, converted to WebP
   const LAUNCHES = [
     { kicker: "Elista", title: "Elista 4K Smart TV Collection", text: "Brilliant 4K entertainment, beautifully yours.", href: brandUrl("Elista"), img: life("launch1", "img/hero0.jpg"), dark: true },
     { kicker: "Telefunken", title: "Cinematic Viewing, Reimagined", text: "Big-screen Google TV with Dolby Audio.", href: brandUrl("Telefunken"), img: life("launch2", "img/life-cinema.jpg"), dark: true },
@@ -88,6 +88,7 @@ export function Home() {
       {slides.length > 1 && <><button className="arrow prev" aria-label="Previous slide">‹</button><button className="arrow next" aria-label="Next slide">›</button>
       <div className="dots">{slides.map((_, i) => <button aria-label={"Slide " + (i + 1)} data-i={i} className={i === cur ? "on" : undefined} key={i}></button>)}</div></>}
     </div>
+    {tvs.length > 0 && <nav className="bands wrap" aria-label="Shop by budget">{[[0, 10000, "Under " + money(10000)], [10000, 25000, money(10000) + " – " + money(25000)], [25000, 50000, money(25000) + " – " + money(50000)], [50000, 0, "Above " + money(50000)]].map(([mn, mx, label]) => <a href={listUrl({ cat: "Televisions", min: mn || "", max: mx || "" })} key={label}>{label}</a>)}</nav>}
 
 
     {CATS.length > 1 && <nav className="catrail" aria-label="Shop by category">{CATS.map(c => { const n = P.filter(p => p.cat === c).length; return <a className="crail" href={listUrl({ cat: c })} key={c}><b>{c}</b><small>{n} model{n === 1 ? "" : "s"}</small></a>; })}</nav>}
