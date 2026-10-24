@@ -1792,3 +1792,17 @@ body, body::before, body::after, .slide .bg::after, .slide.on .w, .img .badge, .
 .budget .bbd em { white-space:nowrap; font-size:13px } .budget .bcard .darr { display:none } /* the TV is the pointer now */
 @media (max-width:760px) { .budget .bcard { padding-right:104px } .budget .bcard .bcut { width:112px } }
 
+
+/* ===== Deal theme (2026-10-24): the client chose the deal-first design (Downloads/tv-store-design). Cool white ground, indigo
+   primary, green deal badges and savings, amber highlight. Appended last so it wins over the Studio theme. Remove this block to go back. ===== */
+:root { --bg:#f6f7f9; --card:#ffffff; --line:#e5e7ef; --text:#2a2e45; --soft:#424a5e; --muted:#6b7280; --tile:#eef0f4; --accent:#3b45c9; --ink:#3b45c9; --on:#ffffff; --deal:#1f9d55; --deal-soft:#e7f6ee; --hi:#f6c829; --hi-fg:#43370a }
+.btn:hover { background:#2f38b0 }
+.badge { background:var(--deal); color:#fff; border-radius:5px; padding:3px 8px; font-size:12px; font-weight:800; letter-spacing:.02em; text-transform:uppercase; box-shadow:none }
+.card small { color:var(--accent) }
+.card .save { color:var(--deal); font-weight:700 }
+.stock { background:var(--deal-soft); color:var(--deal) }
+.card::before { background:radial-gradient(240px circle at var(--mx,50%) var(--my,0%),#3b45c91f,transparent 70%) }
+.card:hover { box-shadow:0 26px 44px -24px #1c227080 }
+footer { background:#2a2e45 } /* dark slate like the design's announcement bar and compare tray, not the indigo button colour */
+.dcard.photo .dimg { background:#2a2e45 }
+.ftrust .ic { color:var(--hi) }

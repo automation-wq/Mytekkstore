@@ -58,9 +58,9 @@ export function Card({ p, i = 0, sizes, compare }) {
   const onLeave = () => { rx.set(0); ry.set(0); };
   return <m.div className="card" style={{ rotateX: rx, rotateY: ry, transformPerspective: 900 }} onPointerMove={onMove} onPointerLeave={onLeave}
     initial={{ opacity: 0, y: 10 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: "0px 0px -40px" }} transition={{ type: "spring", stiffness: 220, damping: 26, delay: (i % 6) * .06 }}><Heart p={p} />
-    <a href={productUrl(p)}><div className="img"><Photo p={p} />{off(p) > 0 && <span className="badge">{off(p)}% off</span>}<button type="button" className="qview" data-quick={p.id} aria-label={"Quick view " + p.brand + " " + p.name}>Quick view</button></div><small>{p.brand}{p.os ? " · " + p.os : ""}</small><h3>{p.name}</h3><Stars p={p} /></a>
+    <a href={productUrl(p)}><div className="img"><Photo p={p} />{off(p) > 0 && <span className="badge">{off(p)}% OFF</span>}<button type="button" className="qview" data-quick={p.id} aria-label={"Quick view " + p.brand + " " + p.name}>Quick view</button></div><small>{p.brand}{p.os ? " · " + p.os : ""}</small><h3>{p.name}</h3><Stars p={p} /></a>
     {sizes && sizes.length > 1 && <span className="csizes"><small>Sizes</small>{sizes.map(([l, href, on]) => on ? <b key={l}>{l}</b> : <a href={href} key={l}>{l}</a>)}</span>}
-    <div className="price"><b>{money(p.price)}</b>{p.mrp > p.price && <><s>{money(p.mrp)}</s><em className="save">Save {money(p.mrp - p.price)}</em></>}</div>{p.emi && <span className="emi">No Cost EMI · {money(emiPlans(p.price)[2][1])}/month</span>}<Buy p={p} />{compare && <label className="ccmp"><input type="checkbox" checked={compare[0]} onChange={() => compare[1](p.id)} /> Compare</label>}</m.div>;
+    <div className="price"><b>{money(p.price)}</b>{p.mrp > p.price && <><s>{money(p.mrp)}</s><em className="save">{off(p)}% off · Save {money(p.mrp - p.price)}</em></>}</div>{p.emi && <span className="emi">No Cost EMI · {money(emiPlans(p.price)[2][1])}/month</span>}<Buy p={p} />{compare && <label className="ccmp"><input type="checkbox" checked={compare[0]} onChange={() => compare[1](p.id)} /> Compare</label>}</m.div>;
 }
 export function Line({ p }) {
   const { money, qtyOf } = useStore();
@@ -245,7 +245,7 @@ export function Header() {
   return <header id="hdr">
     <div className="ticker" aria-label="Store offers"><div>{[0, 1].flatMap(r => [["truck", "Free delivery on every order"], ["shield", "100% genuine products with brand warranty"], ["cash", "Cash on delivery available"], ["undo", "Easy returns"], ["box", "Track every order from your account"]].map(([i, t]) => <span key={r + i}><Icon k={i} /> {t}</span>))}</div></div>
     <div className="wrap">
-      <a className="logo" href="/"><svg viewBox="0 0 32 32" width="30" height="30" aria-hidden="true"><rect width="32" height="32" rx="9" fill="#08805f" /><path d="M18 5 9 18h6l-2 9 10-14h-6z" fill="#ffffff" /></svg><span>mytekk<b>store</b></span></a>
+      <a className="logo" href="/"><svg viewBox="0 0 32 32" width="30" height="30" aria-hidden="true"><rect width="32" height="32" rx="9" fill="var(--accent)" /><path d="M18 5 9 18h6l-2 9 10-14h-6z" fill="#ffffff" /></svg><span>mytekk<b>store</b></span></a>
       <Search /><Deliver />
       <select id="country" aria-label="Country" defaultValue={country} onChange={e => { save("country", e.target.value); location.reload(); }}>{Object.keys(COUNTRIES).map(c => <option value={c} key={c}>{c}</option>)}</select>
       <a className="hlink" href="/account" aria-label={me ? "My account" : "Sign in"}><Icon k="user" /> <span>{me ? me.name.split(" ")[0] : "Sign in"}</span></a>
@@ -323,12 +323,12 @@ export function QuickView() {
   return <AnimatePresence>{p && <m.div className="quickwrap" key="qv" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={e => { if (e.target === e.currentTarget) closeQuick(); }}>
     <m.div className="quick" role="dialog" aria-modal="true" aria-label={p.brand + " " + p.name} initial={{ opacity: 0, scale: .96, y: 12 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: .97 }} transition={SPRING}>
       <button type="button" className="x" aria-label="Close" onClick={closeQuick}>×</button>
-      <div className="qimg"><Photo p={p} main />{off(p) > 0 && <span className="badge">{off(p)}% off</span>}</div>
+      <div className="qimg"><Photo p={p} main />{off(p) > 0 && <span className="badge">{off(p)}% OFF</span>}</div>
       <div className="qinfo">
         <a className="qbrand" href={brandUrl(p.brand)}>{p.brand}{p.os ? " · " + p.os : ""}</a>
         <h2>{p.brand} {p.name}</h2>
         <Stars p={p} />
-        <div className="price"><b>{money(p.price)}</b>{p.mrp > p.price && <><s>{money(p.mrp)}</s><span className="badge">{off(p)}% off</span></>}</div>
+        <div className="price"><b>{money(p.price)}</b>{p.mrp > p.price && <><s>{money(p.mrp)}</s><span className="badge">{off(p)}% OFF</span></>}</div>
         {p.emi && <p className="muted small">No Cost EMI from {money(emiPlans(p.price)[2][1])}/month</p>}
         {(p.specs || []).length > 0 && <ul className="qspecs">{p.specs.slice(0, 5).map(([k, v]) => <li key={k}><span>{k}</span><b>{v}</b></li>)}</ul>}
         <div className="qactions"><Buy p={p} />{p.stock > 0 && <button type="button" className="btn ghost" data-buy={p.id}>Buy now</button>}<Heart p={p} /></div>

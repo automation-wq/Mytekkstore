@@ -171,7 +171,7 @@ export function CompareAll({ list, cat, short, picked }) {
     <div className="scroll"><table className="ctable">
       <thead><tr><th></th>{cols.map(x => <th key={x.id}><a href={productUrl(x)}><span className="cimg"><Photo p={x} sizes="120px" /></span><small>{x.brand}</small><b>{x.name}</b></a></th>)}</tr></thead>
       <tbody>
-        {line("Price", x => <><b className="cprice">{money(x.price)}</b>{x.mrp > x.price && <><s>{money(x.mrp)}</s><span className="badge">{off(x)}% off</span></>}{x.price === cheapest && <><br /><span className="stock">Lowest price</span></>}</>)}
+        {line("Price", x => <><b className="cprice">{money(x.price)}</b>{x.mrp > x.price && <><s>{money(x.mrp)}</s><span className="badge">{off(x)}% OFF</span></>}{x.price === cheapest && <><br /><span className="stock">Lowest price</span></>}</>)}
         {line("Rating", x => x.reviews && x.reviews.length ? <Stars p={x} /> : <span className="muted">No reviews yet</span>)}
         {cols.some(x => x.os) && line("Operating system", x => x.os || "—", new Set(cols.map(x => x.os || "")).size > 1 ? "diff" : "")}
         {keys.map(k => line(k, x => specOf(x, k), new Set(cols.map(x => specOf(x, k))).size > 1 ? "diff" : ""))}
