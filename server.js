@@ -690,7 +690,13 @@ function staticHome() {
   const words = t => String(t || "").split(/(?<=[.!?])\s+/).filter(Boolean).map(l => `<span class="ln">${l.split(" ").map(w => `<span class="w">${escHtml(w)}&nbsp;</span>`).join("")}</span>`).join("");
   const header = staticHeader();
   const hero = !b || b.brand || b.productId || b.preset === "promo" ? "" : `<div class="hero auto"><div class="slide k-photo on" data-preset="${escHtml(b.preset || "cinematic")}"><div class="bg"><picture>${img}</picture></div><div class="hpanel"><h1>${words(b.title)}</h1><p>${escHtml(b.text || "")}</p><div class="hcta"><a class="btn" href="${escHtml(b.href || "/televisions")}">${escHtml(b.cta || "Explore TVs")}</a><a class="btn ghost" href="${escHtml(b.href2 || "/televisions?sort=off")}">${escHtml(b.cta2 || "See deals")}</a></div></div></div></div>`;
-  return header + '<main id="main" class="wrap">' + hero + "</main>";
+  // the discount banner under the hero, painted with it so the page's largest first-screen text does not wait for the script
+  // (same markup and figures as the deal box in web/src/home.jsx: biggest discount, lowest price, lowest 9-month No Cost EMI)
+  const tvs = live().filter(p => p.cat === "Televisions"), rs = n => String.fromCharCode(8377) + n.toLocaleString("en-IN");
+  const maxOff = Math.max(0, ...live().map(p => Math.round((1 - p.price / p.mrp) * 100))), minTv = tvs.length ? Math.min(...tvs.map(p => p.price)) : 0;
+  const emis = tvs.filter(p => p.emi).map(p => Math.ceil(p.price / 9)), minEmi = emis.length ? Math.min(...emis) : 0;
+  const deal = !hero || !tvs.length ? "" : `<section class="dealbox wrap" aria-label="Deals on Smart TVs"><div class="dealin"><span class="deye">Deals on Smart TVs</span><h2>Up to <em>${maxOff}% off</em> on Smart TVs</h2><p>Starting at ${rs(minTv)}${minEmi ? ", No Cost EMI from " + rs(minEmi) + "/month" : ""}, bank offers and cash on delivery.</p><a class="btn" href="${catPath("Televisions")}?sort=off">Shop all deals →</a></div></section>`;
+  return header + '<main id="main" class="wrap">' + hero + deal + "</main>";
 }
 // The product page's first screen (breadcrumbs, main photo, brand, name, rating, price) written into the HTML the same way as the
 // home page: the photo is the page's largest element, so it paints before the script runs. Same classes as the top of Product in
