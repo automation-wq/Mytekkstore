@@ -62,6 +62,8 @@ async function launch({ port = 9555, width = 1366, height = 800, mobile = false 
       if (await action() === "same page") onLoad = null; else await loaded;
     } finally { clearTimeout(timer); }
     await ev("typeof ready === 'undefined' ? 0 : ready.then(() => new Promise(r => setTimeout(r, 80)))");
+    for (let i = 0; i < 100 && await ev("!!document.getElementById('static')"); i++) await sleep(30); // some pages paint a static first screen; the app removes it once its own header and page are drawn
+    for (let i = 0; i < 100 && !(await ev("!!document.querySelector('#hdr .l0link')")); i++) await sleep(30); // and the app's own header bar is drawn (it can trail the ready signal by a few hundred ms on a busy machine)
   };
   return {
     errors, ev, send, afterLoad,
@@ -112,15 +114,17 @@ async function run() {
     // The page itself records when the pointer entered a category and when a menu opened,
     // so the timing checks do not depend on how quickly this script talks to the browser.
     await b.ev(`window.navLog = []; document.querySelectorAll(".l0").forEach(l => l.addEventListener("pointerenter", () => navLog.push(["enter", performance.now()])));
-      new MutationObserver(ms => ms.forEach(m => m.target.classList.contains("open") && navLog.push(["open", performance.now()])))
-        .observe(document.querySelector(".gbar"), { subtree: true, attributes: true, attributeFilter: ["class"] }); 0`);
+      new MutationObserver(ms => ms.forEach(m => (m.target.classList?.contains("open") || [...m.addedNodes].some(n => n.nodeType === 1 && (n.classList.contains("open") || n.querySelector(".open")))) && navLog.push(["open", performance.now()])))
+        .observe(document.querySelector(".gbar"), { subtree: true, attributes: true, attributeFilter: ["class"], childList: true }); 0`); // the open class can arrive on a re-created node, not only as an attribute change
     const tv = await b.center(".l0link", 0), away = [700, 720];
     await b.move(...away);
     await b.glide(...tv, 120);
     // wait for the panel and the dim layer to finish fading in (the machine may be busy)
     for (let i = 0; i < 25 && +(await b.ev(`getComputedStyle(document.querySelector(".navshade")).opacity`)) < 0.95; i++) await sleep(100);
     assert.equal(await open(), "Televisions");
-    const log = await b.ev(`navLog`), delay = log.find(e => e[0] === "open")[1] - log.find(e => e[0] === "enter")[1];
+    const log = await b.ev(`navLog`), opened = log.find(e => e[0] === "open"), entered = log.find(e => e[0] === "enter");
+    assert.ok(opened && entered, "the page should log the pointer entering and the menu opening; log: " + JSON.stringify(log));
+    const delay = opened[1] - entered[1];
     assert.ok(delay >= 120 && delay < 400, `the menu should open a moment after the pointer arrives, not instantly; it took ${Math.round(delay)} ms`);
     const panel = await b.ev(`(() => { const p = document.querySelector(".l0.open .npanel"), r = p.getBoundingClientRect(), s = getComputedStyle(p), h = document.querySelector("#hdr").getBoundingClientRect();
       return { vis: s.visibility, opacity: +s.opacity, left: r.left, width: r.width, top: r.top, bottom: r.bottom, hdrBottom: h.bottom, vw: document.documentElement.clientWidth, vh: innerHeight,
@@ -215,7 +219,11 @@ async function run() {
       const hash = new URL(h).hash;
       if (hash) await b.goto(base + "/cart.html"); // arrive from another page, so the section has to be found after a full load
       await b.goto(h);
-      if (hash) await sleep(900); // the page scrolls smoothly to the section
+      if (hash) { // the page scrolls smoothly to the section; a long page takes about 2 s on this machine, so wait for the scroll to settle rather than guess
+        await sleep(900); let last = -1, still = 0;
+        for (let i = 0; i < 30 && still < 3; i++) { const y = await b.ev(`Math.round(scrollY)`); still = y === last ? still + 1 : 0; last = y; await sleep(150); }
+      }
+      for (let i = 0; i < 40 && !(await b.ev(`!!document.querySelector("#hdr")`)); i++) await sleep(100); // pages without a server-painted header get theirs when the app mounts; wait for it instead of racing it
       const r = await b.ev(`(() => { const t = ${JSON.stringify(hash)} && document.querySelector(${JSON.stringify(hash || "x")}); return { page: document.body.dataset.page, cards: document.querySelectorAll("main .card").length,
         pdp: !!document.querySelector(".pdp"), h1: (document.querySelector("main h1") || {}).textContent, top: t ? t.getBoundingClientRect().top : null, hdr: document.querySelector("#hdr").getBoundingClientRect().bottom, vh: innerHeight }; })()`);
       if (r.page === "category" && !h.includes("wish=1")) assert.ok(r.cards > 0, "no products at " + h);
@@ -297,21 +305,21 @@ async function run() {
     assert.equal(await b.ev(`getComputedStyle(document.querySelector(".pdp .actions .btn")).borderRadius`), "999px", "pill buttons");
     await b.goto(base + "/");
     const clips = await b.ev(`({ hero: document.querySelectorAll(".slide").length, oss: document.querySelectorAll(".disco .dcard.os").length, brands: document.querySelectorAll(".bbrand").length, arrows: [...document.querySelectorAll(".strip")].filter(x => !x.classList.contains("nos") && x.querySelector(".row").scrollWidth <= x.querySelector(".row").clientWidth + 2).length })`);
-    assert.equal(clips.hero, 1, "one clean hero slide (promo slide removed per client): A Bigger World Awaits"); assert.equal(clips.oss, 2, "shop by operating system on the home page"); assert.equal(clips.brands, 2, "a giant tile per brand");
+    assert.equal(clips.hero, 3, "three hero slides per the client MOM of 23 October: factory price, Elista, Telefunken (the promo banner is not in the rotation)"); assert.equal(clips.oss, 2, "shop by operating system on the home page"); assert.equal(clips.brands, 2, "a giant tile per brand");
     assert.equal(clips.arrows, 0, "a row that fits on the screen shows no scroll arrows");
     await b.goto(base + "/category.html?cat=Televisions");
-    assert.deepEqual(await b.ev(`[...document.querySelectorAll(".cdisco .dtabs button")].map(b => b.textContent)`), ["Shop by Size", "Shop by OS", "Screen type / Resolution"], "three-tab discovery under the category banner (client brief)");
+    assert.deepEqual(await b.ev(`[...document.querySelectorAll(".cdisco .dtabs button")].map(b => b.textContent)`), ["Shop by Size", "Shop by Budget", "Shop by OS", "Screen type / Resolution"], "four-tab discovery under the category banner: size, budget, operating system, screen type");
     assert.equal(await b.ev(`document.querySelectorAll(".cdisco .dcard .dimg img").length`), 6, "every size option is a picture card with a from-price");
     assert.equal(await b.ev(`getComputedStyle(document.querySelector(".plp .grid")).gridTemplateColumns.split(" ").length`), 3, "three product cards per row on desktop");
     assert.equal(await b.ev(`new Set([...document.querySelectorAll(".plp .grid .card img")].map(i => i.currentSrc || i.src)).size`), 9, "every TV in the list has its own picture");
-    await b.click(...await b.center(".cdisco .dtabs button", 1)); await sleep(300);
+    await b.click(...await b.center(".cdisco .dtabs button", 2)); await sleep(300); // the third tab is Shop by OS (Budget sits second)
     assert.equal(await b.ev(`document.querySelectorAll(".cdisco .dcard").length`), 2, "the OS tab lists the two operating systems in the catalogue");
     await b.click(...await b.center(".cdisco .dcard", 0)); await sleep(500);
     assert.ok(await b.ev(`location.search.includes("os=Google") && document.querySelectorAll(".plp .grid .card").length === 5 && !!document.querySelector(".cdisco .dcard.on")`), "tapping an option filters the list, marks the card and keeps the address");
     await b.goto(base + "/category.html?cat=Televisions");
     assert.equal(await b.ev(`document.querySelectorAll(".fbar, .ftrack").length`), 0, "no scroll line or arrow buttons under the explore tiles (client decision)");
     assert.ok(await b.ev(`!!document.querySelector(".kv .kvimg") && document.querySelector(".kv h1").textContent === "A World of Entertainment Awaits."`), "the category headline sits on its lifestyle photo");
-    assert.ok(await b.ev(`!!document.querySelector(".topf video.bvid") && document.querySelectorAll(".tf svg").length === 6`), "the Top features band has its room clip and line icons");
+    assert.ok(await b.ev(`document.querySelectorAll(".tf svg").length === 6`), "the Top features band shows its six line icons (its room clip went with the no-idle-motion decision of 22 October)");
 
     step = "quick view opens from a card, shows the product and closes";
     await b.ev(`document.querySelector(".plp .grid .card .qview").click()`); await sleep(500);

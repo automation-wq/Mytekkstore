@@ -1795,7 +1795,7 @@ body, body::before, body::after, .slide .bg::after, .slide.on .w, .img .badge, .
 
 /* ===== Deal theme (2026-10-24): the client chose the deal-first design (Downloads/tv-store-design). Cool white ground, indigo
    primary, green deal badges and savings, amber highlight. Appended last so it wins over the Studio theme. Remove this block to go back. ===== */
-:root { --bg:#f6f7f9; --card:#ffffff; --line:#e5e7ef; --text:#2a2e45; --soft:#424a5e; --muted:#6b7280; --tile:#eef0f4; --accent:#3b45c9; --ink:#3b45c9; --on:#ffffff; --deal:#1f9d55; --deal-soft:#e7f6ee; --hi:#f6c829; --hi-fg:#43370a }
+:root { --bg:#f6f7f9; --card:#ffffff; --line:#e5e7ef; --text:#2a2e45; --soft:#424a5e; --muted:#5b6370; --tile:#eef0f4; --accent:#3b45c9; --ink:#3b45c9; --on:#ffffff; --deal:#15803d; --deal-soft:#e7f6ee; --hi:#f6c829; --hi-fg:#43370a } /* deal green dark enough for white text and for text on white (4.9:1); --muted kept dark for small text */
 .btn:hover { background:#2f38b0 }
 .badge { background:var(--deal); color:#fff; border-radius:5px; padding:3px 8px; font-size:12px; font-weight:800; letter-spacing:.02em; text-transform:uppercase; box-shadow:none }
 .card small { color:var(--accent) }
@@ -1806,8 +1806,19 @@ body, body::before, body::after, .slide .bg::after, .slide.on .w, .img .badge, .
 footer { background:#2a2e45 } /* dark slate like the design's announcement bar and compare tray, not the indigo button colour */
 .dcard.photo .dimg { background:#2a2e45 }
 .ftrust .ic { color:var(--hi) }
-/* the four price-band quick links under the hero (tv-store-design HeroDeal): a straight road to the TVs in a budget */
-.bands { display:grid; grid-template-columns:repeat(2,1fr); gap:8px; margin-top:12px }
-.bands a { display:flex; align-items:center; justify-content:center; min-height:48px; padding:6px 10px; border:1px solid var(--line); background:var(--card); border-radius:10px; font-weight:700; font-size:14px; text-align:center; color:var(--text) }
-.bands a:hover { border-color:var(--accent); color:var(--accent) }
-@media (min-width:640px) { .bands { grid-template-columns:repeat(4,1fr) } }
+
+.stock { color:#166534 } /* green text on the pale green pill: 5.9:1 */
+footer .copy, footer p, .copy { color:#b9bfcb } /* copyright and running text on the slate footer: 6.5:1 */
+/* the four price bands in the bar, right of the menus; the bar already scrolls sideways on phones */
+.gbar .qbands { display:flex; gap:4px; margin-left:auto } .gbar .qbands a { display:flex; align-items:center; padding:12px 10px; font-weight:600; color:var(--soft); border-radius:8px; white-space:nowrap }
+.gbar .qbands a:hover { background:var(--tile); color:var(--accent) }
+/* the discount banner under the hero (tv-store-design HeroDeal): indigo block, the biggest discount in amber, every figure from the catalogue */
+.dealbox { margin-top:14px } .dealbox .dealin { background:var(--accent); color:#fff; border-radius:16px; padding:26px 22px }
+.dealbox .deye { display:block; font-size:12px; font-weight:700; letter-spacing:.04em; text-transform:uppercase; opacity:.85 }
+main .dealbox h2 { color:#fff; font-size:clamp(28px,4vw,38px); margin:6px 0 0; letter-spacing:-1px } .dealbox h2 em { font-style:normal; color:var(--hi) }
+.dealbox p { margin:10px 0 0; max-width:36rem; font-size:15px; opacity:.92 } .dealbox .btn { background:#fff; color:var(--text); margin-top:16px } .dealbox .btn:hover { background:#eef0f4 }
+@media (min-width:760px) { .dealbox .dealin { padding:32px 34px } }
+/* bank offers as the design draws them: pale green cards with a dashed deal border */
+.offer { background:var(--deal-soft); border:1px dashed #15803d80; border-radius:12px; padding:16px 18px; box-shadow:none } .offer b { font-size:18px } .offer span { color:var(--text) }
+main .dealbox h2 { display:block } /* the site lays h2s out as a row for a right-hand link; the banner headline is one line of text */
+.dealbox .btn:not(.ghost):not([disabled]) { background:#fff; color:var(--text) } .dealbox .btn:not(.ghost):not([disabled]):hover { background:#eef0f4 } /* outranks the ink-pill rule so the button stays white on the indigo box */

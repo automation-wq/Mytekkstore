@@ -81,7 +81,7 @@ export function OrderItems({ o }) {
     <div><span>{it.brand} {it.name}</span><div className="lrow"><span className="muted">Qty {it.qty}</span><b>{money(it.price * it.qty)}</b></div></div></div>);
 }
 // bank offers block, used on the home page and the offers page
-export const BankOffers = () => <section className="offers" id="bank"><h2>Bank offers <a href="/offers">All offers</a></h2><div className="ogrid">{BANK_OFFERS.map(([bank, big, note, c]) =>
+export const BankOffers = () => <section className="offers" id="bank"><h2>Bank offers &amp; No Cost EMI <a href="/offers">All offers</a></h2><div className="ogrid">{BANK_OFFERS.map(([bank, big, note, c]) =>
   <div className="offer" style={{ "--bc": c }} key={bank}><i className="blogo">{bank.split(" ")[0]}</i><b>{big}</b><span>{note}</span><small>{bank} · T&amp;C apply</small></div>)}</div></section>;
 
 // forms: show the server's message under the form and stop double submits. onSubmit gets the fields; throw to show an error.
@@ -258,7 +258,7 @@ export function Header() {
         <div><p className="nhead">{it.head}</p><div className="ntiles">{it.tiles.map(([t, h, img]) => <a className="ntile" href={h} key={h}><img src={pic(img, 480)} alt="" loading="lazy" width="800" height="800" /><span>{t}</span></a>)}</div></div>
         <div><p className="nhead">{it.prodHead}</p><div className="nprods">{it.prods.map(p => <a className="nprod" href={productUrl(p)} key={p.id}><img src={pic(p.img, 480)} alt="" loading="lazy" width="800" height="800" /><span><small>{p.brand}</small><b>{p.name}</b><i>{money(p.price)}</i></span></a>)}</div></div>
         <div className="ndisc"><p className="nhead">Discover</p>{it.links.map(([t, h]) => <a href={h} key={t}>{t}</a>)}{it.promo && <a className="npromo" href={it.promo[2]}><b>{it.promo[0]}</b><span>{it.promo[1]}</span><u>Open the guide →</u></a>}</div>
-      </div></div>}</li>)}</ul></nav>
+      </div></div>}</li>)}<li className="qbands">{[[0, 10000, "Under " + money(10000)], [10000, 25000, money(10000) + " – " + money(25000)], [25000, 50000, money(25000) + " – " + money(50000)], [50000, 0, "Above " + money(50000)]].map(([mn, mx, label]) => <a href={listUrl({ cat: "Televisions", min: mn || "", max: mx || "" })} key={label}>{label}</a>)}</li></ul></nav>
   </header>;
 }
 

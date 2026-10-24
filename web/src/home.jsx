@@ -6,7 +6,7 @@ import { useEffect, useRef, useState } from "react";
 import { m } from "motion/react";
 import { useStore } from "./store.jsx";
 import { Card, Row, BankOffers, Ico, Icon, Qa, OsChart } from "./components.jsx";
-import { DRAW_ICONS, HOME_BANNERS, FAQ, catSizes, brandUrl, listUrl, off, starRow, productUrl, pic, picSet, osList, osUrl, brandPoints, cutout, life } from "./data.js";
+import { DRAW_ICONS, HOME_BANNERS, FAQ, catSizes, brandUrl, listUrl, off, starRow, productUrl, pic, picSet, osList, osUrl, brandPoints, cutout, life, emiPlans } from "./data.js";
 import { lines, TONES } from "./banner.jsx";
 import { resOf } from "./category.jsx"; // resolution of a TV from its specifications, for the screen-type cards
 
@@ -18,6 +18,8 @@ const GROUP = { hide: {}, show: { transition: { staggerChildren: .12 } } };
 export function Home() {
   const { P, CATS, BRANDS, recent, byId, money, banners } = useStore();
   const [cur, setCur] = useState(0);
+  const [seen, setSeen] = useState(() => new Set([0])); // a slide's photos mount the first time it shows, so the first paint carries only the first slide
+  useEffect(() => { setSeen(s => s.has(cur) ? s : new Set(s).add(cur)); }, [cur]);
   const heroRef = useRef();
   const maxOff = Math.max(0, ...P.map(off));
   const biggest = b => [...P].filter(p => p.brand === b).sort((a, c) => c.price - a.price)[0]; // the brand's flagship: its most expensive model
@@ -45,6 +47,7 @@ export function Home() {
   const onMove = e => { const h = heroRef.current, r = h.getBoundingClientRect(); h.style.setProperty("--px", ((e.clientX - r.left) / r.width - .5).toFixed(3)); h.style.setProperty("--py", ((e.clientY - r.top) / r.height - .5).toFixed(3)); };
   const picOf = src => ({ src: pic(src, 960), srcSet: picSet(src) });
   const tvs = P.filter(p => p.cat === "Televisions");
+  const minTv = tvs.length ? Math.min(...tvs.map(p => p.price)) : 0, minEmi = tvs.some(p => p.emi) ? Math.min(...tvs.filter(p => p.emi).map(p => emiPlans(p.price)[2][1])) : 0; // the deal box: every figure from the catalogue
   // premium discovery sections (MASTER PROMPT redesign): image-led cards for size, operating system and resolution, an editorial
   // Latest Launches grid, and a product-care banner. Prototype imagery reuses the store's renders and lifestyle shots; copy is
   // aspirational marketing only, no invented specs, prices or model names.
@@ -74,8 +77,8 @@ export function Home() {
     <div className={"hero" + (auto ? " auto" : "")} ref={heroRef} onClick={onHero} onPointerMove={onMove}>
       {slides.map((sl, i) => <m.div className={"slide k-" + sl.kind + (i === cur ? " on" : "")} data-preset={sl.preset || "cinematic"} key={i} initial={i === 0 ? false : "hide"} animate={i === cur ? "show" : "hide"} variants={GROUP} style={sl.tone ? { background: sl.tone } : undefined}>
         {(sl.brand || sl.kind === "promo") && <span className="ghostmark" aria-hidden="true">{sl.brand || "Offers"}</span>}
-        {sl.im && <div className="bg"><picture>{sl.imMobile && <source media="(max-width:760px)" srcSet={pic(sl.imMobile, 960)} />}<img {...picOf(sl.im)} sizes="100vw" alt="" width="1344" height="752" fetchPriority={i ? "low" : "high"} loading={i ? "lazy" : "eager"} decoding="async" /></picture>{sl.vid && <video className="vid" muted loop playsInline preload="none" data-src={sl.vid} aria-hidden="true"></video>}</div>}
-        {sl.prod && <m.a className={"bigtv" + (cutout(sl.prod.img) ? " cut" : "")} variants={RISE} href={productUrl(sl.prod)}>{cutout(sl.prod.img)
+        {sl.im && seen.has(i) && <div className="bg"><picture>{sl.imMobile && <source media="(max-width:760px)" srcSet={picSet(sl.imMobile) || pic(sl.imMobile, 960)} sizes="100vw" />}<img {...picOf(sl.im)} sizes="100vw" alt="" width="1344" height="752" fetchPriority={i ? "low" : "high"} loading={i ? "lazy" : "eager"} decoding="async" /></picture>{sl.vid && <video className="vid" muted loop playsInline preload="none" data-src={sl.vid} aria-hidden="true"></video>}</div>}
+        {sl.prod && seen.has(i) && <m.a className={"bigtv" + (cutout(sl.prod.img) ? " cut" : "")} variants={RISE} href={productUrl(sl.prod)}>{cutout(sl.prod.img)
           ? <><span className="tvglow" aria-hidden="true"></span><img className="tvmain" src={cutout(sl.prod.img)} alt={sl.prod.brand + " " + sl.prod.name} loading={i ? "lazy" : "eager"} /><img className="tvrefl" src={cutout(sl.prod.img)} alt="" aria-hidden="true" loading="lazy" /></>
           : <img src={pic(sl.prod.img)} srcSet={picSet(sl.prod.img)} sizes="(max-width:760px) 40vw, 30vw" alt={sl.prod.brand + " " + sl.prod.name} width="800" height="800" loading={i ? "lazy" : "eager"} />}</m.a>}
         <div className="hpanel">
@@ -88,7 +91,7 @@ export function Home() {
       {slides.length > 1 && <><button className="arrow prev" aria-label="Previous slide">‹</button><button className="arrow next" aria-label="Next slide">›</button>
       <div className="dots">{slides.map((_, i) => <button aria-label={"Slide " + (i + 1)} data-i={i} className={i === cur ? "on" : undefined} key={i}></button>)}</div></>}
     </div>
-    {tvs.length > 0 && <nav className="bands wrap" aria-label="Shop by budget">{[[0, 10000, "Under " + money(10000)], [10000, 25000, money(10000) + " – " + money(25000)], [25000, 50000, money(25000) + " – " + money(50000)], [50000, 0, "Above " + money(50000)]].map(([mn, mx, label]) => <a href={listUrl({ cat: "Televisions", min: mn || "", max: mx || "" })} key={label}>{label}</a>)}</nav>}
+    {tvs.length > 0 && <section className="dealbox wrap" aria-label="Deals on Smart TVs"><div className="dealin"><span className="deye">Deals on Smart TVs</span><h2>Up to <em>{maxOff}% off</em> on Smart TVs</h2><p>Starting at {money(minTv)}{minEmi ? ", No Cost EMI from " + money(minEmi) + "/month" : ""}, bank offers and cash on delivery.</p><a className="btn" href={listUrl({ cat: "Televisions", sort: "off" })}>Shop all deals →</a></div></section>}
 
 
     {CATS.length > 1 && <nav className="catrail" aria-label="Shop by category">{CATS.map(c => { const n = P.filter(p => p.cat === c).length; return <a className="crail" href={listUrl({ cat: c })} key={c}><b>{c}</b><small>{n} model{n === 1 ? "" : "s"}</small></a>; })}</nav>}
