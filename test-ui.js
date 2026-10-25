@@ -116,7 +116,7 @@ async function run() {
     await b.ev(`window.navLog = []; document.querySelectorAll(".l0").forEach(l => l.addEventListener("pointerenter", () => navLog.push(["enter", performance.now()])));
       new MutationObserver(ms => ms.forEach(m => (m.target.classList?.contains("open") || [...m.addedNodes].some(n => n.nodeType === 1 && (n.classList.contains("open") || n.querySelector(".open")))) && navLog.push(["open", performance.now()])))
         .observe(document.querySelector(".gbar"), { subtree: true, attributes: true, attributeFilter: ["class"], childList: true }); 0`); // the open class can arrive on a re-created node, not only as an attribute change
-    const tv = await b.center(".l0link", 0), away = [700, 720];
+    const tv = await b.center(".l0link", 0), away = [700, 620]; // on the hero photo, below the open menu panel (bottom 563 px) and above the band, which is one big link now; inert on every slide
     await b.move(...away);
     await b.glide(...tv, 120);
     // wait for the panel and the dim layer to finish fading in (the machine may be busy)
@@ -169,7 +169,7 @@ async function run() {
     step = "a click right after leaving a hover menu reaches the page";
     await b.glide(...await b.center(".l0link", 0), 120); await sleep(450);
     assert.equal(await open(), "Televisions");
-    const cardLink = await b.center("main .card a", 0);
+    const cardLink = await b.center("main .card h3", 0); // the product name: the link's centre now sits on the Quick view button, which is its own control
     await b.glide(...cardLink, 120); // leave the menu and click a product at once, inside the menu's closing delay
     await b.afterLoad(async () => b.click(...cardLink));
     assert.equal(await b.ev(`document.body.dataset.page`), "product", "the dim layer must not swallow that click");

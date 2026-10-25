@@ -74,6 +74,12 @@ export function Home() {
     { kicker: "Big screen", title: "The Big-Screen Experience", text: "Made for movie nights.", href: listUrl({ cat: "Televisions", size: "65 inch TVs" }), img: life("launch4", "img/p3.jpg") },
     { kicker: "New", title: "Next-Generation Smart TVs", text: "Discover the latest from Elista and Telefunken.", href: "/televisions", img: life("launch5", "img/p0.jpg") },
   ].map(l => ({ ...l, dark: l.dark || !cutout(l.img) })); // a room photo gets the darker shade; a render sits on its own dark stage
+  const brandBig = (b, i) => { const prod = biggest(b), pts = brandPoints(P, b), n = P.filter(p => p.brand === b).length, tone = (HOME_BANNERS.find(s => s.brand === b) || {}).tone, show = BRAND_SHOW[b] || { title: b + ".", text: "Discover the " + b + " television collection.", cta: "Explore " + b + " TVs", img: "" };
+        return prod ? <a className={"bbrand" + (i % 2 ? " flip" : "") + (show.img ? " photo" : "")} href={brandUrl(b)} key={b} style={tone && !show.img ? { background: tone } : undefined}>
+          {show.img && <img className="bphoto" src={pic(show.img, 960)} srcSet={picSet(show.img)} sizes="(max-width:1240px) 100vw, 1240px" alt="" loading="lazy" />}
+          {show.img && /show-(elista|telefunken)/.test(show.img) && <video className="bvid" muted loop playsInline preload="none" data-src={"/" + show.img.replace(".jpg", ".mp4")} aria-hidden="true"></video>}
+          <div className="btext"><span className="kicker">{b} · {n} model{n === 1 ? "" : "s"}</span><b>{show.title}</b><p>{show.text}</p><ul>{pts.map(t => <li key={t}>{t}</li>)}</ul><u>{show.cta} →</u></div>
+          {show.img ? null : cutout(prod.img) ? <img className="cut" src={cutout(prod.img)} alt={prod.brand + " " + prod.name} loading="lazy" /> : <img src={pic(prod.img)} srcSet={picSet(prod.img)} sizes="(max-width:860px) 100vw, 46vw" alt={prod.brand + " " + prod.name} width="800" height="800" loading="lazy" />}</a> : null; }; // one giant band per brand (the client wants big, colourful brand imagery, not small cards)
   return <>
     <div className={"hero" + (auto ? " auto" : "")} ref={heroRef} onClick={onHero} onPointerMove={onMove}>
       {slides.map((sl, i) => <m.div className={"slide k-" + sl.kind + (i === cur ? " on" : "")} data-preset={sl.preset || "cinematic"} key={i} initial={i === 0 ? false : "hide"} animate={i === cur ? "show" : "hide"} variants={GROUP} style={sl.tone ? { background: sl.tone } : undefined}>
@@ -94,39 +100,34 @@ export function Home() {
     </div>
     <FestiveBanner tvs={tvs} maxOff={maxOff} minEmi={minEmi} money={money} />
     <DealCarousel tvs={tvs} maxOff={maxOff} minTv={minTv} minEmi={minEmi} money={money} />
-    <BankStrip wrap full />
-    <section><h2>Deals of the Day <a href="/products?sort=off">View all</a></h2><p className="lead">The biggest discounts right now. Free delivery on every order, cash on delivery.</p><div className="grid">{deals.map((p, i) => <Card p={p} i={i} key={p.id} />)}</div></section>
-
-
-    {CATS.length > 1 && <nav className="catrail" aria-label="Shop by category">{CATS.map(c => { const n = P.filter(p => p.cat === c).length; return <a className="crail" href={listUrl({ cat: c })} key={c}><b>{c}</b><small>{n} model{n === 1 ? "" : "s"}</small></a>; })}</nav>}
-
-    <section className="launches"><h2>Latest Launches</h2><p className="lead">Discover what's new in home entertainment.</p>
-      <div className="launchgrid">{LAUNCHES.map((l, i) => <a className={"launch" + (i < 2 ? " big" : "") + (l.dark ? " dark" : "") + (cutout(l.img) ? " stage" : "")} href={l.href} key={l.title}>{cutout(l.img) ? <img src={cutout(l.img)} alt="" loading="lazy" /> : <img src={pic(l.img, 960)} srcSet={picSet(l.img)} sizes="(max-width:760px) 92vw, 46vw" alt="" loading="lazy" />}<span className="lshade"></span><span className="ltext"><span className="kicker">{l.kicker}</span><h3>{l.title}</h3><p>{l.text}</p><u>Explore now →</u></span></a>)}</div></section>
-
-
-    <section className="disco"><h2>Every room. The right screen.</h2><p className="lead">Find the perfect screen size for every space.</p>
-      <div className="dgrid five">{sizeCards.map(s => <a className={"dcard" + (cutout(s.img) ? "" : " photo")} href={listUrl({ cat: "Televisions", size: s.inch + " inch TVs" })} key={s.inch}><span className="dimg"><img src={pic(s.img, 480)} srcSet={picSet(s.img)} sizes="240px" alt="" loading="lazy" width="800" height="800" /></span><span className="dbody"><b>{s.inch}"</b><small>{s.desc}</small><em>{s.from ? "from " + money(s.from) : "Coming soon"}</em></span><i className="darr" aria-hidden="true">→</i></a>)}</div></section>
-    {osCards.length > 0 && <section className="disco"><h2>Entertainment, your way.</h2><p className="lead">Choose the smart TV experience that fits your lifestyle.</p>
-      <div className="dgrid land">{osCards.map(c => <a className="dcard os" href={osUrl(c.os)} key={c.os}><span className="dimg"><img src={pic(c.img, 960)} srcSet={picSet(c.img)} sizes="(max-width:760px) 92vw, 46vw" alt="" loading="lazy" /></span><span className="dbody"><b>{c.os}</b><small>{c.text}</small><em>{c.from ? "from " + money(c.from) : ""}</em></span><i className="darr" aria-hidden="true">→</i></a>)}</div></section>}
-
-    <OsChart P={tvs} lead="Not sure which operating system to pick? Here is what each one gives you, side by side." />
-
-    {detailCards.length > 0 && <section className="disco"><h2>See every detail differently.</h2><p className="lead">Explore display technologies built for exceptional viewing.</p>
-      <div className={"dgrid " + (detailCards.length > 3 ? "four" : "three")}>{detailCards.map(c => <a className={"dcard tall dark" + (/-cut\.webp$/.test(c.img) ? "" : " photo")} href={c.href} key={c.res}><span className="dimg"><img src={pic(c.img, 960)} srcSet={picSet(c.img)} sizes="(max-width:760px) 70vw, 30vw" alt="" loading="lazy" /></span><span className="lshade"></span><span className="dbody"><b>{c.res}</b><small>{c.text}</small><em>from {money(c.from)}</em></span></a>)}</div></section>}
-
-    <section className="bigbrands"><h2>Featured brands</h2><p className="lead">Flagship collections from {BRANDS.join(" and ")}, with the brand's own warranty.</p>
-      {BRANDS.map((b, i) => { const prod = biggest(b), pts = brandPoints(P, b), n = P.filter(p => p.brand === b).length, tone = (HOME_BANNERS.find(s => s.brand === b) || {}).tone, show = BRAND_SHOW[b] || { title: b + ".", text: "Discover the " + b + " television collection.", cta: "Explore " + b + " TVs", img: "" };
-        return prod ? <a className={"bbrand" + (i % 2 ? " flip" : "") + (show.img ? " photo" : "")} href={brandUrl(b)} key={b} style={tone && !show.img ? { background: tone } : undefined}>
-          {show.img && <img className="bphoto" src={pic(show.img, 960)} srcSet={picSet(show.img)} sizes="(max-width:1240px) 100vw, 1240px" alt="" loading="lazy" />}
-          {show.img && /show-(elista|telefunken)/.test(show.img) && <video className="bvid" muted loop playsInline preload="none" data-src={"/" + show.img.replace(".jpg", ".mp4")} aria-hidden="true"></video>}
-          <div className="btext"><span className="kicker">{b} · {n} model{n === 1 ? "" : "s"}</span><b>{show.title}</b><p>{show.text}</p><ul>{pts.map(t => <li key={t}>{t}</li>)}</ul><u>{show.cta} →</u></div>
-          {show.img ? null : cutout(prod.img) ? <img className="cut" src={cutout(prod.img)} alt={prod.brand + " " + prod.name} loading="lazy" /> : <img src={pic(prod.img)} srcSet={picSet(prod.img)} sizes="(max-width:860px) 100vw, 46vw" alt={prod.brand + " " + prod.name} width="800" height="800" loading="lazy" />}</a> : null; })}</section>
     <section><h2>Why Mytekkstore?</h2><p className="lead">More confidence in every purchase.</p><div className="why">
       <div><Ico shapes={DRAW_ICONS.truck} /><b>Fast delivery</b><p>Doorstep delivery across the country.</p></div>
       <div><Ico shapes={DRAW_ICONS.shield} /><b>Genuine products</b><p>Brand warranty on everything we sell.</p></div>
       <div><Ico shapes={DRAW_ICONS.cash} /><b>Cash on delivery</b><p>Pay when your order arrives.</p></div>
       <div><Ico shapes={DRAW_ICONS.box} /><b>Order tracking</b><p>Follow every order from your account.</p></div>
     </div></section>
+    <section><h2>Deals of the Day <a href="/products?sort=off">View all</a></h2><p className="lead">The biggest discounts right now. Free delivery on every order, cash on delivery.</p><div className="grid">{deals.map((p, i) => <Card p={p} i={i} key={p.id} />)}</div></section>
+    <section className="disco"><h2>Shop by size</h2><p className="lead">Know the size you want? Start here. Every size we stock, with its starting price.</p>
+      <div className="dgrid five">{sizeCards.map(s => <a className={"dcard" + (cutout(s.img) ? "" : " photo")} href={listUrl({ cat: "Televisions", size: s.inch + " inch TVs" })} key={s.inch}><span className="dimg"><img src={pic(s.img, 480)} srcSet={picSet(s.img)} sizes="240px" alt="" loading="lazy" width="800" height="800" /></span><span className="dbody"><b>{s.inch}"</b><small>{s.desc}</small><em>{s.from ? "from " + money(s.from) : "Coming soon"}</em></span><i className="darr" aria-hidden="true">→</i></a>)}</div></section>
+    {BRANDS[0] && <section className="bigbrands solo">{brandBig(BRANDS[0], 0)}</section>}
+    {osCards.length > 0 && <section className="disco"><h2>Shop by technology</h2><p className="lead">Google TV or WebOS, with the apps built in. Pick the platform that fits you.</p>
+      <div className="dgrid land">{osCards.map(c => <a className="dcard os" href={osUrl(c.os)} key={c.os}><span className="dimg"><img src={pic(c.img, 960)} srcSet={picSet(c.img)} sizes="(max-width:760px) 92vw, 46vw" alt="" loading="lazy" /></span><span className="dbody"><b>{c.os}</b><small>{c.text}</small><em>{c.from ? "from " + money(c.from) : ""}</em></span><i className="darr" aria-hidden="true">→</i></a>)}</div></section>}
+    <OsChart P={tvs} lead="Not sure which operating system to pick? Here is what each one gives you, side by side." />
+    <BankStrip wrap full />
+    {BRANDS[1] && <section className="bigbrands solo">{brandBig(BRANDS[1], 1)}</section>}
+    {detailCards.length > 0 && <section className="disco"><h2>Shop by picture quality</h2><p className="lead">4K, Full HD or HD Ready, and the screen technology behind it.</p>
+      <div className={"dgrid " + (detailCards.length > 3 ? "four" : "three")}>{detailCards.map(c => <a className={"dcard tall dark" + (/-cut\.webp$/.test(c.img) ? "" : " photo")} href={c.href} key={c.res}><span className="dimg"><img src={pic(c.img, 960)} srcSet={picSet(c.img)} sizes="(max-width:760px) 70vw, 30vw" alt="" loading="lazy" /></span><span className="lshade"></span><span className="dbody"><b>{c.res}</b><small>{c.text}</small><em>from {money(c.from)}</em></span></a>)}</div></section>}
+    <section className="launches"><h2>Latest Launches</h2><p className="lead">Discover what's new in home entertainment.</p>
+      <div className="launchgrid">{LAUNCHES.map((l, i) => <a className={"launch" + (i < 2 ? " big" : "") + (l.dark ? " dark" : "") + (cutout(l.img) ? " stage" : "")} href={l.href} key={l.title}>{cutout(l.img) ? <img src={cutout(l.img)} alt="" loading="lazy" /> : <img src={pic(l.img, 960)} srcSet={picSet(l.img)} sizes="(max-width:760px) 92vw, 46vw" alt="" loading="lazy" />}<span className="lshade"></span><span className="ltext"><span className="kicker">{l.kicker}</span><h3>{l.title}</h3><p>{l.text}</p><u>Explore now →</u></span></a>)}</div></section>
+
+
+    {CATS.length > 1 && <nav className="catrail" aria-label="Shop by category">{CATS.map(c => { const n = P.filter(p => p.cat === c).length; return <a className="crail" href={listUrl({ cat: c })} key={c}><b>{c}</b><small>{n} model{n === 1 ? "" : "s"}</small></a>; })}</nav>}
+
+
+
+
+
+
     {quotes.length > 0 && <section><h2>What customers say</h2><p className="lead">The newest reviews from across the catalogue.</p><div className="quotes">{quotes.map((r, i) => <a className="quote" href={productUrl(r.p)} key={i}>
       <div className="stars"><span>{starRow(r.rating)}</span></div><p>“{r.text}”</p><b>{r.name}</b><small>{r.p.brand} {r.p.name}</small></a>)}</div></section>}
     <Qa id="faq" title="Frequently asked questions" lead="The questions buyers ask most, answered in short." list={FAQ.slice(0, 6)} more={["/buying-guide", "More about choosing a TV"]} />
@@ -150,7 +151,7 @@ function DealCarousel({ tvs, maxOff, minTv, minEmi, money }) {
   const labels = ["Smart TVs from " + money(minTv), top.brand + " " + top.name, "TV buying guide"];
   const slide = k => ({ className: "dealslide" + (i === k ? " on" : ""), ...(i === k ? {} : { "aria-hidden": true, inert: true }), "aria-roledescription": "slide", "aria-label": (k + 1) + " of " + n + ": " + labels[k] });
   const topImg = cutout(top.img) || pic(top.img, 480);
-  return <section className="dealbox dealcar wrap" aria-roledescription="carousel" aria-label="Deals" onPointerEnter={() => { paused.current = true; }} onPointerLeave={() => { paused.current = false; }} onFocus={() => { paused.current = true; }} onBlur={() => { paused.current = false; }}>
+  return <section className="dealbox dealcar bleed" aria-roledescription="carousel" aria-label="Deals" onPointerEnter={() => { paused.current = true; }} onPointerLeave={() => { paused.current = false; }} onFocus={() => { paused.current = true; }} onBlur={() => { paused.current = false; }}>
     <div className="dealstage">
       <div {...slide(0)}><div className="dealin photo"><picture className="dbg" aria-hidden="true"><img src={pic("img/show-elista.jpg", 960)} srcSet={picSet("img/show-elista.jpg")} sizes="(max-width:1240px) 100vw, 1200px" alt="" loading="lazy" width="1376" height="768" /></picture><span className="deye">Deals on Smart TVs</span><h2>Smart TVs from <em>{money(minTv)}</em></h2><p>Up to {maxOff}% off{minEmi ? ", No Cost EMI from " + money(minEmi) + "/month" : ""}, bank offers and cash on delivery.</p><a className="btn" href={listUrl({ cat: "Televisions", sort: "off" })}>Shop all deals →</a></div></div>
       <div {...slide(1)}><div className="dealin prod stage"><div><span className="deye">Biggest saving right now</span><h2>{top.brand} {top.name}</h2><p><b>{money(top.price)}</b> · MRP {money(top.mrp)} · <em>{off(top)}% off</em>{top.emi ? " · No Cost EMI from " + money(emiPlans(top.price)[2][1]) + "/month" : ""}</p><a className="btn" href={productUrl(top)}>Buy now →</a></div><img src={topImg} alt={top.brand + " " + top.name} loading="lazy" width="800" height="800" /></div></div>
@@ -177,7 +178,7 @@ function FestiveBanner({ tvs, maxOff, minEmi, money }) {
     return () => { removeEventListener("scroll", onScroll); removeEventListener("resize", onScroll); if (raf) cancelAnimationFrame(raf); };
   }, [still]);
   if (!tvs.length || !top || maxOff <= 0) return null;
-  return <section className="festive wrap" ref={ref} aria-label={FESTIVE.title}>
+  return <section className="festive bleed" ref={ref} aria-label={FESTIVE.title}>
     <a className="festin" href="/offers">
       <picture className="fbg" aria-hidden="true"><img src={pic("img/life-cinema.jpg", 960)} srcSet={picSet("img/life-cinema.jpg")} sizes="(max-width:1240px) 100vw, 1200px" alt="" loading="lazy" width="1536" height="1024" /></picture>
       <span className="fsparkle" aria-hidden="true"></span>

@@ -56,11 +56,14 @@ export function Card({ p, i = 0, sizes, compare }) {
     rx.set(((e.clientY - r.top) / r.height - .5) * -5); ry.set(((e.clientX - r.left) / r.width - .5) * 7);
   };
   const onLeave = () => { rx.set(0); ry.set(0); };
+  const sp = k => ((p.specs || []).find(([n]) => n.toLowerCase().includes(k)) || [])[1] || ""; // the three facts a TV buyer reads first
+  const inch = (/\((\d+)\s*inch\)/.exec(sp("screen size") || p.name) || [])[1];
+  const chips = [inch && inch + '"', sp("resolution").split(",")[0].trim(), sp("display type").split(",")[0].trim()].filter(Boolean);
   return <m.div className="card" style={{ rotateX: rx, rotateY: ry, transformPerspective: 900 }} onPointerMove={onMove} onPointerLeave={onLeave}
     initial={{ opacity: 0, y: 10 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: "0px 0px -40px" }} transition={{ type: "spring", stiffness: 220, damping: 26, delay: (i % 6) * .06 }}><Heart p={p} />
-    <a href={productUrl(p)}><div className="img"><Photo p={p} />{off(p) > 0 && <span className="badge">{off(p)}% OFF</span>}<button type="button" className="qview" data-quick={p.id} aria-label={"Quick view " + p.brand + " " + p.name}>Quick view</button></div><small>{p.brand}{p.os ? " · " + p.os : ""}</small><h3>{p.name}</h3><Stars p={p} /></a>
+    <a href={productUrl(p)}><div className="img"><Photo p={p} />{off(p) > 0 && <span className="badge">{off(p)}% OFF</span>}<button type="button" className="qview" data-quick={p.id} aria-label={"Quick view " + p.brand + " " + p.name}>Quick view</button></div><small>{p.brand}{p.os ? " · " + p.os : ""}</small><h3>{p.name}</h3><Stars p={p} />{chips.length > 0 && <ul className="cspecs" aria-label="Key specifications">{chips.map(c => <li key={c}>{c}</li>)}</ul>}</a>
     {sizes && sizes.length > 1 && <span className="csizes"><small>Sizes</small>{sizes.map(([l, href, on]) => on ? <b key={l}>{l}</b> : <a href={href} key={l}>{l}</a>)}</span>}
-    <div className="price"><b>{money(p.price)}</b>{p.mrp > p.price && <><s>{money(p.mrp)}</s><em className="save">{off(p)}% off · Save {money(p.mrp - p.price)}</em></>}</div>{p.emi && <span className="emi">No Cost EMI · {money(emiPlans(p.price)[2][1])}/month</span>}<Buy p={p} />{compare && <label className="ccmp"><input type="checkbox" checked={compare[0]} onChange={() => compare[1](p.id)} /> Compare</label>}</m.div>;
+    <div className="price"><b>{money(p.price)}</b>{p.mrp > p.price && <><s>{money(p.mrp)}</s><em className="save">{off(p)}% off · Save {money(p.mrp - p.price)}</em></>}</div>{p.emi && <span className="emi">No Cost EMI · {money(emiPlans(p.price)[2][1])}/month</span>}<span className="cmeta"><i><Icon k="truck" /> Free delivery</i><i><Icon k="undo" /> Easy returns</i></span><a className="cbank" href="/offers">Bank offers on cards →</a><Buy p={p} />{compare && <label className="ccmp"><input type="checkbox" checked={compare[0]} onChange={() => compare[1](p.id)} /> Compare</label>}</m.div>;
 }
 export function Line({ p }) {
   const { money, qtyOf } = useStore();
@@ -88,7 +91,7 @@ export const BankStrip = ({ wrap = false, full = false }) => {
     <BankBoxes />
     <span className="bscta">See offers →</span>
   </a>;
-  return <section className={"bankad" + (wrap ? " wrap" : "")} aria-label="Bank offers">
+  return <section className={"bankad" + (wrap ? " bleed" : "")} aria-label="Bank offers">
     <div className="bahead"><span className="bskick">Bank offers</span><h2>{head}</h2><p>Instant discounts, cashback and No Cost EMI on leading bank cards, on top of the festive prices. <a className="alink" href="/offers">All offers →</a></p></div>
     <div className="bacards">{BANK_OFFERS.map(([bank, big, note, c]) => <a className="bacard" href="/offers" style={{ "--bc": c }} key={bank}>
       <span className="bachip" aria-hidden="true"></span><span className="babank">{bank}</span><b>{big}</b><span className="banote">{note}</span><small>*T&amp;C apply</small></a>)}</div>
