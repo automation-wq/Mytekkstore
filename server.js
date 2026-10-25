@@ -884,7 +884,7 @@ function serveStatic(req, res, url, clean) {
         headers["Cache-Control"] = robots ? "no-store" : "public, max-age=0, s-maxage=60, stale-while-revalidate=600";
         // a clean address also tells the app which category, product or info page this is (web/src/api.js reads it from <body>)
         const data = clean ? Object.entries(clean.params).map(([k, v]) => ` data-${k}="${escHtml(v)}"`).join("") : "";
-        let html = buf.toString().replace(/<title>[^<]*<\/title>/, "<title>" + escHtml(title) + "</title>").replace("</head>", head + "\n</head>").replace("<body", "<body" + data);
+        let html = buf.toString().replace(/<title>[^<]*<\/title>/, "<title>" + escHtml(title) + "</title>").replace("</head>", head + "\n</head>").replace("<body", "<body" + data).replace("<html", '<html data-built="' + BUILT + '"'); // the build stamp the page can compare with the server's (main.jsx)
         if (!clean && (pathname === "/" || pathname === "/index.html")) html = html.replace('<div id="root"></div>', '<div id="static">' + staticHome() + '</div><div id="root"></div>'); // the home page paints before the script runs; App.jsx removes #static once the real page is drawn
         if (clean && clean.file === "product.html") { const sp = db.products.find(x => String(x.id) === clean.params.id); if (sp && visible(sp) && !db.banners.some(b => b.live && b.slot === "product:" + sp.id)) html = html.replace('<div id="root"></div>', '<div id="static">' + staticProduct(sp) + '</div><div id="root"></div>'); } // and so does a product page
         buf = Buffer.from(html);
