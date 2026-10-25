@@ -100,25 +100,25 @@ export function Home() {
     </div>
     <FestiveBanner tvs={tvs} maxOff={maxOff} minEmi={minEmi} money={money} />
     <DealCarousel tvs={tvs} maxOff={maxOff} minTv={minTv} minEmi={minEmi} money={money} />
-    <section><h2>Why Mytekkstore?</h2><p className="lead">More confidence in every purchase.</p><div className="why">
+    <section className="trustrow" aria-label="Why shop with Mytekkstore"><div className="why">
       <div><Ico shapes={DRAW_ICONS.truck} /><b>Fast delivery</b><p>Doorstep delivery across the country.</p></div>
       <div><Ico shapes={DRAW_ICONS.shield} /><b>Genuine products</b><p>Brand warranty on everything we sell.</p></div>
       <div><Ico shapes={DRAW_ICONS.cash} /><b>Cash on delivery</b><p>Pay when your order arrives.</p></div>
       <div><Ico shapes={DRAW_ICONS.box} /><b>Order tracking</b><p>Follow every order from your account.</p></div>
     </div></section>
-    <section><h2>Deals of the Day <a href="/products?sort=off">View all</a></h2><p className="lead">The biggest discounts right now. Free delivery on every order, cash on delivery.</p><div className="grid">{deals.map((p, i) => <Card p={p} i={i} key={p.id} />)}</div></section>
     <section className="disco"><h2>Shop by size</h2><p className="lead">Know the size you want? Start here. Every size we stock, with its starting price.</p>
       <div className="dgrid five">{sizeCards.map(s => <a className={"dcard" + (cutout(s.img) ? "" : " photo")} href={listUrl({ cat: "Televisions", size: s.inch + " inch TVs" })} key={s.inch}><span className="dimg"><img src={pic(s.img, 480)} srcSet={picSet(s.img)} sizes="240px" alt="" loading="lazy" width="800" height="800" /></span><span className="dbody"><b>{s.inch}"</b><small>{s.desc}</small><em>{s.from ? "from " + money(s.from) : "Coming soon"}</em></span><i className="darr" aria-hidden="true">→</i></a>)}</div></section>
-    {BRANDS[0] && <section className="bigbrands solo">{brandBig(BRANDS[0], 0)}</section>}
     {osCards.length > 0 && <section className="disco"><h2>Shop by technology</h2><p className="lead">Google TV or WebOS, with the apps built in. Pick the platform that fits you.</p>
       <div className="dgrid land">{osCards.map(c => <a className="dcard os" href={osUrl(c.os)} key={c.os}><span className="dimg"><img src={pic(c.img, 960)} srcSet={picSet(c.img)} sizes="(max-width:760px) 92vw, 46vw" alt="" loading="lazy" /></span><span className="dbody"><b>{c.os}</b><small>{c.text}</small><em>{c.from ? "from " + money(c.from) : ""}</em></span><i className="darr" aria-hidden="true">→</i></a>)}</div></section>}
     <OsChart P={tvs} lead="Not sure which operating system to pick? Here is what each one gives you, side by side." />
-    <BankStrip wrap full />
-    {BRANDS[1] && <section className="bigbrands solo">{brandBig(BRANDS[1], 1)}</section>}
     {detailCards.length > 0 && <section className="disco"><h2>Shop by picture quality</h2><p className="lead">4K, Full HD or HD Ready, and the screen technology behind it.</p>
       <div className={"dgrid " + (detailCards.length > 3 ? "four" : "three")}>{detailCards.map(c => <a className={"dcard tall dark" + (/-cut\.webp$/.test(c.img) ? "" : " photo")} href={c.href} key={c.res}><span className="dimg"><img src={pic(c.img, 960)} srcSet={picSet(c.img)} sizes="(max-width:760px) 70vw, 30vw" alt="" loading="lazy" /></span><span className="lshade"></span><span className="dbody"><b>{c.res}</b><small>{c.text}</small><em>from {money(c.from)}</em></span></a>)}</div></section>}
+    {BRANDS[0] && <section className="bigbrands solo">{brandBig(BRANDS[0], 0)}</section>}
+    {BRANDS[1] && <section className="bigbrands solo">{brandBig(BRANDS[1], 1)}</section>}
+    <section><h2>Deals of the Day <a href="/products?sort=off">View all</a></h2><p className="lead">The biggest discounts right now. Free delivery on every order, cash on delivery.</p><div className="grid">{deals.map((p, i) => <Card p={p} i={i} key={p.id} />)}</div></section>
     <section className="launches"><h2>Latest Launches</h2><p className="lead">Discover what's new in home entertainment.</p>
       <div className="launchgrid">{LAUNCHES.map((l, i) => <a className={"launch" + (i < 2 ? " big" : "") + (l.dark ? " dark" : "") + (cutout(l.img) ? " stage" : "")} href={l.href} key={l.title}>{cutout(l.img) ? <img src={cutout(l.img)} alt="" loading="lazy" /> : <img src={pic(l.img, 960)} srcSet={picSet(l.img)} sizes="(max-width:760px) 92vw, 46vw" alt="" loading="lazy" />}<span className="lshade"></span><span className="ltext"><span className="kicker">{l.kicker}</span><h3>{l.title}</h3><p>{l.text}</p><u>Explore now →</u></span></a>)}</div></section>
+    <BankStrip wrap full />
 
 
     {CATS.length > 1 && <nav className="catrail" aria-label="Shop by category">{CATS.map(c => { const n = P.filter(p => p.cat === c).length; return <a className="crail" href={listUrl({ cat: c })} key={c}><b>{c}</b><small>{n} model{n === 1 ? "" : "s"}</small></a>; })}</nav>}
@@ -144,18 +144,17 @@ function DealCarousel({ tvs, maxOff, minTv, minEmi, money }) {
   const [i, setI] = useState(0), [manual, setManual] = useState(false);
   const paused = useRef(false);
   const top = [...tvs].sort((a, b) => off(b) - off(a))[0];
-  const n = 3;
+  const n = 2;
   useEffect(() => { if (manual || still) return; const t = setInterval(() => { if (!paused.current) setI(v => (v + 1) % n); }, 7000); return () => clearInterval(t); }, [manual, still]);
   if (!tvs.length || !top || maxOff <= 0) return null;
   const go = v => { setManual(true); setI(((v % n) + n) % n); };
-  const labels = ["Smart TVs from " + money(minTv), top.brand + " " + top.name, "TV buying guide"];
+  const labels = ["Smart TVs from " + money(minTv), top.brand + " " + top.name];
   const slide = k => ({ className: "dealslide" + (i === k ? " on" : ""), ...(i === k ? {} : { "aria-hidden": true, inert: true }), "aria-roledescription": "slide", "aria-label": (k + 1) + " of " + n + ": " + labels[k] });
   const topImg = cutout(top.img) || pic(top.img, 480);
   return <section className="dealbox dealcar bleed" aria-roledescription="carousel" aria-label="Deals" onPointerEnter={() => { paused.current = true; }} onPointerLeave={() => { paused.current = false; }} onFocus={() => { paused.current = true; }} onBlur={() => { paused.current = false; }}>
     <div className="dealstage">
       <div {...slide(0)}><div className="dealin photo"><picture className="dbg" aria-hidden="true"><img src={pic("img/show-elista.jpg", 960)} srcSet={picSet("img/show-elista.jpg")} sizes="(max-width:1240px) 100vw, 1200px" alt="" loading="lazy" width="1376" height="768" /></picture><span className="deye">Deals on Smart TVs</span><h2>Smart TVs from <em>{money(minTv)}</em></h2><p>Up to {maxOff}% off{minEmi ? ", No Cost EMI from " + money(minEmi) + "/month" : ""}, bank offers and cash on delivery.</p><a className="btn" href={listUrl({ cat: "Televisions", sort: "off" })}>Shop all deals →</a></div></div>
       <div {...slide(1)}><div className="dealin prod stage"><div><span className="deye">Biggest saving right now</span><h2>{top.brand} {top.name}</h2><p><b>{money(top.price)}</b> · MRP {money(top.mrp)} · <em>{off(top)}% off</em>{top.emi ? " · No Cost EMI from " + money(emiPlans(top.price)[2][1]) + "/month" : ""}</p><a className="btn" href={productUrl(top)}>Buy now →</a></div><img src={topImg} alt={top.brand + " " + top.name} loading="lazy" width="800" height="800" /></div></div>
-      <div {...slide(2)}><div className="dealin ink photo"><picture className="dbg" aria-hidden="true"><img src={pic("img/hero0.jpg", 960)} srcSet={picSet("img/hero0.jpg")} sizes="(max-width:1240px) 100vw, 1200px" alt="" loading="lazy" width="1344" height="752" /></picture><span className="deye">Not sure which TV?</span><h2>Your complete TV buying guide</h2><p>Screen size for your room, 4K or Full HD, Google TV or WebOS, and the ports you need. Everything before you choose.</p><a className="btn" href="/buying-guide">Read the guide →</a></div></div>
     </div>
     <div className="dealctl"><div className="dcnav" role="group" aria-label="Deal controls"><button type="button" className="dcbtn" onClick={() => go(i - 1)} aria-label="Previous deal">‹</button><button type="button" className="dcbtn" onClick={() => go(i + 1)} aria-label="Next deal">›</button></div><div className="dcdots" role="tablist" aria-label="Deals">{labels.map((l, k) => <button type="button" role="tab" aria-selected={i === k} aria-label={l} className={i === k ? "on" : undefined} onClick={() => go(k)} key={l} />)}</div></div>
   </section>;

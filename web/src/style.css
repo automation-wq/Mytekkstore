@@ -1994,3 +1994,16 @@ main .dealbox h2 { display:block } /* the site lays h2s out as a row for a right
 .card .cmeta { display:flex; align-items:center; gap:5px; margin-top:6px; font-size:12px; color:var(--soft) } .card .cmeta .ic { width:14px; height:14px; color:var(--accent) }
 .card .cbank { display:block; margin-top:3px; font-size:12px; font-weight:700; color:var(--accent); text-decoration:none } .card .cbank:hover { text-decoration:underline }
 .card .cmeta { flex-wrap:wrap; gap:4px 12px } .card .cmeta i { font-style:normal; display:inline-flex; align-items:center; gap:4px; white-space:nowrap }
+
+/* ─ the trust row: four short promises in a line, no heading (owner note, 25 October) ─ */
+main > .trustrow { margin-top:14px }
+.trustrow .why { grid-template-columns:repeat(4, minmax(0,1fr)); gap:12px }
+.trustrow .why div { display:flex; align-items:center; gap:12px; padding:14px 16px; border-radius:12px; text-align:left; background:var(--card); border:1px solid var(--line) }
+.trustrow .why b { font-size:14px; display:block } .trustrow .why p { margin:0; font-size:12.5px; color:var(--soft) }
+.trustrow .why .kico, .trustrow .why .ico { flex:0 0 auto; width:40px; height:40px }
+@media (max-width:760px) { .trustrow .why { grid-template-columns:repeat(2, minmax(0,1fr)); gap:8px } .trustrow .why div { padding:10px 12px } .trustrow .why p { display:none } }
+/* ─ product cards sit flat on the page: a plain white card with a line, no tilt, no lift, no glow (owner note, 25 October) ─ */
+.card { border:1px solid var(--line); border-radius:12px; box-shadow:none; transform:none !important; translate:0 }
+.card:hover { translate:0; box-shadow:none; border-color:var(--accent) }
+.card::before { display:none }
+.card .img img, .card:hover .img img { scale:1; rotate:0 }
