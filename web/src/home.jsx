@@ -106,19 +106,19 @@ export function Home() {
       <div><Ico shapes={DRAW_ICONS.cash} /><b>Cash on delivery</b><p>Pay when your order arrives.</p></div>
       <div><Ico shapes={DRAW_ICONS.box} /><b>Order tracking</b><p>Follow every order from your account.</p></div>
     </div></section>
+    <section><h2>Deals of the Day <a href="/products?sort=off">View all</a></h2><p className="lead">The biggest discounts right now. Free delivery on every order, cash on delivery.</p><div className="grid">{deals.map((p, i) => <Card p={p} i={i} key={p.id} />)}</div></section>
     <section className="disco"><h2>Shop by size</h2><p className="lead">Know the size you want? Start here. Every size we stock, with its starting price.</p>
       <div className="dgrid five">{sizeCards.map(s => <a className={"dcard" + (cutout(s.img) ? "" : " photo")} href={listUrl({ cat: "Televisions", size: s.inch + " inch TVs" })} key={s.inch}><span className="dimg"><img src={pic(s.img, 480)} srcSet={picSet(s.img)} sizes="240px" alt="" loading="lazy" width="800" height="800" /></span><span className="dbody"><b>{s.inch}"</b><small>{s.desc}</small><em>{s.from ? "from " + money(s.from) : "Coming soon"}</em></span><i className="darr" aria-hidden="true">→</i></a>)}</div></section>
+    {BRANDS[0] && <section className="bigbrands solo">{brandBig(BRANDS[0], 0)}</section>}
     {osCards.length > 0 && <section className="disco"><h2>Shop by technology</h2><p className="lead">Google TV or WebOS, with the apps built in. Pick the platform that fits you.</p>
       <div className="dgrid land">{osCards.map(c => <a className="dcard os" href={osUrl(c.os)} key={c.os}><span className="dimg"><img src={pic(c.img, 960)} srcSet={picSet(c.img)} sizes="(max-width:760px) 92vw, 46vw" alt="" loading="lazy" /></span><span className="dbody"><b>{c.os}</b><small>{c.text}</small><em>{c.from ? "from " + money(c.from) : ""}</em></span><i className="darr" aria-hidden="true">→</i></a>)}</div></section>}
     <OsChart P={tvs} lead="Not sure which operating system to pick? Here is what each one gives you, side by side." />
+    <BankStrip wrap full />
+    {BRANDS[1] && <section className="bigbrands solo">{brandBig(BRANDS[1], 1)}</section>}
     {detailCards.length > 0 && <section className="disco"><h2>Shop by picture quality</h2><p className="lead">4K, Full HD or HD Ready, and the screen technology behind it.</p>
       <div className={"dgrid " + (detailCards.length > 3 ? "four" : "three")}>{detailCards.map(c => <a className={"dcard tall dark" + (/-cut\.webp$/.test(c.img) ? "" : " photo")} href={c.href} key={c.res}><span className="dimg"><img src={pic(c.img, 960)} srcSet={picSet(c.img)} sizes="(max-width:760px) 70vw, 30vw" alt="" loading="lazy" /></span><span className="lshade"></span><span className="dbody"><b>{c.res}</b><small>{c.text}</small><em>from {money(c.from)}</em></span></a>)}</div></section>}
-    {BRANDS[0] && <section className="bigbrands solo">{brandBig(BRANDS[0], 0)}</section>}
-    {BRANDS[1] && <section className="bigbrands solo">{brandBig(BRANDS[1], 1)}</section>}
-    <section><h2>Deals of the Day <a href="/products?sort=off">View all</a></h2><p className="lead">The biggest discounts right now. Free delivery on every order, cash on delivery.</p><div className="grid">{deals.map((p, i) => <Card p={p} i={i} key={p.id} />)}</div></section>
     <section className="launches"><h2>Latest Launches</h2><p className="lead">Discover what's new in home entertainment.</p>
       <div className="launchgrid">{LAUNCHES.map((l, i) => <a className={"launch" + (i < 2 ? " big" : "") + (l.dark ? " dark" : "") + (cutout(l.img) ? " stage" : "")} href={l.href} key={l.title}>{cutout(l.img) ? <img src={cutout(l.img)} alt="" loading="lazy" /> : <img src={pic(l.img, 960)} srcSet={picSet(l.img)} sizes="(max-width:760px) 92vw, 46vw" alt="" loading="lazy" />}<span className="lshade"></span><span className="ltext"><span className="kicker">{l.kicker}</span><h3>{l.title}</h3><p>{l.text}</p><u>Explore now →</u></span></a>)}</div></section>
-    <BankStrip wrap full />
 
 
     {CATS.length > 1 && <nav className="catrail" aria-label="Shop by category">{CATS.map(c => { const n = P.filter(p => p.cat === c).length; return <a className="crail" href={listUrl({ cat: c })} key={c}><b>{c}</b><small>{n} model{n === 1 ? "" : "s"}</small></a>; })}</nav>}
