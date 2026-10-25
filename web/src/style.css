@@ -2007,3 +2007,5 @@ main > .trustrow { margin-top:14px }
 .card:hover { translate:0; box-shadow:none; border-color:var(--accent) }
 .card::before { display:none }
 .card .img img, .card:hover .img img { scale:1; rotate:0 }
+/* spacing check of 25 October: every content section keeps the page rhythm; the two brand bands and the bank advertisement had less or none */
+.bigbrands.solo, .bankad.bleed { margin-top:clamp(64px,9vw,120px) }
