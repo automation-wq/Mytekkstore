@@ -1875,3 +1875,33 @@ main .dealbox h2 { display:block } /* the site lays h2s out as a row for a right
 .fnote { position:absolute; left:34px; bottom:12px; z-index:1; font-size:11px; color:#ffffffa6 }
 @media (max-width:760px) { .festin { grid-template-columns:1fr; padding:22px 18px 40px; min-height:0 } .ftv { width:min(70vw, 300px); justify-self:center } .fnote { left:18px } }
 @media (prefers-reduced-motion:reduce) { .flights, .ftv { transform:none } }
+
+/* ─ premium pass on the festive banner: the festival TV from the owner's file on a glow plate with a reflection, richer lights,
+     a thin gold frame, the EMI and promises as chips. Still: nothing moves on its own; --p only adds depth on scroll. ─ */
+.festin { grid-template-columns:1.1fr .9fr; min-height:300px; padding:34px 38px; gap:10px;
+  background:radial-gradient(60% 90% at 78% 50%, #8a2a62 0%, #4a0f3a 40%, transparent 72%), radial-gradient(70% 70% at 0% 100%, #3a1a7a 0%, transparent 60%), linear-gradient(100deg, #3b0a26 0%, #26104f 55%, #0f1640 100%);
+  box-shadow:inset 0 0 0 1px #ffd98a40, 0 30px 60px -30px #000000a0 }
+.festin::before { content:""; position:absolute; inset:0; z-index:0; pointer-events:none; background:linear-gradient(115deg, transparent 0 38%, #ffffff10 48%, transparent 58%) }
+.flights i { width:16px; height:16px; opacity:.95; box-shadow:0 0 28px 10px #ffb54766, 0 0 60px 22px #ff8a4733 }
+.flights i:nth-child(1) { left:4%; top:12% } .flights i:nth-child(2) { left:18%; top:78%; width:9px; height:9px } .flights i:nth-child(3) { left:36%; top:9%; width:7px; height:7px }
+.flights i:nth-child(4) { left:48%; top:84% } .flights i:nth-child(5) { left:56%; top:18%; width:10px; height:10px } .flights i:nth-child(6) { left:93%; top:14%; width:12px; height:12px }
+.fkick { background:linear-gradient(90deg, #ffd98a, #ffb547); color:#3a2300; border:0; box-shadow:0 6px 18px -8px #ffb547 }
+.festin b { font-size:clamp(34px,5vw,58px) }
+.fchips { display:flex; flex-wrap:wrap; gap:8px } .fchips i { font-style:normal; font-size:12.5px; font-weight:700; padding:6px 12px; border-radius:999px; border:1px solid #ffd98a66; color:#ffe7b8; background:#ffffff14 }
+.fstage { position:relative; z-index:1; justify-self:end; width:min(40vw, 460px); aspect-ratio:10/8; display:grid; place-items:center }
+.fglow { position:absolute; left:50%; top:52%; width:88%; height:60%; translate:-50% -50%; border-radius:50%; background:radial-gradient(closest-side, #ff9a4766, #b4336a33 55%, transparent 72%); filter:blur(14px) }
+.ftv { position:relative; z-index:1; width:100%; height:auto; justify-self:auto; filter:drop-shadow(0 26px 30px #00000099); transform:translateY(calc((var(--p) - .5) * 18px)) }
+.ftvref { position:absolute; left:0; right:0; top:92%; width:100%; height:auto; transform:scaleY(-1) translateY(calc((var(--p) - .5) * -18px)); opacity:.22; -webkit-mask-image:linear-gradient(#000 0%, transparent 55%); mask-image:linear-gradient(#000 0%, transparent 55%); pointer-events:none }
+.fnote { left:38px; bottom:14px }
+@media (max-width:760px) { .festin { grid-template-columns:1fr; padding:22px 18px 44px } .fstage { width:min(78vw, 340px); justify-self:center } .fnote { left:18px } }
+@media (prefers-reduced-motion:reduce) { .ftv, .ftvref { transform:none } .ftvref { transform:scaleY(-1) } }
+/* ─ premium pass on the bank-offer line: a card mark, the banks as chips in their own colours, a gold call to action ─ */
+.bankstrip { gap:14px 22px; padding:16px 22px; border-radius:16px; background:linear-gradient(100deg, #1c2270 0%, #2a2e45 60%, #1c2048 100%); box-shadow:inset 0 1px 0 #ffd98a33, 0 22px 44px -30px #000000a0 }
+.bankstrip .bsmark { display:grid; place-items:center; width:44px; height:44px; border-radius:50%; background:linear-gradient(135deg, #ffd98a, #ffb547); color:#3a2300; flex:0 0 auto }
+.bankstrip .bsmark .ic { width:22px; height:22px }
+.bankstrip .bshead { display:grid; gap:2px } .bankstrip b { font-size:clamp(17px,1.7vw,22px) }
+.bankstrip .bsbanks i { display:inline-flex; align-items:center; gap:7px; padding:6px 12px; background:#ffffff; color:#1c2048; box-shadow:0 1px 0 #00000026 }
+.bankstrip .bsbanks i u { width:9px; height:9px; border-radius:50%; background:var(--bc, #1c2048); text-decoration:none }
+.bankstrip .bsbanks i.emi { background:linear-gradient(90deg, #ffd98a, #ffb547); color:#3a2300 }
+.bankstrip .bscta { padding:10px 18px; border-radius:999px; background:#ffffff; color:#1c2048; text-decoration:none; font-weight:800 } .bankstrip:hover .bscta { background:#ffd98a }
+@media (max-width:760px) { .bankstrip .bsmark { display:none } .bankstrip .bscta { padding:8px 14px } }

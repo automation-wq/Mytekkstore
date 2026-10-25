@@ -178,17 +178,17 @@ function FestiveBanner({ tvs, maxOff, minEmi, money }) {
     return () => { removeEventListener("scroll", onScroll); removeEventListener("resize", onScroll); if (raf) cancelAnimationFrame(raf); };
   }, [still]);
   if (!tvs.length || !top || maxOff <= 0) return null;
-  const img = cutout(top.img) || pic(top.img, 480);
   return <section className="festive wrap" ref={ref} aria-label={FESTIVE.title}>
     <a className="festin" href="/offers">
       <span className="flights" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></span>
       <span className="ftext">
         <span className="fkick">{FESTIVE.title}</span>
         <b>Up to <em>{maxOff}% off</em><br />on Smart TVs</b>
-        <span className="fsub">{FESTIVE.sub}.{minEmi ? " No Cost EMI from " + money(minEmi) + "/month." : ""} Free delivery across India, cash on delivery.</span>
+        <span className="fsub">{FESTIVE.sub}. Free delivery across India, cash on delivery.</span>
+        <span className="fchips">{minEmi && <i>No Cost EMI from {money(minEmi)}/month</i>}<i>Bank offers</i><i>Brand warranty</i></span>
         <span className="btn">Shop festive offers →</span>
       </span>
-      <img className="ftv" src={img} alt={top.brand + " " + top.name} loading="lazy" width="800" height="800" />
+      <span className="fstage" aria-hidden="true"><span className="fglow"></span><img className="ftv" src="/img/tv-festival.webp" alt="" loading="lazy" width="1000" height="700" /><img className="ftvref" src="/img/tv-festival.webp" alt="" loading="lazy" width="1000" height="700" /></span>
       <small className="fnote">Savings are MRP against our price. T&amp;C apply.</small>
     </a>
   </section>;

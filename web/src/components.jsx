@@ -76,12 +76,12 @@ export const Strip = ({ children }) => <div className="strip"><button className=
 // discount in the offers, the banks as chips, No Cost EMI, a link to the offers page. Built from BANK_OFFERS, so it follows them.
 export const BankStrip = ({ wrap = false }) => {
   const amt = Math.max(0, ...BANK_OFFERS.map(([, , note]) => +(((/Up to ₹([\d,]+)/.exec(note) || [])[1] || "0").replace(/,/g, ""))));
-  const banks = BANK_OFFERS.map(([b]) => b.replace(/ (Bank|Card)$/, ""));
+  const banks = BANK_OFFERS.map(([b, , , c]) => [b.replace(/ (Bank|Card)$/, ""), c]);
   const emi = BANK_OFFERS.some(([, big]) => /EMI/i.test(big));
   return <a className={"bankstrip" + (wrap ? " wrap" : "")} href="/offers" aria-label="Bank offers">
-    <span className="bskick">Bank offers</span>
-    <b>{amt ? "Up to ₹" + amt.toLocaleString("en-IN") + " instant discount on bank cards" : "Instant discounts on leading bank cards"}</b>
-    <span className="bsbanks">{banks.map(b => <i key={b}>{b}</i>)}{emi && <i className="emi">No Cost EMI</i>}</span>
+    <span className="bsmark" aria-hidden="true"><Icon k="cash" /></span>
+    <span className="bshead"><span className="bskick">Bank offers</span><b>{amt ? "Up to ₹" + amt.toLocaleString("en-IN") + " instant discount on bank cards" : "Instant discounts on leading bank cards"}</b></span>
+    <span className="bsbanks">{banks.map(([b, c]) => <i key={b} style={{ "--bc": c }}><u></u>{b}</i>)}{emi && <i className="emi">No Cost EMI</i>}</span>
     <span className="bscta">See offers →</span>
     <small>T&amp;C apply</small>
   </a>;
