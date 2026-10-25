@@ -55,6 +55,8 @@ export function Cart() {
 
 export function Checkout() {
   const { me, cart, byId, money, cartCount, cartTotal, clearCart } = useStore();
+  const { CFG: payCfg } = useStore(); // pay: "razorpay" once the server has gateway keys, "demo" otherwise
+  useEffect(() => { if (payCfg && payCfg.pay === "razorpay" && !document.querySelector('script[src^="https://checkout.razorpay.com/"]')) { const sc = document.createElement("script"); sc.src = "https://checkout.razorpay.com/v1/checkout.js"; sc.async = true; document.head.appendChild(sc); } }, [payCfg && payCfg.pay]);
   const [place, setPlace] = useState("");
   useEffect(() => { document.title = "Checkout | Mytekkstore"; }, []);
   useEffect(() => { if (cartCount()) track("begin_checkout", { value: cartTotal(), signedIn: !!me }); if (cartCount() && !me) location.replace("/account?next=/checkout"); }, []); // customers must sign in before checkout
@@ -66,8 +68,17 @@ export function Checkout() {
   const submit = async f => {
     const items = Object.entries(cart).map(([id, qty]) => ({ id: +id, qty }));
     const online = f.pay !== "cod";
-    if (online) await demoPay(f.pay, money(cartTotal()));
-    const { id } = await api("orders", "POST", { name: f.name, phone: f.phone, address: f.address, pin: f.pin, pay: online ? "online" : "cod", items });
+    let id;
+    if (online && payCfg && payCfg.pay === "razorpay" && window.Razorpay) { // the gateway's own checkout; the server verifies the signature before the order counts
+      const o = await api("pay/order", "POST", { name: f.name, phone: f.phone, address: f.address, pin: f.pin, items });
+      await new Promise((res, rej) => { const rz = new window.Razorpay({ key: o.keyId, order_id: o.providerOrderId, amount: o.amount, currency: o.currency, name: "Mytekkstore", description: "Order " + o.id, prefill: { name: f.name, contact: f.phone, email: o.email || "" }, theme: { color: "#3b45c9" },
+        modal: { ondismiss: () => rej(new Error("The payment was not completed. Nothing was charged; you can try again.")) },
+        handler: async r => { try { await api("pay/verify", "POST", { id: o.id, razorpay_order_id: r.razorpay_order_id, razorpay_payment_id: r.razorpay_payment_id, razorpay_signature: r.razorpay_signature }); res(); } catch (e) { rej(e); } } }); rz.open(); });
+      id = o.id;
+    } else {
+      if (online) await demoPay(f.pay, money(cartTotal()));
+      ({ id } = await api("orders", "POST", { name: f.name, phone: f.phone, address: f.address, pin: f.pin, pay: online ? "online" : "cod", items }));
+    }
     track("purchase", { transaction_id: id, value: cartTotal(), items });
     clearCart();
     location.href = "/order?id=" + id;

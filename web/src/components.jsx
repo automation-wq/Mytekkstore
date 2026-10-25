@@ -154,6 +154,7 @@ function navItems(P, CATS, BRANDS, catImg) {
     ["Help", [["FAQ", "/#faq"], ["Track your order", "/account"], ["Contact us", "/contact"], ["How to choose a TV", "/buying-guide"]]],
     ["Policies", [["Shipping and delivery", "/shipping"], ["Warranty and returns", "/returns"], ["Payment options and No Cost EMI", "/offers"], ["Terms", "/terms"], ["Privacy", "/privacy"]]],
   ] }); // help and policy links, in a panel that opens like the category menus
+  items.push({ label: "Track order", href: "/account", cur: page === "account" }); // beside Support on the right (owner note, 25 October)
   return items;
 }
 
@@ -287,7 +288,7 @@ export function Header() {
         <div><p className="nhead">{it.head}</p><div className="ntiles">{it.tiles.map(([t, h, img]) => <a className="ntile" href={h} key={h}><img src={pic(img, 480)} alt="" loading="lazy" width="800" height="800" /><span>{t}</span></a>)}</div></div>
         <div><p className="nhead">{it.prodHead}</p><div className="nprods">{it.prods.map(p => <a className="nprod" href={productUrl(p)} key={p.id}><img src={pic(p.img, 480)} alt="" loading="lazy" width="800" height="800" /><span><small>{p.brand}</small><b>{p.name}</b><i>{money(p.price)}</i></span></a>)}</div></div>
         <div className="ndisc"><p className="nhead">Discover</p>{it.links.map(([t, h]) => <a href={h} key={t}>{t}</a>)}{it.promo && <a className="npromo" href={it.promo[2]}><b>{it.promo[0]}</b><span>{it.promo[1]}</span><u>Open the guide →</u></a>}</div>
-      </div></div> : it.groups ? <div className="npanel nsupport" id={"nav" + i}><div className="ngrid">{it.groups.map(([t, ls]) => <div className="ndisc" key={t}><p className="nhead">{t}</p>{ls.map(([l, h]) => <a href={h} key={l}>{l}</a>)}</div>)}</div></div> : null}</li>)}<li className="qbands">{[[0, 10000, "Under " + money(10000)], [10000, 25000, money(10000) + " – " + money(25000)], [25000, 50000, money(25000) + " – " + money(50000)], [50000, 0, "Above " + money(50000)]].map(([mn, mx, label]) => <a href={listUrl({ cat: "Televisions", min: mn || "", max: mx || "" })} key={label}>{label}</a>)}</li></ul></nav>
+      </div></div> : it.groups ? <div className="npanel nsupport" id={"nav" + i}><div className="ngrid">{it.groups.map(([t, ls]) => <div className="ndisc" key={t}><p className="nhead">{t}</p>{ls.map(([l, h]) => <a href={h} key={l}>{l}</a>)}</div>)}</div></div> : null}</li>)}</ul></nav>
   </header>;
 }
 

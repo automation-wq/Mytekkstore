@@ -107,7 +107,7 @@ async function run() {
     step = "bar contents";
     await b.goto(base + "/");
     assert.equal(await b.ev(`document.querySelector("#hdr").innerText.includes("Menu")`), false, "the old Menu button is gone");
-    assert.deepEqual(await b.ev(`[...document.querySelectorAll(".l0link")].map(a => a.textContent)`), ["Televisions", "Brands", "Best Deals", "Support"]);
+    assert.deepEqual(await b.ev(`[...document.querySelectorAll(".l0link")].map(a => a.textContent)`), ["Televisions", "Brands", "Best Deals", "Support", "Track order"]);
     assert.equal(await open(), "", "no menu is open at the start");
 
     step = "hover opens after a short delay";
@@ -393,7 +393,7 @@ async function run() {
     step = "other pages load without errors";
     for (const p of ["/product.html?id=1", "/cart.html", "/account.html", "/admin.html", "/page.html?p=about", "/offers.html"]) {
       await b.goto(base + p);
-      assert.equal(await b.ev(`document.querySelectorAll(".l0").length`), 4, "the bar is missing on " + p); // Televisions, Brands, Best Deals, Support
+      assert.equal(await b.ev(`document.querySelectorAll(".l0").length`), 5, "the bar is missing on " + p); // Televisions, Brands, Best Deals, Support, Track order
     }
     // checkout sends a signed-out shopper (there is one item in the cart) on to the sign-in page, so wait for that second page
     await b.goto(base + "/checkout.html").catch(() => {});

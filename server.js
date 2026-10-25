@@ -316,16 +316,158 @@ on("POST", "login/google", async ({ body, req, res }) => {
   const credential = str(body.credential, "Google sign-in", 4000);
   const r = await fetch("https://oauth2.googleapis.com/tokeninfo?id_token=" + encodeURIComponent(credential));
   const t = r.ok ? await r.json() : {};
-  if (t.aud !== GOOGLE || !/^(https:\/\/)?accounts\.google\.com$/.test(t.iss || "") || t.email_verified !== "true" || !t.email) throw new HttpError(401, "Google sign-in failed. Please try again.");
+  if (t.aud !== GOOGLE || !/^(https:\/\/)?accounts\.google\.com$/.test(t.iss || "") || t.email_verified !== "true" || !t.email || !t.sub || !(+t.exp * 1000 > Date.now())) throw new HttpError(401, "Google sign-in failed. Please try again.");
   const email = t.email.toLowerCase();
   let u = db.users.find(u => u.email === email);
   if (!u) u = makeUser(str(t.name || email.split("@")[0], "Name", 80), email, "", false, { google: t.sub });
   else if (!u.google) { u.google = t.sub; write("users"); } // an existing email account is linked to the Google account
+  else if (u.google !== t.sub) throw new HttpError(409, "This email is already linked to a different Google account. Sign in with that account, or with your password.");
   startSession(req, res, u);
   return { user: publicUser(u) };
 });
 // what the pages need to know about the optional services
-on("GET", "config", () => ({ google: GOOGLE, sms: smsReady, mail: mailReady, demoCodes: OTP_DEMO, clarity: !!CLARITY, chat: !!CHAT_KEY }));
+// ===== destinations and currencies =====
+// Only India is enabled for ordering and shipping. The others are display currencies for visitors; they open for ordering only
+// after the business, the gateway and the logistics approve them (docs/AUTH_AI_CHECKOUT.md). Every order is charged in INR.
+const DESTINATIONS = {
+  IN: { name: "India", display: "INR", charge: ["INR"], settle: "INR", methods: ["cod", "online"], ship: true, delivery: "3 to 5 days", tax: "GST included in the price" },
+  AE: { name: "United Arab Emirates", display: "AED", charge: [], settle: "INR", methods: [], ship: false, delivery: "", tax: "Import duties would apply" },
+  US: { name: "United States", display: "USD", charge: [], settle: "INR", methods: [], ship: false, delivery: "", tax: "Import duties would apply" },
+};
+function destinationOf(body) {
+  const code = body.country == null ? "IN" : str(body.country, "Country", 2, /^[A-Z]{2}$/);
+  const d = DESTINATIONS[code];
+  if (!d || !d.ship) throw new HttpError(422, "We deliver within India only for now. Other countries open once shipping, duties and warranty cover are confirmed.");
+  return d;
+}
+// display rates from the European-sourced Frankfurter feed (free, no key, daily), the old constants as the fallback; refreshed every 6 hours
+const FX_STATIC = { AED: 0.044, USD: 0.012 };
+let fx = { rates: FX_STATIC, date: "", source: "static", at: 0 };
+async function refreshFx() {
+  if (Date.now() - fx.at < 6 * 3600000) return;
+  fx.at = Date.now();
+  try {
+    const r = await fetch("https://api.frankfurter.dev/v2/rates?base=INR&quotes=AED,USD", { signal: AbortSignal.timeout(8000) });
+    if (!r.ok) return;
+    const rows = await r.json(), rates = { ...FX_STATIC };
+    for (const x of rows) if (x.quote && x.rate > 0) rates[x.quote] = x.rate;
+    fx = { rates, date: (rows[0] && rows[0].date) || "", source: "frankfurter", at: Date.now() };
+  } catch { /* the last rates stay */ }
+}
+const fxNow = () => { refreshFx(); return { rates: fx.rates, date: fx.date, source: fx.source, note: "Display only. Every order is charged in INR." }; };
+
+// ===== payments: a provider behind one interface; "demo" until gateway keys are set =====
+const RZP = { id: process.env.RAZORPAY_KEY_ID || "", secret: process.env.RAZORPAY_KEY_SECRET || "", webhook: process.env.RAZORPAY_WEBHOOK_SECRET || "" };
+const PAY_PROVIDER = RZP.id && RZP.secret ? "razorpay" : "demo";
+const hmac = (secret, msg) => crypto.createHmac("sha256", secret).update(msg).digest("hex");
+const safeEq = (a, b) => a.length === b.length && crypto.timingSafeEqual(Buffer.from(a), Buffer.from(b));
+// Razorpay: checkout signature = HMAC-SHA256(order_id + "|" + payment_id, key secret); webhook signature = HMAC-SHA256(raw body, webhook secret)
+const verifyCheckoutSignature = (orderId, paymentId, signature, secret) => !!signature && !!secret && safeEq(hmac(secret, orderId + "|" + paymentId), String(signature));
+const verifyWebhookSignature = (rawBody, signature, secret) => !!signature && !!secret && safeEq(hmac(secret, rawBody), String(signature));
+async function razorpayCreateOrder(amount, receipt) { // amount in paise
+  let r;
+  try { r = await fetch("https://api.razorpay.com/v1/orders", { method: "POST", headers: { "content-type": "application/json", authorization: "Basic " + Buffer.from(RZP.id + ":" + RZP.secret).toString("base64") }, body: JSON.stringify({ amount, currency: "INR", receipt }), signal: AbortSignal.timeout(15000) }); }
+  catch { throw new HttpError(502, "The payment service is not reachable right now. Please try again."); }
+  if (!r.ok) { console.error("razorpay order", r.status); throw new HttpError(502, "The payment service could not start this payment. Please try again."); }
+  return r.json();
+}
+// the cart, priced and stock-checked from the server's own product list, never from the browser
+function buildLines(items) {
+  if (!Array.isArray(items) || !items.length || items.length > 50) bad("Your cart is empty.");
+  const lines = items.map(it => {
+    const p = it && typeof it === "object" && db.products.find(p => p.id === it.id && visible(p)); // a hidden category cannot be ordered
+    if (!p) bad("A product in your cart is no longer available.");
+    const qty = int(it.qty, "Quantity", 1, 10);
+    if (p.stock < qty) throw new HttpError(409, p.stock ? `Only ${p.stock} left of ${p.brand} ${p.name}.` : `${p.brand} ${p.name} is out of stock.`);
+    return { p, qty };
+  });
+  if (new Set(lines.map(l => l.p.id)).size !== lines.length) bad("Duplicate items in cart.");
+  return lines;
+}
+const stamp = status => ({ at: new Date().toISOString(), status });
+function confirmPaid(o, paymentId, via) { // idempotent: the checkout callback and the webhook can both arrive
+  if (o.status === "Placed") return;
+  for (const it of o.items) { const p = db.products.find(p => p.id === it.id); if (p) { if (p.stock < it.qty) o.stockIssue = true; p.stock = Math.max(0, p.stock - it.qty); } } // stock is taken on confirmation
+  o.status = "Placed"; o.pay = "Paid online (Razorpay)"; o.payment.paymentId = paymentId; o.payment.history.push({ ...stamp("Paid"), via });
+  write("orders"); write("products");
+  notify(o, `Your Mytekkstore order ${o.id} is placed. Total ₹${o.total}. ${o.pay}.`);
+}
+function failPayment(o, paymentId, reason) { o.payment.attempts.push({ ...stamp("Failed"), paymentId, reason: String(reason || "").slice(0, 200) }); o.payment.history.push(stamp("Payment failed")); write("orders"); }
+function expirePending() { // a payment not completed within 30 minutes releases the order; nothing was deducted for it
+  const cut = Date.now() - 30 * 60000; let n = 0;
+  for (const o of db.orders) if (o.status === "Pending payment" && +new Date(o.at) < cut) { o.status = "Expired"; o.payment.history.push(stamp("Expired")); n++; }
+  if (n) write("orders");
+}
+setInterval(expirePending, 300000).unref();
+const seenEvents = new Set(); // x-razorpay-event-id values already handled: Razorpay retries, and the same event can arrive twice
+async function razorpayWebhook(req, res) {
+  const done = (code, obj) => { res.writeHead(code, { "Content-Type": "application/json; charset=utf-8", "Cache-Control": "no-store" }); res.end(JSON.stringify(obj)); };
+  if (!RZP.webhook) return done(503, { error: "Webhook secret not configured." });
+  let raw = ""; for await (const c of req) { raw += c; if (raw.length > 200000) return done(413, { error: "Too large." }); }
+  if (!verifyWebhookSignature(raw, req.headers["x-razorpay-signature"], RZP.webhook)) return done(400, { error: "Bad signature." }); // the raw body, never a re-serialised one
+  const eventId = String(req.headers["x-razorpay-event-id"] || "");
+  if (eventId && seenEvents.has(eventId)) return done(200, { ok: true, duplicate: true });
+  let ev; try { ev = JSON.parse(raw); } catch { return done(400, { error: "Bad body." }); }
+  const pay = ev.payload && ev.payload.payment && ev.payload.payment.entity;
+  const providerOrderId = (pay && pay.order_id) || (ev.payload && ev.payload.order && ev.payload.order.entity && ev.payload.order.entity.id);
+  const o = providerOrderId && db.orders.find(o => o.payment && o.payment.providerOrderId === providerOrderId);
+  if (o) {
+    o.payment.events.push({ ...stamp(ev.event), id: eventId });
+    if (ev.event === "payment.captured" || ev.event === "order.paid") confirmPaid(o, pay ? pay.id : "", "webhook");
+    else if (ev.event === "payment.failed") failPayment(o, pay ? pay.id : "", pay && pay.error_description);
+    else write("orders");
+  }
+  if (eventId) { seenEvents.add(eventId); if (seenEvents.size > 5000) seenEvents.clear(); }
+  return done(200, { ok: true });
+}
+// start a gateway payment: a pending order (no stock taken yet) and the gateway's order id for the checkout
+on("POST", "pay/order", async ({ body, user }) => {
+  if (PAY_PROVIDER === "demo") return { provider: "demo" }; // the client keeps the demo flow until keys exist
+  const dest = destinationOf(body);
+  if (!dest.methods.includes("online")) bad("Online payment is not available for this destination.");
+  const name = str(body.name, "Name", 80), phone = str(body.phone, "Phone", 15, /^[0-9+ ]{7,15}$/), address = str(body.address, "Address", 400), pin = str(body.pin, "Pincode", 10, /^[0-9A-Za-z ]{4,10}$/);
+  const lines = buildLines(body.items), total = lines.reduce((t, l) => t + l.p.price * l.qty, 0);
+  const id = "MT" + crypto.randomBytes(5).toString("hex").toUpperCase();
+  const rz = await razorpayCreateOrder(total * 100, id);
+  const order = { id, at: new Date().toISOString(), status: "Pending payment", name, phone, address, pin, email: user.email || "", country: "IN", pay: "Online (Razorpay)", userId: user.id,
+    items: lines.map(({ p, qty }) => ({ id: p.id, brand: p.brand, name: p.name, img: p.img, price: p.price, qty })), total,
+    payment: { provider: "razorpay", providerOrderId: rz.id, paymentId: "", attempts: [], events: [], history: [stamp("Pending payment")] } };
+  db.orders.push(order); write("orders");
+  return { id, provider: "razorpay", keyId: RZP.id, providerOrderId: rz.id, amount: total * 100, currency: "INR", email: user.email || "" };
+}, "user");
+// the checkout's callback: verified against the order id we stored, never the one the browser sends
+on("POST", "pay/verify", ({ body, user }) => {
+  expirePending();
+  const o = db.orders.find(o => o.id === body.id && o.userId === user.id && o.payment);
+  if (!o) throw new HttpError(404, "Order not found.");
+  if (o.status === "Placed") return { id: o.id, status: o.status };
+  if (o.status === "Expired") throw new HttpError(410, "This payment window has expired. Please place the order again.");
+  if (body.razorpay_order_id !== o.payment.providerOrderId || !verifyCheckoutSignature(o.payment.providerOrderId, String(body.razorpay_payment_id || ""), body.razorpay_signature, RZP.secret)) throw new HttpError(400, "Payment could not be verified.");
+  confirmPaid(o, String(body.razorpay_payment_id), "checkout");
+  return { id: o.id, status: o.status };
+}, "user");
+
+// ===== the assistant's model providers: Gemini's free tier first, the paid model next, and the catalogue rules in the page as the fallback =====
+const GEMINI_KEY = process.env.GEMINI_API_KEY || "", GEMINI_MODEL = process.env.GEMINI_MODEL || "gemini-2.5-flash-lite";
+const chatHits = new Map(); // address -> { n, since }: 30 assistant questions per 10 minutes per address, on top of the general write limit
+async function askModel(system, history, message) {
+  if (GEMINI_KEY) {
+    let r = null;
+    try { r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_KEY}`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ systemInstruction: { parts: [{ text: system }] }, contents: [...history.map(h => ({ role: h.role === "assistant" ? "model" : "user", parts: [{ text: h.content }] })), { role: "user", parts: [{ text: message }] }], generationConfig: { maxOutputTokens: 400, temperature: 0.2 } }), signal: AbortSignal.timeout(20000) }); } catch { r = null; }
+    if (r && r.ok) { const j = await r.json(); const parts = (((j.candidates || [])[0] || {}).content || {}).parts || []; const text = parts.map(p => p.text || "").join(""); if (text) return { text, provider: "gemini" }; }
+    else console.error("chat gemini", r ? r.status : "unreachable"); // a quota reply (429) or an outage falls through, never a stack trace with the question in it
+  }
+  if (CHAT_KEY) {
+    let r;
+    try { r = await fetch("https://api.anthropic.com/v1/messages", { method: "POST", headers: { "content-type": "application/json", "x-api-key": CHAT_KEY, "anthropic-version": "2023-06-01" }, body: JSON.stringify({ model: CHAT_MODEL, max_tokens: 400, system, messages: [...history, { role: "user", content: message }] }), signal: AbortSignal.timeout(20000) }); }
+    catch { throw new HttpError(502, "The assistant is not available right now."); }
+    if (!r.ok) { console.error("chat anthropic", r.status); throw new HttpError(502, "The assistant is not available right now."); }
+    return { text: ((await r.json()).content || []).map(c => c.text || "").join(""), provider: "anthropic" };
+  }
+  throw new HttpError(503, "The assistant is not available right now.");
+}
+
+on("GET", "config", () => ({ google: GOOGLE, sms: smsReady, mail: mailReady, demoCodes: OTP_DEMO, clarity: !!CLARITY, chat: !!(GEMINI_KEY || CHAT_KEY), pay: PAY_PROVIDER, payKey: RZP.id, fx: fxNow(), destinations: Object.fromEntries(Object.entries(DESTINATIONS).map(([k, d]) => [k, { name: d.name, display: d.display, ship: d.ship, methods: d.methods }])) }));
 // Contact form (page.html?p=contact): the message is recorded in the admin outbox ("Customer messages"), so the store sees it
 // even before an email provider is connected. ponytail: no rate limit beyond the body size; add one if the form gets abused.
 on("POST", "contact", ({ body }) => {
@@ -354,20 +496,13 @@ on("GET", "pincode/(\\d{6})", async ({ params }) => {
 on("POST", "orders", ({ body, user }) => { // sign-in required
   const name = str(body.name, "Name", 80), phone = str(body.phone, "Phone", 15, /^[0-9+ ]{7,15}$/);
   const address = str(body.address, "Address", 400), pin = str(body.pin, "Pincode", 10, /^[0-9A-Za-z ]{4,10}$/);
-  if (!Array.isArray(body.items) || !body.items.length || body.items.length > 50) bad("Your cart is empty.");
-  // Prices and stock always come from the server's own product list, never from the browser.
-  const lines = body.items.map(it => {
-    const p = it && typeof it === "object" && db.products.find(p => p.id === it.id && visible(p)); // a hidden category cannot be ordered
-    if (!p) bad("A product in your cart is no longer available.");
-    const qty = int(it.qty, "Quantity", 1, 10);
-    if (p.stock < qty) throw new HttpError(409, p.stock ? `Only ${p.stock} left of ${p.brand} ${p.name}.` : `${p.brand} ${p.name} is out of stock.`);
-    return { p, qty };
-  });
-  if (new Set(lines.map(l => l.p.id)).size !== lines.length) bad("Duplicate items in cart.");
+  const dest = destinationOf(body); // India only until a destination is approved
+  if (!dest.methods.includes(body.pay === "online" ? "online" : "cod")) bad("That payment method is not available for this destination.");
+  const lines = buildLines(body.items); // prices and stock from the server's own product list, never from the browser
   lines.forEach(l => l.p.stock -= l.qty);
   const order = {
     id: "MT" + crypto.randomBytes(5).toString("hex").toUpperCase(), at: new Date().toISOString(), status: "Placed",
-    name, phone, address, pin, email: user.email || "", // the email is for order messages when there is no SMS provider
+    name, phone, address, pin, email: user.email || "", country: "IN", // the email is for order messages when there is no SMS provider
     // "online" is a demo payment: no gateway is called. Connect a real gateway here and verify its payment signature before saving.
     pay: body.pay === "online" ? "Paid online (demo payment)" : "Cash on delivery", userId: user ? user.id : null,
     items: lines.map(({ p, qty }) => ({ id: p.id, brand: p.brand, name: p.name, img: p.img, price: p.price, qty })),
@@ -485,8 +620,12 @@ on("POST", "creative/concepts", async ({ body }) => {
 }, "admin");
 
 // ===== the help bot's assistant: Claude, fed only the catalogue and the store's facts, answering as JSON with links inside the site =====
-on("POST", "chat", async ({ body }) => {
-  if (!CHAT_KEY) throw new HttpError(503, "No chat provider is configured. Set ANTHROPIC_API_KEY on the server; the site answers from the catalogue meanwhile.");
+on("POST", "chat", async ({ body, req }) => {
+  if (!GEMINI_KEY && !CHAT_KEY) throw new HttpError(503, "No chat provider is configured. Set GEMINI_API_KEY or ANTHROPIC_API_KEY on the server; the site answers from the catalogue meanwhile.");
+  const ip = ipOf(req), now = Date.now(), h = chatHits.get(ip) || { n: 0, since: now };
+  if (now - h.since > 600000) { h.n = 0; h.since = now; }
+  if (++h.n > 30) throw new HttpError(429, "The assistant has had many questions from this address. Please try again in a few minutes.");
+  chatHits.set(ip, h); if (chatHits.size > 5000) chatHits.clear();
   const message = str(body.message, "Message", 500);
   const page = body.page && typeof body.page === "object" ? body.page : {};
   const history = (Array.isArray(body.history) ? body.history : []).slice(-8).filter(x => x && (x.role === "user" || x.role === "assistant") && typeof x.text === "string" && x.text.trim()).map(x => ({ role: x.role, content: x.text.slice(0, 500) }));
@@ -497,15 +636,11 @@ FACTS: Delivery is free across India, usually 3 to 5 days, cash on delivery avai
 CATALOGUE: ${JSON.stringify(catalogue)}
 ${cur ? "The customer is looking at product id " + cur.id + "." : "The customer is on the " + (page.page || "home") + " page."}
 Reply as JSON only: {"reply": "...", "links": [{"label": "...", "href": "/..."}]} with at most 3 links whose href is one of the pages or product urls above.`;
-  let r;
-  try { r = await fetch("https://api.anthropic.com/v1/messages", { method: "POST", headers: { "content-type": "application/json", "x-api-key": CHAT_KEY, "anthropic-version": "2023-06-01" }, body: JSON.stringify({ model: CHAT_MODEL, max_tokens: 400, system, messages: [...history, { role: "user", content: message }] }), signal: AbortSignal.timeout(20000) }); }
-  catch { throw new HttpError(502, "The assistant is not available right now."); }
-  if (!r.ok) throw new HttpError(502, "The assistant is not available right now.");
-  const text = ((await r.json()).content || []).map(c => c.text || "").join("");
+  const { text, provider } = await askModel(system, history, message);
   let out; try { out = JSON.parse(text.slice(text.indexOf("{"), text.lastIndexOf("}") + 1)); } catch { out = { reply: text, links: [] }; }
   const ok = new Set(["/televisions", "/offers", "/shipping", "/returns", "/contact", "/account", "/products", ...catalogue.map(p => p.url)]);
   const links = (Array.isArray(out.links) ? out.links : []).filter(l => l && typeof l.href === "string" && (ok.has(l.href) || /^\/compare\?ids=[\d,]+$/.test(l.href))).slice(0, 3).map(l => ({ label: String(l.label || "Open").slice(0, 60), href: l.href }));
-  return { reply: String(out.reply || "").slice(0, 800), links, provider: "anthropic" };
+  return { reply: String(out.reply || "").slice(0, 800), links, provider };
 });
 
 // ===== HTTP plumbing =====
@@ -519,6 +654,7 @@ function readBody(req, limit) {
   });
 }
 async function handleApi(req, res, pathname) {
+  if (pathname === "/api/pay/webhook" && req.method === "POST") return razorpayWebhook(req, res); // signed raw body, no session, no origin
   const send = (code, obj) => { res.writeHead(code, { "Content-Type": "application/json; charset=utf-8", "Cache-Control": "no-store" }); res.end(JSON.stringify(obj)); };
   try {
     let body = {};
@@ -560,7 +696,7 @@ const TYPES = { ".html": "text/html; charset=utf-8", ".css": "text/css; charset=
 const SECURITY = {
   "X-Content-Type-Options": "nosniff", "X-Frame-Options": "DENY", "Referrer-Policy": "strict-origin-when-cross-origin",
   "Permissions-Policy": "camera=(), microphone=(), geolocation=()",
-  "Content-Security-Policy": `default-src 'self'; script-src 'self' 'inline-speculation-rules'${GOOGLE ? " https://accounts.google.com" : ""}${CLARITY ? " https://www.clarity.ms" : ""}; connect-src 'self'${GOOGLE ? " https://accounts.google.com" : ""}${CLARITY ? " https://*.clarity.ms" : ""}; frame-src ${GOOGLE ? "https://accounts.google.com" : "'none'"}; img-src 'self' data: https:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com${GOOGLE ? " https://accounts.google.com" : ""}; font-src https://fonts.gstatic.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self'`,
+  "Content-Security-Policy": `default-src 'self'; script-src 'self' 'inline-speculation-rules'${GOOGLE ? " https://accounts.google.com" : ""}${CLARITY ? " https://www.clarity.ms" : ""}${RZP.id ? " https://checkout.razorpay.com" : ""}; connect-src 'self'${GOOGLE ? " https://accounts.google.com" : ""}${CLARITY ? " https://*.clarity.ms" : ""}${RZP.id ? " https://api.razorpay.com https://lumberjack.razorpay.com" : ""}; frame-src ${[GOOGLE && "https://accounts.google.com", RZP.id && "https://api.razorpay.com https://checkout.razorpay.com"].filter(Boolean).join(" ") || "'none'"}; img-src 'self' data: https:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com${GOOGLE ? " https://accounts.google.com" : ""}; font-src https://fonts.gstatic.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self'`,
 };
 const escHtml = s => String(s).replace(/[&<>"']/g, c => "&#" + c.charCodeAt(0) + ";");
 const siteUrl = req => (req.headers["x-forwarded-proto"] || "http") + "://" + (req.headers.host || "localhost:" + PORT);
@@ -679,7 +815,7 @@ function seoTags(req, url) {
 function staticHeader() {
   const icon = d => `<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d}</svg>`;
   const li = (label, href) => `<li class="l0"><a class="l0link" href="${href}">${escHtml(label)}</a></li>`;
-  return `<a class="skip" href="#main">Skip to content</a><header id="hdr"><div class="wrap"><a class="logo" href="/"><svg viewBox="0 0 32 32" width="30" height="30" aria-hidden="true"><rect width="32" height="32" rx="9" fill="var(--accent)"/><path d="M18 5 9 18h6l-2 9 10-14h-6z" fill="#ffffff"/></svg><span>mytekk<b>store</b></span></a><form role="search" action="/products" class="sbox"><input type="search" name="q" placeholder="What are you looking for?" aria-label="Search products" autocomplete="off"></form><details class="deliver"><summary>${icon('<path d="M12 21s-6-5.3-6-11a6 6 0 0112 0c0 5.7-6 11-6 11z"/><circle cx="12" cy="10" r="2.5"/>')}<span><small>Deliver to</small><b>Enter pincode</b></span></summary></details><select id="country" aria-label="Country"><option>India</option></select><a class="hlink" href="/account" aria-label="Sign in">${icon('<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0116 0"/>')} <span>Sign in</span></a><a class="hlink" href="/products?wish=1" aria-label="Wishlist">${icon('<path d="M12 20s-7-4.4-7-10a4 4 0 017-2.6A4 4 0 0119 10c0 5.6-7 10-7 10z"/>')}</a><a class="hlink" href="/cart" aria-label="Cart">${icon('<path d="M3 4h2l2.4 11h11l2-7H7"/><circle cx="9" cy="20" r="1.5"/><circle cx="17" cy="20" r="1.5"/>')}</a></div><nav class="gnav" aria-label="Shop"><ul class="gbar">${[...new Set(live().map(p => p.cat))].map(c => li(c, catPath(c))).join("")}${HIDDEN_CATS.map(c => `<li class="soon"><span>${escHtml(c)}</span></li>`).join("")}${li("Brands", "/products")}${li("Best Deals", "/offers")}${li("Support", "/contact")}<li class="qbands">${[[0, 10000], [10000, 25000], [25000, 50000], [50000, 0]].map(([mn, mx]) => { const rs = n => "₹" + n.toLocaleString("en-IN"); const label = mn && mx ? rs(mn) + " – " + rs(mx) : mn ? "Above " + rs(mn) : "Under " + rs(mx); const q = [mn ? "min=" + mn : "", mx ? "max=" + mx : ""].filter(Boolean).join("&"); return `<a href="${catPath("Televisions")}?${q}">${label}</a>`; }).join("")}</li></ul></nav></header>`;
+  return `<a class="skip" href="#main">Skip to content</a><header id="hdr"><div class="wrap"><a class="logo" href="/"><svg viewBox="0 0 32 32" width="30" height="30" aria-hidden="true"><rect width="32" height="32" rx="9" fill="var(--accent)"/><path d="M18 5 9 18h6l-2 9 10-14h-6z" fill="#ffffff"/></svg><span>mytekk<b>store</b></span></a><form role="search" action="/products" class="sbox"><input type="search" name="q" placeholder="What are you looking for?" aria-label="Search products" autocomplete="off"></form><details class="deliver"><summary>${icon('<path d="M12 21s-6-5.3-6-11a6 6 0 0112 0c0 5.7-6 11-6 11z"/><circle cx="12" cy="10" r="2.5"/>')}<span><small>Deliver to</small><b>Enter pincode</b></span></summary></details><select id="country" aria-label="Country"><option>India</option></select><a class="hlink" href="/account" aria-label="Sign in">${icon('<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0116 0"/>')} <span>Sign in</span></a><a class="hlink" href="/products?wish=1" aria-label="Wishlist">${icon('<path d="M12 20s-7-4.4-7-10a4 4 0 017-2.6A4 4 0 0119 10c0 5.6-7 10-7 10z"/>')}</a><a class="hlink" href="/cart" aria-label="Cart">${icon('<path d="M3 4h2l2.4 11h11l2-7H7"/><circle cx="9" cy="20" r="1.5"/><circle cx="17" cy="20" r="1.5"/>')}</a></div><nav class="gnav" aria-label="Shop"><ul class="gbar">${[...new Set(live().map(p => p.cat))].map(c => li(c, catPath(c))).join("")}${HIDDEN_CATS.map(c => `<li class="soon"><span>${escHtml(c)}</span></li>`).join("")}${li("Brands", "/products")}${li("Best Deals", "/offers")}${li("Support", "/contact")}${li("Track order", "/account")}</ul></nav></header>`;
 }
 function staticHome() {
   const b = db.banners.filter(x => x.live && x.slot === "home").sort((a, c) => a.order - c.order || a.id - c.id)[0];
@@ -692,7 +828,7 @@ function staticHome() {
   const tvs = live().filter(p => p.cat === "Televisions"), rs = n => String.fromCharCode(8377) + n.toLocaleString("en-IN");
   const maxOff = Math.max(0, ...live().map(p => Math.round((1 - p.price / p.mrp) * 100))), minTv = tvs.length ? Math.min(...tvs.map(p => p.price)) : 0;
   const emis = tvs.filter(p => p.emi).map(p => Math.ceil(p.price / 9)), minEmi = emis.length ? Math.min(...emis) : 0;
-  const hero = !b || b.brand || b.productId || b.preset === "promo" ? "" : `<div class="hero auto"><div class="slide k-photo on" data-preset="${escHtml(b.preset || "cinematic")}"><div class="bg"><picture>${img}</picture></div><div class="hpanel"><h1>${words(b.title)}</h1><p>${escHtml(b.text || "")}</p>${minTv ? `<div class="hfacts"><span>From ${rs(minTv)}</span><span>Up to ${maxOff}% off</span>${minEmi ? "<span>No Cost EMI from " + rs(minEmi) + "/month</span>" : ""}</div>` : ""}<div class="hcta"><a class="btn" href="${escHtml(b.href || "/televisions")}">${escHtml(b.cta || "Explore TVs")}</a><a class="btn ghost" href="${escHtml(b.href2 || "/televisions?sort=off")}">${escHtml(b.cta2 || "See deals")}</a></div></div><div class="fan" aria-hidden="true"><span class="fanglow"></span><img src="/img/tv-landscape.webp" alt="" loading="lazy" width="846" height="566"><img src="/img/tv-cricket.webp" alt="" loading="lazy" width="831" height="552"><img class="main" src="/img/tv-ocean.webp" alt="" width="865" height="572"></div></div></div>`;
+  const hero = !b || b.brand || b.productId || b.preset === "promo" ? "" : `<div class="hero auto"><div class="slide k-photo on" data-preset="${escHtml(b.preset || "cinematic")}"><div class="bg"><picture>${img}</picture></div><div class="hpanel"><h1>${words(b.title)}</h1><p>${escHtml(b.text || "")}</p>${minTv ? `<div class="hfacts"><span>From ${rs(minTv)}</span><span>Up to ${maxOff}% off</span>${minEmi ? "<span>No Cost EMI from " + rs(minEmi) + "/month</span>" : ""}</div>` : ""}<div class="hcta"><a class="btn" href="${escHtml(b.href || "/televisions")}">${escHtml(b.cta || "Explore TVs")}</a><a class="btn ghost" href="${escHtml(b.href2 || "/televisions?sort=off")}">${escHtml(b.cta2 || "See deals")}</a></div></div></div></div>`;
   // the discount banner under the hero, painted with it so the page's largest first-screen text does not wait for the script
   // (same markup and figures as the deal box in web/src/home.jsx: biggest discount, lowest price, lowest 9-month No Cost EMI)
   const topDeal = tvs.length ? [...tvs].sort((a, b) => (b.mrp - b.price) / b.mrp - (a.mrp - a.price) / a.mrp)[0] : null;
@@ -801,3 +937,4 @@ if (require.main === module) {
   server.listen(PORT, HOST, () => console.log(`Mytekkstore store running at http://localhost:${PORT}  (admin login is in data/ADMIN_LOGIN.txt)`));
 }
 module.exports = server;
+module.exports.pay = { hmac, verifyCheckoutSignature, verifyWebhookSignature }; // pure functions, covered by test.js

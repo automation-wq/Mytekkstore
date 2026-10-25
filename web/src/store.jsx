@@ -23,7 +23,7 @@ export function StoreProvider({ children }) {
   const toastTimer = useRef();
 
   const country = useMemo(() => { const c = load("country", "India"); return Object.hasOwn(COUNTRIES, c) ? c : "India"; }, []);
-  const money = n => { const [s, l, r] = COUNTRIES[country]; return s + Math.round(n * r).toLocaleString(l); };
+  const money = n => { const [s, l, r0] = COUNTRIES[country]; const code = { UAE: "AED", USA: "USD" }[country]; const r = (code && CFG && CFG.fx && CFG.fx.rates && CFG.fx.rates[code]) || r0; return s + Math.round(n * r).toLocaleString(l); }; // live display rates from the server when it has them; every order is charged in INR
 
   useEffect(() => {
     const apply = ({ products, user, cfg, banners }) => {

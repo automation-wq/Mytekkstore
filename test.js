@@ -105,7 +105,7 @@ server.listen(0, "127.0.0.1", async () => {
     assert.ok((await call("/api/admin/outbox", "GET", null, admin)).data.messages.some(m => m.text.includes("Do you deliver to Pune?") && m.sent === "received"));
     // Google sign-in and SMS stay off until their keys are set
     assert.equal((await call("/api/login/google", "POST", { credential: "x" })).status, 503);
-    assert.deepEqual((await call("/api/config")).data, { google: "", sms: false, mail: false, demoCodes: false, clarity: false, chat: false });
+    { const c = (await call("/api/config")).data; assert.deepEqual({ google: c.google, sms: c.sms, mail: c.mail, demoCodes: c.demoCodes, clarity: c.clarity, chat: c.chat }, { google: "", sms: false, mail: false, demoCodes: false, clarity: false, chat: false }); } // the optional services are all off here; pay, fx and destinations are checked at the end
     // a code by email signs into the account with that email; a new email gets its own account
     r = await call("/api/otp/send", "POST", { to: "Asha@Example.com" });
     assert.equal(r.status, 200); assert.equal(r.data.via, "demo");
@@ -258,6 +258,19 @@ server.listen(0, "127.0.0.1", async () => {
     // data survives on disk and passwords are not stored in plain text
     const users = fs.readFileSync(path.join(process.env.DATA_DIR, "users.json"), "utf8");
     assert.ok(!users.includes("longenough1") && !users.includes(pw));
+    // payments: Razorpay documents both HMACs; the checks are pure functions, so they are tested here without gateway keys
+    const pay = require("./server.js").pay;
+    assert.equal(pay.verifyCheckoutSignature("order_A", "pay_B", pay.hmac("secret", "order_A|pay_B"), "secret"), true, "a correct checkout signature passes");
+    assert.equal(pay.verifyCheckoutSignature("order_A", "pay_B", pay.hmac("secret", "order_A|pay_C"), "secret"), false, "a signature for another payment fails");
+    assert.equal(pay.verifyCheckoutSignature("order_A", "pay_B", "", "secret"), false, "an empty signature fails");
+    assert.equal(pay.verifyCheckoutSignature("order_A", "pay_B", pay.hmac("secret", "order_A|pay_B"), ""), false, "no secret, no verification");
+    assert.equal(pay.verifyWebhookSignature('{"event":"order.paid"}', pay.hmac("whsec", '{"event":"order.paid"}'), "whsec"), true, "a webhook signed over the raw body passes");
+    assert.equal(pay.verifyWebhookSignature('{"event":"order.paid"}', pay.hmac("whsec", '{"event":"order.paid" }'), "whsec"), false, "the raw body must match byte for byte");
+    r = await call("/api/pay/order", "POST", { ...addr, items: [{ id: 1, qty: 1 }] }, buyer); assert.equal(r.status, 200); assert.equal(r.data.provider, "demo", "without gateway keys the demo flow stays");
+    assert.equal((await call("/api/pay/webhook", "POST", { event: "order.paid" })).status, 503, "the webhook refuses until a secret is set");
+    assert.equal((await call("/api/orders", "POST", { ...addr, country: "AE", items: [{ id: 1, qty: 1 }] }, buyer)).status, 422, "only India can be ordered to until a destination is approved");
+    assert.equal((await call("/api/orders", "POST", { ...addr, country: "IN", items: [{ id: 1, qty: 1 }] }, buyer)).status, 200, "India orders as before");
+    r = await call("/api/config"); assert.equal(r.data.pay, "demo"); assert.ok(r.data.fx && r.data.fx.rates && r.data.fx.rates.USD > 0 && r.data.destinations.IN.ship === true && r.data.destinations.AE.ship === false, "config carries the pay provider, display rates and destinations");
     console.log("ALL TESTS PASSED");
   } catch (e) { console.error("TEST FAILED:", e.message, e.stack.split("\n")[2]); process.exitCode = 1; }
   server.close(); server.closeAllConnections();
