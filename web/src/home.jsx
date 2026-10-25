@@ -6,7 +6,7 @@ import { useEffect, useRef, useState } from "react";
 import { m, useReducedMotion } from "motion/react";
 import { useStore } from "./store.jsx";
 import { Card, Row, BankOffers, Ico, Icon, Qa, OsChart, BankStrip } from "./components.jsx";
-import { DRAW_ICONS, HOME_BANNERS, FAQ, catSizes, brandUrl, listUrl, off, starRow, productUrl, pic, picSet, osList, osUrl, brandPoints, cutout, life, emiPlans } from "./data.js";
+import { DRAW_ICONS, HOME_BANNERS, FESTIVE, FAQ, catSizes, brandUrl, listUrl, off, starRow, productUrl, pic, picSet, osList, osUrl, brandPoints, cutout, life, emiPlans } from "./data.js";
 import { lines, TONES } from "./banner.jsx";
 import { resOf } from "./category.jsx"; // resolution of a TV from its specifications, for the screen-type cards
 
@@ -92,6 +92,7 @@ export function Home() {
       {slides.length > 1 && <><button className="arrow prev" aria-label="Previous slide">‹</button><button className="arrow next" aria-label="Next slide">›</button>
       <div className="dots">{slides.map((_, i) => <button aria-label={"Slide " + (i + 1)} data-i={i} className={i === cur ? "on" : undefined} key={i}></button>)}</div></>}
     </div>
+    <FestiveBanner tvs={tvs} maxOff={maxOff} minEmi={minEmi} money={money} />
     <DealCarousel tvs={tvs} maxOff={maxOff} minTv={minTv} minEmi={minEmi} money={money} />
     <BankStrip wrap />
     <BankOffers />
@@ -157,5 +158,38 @@ function DealCarousel({ tvs, maxOff, minTv, minEmi, money }) {
       <div {...slide(2)}><div className="dealin ink"><span className="deye">Not sure which TV?</span><h2>Your complete TV buying guide</h2><p>Screen size for your room, 4K or Full HD, Google TV or WebOS, and the ports you need. Everything before you choose.</p><a className="btn" href="/buying-guide">Read the guide →</a></div></div>
     </div>
     <div className="dealctl"><div className="dcnav" role="group" aria-label="Deal controls"><button type="button" className="dcbtn" onClick={() => go(i - 1)} aria-label="Previous deal">‹</button><button type="button" className="dcbtn" onClick={() => go(i + 1)} aria-label="Next deal">›</button></div><div className="dcdots" role="tablist" aria-label="Deals">{labels.map((l, k) => <button type="button" role="tab" aria-selected={i === k} aria-label={l} className={i === k ? "on" : undefined} onClick={() => go(k)} key={l} />)}</div></div>
+  </section>;
+}
+
+// The festive discount banner under the hero (Reliance Digital and Amazon open their festival sales this way): festive colours,
+// lights drawn in CSS and still, the biggest real discount in gold, the biggest-saving TV's own render. The lights and the TV
+// shift a little as the visitor scrolls (--p from 0 to 1 across the viewport), never on their own, and not under reduced motion.
+function FestiveBanner({ tvs, maxOff, minEmi, money }) {
+  const ref = useRef();
+  const still = useReducedMotion();
+  const top = [...tvs].sort((a, b) => off(b) - off(a))[0];
+  useEffect(() => {
+    if (still) return;
+    const el = ref.current; if (!el) return;
+    let raf = 0;
+    const tick = () => { raf = 0; const r = el.getBoundingClientRect(), vh = innerHeight; el.style.setProperty("--p", Math.min(1, Math.max(0, (vh - r.top) / (vh + r.height))).toFixed(3)); };
+    const onScroll = () => { if (!raf) raf = requestAnimationFrame(tick); };
+    tick(); addEventListener("scroll", onScroll, { passive: true }); addEventListener("resize", onScroll);
+    return () => { removeEventListener("scroll", onScroll); removeEventListener("resize", onScroll); if (raf) cancelAnimationFrame(raf); };
+  }, [still]);
+  if (!tvs.length || !top || maxOff <= 0) return null;
+  const img = cutout(top.img) || pic(top.img, 480);
+  return <section className="festive wrap" ref={ref} aria-label={FESTIVE.title}>
+    <a className="festin" href="/offers">
+      <span className="flights" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></span>
+      <span className="ftext">
+        <span className="fkick">{FESTIVE.title}</span>
+        <b>Up to <em>{maxOff}% off</em><br />on Smart TVs</b>
+        <span className="fsub">{FESTIVE.sub}.{minEmi ? " No Cost EMI from " + money(minEmi) + "/month." : ""} Free delivery across India, cash on delivery.</span>
+        <span className="btn">Shop festive offers →</span>
+      </span>
+      <img className="ftv" src={img} alt={top.brand + " " + top.name} loading="lazy" width="800" height="800" />
+      <small className="fnote">Savings are MRP against our price. T&amp;C apply.</small>
+    </a>
   </section>;
 }

@@ -1854,3 +1854,24 @@ main .dealbox h2 { display:block } /* the site lays h2s out as a row for a right
 
 .faq { scroll-margin-top:calc(var(--hh,150px) + 16px) } /* the Support menu links to /#faq: land it under the sticky header like the other anchors */
 .ahero::before { background:linear-gradient(90deg, #0f1115c7 0%, #0f111573 42%, #0f111500 68%), linear-gradient(180deg, transparent 30%, #0f1115bf) } /* a scrim behind the A+ headline too, not only at the foot: the kicker sat over the brightest part of the photo */
+
+/* the festive discount banner under the hero (home.jsx FestiveBanner): festive colours, CSS lights, gold figure, the TV render.
+   --p (0 at the bottom of the viewport, 1 at the top) moves the lights and the TV a few pixels: depth on scroll, nothing on its own */
+.festive { --p:.5; margin-top:14px }
+.festin { position:relative; display:grid; grid-template-columns:1fr auto; align-items:center; gap:18px; min-height:250px; padding:30px 34px; border-radius:18px; overflow:hidden; color:#fff; text-decoration:none; isolation:isolate;
+  background:radial-gradient(120% 120% at 100% 0%, #6a1b4d 0%, transparent 55%), radial-gradient(90% 90% at 0% 100%, #2b1a6b 0%, transparent 60%), linear-gradient(100deg, #4a0f2e 0%, #2a1158 55%, #141a4a 100%) }
+.festin:hover { filter:brightness(1.05) }
+.flights { position:absolute; inset:0; z-index:0; pointer-events:none; transform:translateY(calc((var(--p) - .5) * -28px)) }
+.flights i { position:absolute; width:14px; height:14px; border-radius:50%; background:radial-gradient(circle, #ffe9a8 0%, #ffb547 45%, transparent 70%); box-shadow:0 0 22px 8px #ffb54766; opacity:.9 }
+.flights i:nth-child(1) { left:6%; top:16% } .flights i:nth-child(2) { left:22%; top:72%; width:10px; height:10px } .flights i:nth-child(3) { left:41%; top:12%; width:9px; height:9px }
+.flights i:nth-child(4) { left:58%; top:80% } .flights i:nth-child(5) { left:70%; top:22%; width:11px; height:11px } .flights i:nth-child(6) { left:90%; top:66%; width:8px; height:8px }
+.ftext { position:relative; z-index:1; display:grid; gap:10px; justify-items:start; max-width:34rem }
+.fkick { display:inline-block; padding:5px 12px; border-radius:999px; background:#ffffff1f; border:1px solid #ffffff40; font-size:12px; font-weight:800; letter-spacing:.08em; text-transform:uppercase; color:#ffd98a }
+.festin b { font-family:Manrope,"Manrope Fallback",Inter,"Inter Fallback",system-ui,sans-serif; font-size:clamp(30px,4.6vw,52px); line-height:1; letter-spacing:-1.5px; font-weight:800 }
+.festin b em { font-style:normal; color:var(--hi); text-shadow:0 2px 24px #ffb54766 }
+.fsub { font-size:15px; color:#ffffffe0; max-width:32rem }
+.festin .btn, .festin .btn:not(.ghost):not([disabled]) { background:var(--hi); color:var(--hi-fg); margin-top:4px }
+.ftv { position:relative; z-index:1; width:min(34vw, 380px); height:auto; justify-self:end; filter:drop-shadow(0 24px 30px #00000080); transform:translateY(calc((var(--p) - .5) * 18px)) }
+.fnote { position:absolute; left:34px; bottom:12px; z-index:1; font-size:11px; color:#ffffffa6 }
+@media (max-width:760px) { .festin { grid-template-columns:1fr; padding:22px 18px 40px; min-height:0 } .ftv { width:min(70vw, 300px); justify-self:center } .fnote { left:18px } }
+@media (prefers-reduced-motion:reduce) { .flights, .ftv { transform:none } }
