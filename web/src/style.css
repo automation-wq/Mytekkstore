@@ -2068,3 +2068,17 @@ main > .trustrow { margin-top:14px }
 /* ─ the offers page opens on the festive banner; its heading stays for the page outline and search engines ─ */
 .srh { position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap }
 main > .festive.bleed:first-of-type { margin-top:0 }
+
+/* ─ the sign-in page, cinematic (25 Oct): cinema-room photograph, a floating television on a glow, the headline word by word ─ */
+.aside.cine { min-height:660px; justify-content:flex-end; background:#07090e }
+.aside.cine .aimg2 { position:absolute; inset:0 } .aside.cine .aimg2 img { width:100%; height:100%; object-fit:cover; object-position:center; animation:kenburns 14s ease-out forwards; opacity:.9 }
+.aside.cine::after { background:linear-gradient(180deg,#07090e33 0%,#07090e66 40%,#07090ef2 100%) }
+.aside.cine .aglow { position:absolute; left:50%; top:28%; width:70%; aspect-ratio:1.4; translate:-50% -50%; border-radius:50%; background:radial-gradient(ellipse, #2aa9ff55, #1e5bff22 45%, transparent 70%); filter:blur(36px); z-index:1 }
+.aside.cine .atv { position:absolute; left:50%; top:26%; width:min(62%,400px); translate:-50% -50%; z-index:1; filter:drop-shadow(0 40px 50px #000c) }
+.aside.cine .atext { padding:clamp(24px,4vw,40px) }
+.aside.cine h2 { font-size:clamp(28px,3.2vw,42px); letter-spacing:-1.2px; line-height:1.05 } .aside.cine h2 .ln { display:inline-block; overflow:hidden; vertical-align:bottom; padding-bottom:.08em } .aside.cine h2 .w { display:inline-block }
+.aside.cine ul { display:flex; flex-wrap:wrap; gap:8px; margin-top:16px } .aside.cine li { display:inline-flex; align-items:center; gap:6px; padding:7px 12px; border-radius:999px; background:#ffffff14; border:1px solid #ffffff2e; color:#fff; font-size:13px; font-weight:700; backdrop-filter:blur(6px) }
+.aside.cine li svg { width:14px; height:14px; color:var(--hi) }
+.acard input:focus { border-color:var(--accent); box-shadow:0 0 0 4px #3b45c922 }
+.copy .built { color:inherit; opacity:.8 }
+@media (max-width:860px) { .aside.cine { min-height:320px } .aside.cine .atv, .aside.cine .aglow { display:none } } /* phones: the photograph and the words; the television would sit on the text */

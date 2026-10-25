@@ -1,9 +1,16 @@
 // Sign-in page (one-time code by SMS or email, password, Google) and the signed-in account page.
 import { useEffect, useRef, useState } from "react";
+import { m } from "motion/react";
 import { useStore } from "./store.jsx";
 import { api, qs, load, save } from "./api.js";
 import { Form, Icon, Row } from "./components.jsx";
-import { off } from "./data.js";
+import { off, pic, picSet } from "./data.js";
+// the sign-in page's entrance: parts rise one after another, the headline word by word (same springs as the home hero); once, never looping
+const RISE = { hide: { y: "115%", opacity: 0 }, show: { y: 0, opacity: 1, transition: { type: "spring", stiffness: 280, damping: 28 } } };
+const UP = { hide: { y: 24, opacity: 0 }, show: { y: 0, opacity: 1, transition: { type: "spring", stiffness: 220, damping: 26 } } };
+const WORDS = { hide: {}, show: { transition: { staggerChildren: .06, delayChildren: .15 } } };
+const GROUP = { hide: {}, show: { transition: { staggerChildren: .12 } } };
+const FLOAT = { hide: { y: 48, opacity: 0, rotate: -2 }, show: { y: 0, opacity: 1, rotate: 0, transition: { type: "spring", stiffness: 120, damping: 20, delay: .2 } } };
 import { reveal } from "./motion.js";
 
 export function Account() {
@@ -47,13 +54,18 @@ function SignIn({ CFG }) {
     document.head.append(g);
   }, []);
   return <div className="auth">
-    <aside className="aside"><div className="aimg" style={{ backgroundImage: "url(/img/kv-tv-960.webp)" }}></div><div className="atext"><p className="kicker">Welcome to Mytekkstore</p><h2>One account for everything</h2>
-      <ul><li><Icon k="check" />Faster checkout with a saved address</li><li><Icon k="check" />Order tracking and order history</li><li><Icon k="check" />Reviews and wishlist</li></ul></div></aside>
-    <div className="panel acard">
-      <div><h1>{next === "/checkout" ? "Sign in to continue to checkout" : "Sign in or create an account"}</h1>
-        <p className="muted small">{next === "/checkout" ? "An account keeps your orders, address and order tracking in one place. It takes a minute." : "A one-time code by SMS or email, your password" + (CFG.google ? ", or your Google account." : ".")}</p></div>
-      {CFG.google && <><div className="gbtn" id="gbtn"></div><div className="or"><span>or</span></div></>}
-      <Tabs tabs={[["t-phone", "Mobile number or email"], ["t-email", "Password"]]}>
+    <m.aside className="aside cine" initial="hide" animate="show" variants={GROUP}>
+      <picture className="aimg2" aria-hidden="true"><img src={pic("img/life-cinema.jpg", 960)} srcSet={picSet("img/life-cinema.jpg")} sizes="(max-width:860px) 100vw, 50vw" alt="" decoding="async" /></picture>
+      <span className="aglow" aria-hidden="true"></span>
+      <m.img className="atv" src="/img/p34-cut.webp" alt="" aria-hidden="true" variants={FLOAT} />
+      <div className="atext"><m.p className="kicker" variants={UP}>Welcome to Mytekkstore</m.p>
+        <m.h2 variants={WORDS}>{"One account. Every TV deal.".split(" ").map((w, k) => <span className="ln" key={k}><m.span className="w" variants={RISE}>{w}&nbsp;</m.span></span>)}</m.h2>
+        <m.ul variants={GROUP}>{["Faster checkout with a saved address", "Order tracking and history", "Reviews and wishlist", "Festive and bank offers first"].map(t => <m.li variants={UP} key={t}><Icon k="check" />{t}</m.li>)}</m.ul></div></m.aside>
+    <m.div className="panel acard" initial="hide" animate="show" variants={GROUP}>
+      <m.div variants={UP}><h1>{next === "/checkout" ? "Sign in to continue to checkout" : "Sign in or create an account"}</h1>
+        <p className="muted small">{next === "/checkout" ? "An account keeps your orders, address and order tracking in one place. It takes a minute." : "A one-time code by SMS or email, your password" + (CFG.google ? ", or your Google account." : ".")}</p></m.div>
+      {CFG.google && <m.div variants={UP}><div className="gbtn" id="gbtn"></div><div className="or"><span>or</span></div></m.div>}
+      <m.div variants={UP}><Tabs tabs={[["t-phone", "Mobile number or email"], ["t-email", "Password"]]}>
         {tab => <>
           <div className="tabpane" id="t-phone" hidden={tab !== "t-phone"}><Form className="form" id="otp" noValidate ref={otpRef} onSubmit={submit} after={busy => <div className="arow"><button className="btn" disabled={busy}>{btnText}</button>{stage === "verify" && <button type="button" className="link" id="resend" disabled={left > 0} onClick={resend}>{left > 0 ? `Send a new code in ${left}s` : "Send a new code"}</button>}</div>}>
             <label>Mobile number or email<input name="to" type="text" required autoComplete="username" placeholder="98765 43210 or you@example.com" maxLength="120" defaultValue={load("signin", "")} /></label>
@@ -72,8 +84,8 @@ function SignIn({ CFG }) {
               <label>Password (at least 8 characters)<input name="password" type="password" required minLength="8" autoComplete="new-password" /></label></Form>
           </div>
         </>}
-      </Tabs>
-    </div></div>;
+      </Tabs></m.div>
+    </m.div></div>;
 }
 
 // a tab bar; children is a function of the active tab id

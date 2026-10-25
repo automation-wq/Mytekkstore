@@ -292,6 +292,8 @@ export function Header() {
   </header>;
 }
 
+// the build date in the footer: tells a page left open from an old build apart from the live site at a glance (server.js writes data-built)
+const built = () => { const b = document.documentElement.dataset.built; return b ? new Date(b).toLocaleString("en-IN", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit", timeZone: "Asia/Kolkata" }) + " IST" : ""; };
 export function Footer() {
   const { CATS, BRANDS } = useStore();
   return <footer id="ftr"><div className="wrap">
@@ -302,7 +304,7 @@ export function Footer() {
       <div><b>Help</b><a href="/buying-guide">How to choose a TV</a><a href="/contact">Contact</a><a href="/shipping">Shipping</a><a href="/returns">Warranty and returns</a>{SHOW_STORES && <a href="/stores">Store locator</a>}</div>
       <div><b>Mytekkstore</b><a href="/about">About</a><a href="/account">My account</a><a href="/terms">Terms</a><a href="/privacy">Privacy</a></div>
     </div>
-    <div className="copy">© 2026 Mytekkstore. All rights reserved.</div>
+    <div className="copy">© 2026 Mytekkstore. All rights reserved.{built() && <span className="built"> · Site updated {built()}</span>}</div>
   </div></footer>;
 }
 
