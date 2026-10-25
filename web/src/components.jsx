@@ -5,7 +5,7 @@ import { animate, stagger } from "motion";
 import { reduced } from "./motion.js";
 import { useStore } from "./store.jsx";
 import { api, qs, load, save, track } from "./api.js";
-import { ICONS, DRAW_ICONS, COUNTRIES, BANK_OFFERS, TOP_FEATURES, CAT_SIZE, TV_OS, OS_ROWS, SHOW_STORES, COMING_SOON, catSizes, emiPlans, catUrl, brandUrl, listUrl, off, avg, starRow, eta, productUrl, pic, picSet, dims, osList, osUrl } from "./data.js";
+import { POLICY, ICONS, DRAW_ICONS, COUNTRIES, BANK_OFFERS, TOP_FEATURES, CAT_SIZE, TV_OS, OS_ROWS, SHOW_STORES, COMING_SOON, catSizes, emiPlans, catUrl, brandUrl, listUrl, off, avg, starRow, eta, productUrl, pic, picSet, dims, osList, osUrl } from "./data.js";
 
 const $ = (s, el = document) => el.querySelector(s);
 const $$ = (s, el = document) => [...el.querySelectorAll(s)];
@@ -58,12 +58,21 @@ export function Card({ p, i = 0, sizes, compare }) {
   const onLeave = () => { rx.set(0); ry.set(0); };
   const sp = k => ((p.specs || []).find(([n]) => n.toLowerCase().includes(k)) || [])[1] || ""; // the three facts a TV buyer reads first
   const inch = (/\((\d+)\s*inch\)/.exec(sp("screen size") || p.name) || [])[1];
-  const chips = [inch && inch + '"', sp("resolution").split(",")[0].trim(), sp("display type").split(",")[0].trim()].filter(Boolean);
+  const chips = [inch && inch + " inch", sp("resolution").split(",")[0].trim(), sp("display type").split(",")[0].trim()].filter(Boolean);
+  // the design file's bank line: the biggest instant discount among the bank offers, worded "up to" because it depends on the card
+  const bankTop = BANK_OFFERS.map(([bank, , note]) => [bank.replace(/ (Bank|Card)$/, ""), +(((/Up to ₹([\d,]+)/.exec(note) || [])[1] || "0").replace(/,/g, ""))]).sort((a, b) => b[1] - a[1])[0];
+  const bankLine = bankTop && bankTop[1] ? "Extra up to " + money(bankTop[1]) + " off with " + bankTop[0] : "";
   return <m.div className="card" style={{ rotateX: rx, rotateY: ry, transformPerspective: 900 }} onPointerMove={onMove} onPointerLeave={onLeave}
     initial={{ opacity: 0, y: 10 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: "0px 0px -40px" }} transition={{ type: "spring", stiffness: 220, damping: 26, delay: (i % 6) * .06 }}><Heart p={p} />
-    <a href={productUrl(p)}><div className="img"><Photo p={p} />{off(p) > 0 && <span className="badge">{off(p)}% OFF</span>}<button type="button" className="qview" data-quick={p.id} aria-label={"Quick view " + p.brand + " " + p.name}>Quick view</button></div><small>{p.brand}{p.os ? " · " + p.os : ""}</small><h3>{p.name}</h3><Stars p={p} />{chips.length > 0 && <ul className="cspecs" aria-label="Key specifications">{chips.map(c => <li key={c}>{c}</li>)}</ul>}</a>
+    <a href={productUrl(p)} className="cbody"><div className="img"><Photo p={p} />{off(p) > 0 && <span className="badge">{off(p)}% OFF</span>}<button type="button" className="qview" data-quick={p.id} aria-label={"Quick view " + p.brand + " " + p.name}>Quick view</button></div>
+      <div className="price"><b>{money(p.price)}</b>{p.mrp > p.price && <s><span className="sr">Original price </span>{money(p.mrp)}</s>}</div>
+      {p.mrp > p.price && <em className="save">{off(p)}% off · Save {money(p.mrp - p.price)}</em>}
+      <small>{p.brand}</small><h3>{p.name}</h3>
+      {chips.length > 0 && <ul className="cspecs" aria-label="Key specs">{chips.map(c => <li key={c}>{c}</li>)}</ul>}
+      <Stars p={p} />
+      <ul className="cfacts">{p.emi && <li className="emi"><Icon k="cash" /><span><b>EMI {money(emiPlans(p.price)[2][1])}/mo</b> · No-cost</span></li>}{bankLine && <li className="cbank">{bankLine}</li>}<li><Icon k="truck" /><span>Free delivery in 3 to 5 days · {POLICY.returnDays}-day returns</span></li></ul></a>
     {sizes && sizes.length > 1 && <span className="csizes"><small>Sizes</small>{sizes.map(([l, href, on]) => on ? <b key={l}>{l}</b> : <a href={href} key={l}>{l}</a>)}</span>}
-    <div className="price"><b>{money(p.price)}</b>{p.mrp > p.price && <><s>{money(p.mrp)}</s><em className="save">{off(p)}% off · Save {money(p.mrp - p.price)}</em></>}</div>{p.emi && <span className="emi">No Cost EMI · {money(emiPlans(p.price)[2][1])}/month</span>}<span className="cmeta"><i><Icon k="truck" /> Free delivery</i><i><Icon k="undo" /> Easy returns</i></span><a className="cbank" href="/offers">Bank offers on cards →</a><Buy p={p} />{compare && <label className="ccmp"><input type="checkbox" checked={compare[0]} onChange={() => compare[1](p.id)} /> Compare</label>}</m.div>;
+    <Buy p={p} />{compare && <label className="ccmp"><input type="checkbox" checked={compare[0]} onChange={() => compare[1](p.id)} /> Compare</label>}</m.div>;
 }
 export function Line({ p }) {
   const { money, qtyOf } = useStore();

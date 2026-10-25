@@ -106,7 +106,6 @@ export function Category() {
       {!wishOnly && <button type="button" className="btn ghost fbtn" onClick={() => setOpen(true)} aria-expanded={open} aria-controls="filters"><Icon k="sliders" /> Filters{chips.length ? " (" + chips.length + ")" : ""}</button>}
       <label className="sortby">Sort by <select value={f.sort} onChange={e => set({ sort: e.target.value })}><option value="">Featured</option><option value="low">Price: low to high</option><option value="high">Price: high to low</option><option value="off">Biggest discount</option><option value="rating">Customer rating</option></select></label></div>
     {!wishOnly && n > 0 && <TrustLine />}
-    {!wishOnly && n > 0 && <BankStrip />}
     {chips.length > 0 && <div className="chips" aria-label="Applied filters"><AnimatePresence>{chips.map(([t, rm]) => <m.button type="button" className="fchip" onClick={rm} aria-label={"Remove " + t} key={t} layout initial={{ opacity: 0, scale: .8 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: .8 }} transition={{ type: "spring", stiffness: 400, damping: 30 }}>{t} <span aria-hidden="true">×</span></m.button>)}</AnimatePresence><button type="button" className="link" onClick={clear}>Clear all</button></div>}
     <div className="plp">
       <div className="foverlay" onClick={() => setOpen(false)}></div>
@@ -155,7 +154,6 @@ function CategoryExtras({ cat, list, sizes, sizeUrl, picks = [] }) {
     {quotes.length > 0 && <section><h2>What customers say</h2><p className="lead">The newest reviews on {short.toLowerCase()}.</p><div className="quotes">{quotes.map((r, i) => <a className="quote" href={productUrl(r.p)} key={i}>
       <div className="stars"><span>{starRow(r.rating)}</span></div><p>“{r.text}”</p><b>{r.name}</b><small>{r.p.brand} {r.p.name}</small></a>)}</div></section>}
     {rich && <FindYour cat={cat} list={list} short={short} />}
-    {rich && <BankOffers />}
     {faq && <Qa title="Good to know" lead={"Short answers about " + short.toLowerCase() + ", warranty and returns included."} list={faq} />}
     {rich && <Help />}
   </>;

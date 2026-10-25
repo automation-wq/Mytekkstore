@@ -2082,3 +2082,34 @@ main > .festive.bleed:first-of-type { margin-top:0 }
 .acard input:focus { border-color:var(--accent); box-shadow:0 0 0 4px #3b45c922 }
 .copy .built { color:inherit; opacity:.8 }
 @media (max-width:860px) { .aside.cine { min-height:320px } .aside.cine .atv, .aside.cine .aglow { display:none } } /* phones: the photograph and the words; the television would sit on the text */
+
+/* ─ the deal hero (design file, 25 Oct): indigo stage, the figure in gold, one television on a glow in the right half ─ */
+.slide.k-deal { background:radial-gradient(70% 110% at 78% 40%,#2a9dff40 0%,transparent 60%), linear-gradient(120deg,#0f0c3a 0%,#3b45c9 58%,#1e1b4b 100%) }
+.slide.k-deal .hpanel { background:none }
+.slide.k-deal .hpanel::before { display:none }
+.slide.k-deal .w.hi { color:var(--hi) }
+.slide.k-deal .bigtv.cut.art { grid-column:2; grid-row:1; align-self:center; justify-self:center; position:relative; right:auto; top:auto; translate:none; width:min(86%,620px); aspect-ratio:auto; display:grid; place-items:center; z-index:1; pointer-events:none; background:none; padding:0; box-shadow:none; filter:none }
+.slide.k-deal .bigtv.cut.art::after { content:none }
+.slide.k-deal .bigtv.cut.art .tvglow { position:absolute; inset:8% -8% -12%; border-radius:50%; background:radial-gradient(ellipse at 50% 60%,#5ec1ff66,#1e5bff22 45%,transparent 72%); filter:blur(40px) }
+.slide.k-deal .bigtv.cut.art img { position:relative; width:100%; height:auto; object-fit:contain; filter:drop-shadow(0 50px 60px #000b) }
+@media (max-width:760px) { .slide.k-deal { grid-template-columns:1fr; grid-template-rows:auto 1fr } .slide.k-deal .bigtv.cut.art { grid-column:1; grid-row:1; width:min(70%,340px); margin:22px auto 0 } .slide.k-deal .hpanel { grid-row:2 } }
+/* ─ the product card, as the design file's (25 Oct): square white photo, price first, the saving in green, brand and name, spec chips, rating, EMI, the bank line, delivery ─ */
+.card { padding:0; gap:0; border-radius:12px; overflow:hidden }
+.card .cbody { display:flex; flex-direction:column; gap:6px; padding:12px; color:inherit; text-decoration:none }
+.card .cbody .img { margin:-12px -12px 6px; border-radius:0; border:0; border-bottom:1px solid var(--line); background:#fff; aspect-ratio:1; padding:12px; width:auto }
+.card .cbody .img img { width:100%; height:100%; object-fit:contain }
+.card .price { margin:0; gap:0 6px } .card .price b { font-size:19px; letter-spacing:-.4px; line-height:1.1 } .card .price s { font-size:12px; color:var(--muted) }
+.card .save { display:block; font-size:12px; font-weight:700; color:var(--deal); margin:0 }
+.card .cbody small { font-size:11px; font-weight:800; letter-spacing:.6px; text-transform:uppercase; color:var(--accent); margin-top:4px }
+.card h3 { font-size:14px; line-height:1.4; font-weight:500; margin:0 }
+.card .cspecs { margin:2px 0 0 } .card .cspecs li { font-size:12px; padding:2px 6px; border-radius:4px; font-weight:600 }
+.card .stars { font-size:12px }
+.card .cfacts { list-style:none; margin:2px 0 0; padding:0; display:grid; gap:4px; font-size:12px; color:var(--soft) }
+.card .cfacts li { display:flex; align-items:flex-start; gap:6px; line-height:1.35 } .card .cfacts .ic { width:14px; height:14px; flex:none; margin-top:1px; color:var(--accent) }
+.card .cfacts .emi { color:var(--text); margin:0; width:auto; max-width:100%; font-size:12px } .card .cfacts .emi b { font-weight:700 }
+.card .cfacts .cbank { padding-left:20px; margin:0; font-size:12px; font-weight:500; color:var(--soft); display:block }
+.card .sr { position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0) }
+.card > :not(.cbody):not(.heart):not(.qview) { margin-left:12px; margin-right:12px }
+.card > :last-child:not(.cbody):not(.heart) { margin-bottom:12px }
+.card .csizes { margin-top:0 }
+.card .ccmp { margin-top:6px; padding-top:8px; border-top:1px solid var(--line) }

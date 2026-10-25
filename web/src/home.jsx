@@ -25,11 +25,14 @@ export function Home() {
   const biggest = b => [...P].filter(p => p.brand === b).sort((a, c) => c.price - a.price)[0]; // the brand's flagship: its most expensive model
   // the banners: a brand banner shows the brand's flagship and its reasons; the promotion shows the biggest discount
   // the banners the admin keeps in the slot "home", in order; the built-in four are the fallback until any are saved
+  const tvs = P.filter(p => p.cat === "Televisions");
+  const minTv = tvs.length ? Math.min(...tvs.map(p => p.price)) : 0, minEmi = tvs.some(p => p.emi) ? Math.min(...tvs.filter(p => p.emi).map(p => emiPlans(p.price)[2][1])) : 0; // the deal box: every figure from the catalogue
   const home = banners.filter(b => b.slot === "home");
   const raw = home.length ? home.map(b => ({ kind: b.brand ? "brand" : b.preset === "promo" ? "promo" : "photo", preset: b.preset, eyebrow: b.kicker, h: lines(b.title), s: b.text, href: b.href, cta: b.cta, cta2: b.cta2, href2: b.href2, im: b.img, imMobile: b.imgMobile, brand: b.brand, tone: TONES[b.tone] || undefined, prod: b.productId ? byId(b.productId) : null })) : HOME_BANNERS;
   const slides = raw.filter(s => s.kind !== "promo" && (s.kind !== "brand" || biggest(s.brand))).map(s => s.kind === "brand" ? { ...s, pts: brandPoints(P, s.brand), prod: s.prod || biggest(s.brand), href: s.href || brandUrl(s.brand), cta: s.cta || "Shop " + s.brand, eyebrow: s.eyebrow || s.brand }
     : s.kind === "promo" ? { ...s, s: s.s || "Up to " + maxOff + "% off, bank offers, and No Cost EMI on the models that carry it." }
-    : s.kind === "photo" ? { ...s, eyebrow: "" } : s); // lead photo slide: the still photograph, no clip (owner note, 25 October), no eyebrow label (the logo already names the store)
+    : s.kind === "photo" ? { ...s, kind: "deal", im: "", imMobile: "", vid: "", eyebrow: "Straight from the factory · Live now", h: ["Up to " + maxOff + "% off on Smart TVs."], hi: [maxOff + "%", "off"],
+      s: "Starting at " + money(minTv) + "." + (minEmi ? " No Cost EMI from " + money(minEmi) + "/month," : "") + " extra bank discounts and cash on delivery.", cta: "Shop all deals", href: listUrl({ cat: "Televisions", sort: "off" }), cta2: "Compare TVs", href2: "/compare", art: "/img/tv-ocean.webp", tone: "" } : s); // the lead slide is the design file's deal hero (owner note, 25 October): the biggest real discount, the lowest price and EMI, one television on a glow; no photograph, no clip
   const show = n => setCur((n + slides.length) % slides.length);
   const [auto, setAuto] = useState(true); // autoplay stops for good once the visitor takes control (arrow/dot)
   useEffect(() => { if (!auto) return; const t = setInterval(() => { if (!heroRef.current || !heroRef.current.matches(":hover")) setCur(c => (c + 1) % slides.length); }, 6000); return () => clearInterval(t); }, [slides.length, auto]);
@@ -47,8 +50,6 @@ export function Home() {
   // the banner photo drifts a little toward the pointer
   const onMove = e => { const h = heroRef.current, r = h.getBoundingClientRect(); h.style.setProperty("--px", ((e.clientX - r.left) / r.width - .5).toFixed(3)); h.style.setProperty("--py", ((e.clientY - r.top) / r.height - .5).toFixed(3)); };
   const picOf = src => ({ src: pic(src, 960), srcSet: picSet(src) });
-  const tvs = P.filter(p => p.cat === "Televisions");
-  const minTv = tvs.length ? Math.min(...tvs.map(p => p.price)) : 0, minEmi = tvs.some(p => p.emi) ? Math.min(...tvs.filter(p => p.emi).map(p => emiPlans(p.price)[2][1])) : 0; // the deal box: every figure from the catalogue
   // premium discovery sections (MASTER PROMPT redesign): image-led cards for size, operating system and resolution, an editorial
   // Latest Launches grid, and a product-care banner. Prototype imagery reuses the store's renders and lifestyle shots; copy is
   // aspirational marketing only, no invented specs, prices or model names.
@@ -88,11 +89,12 @@ export function Home() {
         {sl.prod && seen.has(i) && <m.a className={"bigtv" + (cutout(sl.prod.img) ? " cut" : "")} variants={RISE} href={productUrl(sl.prod)}>{cutout(sl.prod.img)
           ? <><span className="tvglow" aria-hidden="true"></span><img className="tvmain" src={cutout(sl.prod.img)} alt={sl.prod.brand + " " + sl.prod.name} loading={i ? "lazy" : "eager"} /><img className="tvrefl" src={cutout(sl.prod.img)} alt="" aria-hidden="true" loading="lazy" /></>
           : <img src={pic(sl.prod.img)} srcSet={picSet(sl.prod.img)} sizes="(max-width:760px) 40vw, 30vw" alt={sl.prod.brand + " " + sl.prod.name} width="800" height="800" loading={i ? "lazy" : "eager"} />}</m.a>}
+        {sl.art && <m.span className="bigtv cut art" variants={RISE} aria-hidden="true"><span className="tvglow"></span><img className="tvmain" src={sl.art} alt="" width="865" height="572" fetchPriority={i ? "low" : "high"} loading={i ? "lazy" : "eager"} decoding="async" /></m.span>}
         <div className="hpanel">
           {sl.eyebrow && <m.span className="eyebrow" variants={RISE}>{sl.eyebrow}</m.span>}
-          <m.h1 variants={WORDS}>{sl.h.map((l, j) => <span className="ln" key={j}>{l.split(" ").map((w, k) => <m.span className="w" variants={RISE} key={k}>{w}&nbsp;</m.span>)}</span>)}</m.h1>
+          <m.h1 variants={WORDS}>{sl.h.map((l, j) => <span className="ln" key={j}>{l.split(" ").map((w, k) => <m.span className={"w" + (sl.hi && sl.hi.includes(w) ? " hi" : "")} variants={RISE} key={k}>{w}&nbsp;</m.span>)}</span>)}</m.h1>
           {sl.pts ? <m.ul className="pts" variants={RISE}>{sl.pts.map(t => <li key={t}>{t}</li>)}</m.ul> : <m.p variants={RISE}>{sl.s}</m.p>}
-          {sl.kind === "photo" && minTv > 0 && <m.div className="hfacts" variants={RISE}><span>From {money(minTv)}</span><span>Up to {maxOff}% off</span>{minEmi > 0 && <span>No Cost EMI from {money(minEmi)}/month</span>}</m.div>}
+          {(sl.kind === "photo" || sl.kind === "deal") && minTv > 0 && <m.div className="hfacts" variants={RISE}><span>From {money(minTv)}</span><span>Up to {maxOff}% off</span>{minEmi > 0 && <span>No Cost EMI from {money(minEmi)}/month</span>}</m.div>}
           <m.div className="hcta" variants={RISE}><a className="btn" href={sl.href}>{sl.cta}</a><a className="btn ghost" href={sl.href2 || listUrl({ cat: "Televisions", sort: "off" })}>{sl.cta2 || "See deals"}</a></m.div>
         </div>
       </m.div>)}
