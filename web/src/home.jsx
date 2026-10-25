@@ -92,8 +92,10 @@ export function Home() {
           {sl.eyebrow && <m.span className="eyebrow" variants={RISE}>{sl.eyebrow}</m.span>}
           <m.h1 variants={WORDS}>{sl.h.map((l, j) => <span className="ln" key={j}>{l.split(" ").map((w, k) => <m.span className="w" variants={RISE} key={k}>{w}&nbsp;</m.span>)}</span>)}</m.h1>
           {sl.pts ? <m.ul className="pts" variants={RISE}>{sl.pts.map(t => <li key={t}>{t}</li>)}</m.ul> : <m.p variants={RISE}>{sl.s}</m.p>}
+          {sl.kind === "photo" && minTv > 0 && <m.div className="hfacts" variants={RISE}><span>From {money(minTv)}</span><span>Up to {maxOff}% off</span>{minEmi > 0 && <span>No Cost EMI from {money(minEmi)}/month</span>}</m.div>}
           <m.div className="hcta" variants={RISE}><a className="btn" href={sl.href}>{sl.cta}</a><a className="btn ghost" href={sl.href2 || listUrl({ cat: "Televisions", sort: "off" })}>{sl.cta2 || "See deals"}</a></m.div>
         </div>
+        {sl.kind === "photo" && seen.has(i) && <div className="fan" aria-hidden="true"><span className="fanglow"></span><img src="/img/tv-landscape.webp" alt="" loading="lazy" width="846" height="566" /><img src="/img/tv-cricket.webp" alt="" loading="lazy" width="831" height="552" /><img className="main" src="/img/tv-ocean.webp" alt="" loading={i ? "lazy" : "eager"} width="865" height="572" /></div>}
       </m.div>)}
       {slides.length > 1 && <><button className="arrow prev" aria-label="Previous slide">‹</button><button className="arrow next" aria-label="Next slide">›</button>
       <div className="dots">{slides.map((_, i) => <button aria-label={"Slide " + (i + 1)} data-i={i} className={i === cur ? "on" : undefined} key={i}></button>)}</div></>}

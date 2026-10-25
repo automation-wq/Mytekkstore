@@ -2016,3 +2016,19 @@ main > .trustrow { margin-top:14px }
 .fstage .fglow { width:110%; height:100%; top:55%; background:radial-gradient(closest-side, #ffb04766, #b4336a33 55%, transparent 72%) }
 .fcamp { font-size:clamp(14px,1.3vw,17px); font-weight:600; color:#ffe7b8; letter-spacing:.01em; margin-top:-2px }
 @media (max-width:760px) { .fstage { width:100%; max-width:none; aspect-ratio:860/430 } }
+
+/* ─ the range hero (slide one): the design-file televisions fanned on a glow at the right; the figures as glass chips ─ */
+.slide.k-photo .bg > img { object-position:34% center } /* the room's own wall television leaves the right half to the fan */
+.slide.k-photo .bg::before { background:linear-gradient(90deg,#0a0d13f2 0%,#0a0d13cc 36%,#0a0d1366 58%,#0a0d13b3 100%), linear-gradient(0deg,#0a0d13b0 0%,transparent 45%) }
+.hfacts { display:flex; flex-wrap:wrap; gap:8px; margin:-12px 0 24px }
+.hfacts span { padding:7px 12px; border-radius:999px; background:#ffffff14; border:1px solid #ffffff2e; color:#fff; font-size:13px; font-weight:700; backdrop-filter:blur(6px) }
+.hfacts span:nth-child(2) { background:var(--hi); color:var(--hi-fg); border-color:transparent }
+.fan { position:absolute; right:clamp(10px,5vw,80px); top:50%; translate:0 -50%; width:clamp(260px,42vw,620px); aspect-ratio:1.55; z-index:1; pointer-events:none }
+.fanglow { position:absolute; inset:12% 0 0; border-radius:50%; background:radial-gradient(ellipse at 50% 55%, #2aa9ff66, #1e5bff22 45%, transparent 72%); filter:blur(40px) }
+.fan img { position:absolute; width:62%; height:auto; filter:drop-shadow(0 40px 40px #000c) }
+.fan img:nth-child(2) { left:0; top:10%; rotate:-6deg; opacity:.94 }
+.fan img:nth-child(3) { right:0; top:10%; rotate:6deg; opacity:.94 }
+.fan img.main { left:50%; top:24%; width:70%; translate:-50% 0; z-index:1 }
+@media (max-width:1000px) { .fan { width:clamp(220px,40vw,420px) } }
+@media (max-width:760px) { .fan { display:none } .slide.k-photo .bg > img { object-position:70% center } .hfacts { margin:-4px 0 14px } .hfacts span { font-size:12px; padding:6px 10px } }
+.slide.k-photo > .fan { position:absolute; z-index:2 } /* outranks the rule that keeps slide children in the flow */
