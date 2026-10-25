@@ -1906,3 +1906,72 @@ main .dealbox h2 { display:block } /* the site lays h2s out as a row for a right
 .bankstrip .bscta { padding:10px 18px; border-radius:999px; background:#ffffff; color:#1c2048; text-decoration:none; font-weight:800 } .bankstrip:hover .bscta { background:#ffd98a }
 @media (max-width:760px) { .bankstrip .bsmark { display:none } .bankstrip .bscta { padding:8px 14px } }
 .ftvref { opacity:.12; top:94%; -webkit-mask-image:linear-gradient(#000 0%, transparent 42%); mask-image:linear-gradient(#000 0%, transparent 42%) } /* the reflection reads as a glow, not a band */
+
+/* ═══ ad-grade promo bands (research: Amazon and Flipkart festival tiles, Reliance Digital's festive hero) ═══ */
+/* festive banner: photograph, sparkle ground, lockup, one huge figure, benefits, framed TV, bank boxes in the footer */
+.festin { grid-template-columns:1.05fr .95fr; grid-template-rows:auto auto; min-height:0; padding:34px 38px 20px; gap:14px 24px; background:#1a0b2e; box-shadow:inset 0 0 0 1px #ffd98a4d, 0 30px 60px -30px #000000b3 }
+.festin::before { background:linear-gradient(90deg, #1a0b2ef2 0%, #2a0f3ccc 44%, #1a0b2e40 70%, #1a0b2e14 100%), linear-gradient(180deg, #1a0b2e33, transparent 40%, #1a0b2ecc 100%) }
+.fbg { position:absolute; inset:0; z-index:-1 } .fbg img { width:100%; height:100%; object-fit:cover; object-position:62% 50%; filter:saturate(1.1) }
+.fsparkle { position:absolute; inset:0; z-index:0; pointer-events:none; opacity:.55; background:
+  radial-gradient(circle at 12% 30%, #ffe9a8 0 1px, transparent 2px), radial-gradient(circle at 27% 78%, #fff3c8 0 1px, transparent 2px), radial-gradient(circle at 38% 22%, #ffe9a8 0 1px, transparent 2px),
+  radial-gradient(circle at 52% 64%, #fff3c8 0 1px, transparent 2px), radial-gradient(circle at 66% 14%, #ffe9a8 0 1px, transparent 2px), radial-gradient(circle at 81% 46%, #fff3c8 0 1px, transparent 2px),
+  radial-gradient(circle at 91% 82%, #ffe9a8 0 1px, transparent 2px), radial-gradient(circle at 6% 90%, #fff3c8 0 1px, transparent 2px), radial-gradient(circle at 44% 92%, #ffe9a8 0 1px, transparent 2px), radial-gradient(circle at 74% 88%, #fff3c8 0 1px, transparent 2px) }
+.flock { display:inline-flex; align-items:center; gap:10px; padding:7px 16px; border-radius:999px; border:1px solid #ffd98a; color:#ffe7b8; background:#2a0f3c99; font-size:12px; font-weight:800; letter-spacing:.12em; text-transform:uppercase }
+.flock i { width:7px; height:7px; border-radius:50%; background:radial-gradient(circle, #fff3c8, #ffb547); box-shadow:0 0 10px 3px #ffb54780 }
+.festin b { display:grid; line-height:.95 }
+.festin b small { font-size:clamp(14px,1.4vw,18px); font-weight:800; letter-spacing:.14em; text-transform:uppercase; color:#ffe7b8; margin-bottom:6px }
+.festin b strong { font-size:clamp(46px,7.2vw,96px); font-weight:800; letter-spacing:-3px; color:var(--hi); text-shadow:0 4px 30px #ffb54766, 0 1px 0 #7a4a00 }
+.festin b span { font-size:clamp(20px,2.4vw,32px); font-weight:800; letter-spacing:-.5px; color:#fff; margin-top:4px }
+.fbenefits { display:flex; flex-wrap:wrap; gap:6px 0; font-size:13.5px; font-weight:600; color:#ffffffe6 }
+.fbenefits span + span::before { content:"|"; margin:0 10px; color:#ffd98a99 }
+.festin .btn, .festin .btn:not(.ghost):not([disabled]) { background:linear-gradient(90deg, #ffd98a, #ffb547); color:#3a2300; font-weight:800; box-shadow:0 10px 24px -10px #ffb547 }
+.fstage { width:min(42vw, 520px); aspect-ratio:auto; align-self:center }
+.fframe { position:relative; z-index:1; display:block; padding:12px; border-radius:16px; background:linear-gradient(135deg, #ffd98a, #b8862e 60%, #ffd98a); box-shadow:0 30px 50px -22px #000000d9 }
+.fframe::after { content:""; position:absolute; inset:12px; border-radius:8px; box-shadow:inset 0 0 0 1px #00000040; pointer-events:none }
+.fframe .ftv { display:block; width:100%; height:auto; border-radius:8px; background:#120a1e; filter:none; transform:none; padding:4%; box-sizing:border-box }
+.fstage .fglow { width:120%; height:110%; top:50%; background:radial-gradient(closest-side, #ff9a4766, #b4336a33 55%, transparent 72%) }
+.fbanks { grid-column:1 / -1; position:relative; z-index:1; display:flex; flex-wrap:wrap; align-items:center; gap:10px 14px; padding-top:14px; border-top:1px solid #ffd98a40 }
+.fbanks small { font-size:11px; color:#ffffffb3; margin-left:auto }
+.fnote { display:none }
+.bankboxes { display:flex; flex-wrap:wrap; gap:8px }
+.bankboxes i { display:inline-flex; align-items:center; gap:8px; padding:6px 12px 6px 10px; border-radius:7px; background:#fff; color:#1c2048; font-style:normal; font-size:12px; font-weight:600; box-shadow:0 2px 0 #00000033 }
+.bankboxes i u { width:10px; height:10px; border-radius:3px; background:var(--bc); text-decoration:none } .bankboxes i b { font-weight:800; color:var(--bc) }
+@media (max-width:760px) { .festin { grid-template-columns:1fr; padding:22px 18px 18px } .fstage { width:min(78vw, 360px); justify-self:center } .festin b strong { letter-spacing:-2px } .fbanks small { margin-left:0 } }
+/* the bank band as an advertisement: headline plus four credit-card tiles */
+.bankad { margin-top:14px; padding:26px 30px 28px; border-radius:18px; background:linear-gradient(100deg, #10153a 0%, #1c2270 55%, #10153a 100%); color:#fff; box-shadow:inset 0 1px 0 #ffd98a33, 0 26px 50px -30px #000000b3 }
+.bahead { display:grid; gap:6px; margin-bottom:18px } .bahead h2 { color:#fff; font-size:clamp(22px,2.6vw,34px); letter-spacing:-1px; margin:0 } .bahead p { margin:0; color:#ffffffd1; max-width:60ch } .bahead .alink { color:var(--hi) }
+.bacards { display:grid; grid-template-columns:repeat(4, minmax(0,1fr)); gap:14px }
+.bacard { position:relative; display:grid; gap:4px; align-content:start; aspect-ratio:1.586; padding:16px 18px; border-radius:14px; text-decoration:none; color:#fff; overflow:hidden;
+  background:linear-gradient(135deg, color-mix(in srgb, var(--bc) 82%, #fff) 0%, var(--bc) 48%, color-mix(in srgb, var(--bc) 70%, #000) 100%); box-shadow:0 18px 30px -16px #000000b3, inset 0 0 0 1px #ffffff2e }
+.bacard::before { content:""; position:absolute; right:-30%; top:-60%; width:90%; height:160%; background:radial-gradient(closest-side, #ffffff2e, transparent 70%); pointer-events:none }
+.bachip { width:34px; height:26px; border-radius:6px; margin-bottom:8px; background:linear-gradient(135deg, #ffe7b8, #c9962e 55%, #ffe7b8); box-shadow:inset 0 0 0 1px #00000033 }
+.bachip::after { content:""; position:absolute; width:34px; height:26px; margin:0; background:linear-gradient(90deg, transparent 45%, #0000002e 46%, #0000002e 54%, transparent 55%), linear-gradient(180deg, transparent 45%, #0000002e 46%, #0000002e 54%, transparent 55%); border-radius:6px; left:18px; top:16px }
+.babank { font-size:12px; font-weight:800; letter-spacing:.08em; text-transform:uppercase; color:#ffffffd9 }
+.bacard b { font-size:clamp(18px,1.6vw,22px); line-height:1.1; letter-spacing:-.3px }
+.banote { font-size:12px; line-height:1.4; color:#ffffffd1 } .bacard small { margin-top:auto; font-size:10.5px; color:#ffffff99 }
+.bacard:hover { translate:0 -3px; box-shadow:0 26px 36px -18px #000000cc, inset 0 0 0 1px #ffffff55; transition:translate .2s, box-shadow .2s }
+@media (max-width:980px) { .bacards { grid-template-columns:repeat(2, minmax(0,1fr)) } } @media (max-width:760px) { .bankad { padding:20px 16px } .bacard { aspect-ratio:auto; min-height:150px } }
+/* the compact strip keeps the boxes */
+.bankstrip .bankboxes i { padding:5px 10px 5px 8px }
+/* the deal carousel's slides on photographs */
+.dealbox .dealin.photo { position:relative; isolation:isolate; background:#141a4a }
+.dealbox .dealin.photo .dbg { position:absolute; inset:0; z-index:-2 } .dealbox .dealin.photo .dbg img { width:100%; height:100%; object-fit:cover; object-position:70% 50% }
+.dealbox .dealin.photo::before { content:""; position:absolute; inset:0; z-index:-1; background:linear-gradient(90deg, #141a4af0 0%, #141a4acc 48%, #141a4a3d 78%, #141a4a14 100%), linear-gradient(180deg, transparent 50%, #141a4a99 100%) }
+.dealbox .dealin.photo.ink { background:#1a1f33 } .dealbox .dealin.photo.ink::before { background:linear-gradient(90deg, #1a1f33f2 0%, #1a1f33cc 50%, #1a1f3340 80%, #1a1f3314 100%) }
+.dealbox .dealin.photo.prod img.dbgimg { display:none }
+.dealbox .dealin.prod.photo > img { filter:drop-shadow(0 24px 30px #000000b3) }
+.dealstage { min-height:300px } /* the stage is as tall in the static first paint as after the photo slides mount: no shift */
+@media (max-width:760px) { .dealstage { min-height:560px } }
+
+/* fixes after the first ad-grade frames: the bank boxes keep their own small type inside the festive banner, the text column can
+   shrink on phones, the product slide gets a lit stage of its own instead of a room photograph that already has a television */
+.fbanks .bankboxes i b, .fbanks .bankboxes i { display:inline-flex; font-family:Inter,"Inter Fallback",system-ui,sans-serif; font-size:12px; line-height:1.3; letter-spacing:0; text-shadow:none; font-weight:800 }
+.fbanks .bankboxes i { font-weight:600 }
+.ftext { max-width:100%; min-width:0 } .fbenefits { max-width:100%; min-width:0 } .fbenefits span { white-space:nowrap }
+.dealbox .dealin.prod.stage { position:relative; isolation:isolate; background:radial-gradient(70% 90% at 78% 50%, #3b45c9 0%, #1f2578 45%, #141a4a 75%), #141a4a }
+.dealbox .dealin.prod.stage::before { content:""; position:absolute; right:6%; top:50%; width:34%; height:70%; translate:0 -50%; z-index:-1; border-radius:50%; background:radial-gradient(closest-side, #6d79ff66, transparent 72%); filter:blur(10px) }
+.dealbox .dealin.prod.stage > img { filter:drop-shadow(0 26px 30px #000000b3) }
+@media (max-width:760px) { .fbenefits span { white-space:normal } }
+@media (max-width:760px) { .fstage { width:100%; max-width:360px } .fbenefits span { white-space:normal } } /* the stage never exceeds the banner on phones; the benefits wrap */
+.fframe { aspect-ratio:863/588; box-sizing:border-box } .fframe .ftv { position:absolute; inset:12px; width:auto; height:auto; max-width:calc(100% - 24px); max-height:calc(100% - 24px); margin:auto; object-fit:contain; padding:4% } /* the frame sizes itself, never from the image: no shift while the picture loads */
+.fframe { width:100% } /* the frame spans the stage; its height comes from the aspect ratio */

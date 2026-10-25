@@ -74,17 +74,25 @@ export const Strip = ({ children }) => <div className="strip"><button className=
 // one line of the store's promises above a product list, in place of repeating "free delivery" on every card
 // One line that states the bank offers, the way Reliance Digital and Amazon put it at the top of the page: the biggest instant
 // discount in the offers, the banks as chips, No Cost EMI, a link to the offers page. Built from BANK_OFFERS, so it follows them.
-export const BankStrip = ({ wrap = false }) => {
+// The bank-offer boxes Amazon and Flipkart print in the footer of every festival tile: one white box per bank, the bank's own
+// colour as a mark, the headline of its offer. Built from BANK_OFFERS.
+export const BankBoxes = () => <span className="bankboxes">{BANK_OFFERS.map(([bank, big, , c]) => <i key={bank} style={{ "--bc": c }}><u></u><b>{bank.replace(/ (Bank|Card)$/, "")}</b>{big}</i>)}</span>;
+// The bank band as an advertisement: a headline and four credit-card tiles, each in its bank's colour with a chip, the bank, the
+// offer and its terms. Compact on category and product pages (headline and the boxes), the full cards on the home page.
+export const BankStrip = ({ wrap = false, full = false }) => {
   const amt = Math.max(0, ...BANK_OFFERS.map(([, , note]) => +(((/Up to ₹([\d,]+)/.exec(note) || [])[1] || "0").replace(/,/g, ""))));
-  const banks = BANK_OFFERS.map(([b, , , c]) => [b.replace(/ (Bank|Card)$/, ""), c]);
-  const emi = BANK_OFFERS.some(([, big]) => /EMI/i.test(big));
-  return <a className={"bankstrip" + (wrap ? " wrap" : "")} href="/offers" aria-label="Bank offers">
+  const head = amt ? "Save up to ₹" + amt.toLocaleString("en-IN") + " extra with your bank card" : "Instant discounts on leading bank cards";
+  if (!full) return <a className={"bankstrip" + (wrap ? " wrap" : "")} href="/offers" aria-label="Bank offers">
     <span className="bsmark" aria-hidden="true"><Icon k="cash" /></span>
-    <span className="bshead"><span className="bskick">Bank offers</span><b>{amt ? "Up to ₹" + amt.toLocaleString("en-IN") + " instant discount on bank cards" : "Instant discounts on leading bank cards"}</b></span>
-    <span className="bsbanks">{banks.map(([b, c]) => <i key={b} style={{ "--bc": c }}><u></u>{b}</i>)}{emi && <i className="emi">No Cost EMI</i>}</span>
+    <span className="bshead"><span className="bskick">Bank offers</span><b>{head}</b></span>
+    <BankBoxes />
     <span className="bscta">See offers →</span>
-    <small>T&amp;C apply</small>
   </a>;
+  return <section className={"bankad" + (wrap ? " wrap" : "")} aria-label="Bank offers">
+    <div className="bahead"><span className="bskick">Bank offers</span><h2>{head}</h2><p>Instant discounts, cashback and No Cost EMI on leading bank cards, on top of the festive prices. <a className="alink" href="/offers">All offers →</a></p></div>
+    <div className="bacards">{BANK_OFFERS.map(([bank, big, note, c]) => <a className="bacard" href="/offers" style={{ "--bc": c }} key={bank}>
+      <span className="bachip" aria-hidden="true"></span><span className="babank">{bank}</span><b>{big}</b><span className="banote">{note}</span><small>*T&amp;C apply</small></a>)}</div>
+  </section>;
 };
 export const TrustLine = () => <p className="trustline"><Icon k="truck" /> Free delivery on every order, usually by {eta()[1]} <span>·</span> <Icon k="cash" /> Cash on delivery <span>·</span> <Icon k="shield" /> Brand warranty</p>;
 export const Row = ({ title, href, list }) => list.length ? <section><h2>{title} {href ? <a href={href}>View all</a> : null}</h2><Strip>{list.map((p, i) => <Card key={p.id} p={p} i={i} />)}</Strip></section> : null;

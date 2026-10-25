@@ -5,7 +5,7 @@
 import { useEffect, useRef, useState } from "react";
 import { m, useReducedMotion } from "motion/react";
 import { useStore } from "./store.jsx";
-import { Card, Row, BankOffers, Ico, Icon, Qa, OsChart, BankStrip } from "./components.jsx";
+import { Card, Row, BankOffers, Ico, Icon, Qa, OsChart, BankStrip, BankBoxes } from "./components.jsx";
 import { DRAW_ICONS, HOME_BANNERS, FESTIVE, FAQ, catSizes, brandUrl, listUrl, off, starRow, productUrl, pic, picSet, osList, osUrl, brandPoints, cutout, life, emiPlans } from "./data.js";
 import { lines, TONES } from "./banner.jsx";
 import { resOf } from "./category.jsx"; // resolution of a TV from its specifications, for the screen-type cards
@@ -94,8 +94,7 @@ export function Home() {
     </div>
     <FestiveBanner tvs={tvs} maxOff={maxOff} minEmi={minEmi} money={money} />
     <DealCarousel tvs={tvs} maxOff={maxOff} minTv={minTv} minEmi={minEmi} money={money} />
-    <BankStrip wrap />
-    <BankOffers />
+    <BankStrip wrap full />
     <section><h2>Deals of the Day <a href="/products?sort=off">View all</a></h2><p className="lead">The biggest discounts right now. Free delivery on every order, cash on delivery.</p><div className="grid">{deals.map((p, i) => <Card p={p} i={i} key={p.id} />)}</div></section>
 
 
@@ -153,9 +152,9 @@ function DealCarousel({ tvs, maxOff, minTv, minEmi, money }) {
   const topImg = cutout(top.img) || pic(top.img, 480);
   return <section className="dealbox dealcar wrap" aria-roledescription="carousel" aria-label="Deals" onPointerEnter={() => { paused.current = true; }} onPointerLeave={() => { paused.current = false; }} onFocus={() => { paused.current = true; }} onBlur={() => { paused.current = false; }}>
     <div className="dealstage">
-      <div {...slide(0)}><div className="dealin"><span className="deye">Deals on Smart TVs</span><h2>Smart TVs from <em>{money(minTv)}</em></h2><p>Up to {maxOff}% off{minEmi ? ", No Cost EMI from " + money(minEmi) + "/month" : ""}, bank offers and cash on delivery.</p><a className="btn" href={listUrl({ cat: "Televisions", sort: "off" })}>Shop all deals →</a></div></div>
-      <div {...slide(1)}><div className="dealin prod"><div><span className="deye">Biggest saving right now</span><h2>{top.brand} {top.name}</h2><p><b>{money(top.price)}</b> · MRP {money(top.mrp)} · <em>{off(top)}% off</em>{top.emi ? " · No Cost EMI from " + money(emiPlans(top.price)[2][1]) + "/month" : ""}</p><a className="btn" href={productUrl(top)}>Buy now →</a></div><img src={topImg} alt={top.brand + " " + top.name} loading="lazy" width="800" height="800" /></div></div>
-      <div {...slide(2)}><div className="dealin ink"><span className="deye">Not sure which TV?</span><h2>Your complete TV buying guide</h2><p>Screen size for your room, 4K or Full HD, Google TV or WebOS, and the ports you need. Everything before you choose.</p><a className="btn" href="/buying-guide">Read the guide →</a></div></div>
+      <div {...slide(0)}><div className="dealin photo"><picture className="dbg" aria-hidden="true"><img src={pic("img/show-elista.jpg", 960)} srcSet={picSet("img/show-elista.jpg")} sizes="(max-width:1240px) 100vw, 1200px" alt="" loading="lazy" width="1376" height="768" /></picture><span className="deye">Deals on Smart TVs</span><h2>Smart TVs from <em>{money(minTv)}</em></h2><p>Up to {maxOff}% off{minEmi ? ", No Cost EMI from " + money(minEmi) + "/month" : ""}, bank offers and cash on delivery.</p><a className="btn" href={listUrl({ cat: "Televisions", sort: "off" })}>Shop all deals →</a></div></div>
+      <div {...slide(1)}><div className="dealin prod stage"><div><span className="deye">Biggest saving right now</span><h2>{top.brand} {top.name}</h2><p><b>{money(top.price)}</b> · MRP {money(top.mrp)} · <em>{off(top)}% off</em>{top.emi ? " · No Cost EMI from " + money(emiPlans(top.price)[2][1]) + "/month" : ""}</p><a className="btn" href={productUrl(top)}>Buy now →</a></div><img src={topImg} alt={top.brand + " " + top.name} loading="lazy" width="800" height="800" /></div></div>
+      <div {...slide(2)}><div className="dealin ink photo"><picture className="dbg" aria-hidden="true"><img src={pic("img/hero0.jpg", 960)} srcSet={picSet("img/hero0.jpg")} sizes="(max-width:1240px) 100vw, 1200px" alt="" loading="lazy" width="1344" height="752" /></picture><span className="deye">Not sure which TV?</span><h2>Your complete TV buying guide</h2><p>Screen size for your room, 4K or Full HD, Google TV or WebOS, and the ports you need. Everything before you choose.</p><a className="btn" href="/buying-guide">Read the guide →</a></div></div>
     </div>
     <div className="dealctl"><div className="dcnav" role="group" aria-label="Deal controls"><button type="button" className="dcbtn" onClick={() => go(i - 1)} aria-label="Previous deal">‹</button><button type="button" className="dcbtn" onClick={() => go(i + 1)} aria-label="Next deal">›</button></div><div className="dcdots" role="tablist" aria-label="Deals">{labels.map((l, k) => <button type="button" role="tab" aria-selected={i === k} aria-label={l} className={i === k ? "on" : undefined} onClick={() => go(k)} key={l} />)}</div></div>
   </section>;
@@ -180,16 +179,17 @@ function FestiveBanner({ tvs, maxOff, minEmi, money }) {
   if (!tvs.length || !top || maxOff <= 0) return null;
   return <section className="festive wrap" ref={ref} aria-label={FESTIVE.title}>
     <a className="festin" href="/offers">
+      <picture className="fbg" aria-hidden="true"><img src={pic("img/life-cinema.jpg", 960)} srcSet={picSet("img/life-cinema.jpg")} sizes="(max-width:1240px) 100vw, 1200px" alt="" loading="lazy" width="1536" height="1024" /></picture>
+      <span className="fsparkle" aria-hidden="true"></span>
       <span className="flights" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></span>
       <span className="ftext">
-        <span className="fkick">{FESTIVE.title}</span>
-        <b>Up to <em>{maxOff}% off</em><br />on Smart TVs</b>
-        <span className="fsub">{FESTIVE.sub}. Free delivery across India, cash on delivery.</span>
-        <span className="fchips">{minEmi && <i>No Cost EMI from {money(minEmi)}/month</i>}<i>Bank offers</i><i>Brand warranty</i></span>
+        <span className="flock"><i></i>{FESTIVE.title}<i></i></span>
+        <b><small>Up to</small><strong>{maxOff}% off</strong><span>on Smart TVs</span></b>
+        <span className="fbenefits"><span>Free delivery across India</span><span>Cash on delivery</span>{minEmi && <span>No Cost EMI from {money(minEmi)}/month</span>}</span>
         <span className="btn">Shop festive offers →</span>
       </span>
-      <span className="fstage" aria-hidden="true"><span className="fglow"></span><img className="ftv" src="/img/tv-festival.webp" alt="" loading="lazy" width="1000" height="700" /><img className="ftvref" src="/img/tv-festival.webp" alt="" loading="lazy" width="1000" height="700" /></span>
-      <small className="fnote">Savings are MRP against our price. T&amp;C apply.</small>
+      <span className="fstage" aria-hidden="true"><span className="fglow"></span><span className="fframe"><img className="ftv" src="/img/tv-festival.webp" alt="" loading="lazy" width="863" height="588" /></span></span>
+      <span className="fbanks"><BankBoxes /><small>*T&amp;C apply · Savings are MRP against our price</small></span>
     </a>
   </section>;
 }
