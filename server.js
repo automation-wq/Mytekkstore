@@ -347,14 +347,14 @@ async function refreshFx() {
   if (Date.now() - fx.at < 6 * 3600000) return;
   fx.at = Date.now();
   try {
-    const r = await fetch("https://api.frankfurter.dev/v2/rates?base=INR&quotes=AED,USD", { signal: AbortSignal.timeout(8000) });
+    const r = await fetch("https://api.frankfurter.dev/v2/rates?base=INR&quotes=AED,USD", { signal: AbortSignal.timeout(2500) }); // short: the config call waits for it
     if (!r.ok) return;
     const rows = await r.json(), rates = { ...FX_STATIC };
     for (const x of rows) if (x.quote && x.rate > 0) rates[x.quote] = x.rate;
     fx = { rates, date: (rows[0] && rows[0].date) || "", source: "frankfurter", at: Date.now() };
   } catch { /* the last rates stay */ }
 }
-const fxNow = () => { refreshFx(); return { rates: fx.rates, date: fx.date, source: fx.source, note: "Display only. Every order is charged in INR." }; };
+const fxNow = async () => { await refreshFx(); return { rates: fx.rates, date: fx.date, source: fx.source, note: "Display only. Every order is charged in INR." }; };
 
 // ===== payments: a provider behind one interface; "demo" until gateway keys are set =====
 const RZP = { id: process.env.RAZORPAY_KEY_ID || "", secret: process.env.RAZORPAY_KEY_SECRET || "", webhook: process.env.RAZORPAY_WEBHOOK_SECRET || "" };
@@ -467,7 +467,7 @@ async function askModel(system, history, message) {
   throw new HttpError(503, "The assistant is not available right now.");
 }
 
-on("GET", "config", () => ({ google: GOOGLE, sms: smsReady, mail: mailReady, demoCodes: OTP_DEMO, clarity: !!CLARITY, chat: !!(GEMINI_KEY || CHAT_KEY), pay: PAY_PROVIDER, payKey: RZP.id, fx: fxNow(), destinations: Object.fromEntries(Object.entries(DESTINATIONS).map(([k, d]) => [k, { name: d.name, display: d.display, ship: d.ship, methods: d.methods }])) }));
+on("GET", "config", async () => ({ google: GOOGLE, sms: smsReady, mail: mailReady, demoCodes: OTP_DEMO, clarity: !!CLARITY, chat: !!(GEMINI_KEY || CHAT_KEY), pay: PAY_PROVIDER, payKey: RZP.id, fx: await fxNow(), destinations: Object.fromEntries(Object.entries(DESTINATIONS).map(([k, d]) => [k, { name: d.name, display: d.display, ship: d.ship, methods: d.methods }])) }));
 // Contact form (page.html?p=contact): the message is recorded in the admin outbox ("Customer messages"), so the store sees it
 // even before an email provider is connected. ponytail: no rate limit beyond the body size; add one if the form gets abused.
 on("POST", "contact", ({ body }) => {
