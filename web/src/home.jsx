@@ -148,12 +148,12 @@ function DealCarousel({ tvs, maxOff, minTv, minEmi, money }) {
   useEffect(() => { if (manual || still) return; const t = setInterval(() => { if (!paused.current) setI(v => (v + 1) % n); }, 7000); return () => clearInterval(t); }, [manual, still]);
   if (!tvs.length || !top || maxOff <= 0) return null;
   const go = v => { setManual(true); setI(((v % n) + n) % n); };
-  const labels = ["Biggest savings on Smart TVs", top.brand + " " + top.name, "TV buying guide"];
+  const labels = ["Smart TVs from " + money(minTv), top.brand + " " + top.name, "TV buying guide"];
   const slide = k => ({ className: "dealslide" + (i === k ? " on" : ""), ...(i === k ? {} : { "aria-hidden": true, inert: true }), "aria-roledescription": "slide", "aria-label": (k + 1) + " of " + n + ": " + labels[k] });
   const topImg = cutout(top.img) || pic(top.img, 480);
   return <section className="dealbox dealcar wrap" aria-roledescription="carousel" aria-label="Deals" onPointerEnter={() => { paused.current = true; }} onPointerLeave={() => { paused.current = false; }} onFocus={() => { paused.current = true; }} onBlur={() => { paused.current = false; }}>
     <div className="dealstage">
-      <div {...slide(0)}><div className="dealin"><span className="deye">Deals on Smart TVs</span><h2>Up to <em>{maxOff}% off</em> on Smart TVs</h2><p>Starting at {money(minTv)}{minEmi ? ", No Cost EMI from " + money(minEmi) + "/month" : ""}, bank offers and cash on delivery.</p><a className="btn" href={listUrl({ cat: "Televisions", sort: "off" })}>Shop all deals →</a></div></div>
+      <div {...slide(0)}><div className="dealin"><span className="deye">Deals on Smart TVs</span><h2>Smart TVs from <em>{money(minTv)}</em></h2><p>Up to {maxOff}% off{minEmi ? ", No Cost EMI from " + money(minEmi) + "/month" : ""}, bank offers and cash on delivery.</p><a className="btn" href={listUrl({ cat: "Televisions", sort: "off" })}>Shop all deals →</a></div></div>
       <div {...slide(1)}><div className="dealin prod"><div><span className="deye">Biggest saving right now</span><h2>{top.brand} {top.name}</h2><p><b>{money(top.price)}</b> · MRP {money(top.mrp)} · <em>{off(top)}% off</em>{top.emi ? " · No Cost EMI from " + money(emiPlans(top.price)[2][1]) + "/month" : ""}</p><a className="btn" href={productUrl(top)}>Buy now →</a></div><img src={topImg} alt={top.brand + " " + top.name} loading="lazy" width="800" height="800" /></div></div>
       <div {...slide(2)}><div className="dealin ink"><span className="deye">Not sure which TV?</span><h2>Your complete TV buying guide</h2><p>Screen size for your room, 4K or Full HD, Google TV or WebOS, and the ports you need. Everything before you choose.</p><a className="btn" href="/buying-guide">Read the guide →</a></div></div>
     </div>
