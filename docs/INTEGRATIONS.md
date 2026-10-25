@@ -9,7 +9,7 @@ Facts below were checked against the vendors' own documentation on 25 October 20
 | Sign-up and sign-in | Email + password register/login; one-time code by email (Brevo) or SMS/WhatsApp (Twilio); Google sign-in if a client id is set | `server.js` routes `register`, `login`, `otp/send`, `otp/verify`, `login/google`; `web/src/account.jsx` | Works locally; the browser suite signs in with a mobile number and a code |
 | Sessions | In memory (`sessions = new Map()`), a week long | `server.js` line ~102 | **Lost on every restart and not shared between Vercel instances**, so live sign-in is unreliable |
 | Users and orders | JSON files in `data/` (on Vercel: `/tmp`, per instance) | `server.js` `DATA_DIR` | Same problem: live accounts and orders can vanish between requests |
-| Checkout | `POST /api/orders` validates items and address server-side, prices from the catalogue, guest checkout allowed; `pay: "online"` is marked "Paid online (demo payment)" | `server.js` orders route; `web/src/pages1.jsx` Checkout | **No payment is taken.** COD orders are real in shape |
+| Checkout | `POST /api/orders` validates items and address server-side, prices from the catalogue, sign-in required (the route is registered with the `"user"` guard; guest checkout is an owner decision, not a current feature); `pay: "online"` is marked "Paid online (demo payment)" | `server.js` orders route; `web/src/pages1.jsx` Checkout | **No payment is taken.** COD orders are real in shape |
 | Keys the server reads | `BREVO_API_KEY`, `MAIL_FROM`, `TWILIO_*`, `GOOGLE_CLIENT_ID`, `ADMIN_PASSWORD`, `CLARITY_ID`, `OTP_DEMO` | `server.js`, `start.bat` | All empty on the live site today |
 
 End-to-end check on 25 October: `node test.js` passes (register, login, order placement, order privacy, validation); `node test-ui.js` passes including "sign in with a mobile number and a code", cart and checkout steps. The flows work; what is missing is persistence and a real gateway.
@@ -51,7 +51,7 @@ Why not keep the custom sign-in: it works, but it needs the business to run Brev
 - Backend: `@clerk/express` `clerkMiddleware()` on the API; `getAuth(req)` replaces the session-token lookup; `CLERK_PUBLISHABLE_KEY` and `CLERK_SECRET_KEY`.
 - Frontend: Clerk's React SDK with its provider around the app and its sign-in and sign-up components on `/account`; the custom register, login and OTP forms in `account.jsx` are retired.
 - Google sign-in is configured in the Clerk dashboard, so `GOOGLE_CLIENT_ID` and the Brevo/Twilio keys are no longer needed.
-- Orders stay keyed by the Clerk user id; guest checkout continues to work with no user id.
+- Orders stay keyed by the Clerk user id; checkout keeps requiring a signed-in user unless the owner decides to allow guests.
 
 ## 5. What the business must supply
 
