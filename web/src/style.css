@@ -2061,3 +2061,10 @@ main > .trustrow { margin-top:14px }
 .roomfig .sofa { width:min(100%,200px); height:34px; border-radius:16px 16px 8px 8px; background:#8b93a7; position:relative } .roomfig .sofa::before { content:""; position:absolute; inset:-14px 18px auto; height:20px; border-radius:10px 10px 0 0; background:#a5acbd }
 .acare ul { grid-template-columns:1fr } .acare li { display:grid; gap:4px; padding:14px 0; border-top:1px solid var(--line, #e5e7eb) } .acare li:first-child { border-top:0; padding-top:0 } .acare li b { font-size:17px } .acare li span { color:var(--soft); font-size:15px; line-height:1.5 }
 @media (max-width:860px) { .aplus .ablock.aglance, .aplus .ablock.acare { grid-template-columns:1fr } .aglance ul { grid-template-columns:repeat(2,1fr) } .ablock.aports.flip .portbay { order:0 } }
+
+/* ─ phones: the bottom tab bar is the way back up, so the floating back-to-top button stays out of the text it was covering (25 Oct) ─ */
+@media (max-width:760px) { .totop { display:none } }
+
+/* ─ the offers page opens on the festive banner; its heading stays for the page outline and search engines ─ */
+.srh { position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap }
+main > .festive.bleed:first-of-type { margin-top:0 }

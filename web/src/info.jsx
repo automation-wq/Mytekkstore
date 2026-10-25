@@ -11,11 +11,11 @@ import { countUp } from "./motion.js";
 
 const PAGES = {
   about: ["About Mytekkstore", "Mytekkstore", "Good electronics, made simple.", "Elista and Telefunken Smart TVs at factory prices, delivered free with cash on delivery and the brand's own warranty.", "Televisions"],
-  contact: ["Contact us", "Help", "We are here to help.", "Orders, delivery, returns and service. Write to us and we reply by email.", "Washing Machines"],
-  stores: ["Store locator", "Visit us", "Find a store.", "Store addresses are being added. Until then, every product ships free to your door.", "Air Conditioners"],
+  contact: ["Contact us", "Help", "We are here to help.", "Orders, delivery, returns and service. Write to us and we reply by email.", "Televisions"],
+  stores: ["Store locator", "Visit us", "Find a store.", "Store addresses are being added. Until then, every product ships free to your door.", "Televisions"],
   shipping: ["Shipping and delivery", "Delivery", "Free delivery, every order.", "Across India, usually in 3 to 5 days, with cash on delivery if you prefer.", "Televisions"],
-  returns: ["Returns and refunds", "Returns", "Easy returns, no drama.", `Tell us within ${POLICY.returnDays} days of delivery and we take it from there.`, "Washing Machines"],
-  terms: ["Terms of use", "Terms", "The short version, in plain words.", "What you agree to when you order from Mytekkstore.", "Air Conditioners"],
+  returns: ["Returns and refunds", "Returns", "Easy returns, no drama.", `Tell us within ${POLICY.returnDays} days of delivery and we take it from there.`, "Televisions"],
+  terms: ["Terms of use", "Terms", "The short version, in plain words.", "What you agree to when you order from Mytekkstore.", "Televisions"],
   privacy: ["Privacy policy", "Privacy", "Your data, kept to a minimum.", "What we store, why we store it, and what we never do with it.", "Televisions"],
   "buying-guide": ["How to choose a TV", "Buying guide", "How to choose the right TV.", "Size, resolution, operating system and connections — in plain words, so you buy once and buy right.", "Televisions"],
 };

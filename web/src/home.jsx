@@ -164,7 +164,7 @@ function DealCarousel({ tvs, maxOff, minTv, minEmi, money }) {
 // The festive discount banner under the hero (Reliance Digital and Amazon open their festival sales this way): festive colours,
 // lights drawn in CSS and still, the biggest real discount in gold, the biggest-saving TV's own render. The lights and the TV
 // shift a little as the visitor scrolls (--p from 0 to 1 across the viewport), never on their own, and not under reduced motion.
-function FestiveBanner({ tvs, maxOff, minEmi, money }) {
+export function FestiveBanner({ tvs, maxOff, minEmi, money, href = "/offers", cta = "Shop festive offers →" }) { // also the opener of the offers page itself, where it points at the deals list
   const ref = useRef();
   const still = useReducedMotion();
   const top = [...tvs].sort((a, b) => off(b) - off(a))[0];
@@ -179,7 +179,7 @@ function FestiveBanner({ tvs, maxOff, minEmi, money }) {
   }, [still]);
   if (!tvs.length || !top || maxOff <= 0) return null;
   return <section className="festive bleed" ref={ref} aria-label={FESTIVE.title}>
-    <a className="festin" href="/offers">
+    <a className="festin" href={href}>
       <picture className="fbg" aria-hidden="true"><img src={pic("img/life-cinema.jpg", 960)} srcSet={picSet("img/life-cinema.jpg")} sizes="(max-width:1240px) 100vw, 1200px" alt="" loading="lazy" width="1536" height="1024" /></picture>
       <span className="fsparkle" aria-hidden="true"></span>
       <span className="flights" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></span>
@@ -188,7 +188,7 @@ function FestiveBanner({ tvs, maxOff, minEmi, money }) {
         <span className="fcamp">Make your Diwali smarter &amp; brighter</span>
         <b><small>Up to</small><strong>{maxOff}% off</strong><span>on Smart TVs</span></b>
         <span className="fbenefits"><span>Free delivery across India</span><span>Cash on delivery</span>{minEmi && <span>No Cost EMI from {money(minEmi)}/month</span>}</span>
-        <span className="btn">Shop festive offers →</span>
+        <span className="btn">{cta}</span>
       </span>
       <span className="fstage" aria-hidden="true"><span className="fglow"></span><img className="froom" src="/img/fest-room.webp" alt="" loading="lazy" width="860" height="430" /></span>
       <span className="fbanks"><BankBoxes /><small>*T&amp;C apply · Savings are MRP against our price</small></span>

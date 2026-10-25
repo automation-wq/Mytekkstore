@@ -330,7 +330,7 @@ async function run() {
 
     step = "offers page, bank offers and the No Cost EMI tag";
     await b.goto(base + "/offers.html");
-    assert.ok(await b.ev(`document.querySelectorAll(".fest .sparks i").length`) > 10, "festive sparks");
+    assert.ok(await b.ev(`!!document.querySelector(".festive .froom")`), "the festive banner opens the offers page"); // the brochure room photo is its stage
     assert.equal(await b.ev(`document.querySelectorAll(".ftile").length`), 0, "the offers-by-category tiles appear only with more than one category on sale");
     assert.equal(await b.ev(`document.querySelectorAll(".offer").length`), 4, "bank offer cards");
     assert.ok(await b.ev(`document.querySelectorAll(".card .emi").length`) > 0, "No Cost EMI tags on deal cards");

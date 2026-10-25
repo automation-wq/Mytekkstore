@@ -4,8 +4,9 @@ import { m, AnimatePresence } from "motion/react";
 import { useStore } from "./store.jsx";
 import { api, qs, demoPay, track } from "./api.js";
 import { Card, Row, Strip, Box, Line, OrderItems, BankOffers, Form, Ico, Icon } from "./components.jsx";
-import { DRAW_ICONS, STEPS, FESTIVE, KV_IMG, POLICY, catUrl, brandUrl, listUrl, off, etaText, pic } from "./data.js";
+import { DRAW_ICONS, STEPS, FESTIVE, KV_IMG, POLICY, catUrl, brandUrl, listUrl, off, etaText, pic, emiPlans } from "./data.js";
 import { reveal } from "./motion.js";
+import { FestiveBanner } from "./home.jsx"; // the brochure festive banner opens the offers page too
 
 const $ = (s, el = document) => el.querySelector(s);
 const $$ = (s, el = document) => [...el.querySelectorAll(s)];
@@ -14,18 +15,17 @@ export { Home } from "./home.jsx";
 
 // the festive offers page: Deals in the bar and the wide banner on the home page open it
 export function Offers() {
-  const { P, CATS, catImg } = useStore();
+  const { P, CATS, catImg, money } = useStore();
   const [left, setLeft] = useState(0);
+  const tvs = P.filter(p => p.cat === "Televisions"), minEmi = tvs.some(p => p.emi) ? Math.min(...tvs.filter(p => p.emi).map(p => emiPlans(p.price)[2][1])) : 0; // the banner's figures, as on the home page
   useEffect(() => { document.title = FESTIVE.title + " | Mytekkstore"; if (!FESTIVE.ends) return; const t = setInterval(() => setLeft(Math.max(0, Math.floor((new Date(FESTIVE.ends) - Date.now()) / 1000))), 1000); return () => clearInterval(t); }, []);
   const deals = P.filter(p => off(p) > 0).sort((a, b) => off(b) - off(a));
   const maxOff = c => Math.max(0, ...P.filter(p => !c || p.cat === c).map(off)); // real figures from the catalogue
   const cells = [left / 86400, left / 3600 % 24, left / 60 % 60, left % 60].map(v => String(Math.floor(v)).padStart(2, "0"));
   return <>
-    <div className="fest"><div className="sparks" aria-hidden="true">{Array.from({ length: 18 }, (_, i) => <i style={{ "--i": i }} key={i}></i>)}</div>
-      <span className="eyebrow">Limited time</span><h1>{FESTIVE.title}</h1><p>{FESTIVE.sub} · up to <b>{maxOff()}% off</b></p>
-      {FESTIVE.ends && <div className="cdown" aria-label="Time left">{["Days", "Hours", "Minutes", "Seconds"].map((l, i) => <div key={l}><b>{cells[i]}</b><span>{l}</span></div>)}</div>}
-      <div className="fcta">{CATS.map(c => <a className="btn" href={listUrl({ cat: c, sort: "off" })} key={c}>{c}</a>)}</div>
-    </div>
+    <h1 className="srh">{FESTIVE.title}</h1>
+    <FestiveBanner tvs={tvs} maxOff={maxOff()} minEmi={minEmi} money={money} href={listUrl({ cat: "Televisions", sort: "off" })} cta="See every TV deal →" />
+    {FESTIVE.ends && <div className="fest"><div className="cdown" aria-label="Time left">{["Days", "Hours", "Minutes", "Seconds"].map((l, i) => <div key={l}><b>{cells[i]}</b><span>{l}</span></div>)}</div></div>}
     {CATS.length > 1 && <section><h2>Offers by category</h2><p className="lead">The biggest discount in each category right now.</p><div className="ftiles">{CATS.map(c => <a className="ftile" href={listUrl({ cat: c, sort: "off" })} key={c}><span><b>Up to {maxOff(c)}% off</b>{c}</span><img src={pic(catImg(c), 480)} alt="" loading="lazy" width="800" height="800" /></a>)}</div></section>}
     <section><h2>Top deals <a href="/products?sort=off">View all</a></h2><p className="lead">Sorted by discount, biggest first.</p><div className="grid">{deals.slice(0, 8).map(p => <Card p={p} key={p.id} />)}</div></section>
     <BankOffers />
