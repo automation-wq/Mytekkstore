@@ -72,6 +72,20 @@ export function Line({ p }) {
 // a sideways-scrolling strip with arrow buttons (hidden when the row fits on the screen)
 export const Strip = ({ children }) => <div className="strip"><button className="sarrow" data-scroll="-1" aria-label="Scroll left">‹</button><div className="row">{children}</div><button className="sarrow" data-scroll="1" aria-label="Scroll right">›</button></div>;
 // one line of the store's promises above a product list, in place of repeating "free delivery" on every card
+// One line that states the bank offers, the way Reliance Digital and Amazon put it at the top of the page: the biggest instant
+// discount in the offers, the banks as chips, No Cost EMI, a link to the offers page. Built from BANK_OFFERS, so it follows them.
+export const BankStrip = ({ wrap = false }) => {
+  const amt = Math.max(0, ...BANK_OFFERS.map(([, , note]) => +(((/Up to ₹([\d,]+)/.exec(note) || [])[1] || "0").replace(/,/g, ""))));
+  const banks = BANK_OFFERS.map(([b]) => b.replace(/ (Bank|Card)$/, ""));
+  const emi = BANK_OFFERS.some(([, big]) => /EMI/i.test(big));
+  return <a className={"bankstrip" + (wrap ? " wrap" : "")} href="/offers" aria-label="Bank offers">
+    <span className="bskick">Bank offers</span>
+    <b>{amt ? "Up to ₹" + amt.toLocaleString("en-IN") + " instant discount on bank cards" : "Instant discounts on leading bank cards"}</b>
+    <span className="bsbanks">{banks.map(b => <i key={b}>{b}</i>)}{emi && <i className="emi">No Cost EMI</i>}</span>
+    <span className="bscta">See offers →</span>
+    <small>T&amp;C apply</small>
+  </a>;
+};
 export const TrustLine = () => <p className="trustline"><Icon k="truck" /> Free delivery on every order, usually by {eta()[1]} <span>·</span> <Icon k="cash" /> Cash on delivery <span>·</span> <Icon k="shield" /> Brand warranty</p>;
 export const Row = ({ title, href, list }) => list.length ? <section><h2>{title} {href ? <a href={href}>View all</a> : null}</h2><Strip>{list.map((p, i) => <Card key={p.id} p={p} i={i} />)}</Strip></section> : null;
 export const Box = ({ title, text, href, cta }) => <div className="box"><h1>{title}</h1><p>{text}</p><a className="btn" href={href}>{cta}</a></div>;
@@ -125,6 +139,10 @@ function navItems(P, CATS, BRANDS, catImg) {
     links: [["All products", "/products"], ["Deals of the day", "/products?sort=off"], ["My wishlist", "/products?wish=1"], ["About Mytekkstore", "/about"], ["Contact us", "/contact"]],
   });
   items.push({ label: "Best Deals", href: "/offers", cur: page === "offers" }); // a plain link to the festive offers page, no panel
+  items.push({ label: "Support", href: "/contact", cur: page === "page" && ["contact", "shipping", "returns", "terms", "privacy"].includes(qs.get("p")), groups: [
+    ["Help", [["FAQ", "/#faq"], ["Track your order", "/account"], ["Contact us", "/contact"], ["How to choose a TV", "/buying-guide"]]],
+    ["Policies", [["Shipping and delivery", "/shipping"], ["Warranty and returns", "/returns"], ["Payment options and No Cost EMI", "/offers"], ["Terms", "/terms"], ["Privacy", "/privacy"]]],
+  ] }); // help and policy links, in a panel that opens like the category menus
   return items;
 }
 
@@ -253,12 +271,12 @@ export function Header() {
       <a className="hlink" href="/cart" data-drawer aria-label="Cart"><Icon k="cart" /> <span id="cartN" className={"count" + (bump ? " bump" : "")} key={bump} hidden={!n}>{n}</span></a>
     </div>
     <nav className="gnav" aria-label="Shop" ref={navRef}><ul className="gbar">{ordered.map(({ it, i, soon }) => soon ? <li className="soon" key={soon}><span>{soon}</span></li> : <li className={"l0" + (it.cur ? " cur" : "")} key={it.label}>
-      <a className="l0link" href={it.href} aria-current={it.cur && page === "category" ? "page" : undefined} {...(it.tiles ? { "aria-haspopup": "true", "aria-expanded": "false", "aria-controls": "nav" + i } : {})}>{it.label}</a>{it.tiles &&
+      <a className="l0link" href={it.href} aria-current={it.cur && page === "category" ? "page" : undefined} {...(it.tiles || it.groups ? { "aria-haspopup": "true", "aria-expanded": "false", "aria-controls": "nav" + i } : {})}>{it.label}</a>{it.tiles ?
       <div className="npanel" id={"nav" + i}><div className="ngrid">
         <div><p className="nhead">{it.head}</p><div className="ntiles">{it.tiles.map(([t, h, img]) => <a className="ntile" href={h} key={h}><img src={pic(img, 480)} alt="" loading="lazy" width="800" height="800" /><span>{t}</span></a>)}</div></div>
         <div><p className="nhead">{it.prodHead}</p><div className="nprods">{it.prods.map(p => <a className="nprod" href={productUrl(p)} key={p.id}><img src={pic(p.img, 480)} alt="" loading="lazy" width="800" height="800" /><span><small>{p.brand}</small><b>{p.name}</b><i>{money(p.price)}</i></span></a>)}</div></div>
         <div className="ndisc"><p className="nhead">Discover</p>{it.links.map(([t, h]) => <a href={h} key={t}>{t}</a>)}{it.promo && <a className="npromo" href={it.promo[2]}><b>{it.promo[0]}</b><span>{it.promo[1]}</span><u>Open the guide →</u></a>}</div>
-      </div></div>}</li>)}<li className="qbands">{[[0, 10000, "Under " + money(10000)], [10000, 25000, money(10000) + " – " + money(25000)], [25000, 50000, money(25000) + " – " + money(50000)], [50000, 0, "Above " + money(50000)]].map(([mn, mx, label]) => <a href={listUrl({ cat: "Televisions", min: mn || "", max: mx || "" })} key={label}>{label}</a>)}</li></ul></nav>
+      </div></div> : it.groups ? <div className="npanel nsupport" id={"nav" + i}><div className="ngrid">{it.groups.map(([t, ls]) => <div className="ndisc" key={t}><p className="nhead">{t}</p>{ls.map(([l, h]) => <a href={h} key={l}>{l}</a>)}</div>)}</div></div> : null}</li>)}<li className="qbands">{[[0, 10000, "Under " + money(10000)], [10000, 25000, money(10000) + " – " + money(25000)], [25000, 50000, money(25000) + " – " + money(50000)], [50000, 0, "Above " + money(50000)]].map(([mn, mx, label]) => <a href={listUrl({ cat: "Televisions", min: mn || "", max: mx || "" })} key={label}>{label}</a>)}</li></ul></nav>
   </header>;
 }
 

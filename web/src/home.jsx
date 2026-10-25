@@ -5,7 +5,7 @@
 import { useEffect, useRef, useState } from "react";
 import { m, useReducedMotion } from "motion/react";
 import { useStore } from "./store.jsx";
-import { Card, Row, BankOffers, Ico, Icon, Qa, OsChart } from "./components.jsx";
+import { Card, Row, BankOffers, Ico, Icon, Qa, OsChart, BankStrip } from "./components.jsx";
 import { DRAW_ICONS, HOME_BANNERS, FAQ, catSizes, brandUrl, listUrl, off, starRow, productUrl, pic, picSet, osList, osUrl, brandPoints, cutout, life, emiPlans } from "./data.js";
 import { lines, TONES } from "./banner.jsx";
 import { resOf } from "./category.jsx"; // resolution of a TV from its specifications, for the screen-type cards
@@ -93,6 +93,7 @@ export function Home() {
       <div className="dots">{slides.map((_, i) => <button aria-label={"Slide " + (i + 1)} data-i={i} className={i === cur ? "on" : undefined} key={i}></button>)}</div></>}
     </div>
     <DealCarousel tvs={tvs} maxOff={maxOff} minTv={minTv} minEmi={minEmi} money={money} />
+    <BankStrip wrap />
     <BankOffers />
     <section><h2>Deals of the Day <a href="/products?sort=off">View all</a></h2><p className="lead">The biggest discounts right now. Free delivery on every order, cash on delivery.</p><div className="grid">{deals.map((p, i) => <Card p={p} i={i} key={p.id} />)}</div></section>
 
@@ -128,7 +129,7 @@ export function Home() {
     </div></section>
     {quotes.length > 0 && <section><h2>What customers say</h2><p className="lead">The newest reviews from across the catalogue.</p><div className="quotes">{quotes.map((r, i) => <a className="quote" href={productUrl(r.p)} key={i}>
       <div className="stars"><span>{starRow(r.rating)}</span></div><p>“{r.text}”</p><b>{r.name}</b><small>{r.p.brand} {r.p.name}</small></a>)}</div></section>}
-    <Qa title="Frequently asked questions" lead="The questions buyers ask most, answered in short." list={FAQ.slice(0, 6)} more={["/buying-guide", "More about choosing a TV"]} />
+    <Qa id="faq" title="Frequently asked questions" lead="The questions buyers ask most, answered in short." list={FAQ.slice(0, 6)} more={["/buying-guide", "More about choosing a TV"]} />
     <Row title="Recently viewed" href="" list={recent.map(byId).filter(Boolean)} />
   </>;
 }

@@ -1837,3 +1837,20 @@ main .dealbox h2 { display:block } /* the site lays h2s out as a row for a right
 .dcnav { display:flex; gap:8px } .dcbtn { width:40px; height:40px; border-radius:50%; border:1px solid var(--line); background:var(--card); color:var(--text); font-size:22px; line-height:1; cursor:pointer } .dcbtn:hover { border-color:var(--accent); color:var(--accent) }
 .dcdots { display:flex; gap:8px } .dcdots button { width:10px; height:10px; padding:0; border-radius:50%; border:1px solid var(--muted); background:transparent; cursor:pointer } .dcdots button.on { background:var(--accent); border-color:var(--accent) }
 @media (max-width:760px) { .dealbox .dealin.prod img { height:110px } }
+
+/* the Support panel: two columns of plain links, the same panel chrome as the category menus */
+.nsupport .ngrid { grid-template-columns:repeat(2, max-content); gap:28px 72px; justify-content:start; padding-top:24px; padding-bottom:28px }
+
+/* the bank-offer line (components.jsx BankStrip): one full-width strip, the biggest instant discount up front, the banks as chips */
+.bankstrip { display:flex; align-items:center; gap:12px 18px; flex-wrap:wrap; margin-top:14px; padding:14px 20px; border-radius:14px; background:linear-gradient(90deg,#2a2e45,#1c2270); color:#fff; text-decoration:none; box-sizing:border-box }
+.bankstrip:hover { filter:brightness(1.06) }
+.bankstrip .bskick { font-size:11px; font-weight:800; letter-spacing:.08em; text-transform:uppercase; color:var(--hi) }
+.bankstrip b { font-size:clamp(16px,1.6vw,20px); font-weight:800; letter-spacing:-.2px }
+.bankstrip .bsbanks { display:flex; gap:6px; flex-wrap:wrap } .bankstrip .bsbanks i { font-style:normal; font-size:12px; font-weight:700; padding:4px 10px; border-radius:999px; background:#fff; color:#2a2e45 } .bankstrip .bsbanks i.emi { background:var(--hi); color:var(--hi-fg) }
+.bankstrip .bscta { margin-left:auto; font-weight:700; color:#fff; text-decoration:underline; text-underline-offset:3px }
+.bankstrip small { flex-basis:100%; font-size:11px; color:#ffffffb3 }
+.wrap .bankstrip, .pdp ~ .bankstrip { margin-top:0 }
+@media (max-width:760px) { .bankstrip { padding:12px 14px } .bankstrip .bscta { margin-left:0 } }
+
+.faq { scroll-margin-top:calc(var(--hh,150px) + 16px) } /* the Support menu links to /#faq: land it under the sticky header like the other anchors */
+.ahero::before { background:linear-gradient(90deg, #0f1115c7 0%, #0f111573 42%, #0f111500 68%), linear-gradient(180deg, transparent 30%, #0f1115bf) } /* a scrim behind the A+ headline too, not only at the foot: the kicker sat over the brightest part of the photo */

@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { m, AnimatePresence } from "motion/react";
 import { useStore } from "./store.jsx";
 import { qs, track } from "./api.js";
-import { Card, Box, Icon, Photo, Stars, Buy, BankOffers, KvImg, OsChart, Qa, Row, TrustLine } from "./components.jsx";
+import { Card, Box, Icon, Photo, Stars, Buy, BankOffers, KvImg, OsChart, Qa, Row, TrustLine, BankStrip } from "./components.jsx";
 import { TOP_FEATURES, KV_IMG, CAT_SIZE, CAT_KNOW, CAT_FAQ, BRAND_BLURB, catSizes, catUrl, listUrl, off, avg, starRow, productUrl, pic, osList, life, brandImg, brandPoints, CONTACT } from "./data.js";
 
 export const BANDS = [[0, 10000, "Under ₹10,000"], [10000, 25000, "₹10,000 to ₹25,000"], [25000, 50000, "₹25,000 to ₹50,000"], [50000, 0, "Above ₹50,000"]]; // [min, max, label]
@@ -106,6 +106,7 @@ export function Category() {
       {!wishOnly && <button type="button" className="btn ghost fbtn" onClick={() => setOpen(true)} aria-expanded={open} aria-controls="filters"><Icon k="sliders" /> Filters{chips.length ? " (" + chips.length + ")" : ""}</button>}
       <label className="sortby">Sort by <select value={f.sort} onChange={e => set({ sort: e.target.value })}><option value="">Featured</option><option value="low">Price: low to high</option><option value="high">Price: high to low</option><option value="off">Biggest discount</option><option value="rating">Customer rating</option></select></label></div>
     {!wishOnly && n > 0 && <TrustLine />}
+    {!wishOnly && n > 0 && <BankStrip />}
     {chips.length > 0 && <div className="chips" aria-label="Applied filters"><AnimatePresence>{chips.map(([t, rm]) => <m.button type="button" className="fchip" onClick={rm} aria-label={"Remove " + t} key={t} layout initial={{ opacity: 0, scale: .8 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: .8 }} transition={{ type: "spring", stiffness: 400, damping: 30 }}>{t} <span aria-hidden="true">×</span></m.button>)}</AnimatePresence><button type="button" className="link" onClick={clear}>Clear all</button></div>}
     <div className="plp">
       <div className="foverlay" onClick={() => setOpen(false)}></div>

@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { m, AnimatePresence } from "motion/react";
 import { useStore } from "./store.jsx";
 import { api, qs, load, save, track, whenShown } from "./api.js";
-import { Photo, Stars, Buy, Heart, Row, Box, Form, Ico, Icon, Qa } from "./components.jsx";
+import { Photo, Stars, Buy, Heart, Row, Box, Form, Ico, Icon, Qa, BankStrip } from "./components.jsx";
 import { Banner } from "./banner.jsx";
 import { DEFAULT_FEATURES, BANK_OFFERS, WARRANTY_QA, SPEC_GROUPS, osUrl, autoStory, callouts, cutout, galleryOf, GALLERY_LABELS, life, specIcon, catSizes, catUrl, brandUrl, off, avg, starRow, etaText, emiPlans, productUrl, pic, picSet } from "./data.js";
 
@@ -146,6 +146,7 @@ export function Product() {
           <div className="btot"><span>Total for <i>{pickedList.length + 1}</i> items</span><b>{money(p.price + pickedList.reduce((t, x) => t + x.price, 0))}</b><button className="btn" id="addAll" type="button" onClick={addAll}>Add all to cart</button></div></div>}
         <div className="actions"><b className="aprice">{money(p.price)}</b><Buy p={p} />{p.stock > 0 && <button className="btn ghost" data-buy={p.id}>Buy now</button>}<Heart p={p} /></div>
         <div className="perks"><span><Icon k="truck" /> Free delivery</span><span><Icon k="shield" /> Brand warranty</span><span><Icon k="undo" /> Easy returns</span><span><Icon k="check" /> Genuine product</span></div>
+        <BankStrip />
         <details className="qbox"><summary><Icon k="shield" /> Warranty, returns and replacement</summary><div>{WARRANTY_QA.slice(0, 3).map(([q, a]) => <p key={q}><b>{q}</b><br />{a}</p>)}<a className="alink" href="#warranty">All warranty and return questions →</a></div></details>
         <div className="sharerow"><span>Share:</span><a href={`https://wa.me/?text=${shareText}%20${share}`} target="_blank" rel="noopener">WhatsApp</a><a href={`https://www.facebook.com/sharer/sharer.php?u=${share}`} target="_blank" rel="noopener">Facebook</a><a href={`https://twitter.com/intent/tweet?url=${share}&text=${shareText}`} target="_blank" rel="noopener">X</a><button className="link" id="share" type="button" onClick={shareLink}>Copy link</button></div>
       </div>
