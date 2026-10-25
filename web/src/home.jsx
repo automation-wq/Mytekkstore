@@ -184,11 +184,12 @@ function FestiveBanner({ tvs, maxOff, minEmi, money }) {
       <span className="flights" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></span>
       <span className="ftext">
         <span className="flock"><i></i>{FESTIVE.title}<i></i></span>
+        <span className="fcamp">Make your Diwali smarter &amp; brighter</span>
         <b><small>Up to</small><strong>{maxOff}% off</strong><span>on Smart TVs</span></b>
         <span className="fbenefits"><span>Free delivery across India</span><span>Cash on delivery</span>{minEmi && <span>No Cost EMI from {money(minEmi)}/month</span>}</span>
         <span className="btn">Shop festive offers →</span>
       </span>
-      <span className="fstage" aria-hidden="true"><span className="fglow"></span><span className="fframe"><img className="ftv" src="/img/tv-festival.webp" alt="" loading="lazy" width="863" height="588" /></span></span>
+      <span className="fstage" aria-hidden="true"><span className="fglow"></span><img className="froom" src="/img/fest-room.webp" alt="" loading="lazy" width="860" height="430" /></span>
       <span className="fbanks"><BankBoxes /><small>*T&amp;C apply · Savings are MRP against our price</small></span>
     </a>
   </section>;

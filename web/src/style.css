@@ -2009,3 +2009,10 @@ main > .trustrow { margin-top:14px }
 .card .img img, .card:hover .img img { scale:1; rotate:0 }
 /* spacing check of 25 October: every content section keeps the page rhythm; the two brand bands and the bank advertisement had less or none */
 .bigbrands.solo, .bankad.bleed { margin-top:clamp(64px,9vw,120px) }
+
+/* ─ the festive banner's visual is the brand's own Diwali creative from the November brochure: a photo card at native size ─ */
+.fstage { width:min(46vw, 560px); aspect-ratio:860/430; display:block; position:relative }
+.froom { position:relative; z-index:1; display:block; width:100%; height:auto; border-radius:14px; box-shadow:0 34px 56px -24px #000000d9, 0 0 0 1px #ffd98a66 }
+.fstage .fglow { width:110%; height:100%; top:55%; background:radial-gradient(closest-side, #ffb04766, #b4336a33 55%, transparent 72%) }
+.fcamp { font-size:clamp(14px,1.3vw,17px); font-weight:600; color:#ffe7b8; letter-spacing:.01em; margin-top:-2px }
+@media (max-width:760px) { .fstage { width:100%; max-width:none; aspect-ratio:860/430 } }
