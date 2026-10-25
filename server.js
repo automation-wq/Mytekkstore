@@ -695,7 +695,7 @@ function staticHome() {
   const tvs = live().filter(p => p.cat === "Televisions"), rs = n => String.fromCharCode(8377) + n.toLocaleString("en-IN");
   const maxOff = Math.max(0, ...live().map(p => Math.round((1 - p.price / p.mrp) * 100))), minTv = tvs.length ? Math.min(...tvs.map(p => p.price)) : 0;
   const emis = tvs.filter(p => p.emi).map(p => Math.ceil(p.price / 9)), minEmi = emis.length ? Math.min(...emis) : 0;
-  const deal = !hero || !tvs.length ? "" : `<section class="dealbox wrap" aria-label="Deals on Smart TVs"><div class="dealin"><span class="deye">Deals on Smart TVs</span><h2>Up to <em>${maxOff}% off</em> on Smart TVs</h2><p>Starting at ${rs(minTv)}${minEmi ? ", No Cost EMI from " + rs(minEmi) + "/month" : ""}, bank offers and cash on delivery.</p><a class="btn" href="${catPath("Televisions")}?sort=off">Shop all deals →</a></div></section>`;
+  const deal = !hero || !tvs.length ? "" : `<section class="dealbox dealcar wrap" aria-roledescription="carousel" aria-label="Deals"><div class="dealstage"><div class="dealslide on"><div class="dealin"><span class="deye">Deals on Smart TVs</span><h2>Up to <em>${maxOff}% off</em> on Smart TVs</h2><p>Starting at ${rs(minTv)}${minEmi ? ", No Cost EMI from " + rs(minEmi) + "/month" : ""}, bank offers and cash on delivery.</p><a class="btn" href="${catPath("Televisions")}?sort=off">Shop all deals →</a></div></div></div></section>`;
   return header + '<main id="main" class="wrap">' + hero + deal + "</main>";
 }
 // The product page's first screen (breadcrumbs, main photo, brand, name, rating, price) written into the HTML the same way as the

@@ -1822,3 +1822,18 @@ main .dealbox h2 { color:#fff; font-size:clamp(28px,4vw,38px); margin:6px 0 0; l
 .offer { background:var(--deal-soft); border:1px dashed #15803d80; border-radius:12px; padding:16px 18px; box-shadow:none } .offer b { font-size:18px } .offer span { color:var(--text) }
 main .dealbox h2 { display:block } /* the site lays h2s out as a row for a right-hand link; the banner headline is one line of text */
 .dealbox .btn:not(.ghost):not([disabled]) { background:#fff; color:var(--text) } .dealbox .btn:not(.ghost):not([disabled]):hover { background:#eef0f4 } /* outranks the ink-pill rule so the button stays white on the indigo box */
+
+/* the deal carousel under the hero (home.jsx DealCarousel): three slides in one grid cell, so the stage keeps one height and
+   nothing below moves when it changes; the product slide keeps its image short so all three slides are about the same height */
+.dealstage { display:grid }
+.dealslide { grid-area:1/1; opacity:0; visibility:hidden; transition:opacity .25s, visibility 0s linear .25s }
+.dealslide.on { opacity:1; visibility:visible; transition:opacity .25s }
+.dealslide > .dealin { height:100%; box-sizing:border-box }
+.dealbox .dealin.prod { display:grid; grid-template-columns:1fr auto; align-items:center; gap:18px }
+.dealbox .dealin.prod img { height:150px; width:auto; max-width:38vw; justify-self:end; filter:drop-shadow(0 14px 18px #0f111540) }
+.dealbox .dealin p b { font-weight:800 } .dealbox .dealin p em { font-style:normal; color:var(--hi); font-weight:700 }
+.dealbox .dealin.ink { background:#2a2e45 } .dealbox .dealin.ink .deye { color:var(--hi); opacity:1 }
+.dealctl { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-top:10px }
+.dcnav { display:flex; gap:8px } .dcbtn { width:40px; height:40px; border-radius:50%; border:1px solid var(--line); background:var(--card); color:var(--text); font-size:22px; line-height:1; cursor:pointer } .dcbtn:hover { border-color:var(--accent); color:var(--accent) }
+.dcdots { display:flex; gap:8px } .dcdots button { width:10px; height:10px; padding:0; border-radius:50%; border:1px solid var(--muted); background:transparent; cursor:pointer } .dcdots button.on { background:var(--accent); border-color:var(--accent) }
+@media (max-width:760px) { .dealbox .dealin.prod img { height:110px } }

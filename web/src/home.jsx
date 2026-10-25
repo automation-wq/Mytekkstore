@@ -3,7 +3,7 @@
 // imagery and their reasons, the operating systems side by side, customer reviews, bank offers, why us, and Good to know with
 // warranty and returns. Every figure and reason is read from the catalogue, so nothing here claims what the products do not carry.
 import { useEffect, useRef, useState } from "react";
-import { m } from "motion/react";
+import { m, useReducedMotion } from "motion/react";
 import { useStore } from "./store.jsx";
 import { Card, Row, BankOffers, Ico, Icon, Qa, OsChart } from "./components.jsx";
 import { DRAW_ICONS, HOME_BANNERS, FAQ, catSizes, brandUrl, listUrl, off, starRow, productUrl, pic, picSet, osList, osUrl, brandPoints, cutout, life, emiPlans } from "./data.js";
@@ -92,7 +92,9 @@ export function Home() {
       {slides.length > 1 && <><button className="arrow prev" aria-label="Previous slide">‹</button><button className="arrow next" aria-label="Next slide">›</button>
       <div className="dots">{slides.map((_, i) => <button aria-label={"Slide " + (i + 1)} data-i={i} className={i === cur ? "on" : undefined} key={i}></button>)}</div></>}
     </div>
-    {tvs.length > 0 && <section className="dealbox wrap" aria-label="Deals on Smart TVs"><div className="dealin"><span className="deye">Deals on Smart TVs</span><h2>Up to <em>{maxOff}% off</em> on Smart TVs</h2><p>Starting at {money(minTv)}{minEmi ? ", No Cost EMI from " + money(minEmi) + "/month" : ""}, bank offers and cash on delivery.</p><a className="btn" href={listUrl({ cat: "Televisions", sort: "off" })}>Shop all deals →</a></div></section>}
+    <DealCarousel tvs={tvs} maxOff={maxOff} minTv={minTv} minEmi={minEmi} money={money} />
+    <BankOffers />
+    <section><h2>Deals of the Day <a href="/products?sort=off">View all</a></h2><p className="lead">The biggest discounts right now. Free delivery on every order, cash on delivery.</p><div className="grid">{deals.map((p, i) => <Card p={p} i={i} key={p.id} />)}</div></section>
 
 
     {CATS.length > 1 && <nav className="catrail" aria-label="Shop by category">{CATS.map(c => { const n = P.filter(p => p.cat === c).length; return <a className="crail" href={listUrl({ cat: c })} key={c}><b>{c}</b><small>{n} model{n === 1 ? "" : "s"}</small></a>; })}</nav>}
@@ -100,7 +102,6 @@ export function Home() {
     <section className="launches"><h2>Latest Launches</h2><p className="lead">Discover what's new in home entertainment.</p>
       <div className="launchgrid">{LAUNCHES.map((l, i) => <a className={"launch" + (i < 2 ? " big" : "") + (l.dark ? " dark" : "") + (cutout(l.img) ? " stage" : "")} href={l.href} key={l.title}>{cutout(l.img) ? <img src={cutout(l.img)} alt="" loading="lazy" /> : <img src={pic(l.img, 960)} srcSet={picSet(l.img)} sizes="(max-width:760px) 92vw, 46vw" alt="" loading="lazy" />}<span className="lshade"></span><span className="ltext"><span className="kicker">{l.kicker}</span><h3>{l.title}</h3><p>{l.text}</p><u>Explore now →</u></span></a>)}</div></section>
 
-    <section><h2>Deals of the Day <a href="/products?sort=off">View all</a></h2><p className="lead">The biggest discounts right now. Free delivery on every order, cash on delivery.</p><div className="grid">{deals.map((p, i) => <Card p={p} i={i} key={p.id} />)}</div></section>
 
     <section className="disco"><h2>Every room. The right screen.</h2><p className="lead">Find the perfect screen size for every space.</p>
       <div className="dgrid five">{sizeCards.map(s => <a className={"dcard" + (cutout(s.img) ? "" : " photo")} href={listUrl({ cat: "Televisions", size: s.inch + " inch TVs" })} key={s.inch}><span className="dimg"><img src={pic(s.img, 480)} srcSet={picSet(s.img)} sizes="240px" alt="" loading="lazy" width="800" height="800" /></span><span className="dbody"><b>{s.inch}"</b><small>{s.desc}</small><em>{s.from ? "from " + money(s.from) : "Coming soon"}</em></span><i className="darr" aria-hidden="true">→</i></a>)}</div></section>
@@ -119,7 +120,6 @@ export function Home() {
           {show.img && /show-(elista|telefunken)/.test(show.img) && <video className="bvid" muted loop playsInline preload="none" data-src={"/" + show.img.replace(".jpg", ".mp4")} aria-hidden="true"></video>}
           <div className="btext"><span className="kicker">{b} · {n} model{n === 1 ? "" : "s"}</span><b>{show.title}</b><p>{show.text}</p><ul>{pts.map(t => <li key={t}>{t}</li>)}</ul><u>{show.cta} →</u></div>
           {show.img ? null : cutout(prod.img) ? <img className="cut" src={cutout(prod.img)} alt={prod.brand + " " + prod.name} loading="lazy" /> : <img src={pic(prod.img)} srcSet={picSet(prod.img)} sizes="(max-width:860px) 100vw, 46vw" alt={prod.brand + " " + prod.name} width="800" height="800" loading="lazy" />}</a> : null; })}</section>
-    <BankOffers />
     <section><h2>Why Mytekkstore?</h2><p className="lead">More confidence in every purchase.</p><div className="why">
       <div><Ico shapes={DRAW_ICONS.truck} /><b>Fast delivery</b><p>Doorstep delivery across the country.</p></div>
       <div><Ico shapes={DRAW_ICONS.shield} /><b>Genuine products</b><p>Brand warranty on everything we sell.</p></div>
@@ -131,4 +131,30 @@ export function Home() {
     <Qa title="Frequently asked questions" lead="The questions buyers ask most, answered in short." list={FAQ.slice(0, 6)} more={["/buying-guide", "More about choosing a TV"]} />
     <Row title="Recently viewed" href="" list={recent.map(byId).filter(Boolean)} />
   </>;
+}
+
+// The deal carousel under the hero: the promo pattern Reliance Digital, Amazon and Vijay Sales run at the top of the page. Three
+// slides, every figure from the catalogue: the biggest saving overall, the single TV with the biggest saving, the buying guide.
+// Slides share one grid cell so the stage keeps one height (nothing below jumps); the inactive two are invisible, inert and hidden
+// from assistive tech. Advances every 7 s unless the visitor prefers reduced motion, hovers or focuses inside, or takes control.
+function DealCarousel({ tvs, maxOff, minTv, minEmi, money }) {
+  const still = useReducedMotion();
+  const [i, setI] = useState(0), [manual, setManual] = useState(false);
+  const paused = useRef(false);
+  const top = [...tvs].sort((a, b) => off(b) - off(a))[0];
+  const n = 3;
+  useEffect(() => { if (manual || still) return; const t = setInterval(() => { if (!paused.current) setI(v => (v + 1) % n); }, 7000); return () => clearInterval(t); }, [manual, still]);
+  if (!tvs.length || !top || maxOff <= 0) return null;
+  const go = v => { setManual(true); setI(((v % n) + n) % n); };
+  const labels = ["Biggest savings on Smart TVs", top.brand + " " + top.name, "TV buying guide"];
+  const slide = k => ({ className: "dealslide" + (i === k ? " on" : ""), ...(i === k ? {} : { "aria-hidden": true, inert: true }), "aria-roledescription": "slide", "aria-label": (k + 1) + " of " + n + ": " + labels[k] });
+  const topImg = cutout(top.img) || pic(top.img, 480);
+  return <section className="dealbox dealcar wrap" aria-roledescription="carousel" aria-label="Deals" onPointerEnter={() => { paused.current = true; }} onPointerLeave={() => { paused.current = false; }} onFocus={() => { paused.current = true; }} onBlur={() => { paused.current = false; }}>
+    <div className="dealstage">
+      <div {...slide(0)}><div className="dealin"><span className="deye">Deals on Smart TVs</span><h2>Up to <em>{maxOff}% off</em> on Smart TVs</h2><p>Starting at {money(minTv)}{minEmi ? ", No Cost EMI from " + money(minEmi) + "/month" : ""}, bank offers and cash on delivery.</p><a className="btn" href={listUrl({ cat: "Televisions", sort: "off" })}>Shop all deals →</a></div></div>
+      <div {...slide(1)}><div className="dealin prod"><div><span className="deye">Biggest saving right now</span><h2>{top.brand} {top.name}</h2><p><b>{money(top.price)}</b> · MRP {money(top.mrp)} · <em>{off(top)}% off</em>{top.emi ? " · No Cost EMI from " + money(emiPlans(top.price)[2][1]) + "/month" : ""}</p><a className="btn" href={productUrl(top)}>Buy now →</a></div><img src={topImg} alt={top.brand + " " + top.name} loading="lazy" width="800" height="800" /></div></div>
+      <div {...slide(2)}><div className="dealin ink"><span className="deye">Not sure which TV?</span><h2>Your complete TV buying guide</h2><p>Screen size for your room, 4K or Full HD, Google TV or WebOS, and the ports you need. Everything before you choose.</p><a className="btn" href="/buying-guide">Read the guide →</a></div></div>
+    </div>
+    <div className="dealctl"><div className="dcnav" role="group" aria-label="Deal controls"><button type="button" className="dcbtn" onClick={() => go(i - 1)} aria-label="Previous deal">‹</button><button type="button" className="dcbtn" onClick={() => go(i + 1)} aria-label="Next deal">›</button></div><div className="dcdots" role="tablist" aria-label="Deals">{labels.map((l, k) => <button type="button" role="tab" aria-selected={i === k} aria-label={l} className={i === k ? "on" : undefined} onClick={() => go(k)} key={l} />)}</div></div>
+  </section>;
 }
