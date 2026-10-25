@@ -56,6 +56,21 @@ export function autoStory(p) {
   const g = galleryOf(p), by = { Picture: g[0], Smart: g[1] || g[0], Sound: g[4] || g[0], Design: g.length > 1 ? life("aplusDesign", "img/kv-tv.jpg") : g[0] };
   return blocks.map(b => ({ ...b, img: by[b.kicker] }));
 }
+// the detail modules under the A+ story (product.jsx): every line read from this product's own specification sheet, plus two
+// range-level facts from the brand's November 2026 brochure (the WebOS Hub app row and the 1+1 year warranty table)
+export function aplusExtras(p) {
+  const spec = k => ((p.specs || []).find(([n]) => n.toLowerCase() === k) || [])[1] || "";
+  const inch = +((/\((\d+) inch\)/.exec(p.name) || [])[1] || 0), res = spec("resolution"), sound = spec("sound output"), ports = spec("ports"), disp = spec("display type"), hz = spec("refresh rate");
+  const glance = [["Screen", spec("screen size")], ["Picture", res.split(",")[0]], ["Panel", [disp, hz].filter(Boolean).join(" · ")], ["Smart", p.os || spec("smart tv")], ["Sound", sound], ["Ports", ports]].filter(([, v]) => v);
+  const apps = /webos/i.test(p.os) ? ["Netflix", "YouTube", "Prime Video", "Apple TV"] : /google/i.test(p.os) ? ["Netflix", "YouTube", "Prime Video", "Google Play apps"] : [];
+  const portList = [...ports.matchAll(/(\d+)\s*(HDMI|USB)/gi)].map(m => [m[2].toUpperCase(), +m[1]]);
+  // seating distance by screen size (the buying guide's table), so the buyer knows the size suits the room before paying
+  const room = inch >= 75 ? ["3.0 m and more", "large rooms and home cinemas"] : inch >= 65 ? ["2.5 – 3.0 m", "big living rooms"] : inch >= 50 ? ["2.0 – 2.6 m", "the living room"] : inch >= 40 ? ["1.8 – 2.2 m", "living rooms and bedrooms"] : inch ? ["1.2 – 1.8 m", "bedrooms, kitchens and compact rooms"] : null;
+  // Elista's Google TV and WebOS models from 32 inch carry 1+1 year warranty on registration (brochure warranty table); anything else keeps the manufacturer's standard cover
+  const warranty = p.brand === "Elista" && p.os && inch >= 32 ? ["1 + 1 year warranty", "One year from the brand, and a second year free when you register the TV after purchase."] : ["Brand warranty", "Serviced through " + p.brand + "'s own service network."];
+  return { glance, apps, ports: portList, portsText: ports, room: room && { inch, dist: room[0], note: room[1] },
+    care: [warranty, ["Free delivery", "Delivered to your door, with cash on delivery available."], [POLICY.returnDays + "-day returns", "Return within " + POLICY.returnDays + " days of delivery under the returns policy."]] };
+}
 // what each brand stands for, on the About page and at the top of its product list. DRAFT wording for the client to confirm.
 export const BRAND_BLURB = { Elista: "An Indian consumer electronics brand making Smart TVs and home appliances for Indian homes, each with the brand's own warranty.",
   Telefunken: "A German electronics name since 1903, sold in India under licence, with televisions and home appliances built to the brand's standard." };

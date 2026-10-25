@@ -51,7 +51,7 @@ function SignIn({ CFG }) {
       <ul><li><Icon k="check" />Faster checkout with a saved address</li><li><Icon k="check" />Order tracking and order history</li><li><Icon k="check" />Reviews and wishlist</li></ul></div></aside>
     <div className="panel acard">
       <div><h1>{next === "/checkout" ? "Sign in to continue to checkout" : "Sign in or create an account"}</h1>
-        <p className="muted small">{next === "/checkout" ? "An account keeps your orders, address and order tracking in one place. It takes a minute." : "A one-time code by SMS or email, your password, or your Google account."}</p></div>
+        <p className="muted small">{next === "/checkout" ? "An account keeps your orders, address and order tracking in one place. It takes a minute." : "A one-time code by SMS or email, your password" + (CFG.google ? ", or your Google account." : ".")}</p></div>
       {CFG.google && <><div className="gbtn" id="gbtn"></div><div className="or"><span>or</span></div></>}
       <Tabs tabs={[["t-phone", "Mobile number or email"], ["t-email", "Password"]]}>
         {tab => <>

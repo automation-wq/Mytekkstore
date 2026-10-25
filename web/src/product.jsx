@@ -6,7 +6,7 @@ import { useStore } from "./store.jsx";
 import { api, qs, load, save, track, whenShown } from "./api.js";
 import { Photo, Stars, Buy, Heart, Row, Box, Form, Ico, Icon, Qa, BankStrip } from "./components.jsx";
 import { Banner } from "./banner.jsx";
-import { DEFAULT_FEATURES, BANK_OFFERS, WARRANTY_QA, SPEC_GROUPS, osUrl, autoStory, callouts, cutout, galleryOf, GALLERY_LABELS, life, specIcon, catSizes, catUrl, brandUrl, off, avg, starRow, etaText, emiPlans, productUrl, pic, picSet } from "./data.js";
+import { DEFAULT_FEATURES, BANK_OFFERS, WARRANTY_QA, SPEC_GROUPS, osUrl, autoStory, aplusExtras, callouts, cutout, galleryOf, GALLERY_LABELS, life, specIcon, catSizes, catUrl, brandUrl, off, avg, starRow, etaText, emiPlans, productUrl, pic, picSet } from "./data.js";
 
 const $ = (s, el = document) => el.querySelector(s);
 const $$ = (s, el = document) => [...el.querySelectorAll(s)];
@@ -83,6 +83,7 @@ export function Product() {
   const resName = (/4K/i.test(spec(p, "resolution")) ? "4K Ultra HD" : /Full HD/i.test(spec(p, "resolution")) ? "Full HD" : /HD/i.test(spec(p, "resolution")) ? "HD Ready" : "");
   const spin = p.spin && p.spin.length >= 8 ? p.spin : null; // 360° frames turn the viewer on; otherwise the normal photo + zoom
   const story = p.story && p.story.length ? p.story : autoStory(p); // A+ content: the admin's blocks, or blocks built from the specifications
+  const x = aplusExtras(p); // the detail modules under the story: at a glance, apps, ports, the right size, peace of mind
   const inch = +((/\((\d+) inch\)/.exec(p.name) || [])[1] || 0); // A+ hero headline varies by screen size so it never reads templated
   const aheroTitle = inch >= 55 ? "The big screen, done right." : inch >= 43 ? "Made for the way you watch." : "Smart entertainment, made simple.";
   // the banner line is built from this TV's own specifications: picture, sound, system, then the store's three promises
@@ -155,7 +156,11 @@ export function Product() {
         <div className="astats">{callouts(p).map(([big, small]) => <div key={big + small}><b>{big}</b><small>{small}</small></div>)}</div></div></div>
       <div className="showcase">{cutout(p.img) ? <img className="cut" src={cutout(p.img)} alt="" loading="lazy" /> : <img className="tilep" src={pic(p.img)} srcSet={picSet(p.img)} sizes="(max-width:860px) 80vw, 40vw" alt="" loading="lazy" width="800" height="800" />}
         <div><span className="kicker">{story[0].kicker}</span><h2>{story[0].title}.</h2><p>{story[0].text}</p></div></div>
-      {story.slice(1).map((b, i) => <div className={"ablock" + (i % 2 ? " flip" : "") + (i === 1 ? " dark" : "")} key={i}>{b.img && (cutout(b.img) ? <img className="cut" src={cutout(b.img)} alt="" loading="lazy" /> : <img src={pic(b.img, 960)} srcSet={picSet(b.img)} sizes="(max-width:860px) 100vw, 50vw" alt="" loading="lazy" />)}<div>{b.kicker && <span className="kicker">{b.kicker}</span>}<h3>{b.title}</h3><p>{b.text}</p></div></div>)}
+      {x.glance.length > 2 && <div className="ablock aglance"><div><span className="kicker">At a glance</span><h3>Every detail, in one place.</h3><p>What this {p.brand}{spec(p, "screen size") ? " " + spec(p, "screen size") : ""} gives you, straight from its specification sheet.</p></div><ul>{x.glance.map(([k, v]) => <li key={k}><small>{k}</small><b>{v}</b></li>)}</ul></div>}
+      {story.slice(1).map((b, i) => <div className={"ablock" + (i % 2 ? " flip" : "") + (i === 1 ? " dark" : "")} key={i}>{b.img && (cutout(b.img) ? <img className="cut" src={cutout(b.img)} alt="" loading="lazy" /> : <img src={pic(b.img, 960)} srcSet={picSet(b.img)} sizes="(max-width:860px) 100vw, 50vw" alt="" loading="lazy" />)}<div>{b.kicker && <span className="kicker">{b.kicker}</span>}<h3>{b.title}</h3><p>{b.text}</p>{b.kicker === "Smart" && x.apps.length > 0 && <div className="aapps">{x.apps.map(a => <span key={a}>{a}</span>)}</div>}</div></div>)}
+      {x.ports.length > 0 && <div className="ablock aports dark flip"><div className="portbay" aria-hidden="true">{x.ports.map(([k, n]) => <div key={k}><span className="pname">{k}</span>{Array.from({ length: n }, (_, i) => <i key={i} className={"port " + k.toLowerCase()}></i>)}</div>)}</div><div><span className="kicker">Connectivity</span><h3>Plug in everything.</h3><p>{x.portsText} at the back: a set-top box, a game console or a laptop on HDMI, and a pen drive or hard disk on USB for your own films and photos.</p></div></div>}
+      {x.room && <div className="ablock aroom"><div className="roomfig" aria-hidden="true"><i className="tvline"><b>{x.room.inch + "\""}</b></i><span className="dist">{x.room.dist}</span><i className="sofa"></i></div><div><span className="kicker">The right size</span><h3>Made for {x.room.note}.</h3><p>Sit about {x.room.dist} from a {x.room.inch} inch screen: close enough to see the detail, far enough that the picture stays smooth. When in doubt, go one size up.</p></div></div>}
+      <div className="ablock acare"><div><span className="kicker">Peace of mind</span><h3>Covered, delivered, returnable.</h3><p>Every order comes with the store's promises and the brand's warranty.</p></div><ul>{x.care.map(([t, d]) => <li key={t}><b>{t}</b><span>{d}</span></li>)}</ul></div>
     </section>}
     <section id="tabs">
       <div className="tabbar">{[["t-desc", "Description"], ["t-specs", "Specifications"], ["t-del", "Delivery and returns"], ["t-rev", "Reviews (" + (p.reviews || []).length + ")"]].map(([id, label]) => <button className={tab === id ? "on" : undefined} data-tab={id} key={id}>{label}{tab === id && <m.i className="ink" layoutId="tab-ink" transition={INK} />}</button>)}</div>
