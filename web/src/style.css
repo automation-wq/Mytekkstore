@@ -2222,3 +2222,6 @@ main > .trustrow { margin-top:clamp(48px,7vw,96px) }
 @media (max-width:860px) { .acard { padding:22px 18px } }
 
 .wstage { padding:20px 28px 14px; min-height:0; place-items:center } .wimg { width:min(100%,340px) } /* the whole render, feet included */
+
+.acard .expired { margin:0; padding:12px 14px; border-radius:12px; background:#fef3c7; color:#92400e; font-size:14px; line-height:1.5 }
+.acard .ahead:has(.expired) { display:grid; gap:10px }

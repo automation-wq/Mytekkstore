@@ -66,7 +66,8 @@ function SignIn({ CFG }) {
         <m.ul variants={GROUP}>{["Faster checkout with a saved address", "Order tracking and history", "Reviews and wishlist", "Festive and bank offers first"].map(t => <m.li variants={UP} key={t}><Icon k="check" />{t}</m.li>)}</m.ul></div></m.aside>
     <m.div className="panel acard" initial="hide" animate="show" variants={GROUP}>
       <m.div variants={UP} className="ahead"><h1 className={next === "/checkout" ? "" : "srh"}>{next === "/checkout" ? "Sign in to continue to checkout" : "Sign in or create an account"}</h1>
-        {next === "/checkout" && <p className="muted small">An account keeps your orders, address and order tracking in one place. It takes a minute.</p>}</m.div>
+        {qs.get("expired") === "1" ? <p className="expired" role="status">Your sign-in ended before the order went through (the store was restarted). Nothing was placed or charged. Sign in again and your cart is waiting at checkout.</p>
+          : next === "/checkout" && <p className="muted small">An account keeps your orders, address and order tracking in one place. It takes a minute.</p>}</m.div>
       {CFG.google && <m.div variants={UP}><div className="gbtn" id="gbtn"></div><div className="or"><span>or</span></div></m.div>}
       <m.div variants={UP}><Tabs tabs={tabs}>
         {tab => <>

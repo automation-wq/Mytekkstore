@@ -60,12 +60,15 @@ export function Checkout() {
   const [place, setPlace] = useState("");
   useEffect(() => { document.title = "Checkout | Mytekkstore"; }, []);
   useEffect(() => { if (cartCount()) track("begin_checkout", { value: cartTotal(), signedIn: !!me }); if (cartCount() && !me) location.replace("/account?next=/checkout"); }, []); // customers must sign in before checkout
-  if (!cartCount()) return <Box title="Nothing to check out" text="Your cart is empty." href="/" cta="Continue shopping" />;
-  if (!me) return null;
   // the delivery place under the pincode, from India Post (the field still accepts any pincode)
   const placeOf = async v => { setPlace(""); if (/^\d{6}$/.test(v)) try { const d = await api("pincode/" + v); if (d.district) setPlace("Delivering to " + d.district + ", " + d.state); } catch {} };
-  useEffect(() => { placeOf(me.pin || ""); }, []);
+  useEffect(() => { if (me) placeOf(me.pin || ""); }, [me && me.id]); // above the early returns: after them it rendered fewer hooks once the cart emptied (React error 300 on every placed order)
+  if (!cartCount()) return <Box title="Nothing to check out" text="Your cart is empty." href="/" cta="Continue shopping" />;
+  if (!me) return null;
   const submit = async f => {
+    try { await placeOrder(f); } catch (e) { if (/sign in/i.test(e.message || "")) { location.href = "/account?next=%2Fcheckout&expired=1"; return; } throw e; } // a sign-in the server no longer knows: back to sign in, with the reason, not a bare error
+  };
+  const placeOrder = async f => {
     const items = Object.entries(cart).map(([id, qty]) => ({ id: +id, qty }));
     const online = f.pay !== "cod";
     let id;
