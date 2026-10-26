@@ -64,7 +64,7 @@ export function Home() {
   const resCards = [["4K Ultra HD", "Four times the detail of Full HD."], ["Full HD", "Crisp, clear everyday viewing."], ["HD Ready", "Great value for smaller rooms."]].map(([res, text], i) => { const ps = tvs.filter(p => resOf(p) === res).sort((a, b) => a.price - b.price); return { res, text, img: life(["res4k", "resfhd", "reshd"][i], ps[0] && (cutout(ps[0].img) || ps[0].img)), from: minP(ps) }; }).filter(c => c.from);
   // display technology from the specifications (LED today; QLED/OLED appear when the catalogue has them), kept apart from resolution
   const typeOf = p => spec(p, "display type").split(",")[0].trim();
-  const TECH_NOTE = { LED: "LED backlight on every model we stock", QLED: "Quantum-dot colour", OLED: "Self-lit pixels, perfect blacks" };
+  const TECH_NOTE = { LED: "LED backlight on every model we stock", "Mini-LED PRO": "Brighter. Deeper. Smoother. More immersive.", QLED: "Quantum-dot colour", OLED: "Self-lit pixels, perfect blacks" }; // the Mini-LED line is the brochure's own
   const techCards = [...new Set(tvs.map(typeOf).filter(Boolean))].sort().map(t => { const ps = tvs.filter(p => typeOf(p) === t).sort((a, b) => a.price - b.price); return { res: t, text: TECH_NOTE[t] || "Screen technology", img: life("tech" + t, ps[0] && (cutout(ps[0].img) || ps[0].img)), from: minP(ps), href: listUrl({ cat: "Televisions", type: t }) }; });
   const detailCards = [...techCards, ...resCards.map(c => ({ ...c, href: listUrl({ cat: "Televisions", res: c.res }) }))];
   // the two brand showcases (client brief, section 12): the brief's headlines, a bright room for Elista, a cinematic room for Telefunken
