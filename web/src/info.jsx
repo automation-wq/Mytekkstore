@@ -10,7 +10,7 @@ import { KV_IMG, CAT_SIZE, BANK_OFFERS, FAQ, CONTACT, STORES, POLICY, SHOW_STORE
 import { countUp } from "./motion.js";
 
 const PAGES = {
-  about: ["About Mytekkstore", "Mytekkstore", "Good electronics, made simple.", "Elista and Telefunken Smart TVs at factory prices, delivered free with cash on delivery and the brand's own warranty.", "Televisions"],
+  about: ["About Mytekkstore", "Mytekkstore", "Good electronics, made simple.", "Elista Smart TVs at factory prices, delivered free with cash on delivery and the brand's own warranty.", "Televisions"],
   contact: ["Contact us", "Help", "We are here to help.", "Orders, delivery, returns and service. Write to us and we reply by email.", "Televisions"],
   stores: ["Store locator", "Visit us", "Find a store.", "Store addresses are being added. Until then, every product ships free to your door.", "Televisions"],
   shipping: ["Shipping and delivery", "Delivery", "Free delivery, every order.", "Across India, usually in 3 to 5 days, with cash on delivery if you prefer.", "Televisions"],

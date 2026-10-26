@@ -106,7 +106,7 @@ export function brandPoints(P, brand) {
 // the client supplies the final ones. kind "photo" uses a lifestyle photo, "brand" shows the brand's biggest TV with its reasons
 // (brandPoints), "promo" opens the offers page with the biggest discount.
 export const HOME_BANNERS = [
-  { kind: "photo", eyebrow: "", h: ["Unbelievable prices,", "straight from the factory."], s: "Elista and Telefunken Smart TVs, delivered free, cash on delivery.", href: "/televisions", cta: "Explore TVs", im: "img/hero-a.jpg" },
+  { kind: "photo", eyebrow: "", h: ["Unbelievable prices,", "straight from the factory."], s: "Elista Smart TVs, delivered free, cash on delivery.", href: "/televisions", cta: "Explore TVs", im: "img/hero-a.jpg" },
   { kind: "brand", brand: "Elista", h: ["Brilliant entertainment.", "Beautifully yours."], im: "img/life-room.jpg" },
   { kind: "brand", brand: "Telefunken", h: ["Bring every moment", "to life."], im: "img/life-cinema.jpg" },
   { kind: "promo", eyebrow: "Limited time", h: ["Festive offers."], href: "/offers", cta: "See the offers", im: "img/hero-b.jpg" },
@@ -124,7 +124,7 @@ export const FAQ = [
   ["Is delivery free?", "Yes. Every order is delivered free, usually within 3 to 5 days. Enter your pincode on any product page to check your area.", null],
   ["Can I pay when the order arrives?", "Yes. Cash on delivery is available on every order.", null],
   ["How does No Cost EMI work?", "On products marked No Cost EMI, the price is split over 3, 6 or 9 months on participating bank credit cards with no extra interest. The plans are listed on each product page.", ["/offers", "See the offers"]],
-  ["Are the products genuine?", "Yes. Mytekkstore sells genuine Elista and Telefunken products, each with the brand's warranty.", null],
+  ["Are the products genuine?", "Yes. Mytekkstore sells genuine Elista products, each with the brand's warranty.", null],
   ["Google TV or WebOS: which should I pick?", "Both stream the usual apps. Google TV adds Google Assistant on the remote and recommendations across your apps; WebOS keeps a quick card-style home screen. The Televisions page shows them side by side.", ["/televisions#os", "Compare the operating systems"]],
   WARRANTY_QA[0], WARRANTY_QA[1],
   ["How do I track my order?", "Sign in and open your account: every order shows its status from Placed to Delivered.", ["/account", "Go to my account"]],
@@ -206,7 +206,7 @@ export const BANK_OFFERS = [
   ["Axis Bank", "₹1,000 off", "On Axis Bank cards for orders above ₹25,000.", "#97144d"],
 ];
 // The festive offers page. Set ends to a date such as "2026-11-15T23:59:59+05:30" to show a live countdown; empty hides it.
-export const FESTIVE = { title: "Festive Offers", sub: "Big savings on Elista and Telefunken Smart TVs", ends: "" };
+export const FESTIVE = { title: "Festive Offers", sub: "Big savings on Elista Smart TVs", ends: "" };
 
 // ===== category extras: "Top features" at the end of every category page. Sample marketing text: only claims the catalogue's =====
 // specifications support. (The TV size guide was removed on 2026-10-12: the client's buyers already know the size they want.)

@@ -74,7 +74,7 @@ export function Home() {
     { kicker: "Telefunken", title: "Cinematic Viewing, Reimagined", text: "Big-screen Google TV with Dolby Audio.", href: brandUrl("Telefunken"), img: life("launch2", "img/life-cinema.jpg"), dark: true },
     { kicker: "Apps built in", title: "Smart Entertainment", text: "Every app built in, no set-top box.", href: "/televisions#os", img: life("launch3", "img/p2.jpg") },
     { kicker: "Big screen", title: "The Big-Screen Experience", text: "Made for movie nights.", href: listUrl({ cat: "Televisions", size: "65 inch TVs" }), img: life("launch4", "img/p3.jpg") },
-    { kicker: "New", title: "Next-Generation Smart TVs", text: "Discover the latest from Elista and Telefunken.", href: "/televisions", img: life("launch5", "img/p0.jpg") },
+    { kicker: "New", title: "Next-Generation Smart TVs", text: "Discover the latest from Elista.", href: "/televisions", img: life("launch5", "img/p0.jpg") },
   ].map(l => ({ ...l, dark: l.dark || !cutout(l.img) })); // a room photo gets the darker shade; a render sits on its own dark stage
   const brandBig = (b, i) => { const prod = biggest(b), pts = brandPoints(P, b), n = P.filter(p => p.brand === b).length, tone = (HOME_BANNERS.find(s => s.brand === b) || {}).tone, show = BRAND_SHOW[b] || { title: b + ".", text: "Discover the " + b + " television collection.", cta: "Explore " + b + " TVs", img: "" };
         return prod ? <a className={"bbrand" + (i % 2 ? " flip" : "") + (show.img ? " photo" : "")} href={brandUrl(b)} key={b} style={tone && !show.img ? { background: tone } : undefined}>

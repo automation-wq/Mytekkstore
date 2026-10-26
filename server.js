@@ -783,7 +783,7 @@ const siteUrl = req => (req.headers["x-forwarded-proto"] || "http") + "://" + (r
 const INFO_PAGES = ["about", "contact", "stores", "shipping", "returns", "terms", "privacy", "buying-guide"];
 // title and description of each info page (the page itself is drawn by web/src/info.jsx)
 const INFO_TITLES = {
-  about: ["About Mytekkstore", "Mytekkstore sells genuine Elista and Telefunken electronics at factory prices, delivered free with cash on delivery and the brand's warranty."],
+  about: ["About Mytekkstore", "Mytekkstore sells genuine Elista electronics at factory prices, delivered free with cash on delivery and the brand's warranty."],
   contact: ["Contact us", "Write to Mytekkstore about orders, delivery, returns and service. We reply by email."],
   stores: ["Store locator", "Find a Mytekkstore store, or check delivery to your pincode: free delivery across India, usually in 3 to 5 days."],
   shipping: ["Shipping and delivery", "Free delivery on every Mytekkstore order, usually in 3 to 5 days, with cash on delivery. Check your pincode before you order."],
@@ -816,8 +816,8 @@ function resolveClean(pathname) { // -> { file, params } for a clean address, el
 // sharing tags and schema.org data into each page before sending it. Product and category pages get their own.
 function seoTags(req, url) {
   const base = siteUrl(req), q = url.searchParams, file = url.pathname, tag = (k, v) => `<meta property="${k}" content="${escHtml(v)}">`;
-  let title = "Mytekkstore | Elista and Telefunken " + catWords() + " at factory prices", img = base + "/img/hero0.jpg", ld = null, robots = "";
-  let desc = "Shop Elista and Telefunken " + catWords() + " at Mytekkstore, straight from the factory. Genuine products with brand warranty, free delivery, cash on delivery.";
+  let title = "Mytekkstore | Elista " + catWords() + " at factory prices", img = base + "/img/hero0.jpg", ld = null, robots = "";
+  let desc = "Shop Elista " + catWords() + " at Mytekkstore, straight from the factory. Genuine products with brand warranty, free delivery, cash on delivery.";
   let canonical = file + url.search; // the clean address of this page; the old .html addresses point at it
   const p = file === "/product.html" && db.products.find(p => p.id === +q.get("id"));
   const cat = file === "/category.html" && q.get("cat"), brand = file === "/category.html" && !cat && q.get("brand"), info = file === "/page.html" && q.get("p");
@@ -841,11 +841,11 @@ function seoTags(req, url) {
   } else if (file === "/offers.html") {
     canonical = "/offers";
     title = "Festive offers | Mytekkstore";
-    desc = "Festive offers at Mytekkstore: top deals on Elista and Telefunken TVs, washing machines and ACs, bank offers and No Cost EMI.";
+    desc = "Festive offers at Mytekkstore: top deals on Elista TVs, washing machines and ACs, bank offers and No Cost EMI.";
   } else if (cat) {
     canonical = catPath(cat);
     title = cat + " | Mytekkstore";
-    desc = "Elista and Telefunken " + cat.toLowerCase() + " at Mytekkstore: every model compared side by side, with a buying guide, free delivery and cash on delivery.";
+    desc = "Elista " + cat.toLowerCase() + " at Mytekkstore: every model compared side by side, with a buying guide, free delivery and cash on delivery.";
     const first = db.products.find(p => p.cat === cat);
     if (first) img = base + "/" + first.img;
     ld = [
@@ -855,7 +855,7 @@ function seoTags(req, url) {
   } else if (file === "/category.html") {
     canonical = brand ? "/products?brand=" + encodeURIComponent(brand) : "/products";
     title = (brand || "All products") + " | Mytekkstore";
-    desc = (brand ? "All " + brand + " " : "All Elista and Telefunken ") + catWords() + " at Mytekkstore, with filters for " + (brand ? "" : "brand, ") + "size, operating system, price and discount.";
+    desc = (brand ? "All " + brand + " " : "All Elista ") + catWords() + " at Mytekkstore, with filters for " + (brand ? "" : "brand, ") + "size, operating system, price and discount.";
     if (q.has("wish") || q.get("q")) robots = "noindex"; // a personal wishlist and search results are not landing pages
   } else if (info && INFO_TITLES[info]) {
     canonical = "/" + info;
