@@ -30,7 +30,7 @@ function SignIn({ CFG }) {
   const sendCode = async () => {
     const to = otpRef.current.to.value.trim(), { via, demoCode } = await api("otp/send", "POST", { to });
     save("signin", to);
-    setNote(via === "demo" ? `No SMS or email provider is connected yet, so here is your code: ${demoCode}` : `We sent a code by ${via === "email" ? "email" : "SMS"} to ${to}.`);
+    setNote(via === "demo" ? `Demo mode — codes are shown here until an SMS or email service is connected. Your code: ${demoCode}` : `We sent a code by ${via === "email" ? "email" : "SMS"} to ${to}.`);
     setCodeRow(true); otpRef.current.code.value = ""; setTimeout(() => otpRef.current.code.focus(), 0);
     setBtnText("Verify and sign in"); setStage("verify"); setLeft(30);
   };
@@ -53,6 +53,11 @@ function SignIn({ CFG }) {
     };
     document.head.append(g);
   }, []);
+  // which routes to offer: one-time codes only when they can arrive (an SMS or email service) or in demo mode (OTP_DEMO, or localhost);
+  // with no real service the password route comes first and the demo route is named as such, so a customer never meets a code that
+  // only appears on the page without knowing why (owner note, 26 Oct)
+  const real = !!(CFG.sms || CFG.mail), isLocal = /^(localhost|127.0.0.1|[::1])$/.test(location.hostname), demoOnly = !real && (CFG.demoCodes || isLocal);
+  const tabs = [...(real ? [["t-phone", "Mobile number or email"]] : []), ["t-email", "Password"], ...(demoOnly ? [["t-phone", "One-time code (demo)"]] : [])];
   return <div className="auth">
     <m.aside className="aside cine" initial="hide" animate="show" variants={GROUP}>
       <picture className="aimg2" aria-hidden="true"><img src={pic("img/life-cinema.jpg", 960)} srcSet={picSet("img/life-cinema.jpg")} sizes="(max-width:860px) 100vw, 50vw" alt="" decoding="async" /></picture>
@@ -61,9 +66,9 @@ function SignIn({ CFG }) {
         <m.ul variants={GROUP}>{["Faster checkout with a saved address", "Order tracking and history", "Reviews and wishlist", "Festive and bank offers first"].map(t => <m.li variants={UP} key={t}><Icon k="check" />{t}</m.li>)}</m.ul></div></m.aside>
     <m.div className="panel acard" initial="hide" animate="show" variants={GROUP}>
       <m.div variants={UP}><h1>{next === "/checkout" ? "Sign in to continue to checkout" : "Sign in or create an account"}</h1>
-        <p className="muted small">{next === "/checkout" ? "An account keeps your orders, address and order tracking in one place. It takes a minute." : "A one-time code by SMS or email, your password" + (CFG.google ? ", or your Google account." : ".")}</p></m.div>
+        <p className="muted small">{next === "/checkout" ? "An account keeps your orders, address and order tracking in one place. It takes a minute." : (real ? "A one-time code by SMS or email, your password" : "Your email and password") + (CFG.google ? ", or your Google account." : ".")}</p></m.div>
       {CFG.google && <m.div variants={UP}><div className="gbtn" id="gbtn"></div><div className="or"><span>or</span></div></m.div>}
-      <m.div variants={UP}><Tabs tabs={[["t-phone", "Mobile number or email"], ["t-email", "Password"]]}>
+      <m.div variants={UP}><Tabs tabs={tabs}>
         {tab => <>
           <div className="tabpane" id="t-phone" hidden={tab !== "t-phone"}><Form className="form" id="otp" noValidate ref={otpRef} onSubmit={submit} after={busy => <div className="arow"><button className="btn" disabled={busy}>{btnText}</button>{stage === "verify" && <button type="button" className="link" id="resend" disabled={left > 0} onClick={resend}>{left > 0 ? `Send a new code in ${left}s` : "Send a new code"}</button>}</div>}>
             <label>Mobile number or email<input name="to" type="text" required autoComplete="username" placeholder="98765 43210 or you@example.com" maxLength="120" defaultValue={load("signin", "")} /></label>

@@ -371,7 +371,7 @@ async function run() {
 
     step = "sign in with a mobile number and a code";
     await b.goto(base + "/account.html");
-    assert.deepEqual(await b.ev(`[...document.querySelectorAll(".acard .tabbar button")].map(x => x.textContent)`), ["Mobile number or email", "Password"]);
+    assert.deepEqual(await b.ev(`[...document.querySelectorAll(".acard .tabbar button")].map(x => x.textContent)`), ["Password", "One-time code (demo)"]); // no SMS or email service here: the password route first, the demo route named as such
     assert.equal(await b.ev(`document.querySelectorAll("#gbtn").length`), 0, "no Google button until a client id is set");
     const otpText = sel => b.ev(`document.querySelector(${JSON.stringify(sel)}).textContent`);
     await b.ev(`(() => { const f = document.querySelector("#otp"); f.to.value = "98765 43210"; f.requestSubmit(); })()`);
