@@ -2345,3 +2345,7 @@ main > section, main > .fest, main > .cols, .bigbrands.solo, .bankad.bleed, main
 
 /* the banner picture fills the slide on every width (on phones the picture box took its own height and left the hero empty below it) */
 .slide.k-banner { position:absolute; inset:0 } .slide.k-banner .bannerlink { position:absolute; inset:0 } .slide.k-banner picture { position:absolute; inset:0 } .slide.k-banner img { position:absolute; inset:0; width:100%; height:100% }
+
+/* phones: the hero ends above the bottom tab bar so its buttons are never behind it; the product tabs take the full width */
+@media (max-width:760px) { .hero, .hero.auto { height:min(62vh,520px); min-height:400px } .slide.k-banner .hpanel { padding-bottom:22px } }
+#tabs, #tabs .tabpane, #tabs .specgrid { max-width:none }
