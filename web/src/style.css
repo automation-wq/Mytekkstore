@@ -2225,3 +2225,31 @@ main > .trustrow { margin-top:clamp(48px,7vw,96px) }
 
 .acard .expired { margin:0; padding:12px 14px; border-radius:12px; background:#fef3c7; color:#92400e; font-size:14px; line-height:1.5 }
 .acard .ahead:has(.expired) { display:grid; gap:10px }
+
+/* ─ the sign-in page after the owner's references (26 Oct): a black brand panel beside a white centred form ─ */
+.auth.mono { gap:0; border-radius:28px; overflow:hidden; box-shadow:0 40px 90px -40px #0b0e1480; background:var(--card); grid-template-columns:1fr 1.1fr }
+.aside.cine.mono { border-radius:0; background:#050608; justify-content:center; min-height:640px }
+.aside.cine.mono .aimg2, .aside.cine.mono::after { display:none }
+.amark { position:relative; display:grid; place-items:center; margin:clamp(24px,5vw,56px) auto 0; width:min(44%,200px); aspect-ratio:1 }
+.amark svg { width:100%; height:100%; filter:drop-shadow(0 30px 40px #000) }
+.aglow2 { position:absolute; left:8%; right:8%; bottom:-16%; height:22%; border-radius:50%; background:radial-gradient(ellipse,#ffffff33,#ffffff0a 50%,transparent 72%); filter:blur(14px) }
+.aside.cine.mono .atext { padding:clamp(24px,4vw,44px) }
+.aside.cine.mono .kicker { color:#9aa3b2 }
+.aside.cine.mono .asub { color:#ffffffb8; font-size:15px; line-height:1.55; margin:10px 0 0; max-width:42ch }
+.afloat { margin-top:22px; padding:18px 20px; border-radius:20px 20px 20px 6px; background:#ffffff12; border:1px solid #ffffff22; backdrop-filter:blur(8px); display:grid; gap:6px; color:#fff; max-width:420px }
+.afloat b { font-size:18px; letter-spacing:-.3px } .afloat span { font-size:13.5px; color:#ffffffc0; line-height:1.5 }
+.acard.mono { border:0; border-radius:0; background:var(--card); box-shadow:none; padding:clamp(28px,5vw,64px) clamp(24px,5vw,64px); display:grid; align-content:center }
+.acard.mono .tabbar { display:none }
+.acard.mono .fhead { text-align:center; justify-items:center; margin-bottom:10px }
+.acard.mono .avatar { width:44px; height:44px; border-radius:50%; background:var(--tile); display:grid; place-items:center; margin:0 auto 10px } .acard.mono .avatar .ic { width:20px; height:20px; color:var(--muted) }
+.acard.mono .fhead h2 { font-size:clamp(26px,3vw,34px); letter-spacing:-1px }
+.acard.mono .fld input { background:var(--tile); border-color:transparent; box-shadow:inset 0 1px 2px #0000000f } .acard.mono .fld input:focus { background:var(--card); border-color:#0b0e14; box-shadow:0 0 0 4px #0b0e1414 }
+.acard.mono .btn.full { background:#0b0e14; color:#fff; border-radius:999px; box-shadow:0 14px 28px -14px #0b0e14cc } .acard.mono .btn.full:hover { background:#1c2030 }
+.acard.mono .frow { display:flex; justify-content:flex-end; margin:-6px 0 0; font-size:13px } .acard.mono .frow .link { padding:0; color:var(--muted); font-weight:600 }
+.acard.mono .or { display:flex; align-items:center; gap:12px; color:var(--muted); font-size:13px; margin:2px 0 } .acard.mono .or::before, .acard.mono .or::after { content:""; flex:1; height:1px; background:var(--line) }
+.acard.mono .btn.alt { width:100%; justify-content:center; height:46px; border-radius:999px; background:var(--card); border:1px solid var(--line); color:var(--text); box-shadow:0 1px 2px #0000000a } .acard.mono .btn.alt:hover { border-color:var(--text); background:var(--card) }
+.acard.mono .swap { text-align:center } .acard.mono .atrust { margin-top:14px }
+.acard.mono #otp label { font-size:13px; font-weight:700 } .acard.mono #otp input { height:48px; border-radius:12px; background:var(--tile); border-color:transparent }
+@media (max-width:860px) { .auth.mono { grid-template-columns:1fr; border-radius:20px } .aside.cine.mono { min-height:0 } .amark { width:110px; margin-top:26px } .aside.cine.mono .atext { padding:20px 22px 26px } }
+
+.acard.mono #otp .arow { display:grid; gap:10px } .acard.mono #otp .arow .link { justify-self:center }

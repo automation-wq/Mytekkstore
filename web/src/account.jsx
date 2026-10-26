@@ -20,6 +20,8 @@ export function Account() {
 }
 
 function SignIn({ CFG }) {
+  const { P, money } = useStore();
+  const tvs = (P || []).filter(p => p.cat === "Televisions"), maxOff = Math.max(0, ...tvs.map(off)), minTv = tvs.length ? Math.min(...tvs.map(p => p.price)) : 0; // the brand panel's figures, from the catalogue
   const next = /^\/(?!\/)[\w\/-]*(\?[\w=&%-]*)?$/.test(qs.get("next") || "") ? qs.get("next") : "/account"; // only an address on this site
   const done = () => location.href = next;
   const [showReg, setShowReg] = useState(false);
@@ -58,36 +60,40 @@ function SignIn({ CFG }) {
   // only appears on the page without knowing why (owner note, 26 Oct)
   const real = !!(CFG.sms || CFG.mail), isLocal = /^(localhost|127.0.0.1|[::1])$/.test(location.hostname), demoOnly = !real && (CFG.demoCodes || isLocal);
   const tabs = [...(real ? [["t-phone", "Mobile number or email"]] : []), ["t-email", "Password"], ...(demoOnly ? [["t-phone", "One-time code (demo)"]] : [])];
-  return <div className="auth">
-    <m.aside className="aside cine" initial="hide" animate="show" variants={GROUP}>
-      <picture className="aimg2" aria-hidden="true"><img src={pic("img/life-cinema.jpg", 960)} srcSet={picSet("img/life-cinema.jpg")} sizes="(max-width:860px) 100vw, 50vw" alt="" decoding="async" /></picture>
-      <div className="atext"><m.p className="kicker" variants={UP}>Welcome to Mytekkstore</m.p>
-        <m.h2 variants={WORDS}>{"One account. Every TV deal.".split(" ").map((w, k) => <span className="ln" key={k}><m.span className="w" variants={RISE}>{w}&nbsp;</m.span></span>)}</m.h2>
-        <m.ul variants={GROUP}>{["Faster checkout with a saved address", "Order tracking and history", "Reviews and wishlist", "Festive and bank offers first"].map(t => <m.li variants={UP} key={t}><Icon k="check" />{t}</m.li>)}</m.ul></div></m.aside>
-    <m.div className="panel acard" initial="hide" animate="show" variants={GROUP}>
+  return <div className="auth mono">
+    <m.aside className="aside cine mono" initial="hide" animate="show" variants={GROUP}>
+      <m.div className="amark" variants={UP} aria-hidden="true"><svg viewBox="0 0 32 32"><rect width="32" height="32" rx="9" fill="#ffffff12" /><path d="M18 5 9 18h6l-2 9 10-14h-6z" fill="#ffffff" /></svg><span className="aglow2"></span></m.div>
+      <div className="atext"><m.p className="kicker" variants={UP}>Mytekkstore</m.p>
+        <m.h2 variants={WORDS}>{"Welcome to Mytekkstore.".split(" ").map((w, k) => <span className="ln" key={k}><m.span className="w" variants={RISE}>{w}&nbsp;</m.span></span>)}</m.h2>
+        <m.p className="asub" variants={UP}>Elista and Telefunken Smart TVs at factory prices, delivered free with cash on delivery and the brand's own warranty.</m.p>
+        {maxOff > 0 && <m.div className="afloat" variants={UP}><b>Up to {maxOff}% off on Smart TVs</b><span>From {money(minTv)}. Sign up and get the festive and bank offers first.</span></m.div>}</div></m.aside>
+    <m.div className="panel acard mono" initial="hide" animate="show" variants={GROUP}>
       <m.div variants={UP} className="ahead"><h1 className={next === "/checkout" ? "" : "srh"}>{next === "/checkout" ? "Sign in to continue to checkout" : "Sign in or create an account"}</h1>
         {qs.get("expired") === "1" ? <p className="expired" role="status">Your sign-in ended before the order went through (the store was restarted). Nothing was placed or charged. Sign in again and your cart is waiting at checkout.</p>
           : next === "/checkout" && <p className="muted small">An account keeps your orders, address and order tracking in one place. It takes a minute.</p>}</m.div>
       {CFG.google && <m.div variants={UP}><div className="gbtn" id="gbtn"></div><div className="or"><span>or</span></div></m.div>}
       <m.div variants={UP}><Tabs tabs={tabs}>
-        {tab => <>
-          <div className="tabpane" id="t-phone" hidden={tab !== "t-phone"}><Form className="form" id="otp" noValidate ref={otpRef} onSubmit={submit} after={busy => <div className="arow"><button className="btn" disabled={busy}>{btnText}</button>{stage === "verify" && <button type="button" className="link" id="resend" disabled={left > 0} onClick={resend}>{left > 0 ? `Send a new code in ${left}s` : "Send a new code"}</button>}</div>}>
+        {(tab, setTab) => <>
+          <div className="tabpane" id="t-phone" hidden={tab !== "t-phone"}><Form className="form auth-form" id="otp" noValidate ref={otpRef} onSubmit={submit} after={busy => <div className="arow"><button className="btn full" disabled={busy}>{btnText}</button>{stage === "verify" && <button type="button" className="link" id="resend" disabled={left > 0} onClick={resend}>{left > 0 ? `Send a new code in ${left}s` : "Send a new code"}</button>}</div>}>
+            <div className="fhead"><span className="avatar"><Icon k="user" /></span><h2>Sign in with a code</h2><p>{real ? "We send a one-time code to your mobile number or email." : "Demo mode: the code appears on this page until an SMS or email service is connected."}</p></div>
             <label>Mobile number or email<input name="to" type="text" required autoComplete="username" placeholder="98765 43210 or you@example.com" maxLength="120" defaultValue={load("signin", "")} /></label>
             <label id="codeRow" hidden={!codeRow}>6-digit code from the message<input name="code" className="otp" inputMode="numeric" autoComplete="one-time-code" maxLength="6" placeholder="••••••" /></label>
             <label id="nameRow" hidden={!nameRow}>Your name<input name="name" maxLength="80" autoComplete="name" /></label>
             <p className="muted small" id="otpnote" role="status">{note}</p>
+            {tabs.length > 1 && <p className="swap"><button type="button" className="link" onClick={() => setTab("t-email")}>Use your password instead</button></p>}
             {gErr && <p className="err">{gErr}</p>}
           </Form></div>
           <div className="tabpane" id="t-email" hidden={tab !== "t-email"}>
-            <Form className="form auth-form" id="login" hidden={showReg} onSubmit={async f => { await api("login", "POST", f); done(); }} after={busy => <><button className="btn full" disabled={busy}>Sign in</button><p className="swap">New to Mytekkstore? <button type="button" className="link" data-swap="register" onClick={() => setShowReg(true)}>Create an account</button></p></>}>
-              <div className="fhead"><h2>Welcome back</h2><p>Your orders, addresses and wishlist are waiting.</p></div>
+            <Form className="form auth-form" id="login" hidden={showReg} onSubmit={async f => { await api("login", "POST", f); done(); }} after={busy => <><button className="btn full" disabled={busy}>Sign in</button>{tabs.length > 1 && <><div className="or"><span>Or</span></div><button type="button" className="btn alt" onClick={() => setTab("t-phone")}>{real ? "Sign in with a one-time code" : "Use a one-time code (demo)"}</button></>}<p className="swap">New to Mytekkstore? <button type="button" className="link" data-swap="register" onClick={() => setShowReg(true)}>Create an account</button></p></>}>
+              <div className="fhead"><span className="avatar"><Icon k="user" /></span><h2>Welcome back!</h2><p>Enter your sign-in details.</p></div>
               <label className="fld"><I k="mail" /><span>Email</span><input name="email" type="email" required autoComplete="email" placeholder="you@example.com" /></label>
-              <PwField name="password" label="Password" autoComplete="current-password" /></Form>
+              <PwField name="password" label="Password" autoComplete="current-password" />
+              {tabs.length > 1 && <p className="frow"><button type="button" className="link" onClick={() => setTab("t-phone")}>Forgot your password? Use a one-time code</button></p>}</Form>
             <Form className="form auth-form" id="register" hidden={!showReg} onSubmit={async f => { await api("register", "POST", f); done(); }} after={busy => <><button className="btn full" disabled={busy}>Create account</button>
               <p className="legal">By creating an account you agree to the <a href="/terms">Terms</a> and <a href="/privacy">Privacy policy</a>.</p>
               <ul className="regperks"><li><Icon k="truck" /> Track every order, from dispatch to delivery</li><li><Icon k="pin" /> A saved address for one-tap checkout</li><li><Icon k="star" /> Festive and bank offers before anyone else</li></ul>
               <p className="swap">Already have an account? <button type="button" className="link" data-swap="login" onClick={() => setShowReg(false)}>Sign in</button></p></>}>
-              <div className="fhead"><h2>Create your account</h2><p>Takes a minute. Orders, addresses and offers in one place.</p></div>
+              <div className="fhead"><span className="avatar"><Icon k="user" /></span><h2>Create your account</h2><p>Takes a minute. Orders, addresses and offers in one place.</p></div>
               <label className="fld"><Icon k="user" /><span>Full name</span><input name="name" required maxLength="80" autoComplete="name" placeholder="Your name" /></label>
               <label className="fld"><I k="mail" /><span>Email</span><input name="email" type="email" required autoComplete="email" placeholder="you@example.com" /></label>
               <PwField name="password" label="Password" autoComplete="new-password" minLength="8" meter /></Form>
@@ -101,7 +107,7 @@ function SignIn({ CFG }) {
 // a tab bar; children is a function of the active tab id
 export function Tabs({ tabs, children }) {
   const [tab, setTab] = useState(tabs[0][0]);
-  return <><div className="tabbar">{tabs.map(([id, label]) => <button className={tab === id ? "on" : undefined} data-tab={id} type="button" onClick={() => setTab(id)} key={id}>{label}</button>)}</div>{children(tab)}</>;
+  return <><div className="tabbar">{tabs.map(([id, label]) => <button className={tab === id ? "on" : undefined} data-tab={id} type="button" onClick={() => setTab(id)} key={id}>{label}</button>)}</div>{children(tab, setTab)}</>;
 }
 
 function SignedIn({ me, money }) {
