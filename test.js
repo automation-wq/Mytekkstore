@@ -12,8 +12,8 @@ server.listen(0, "127.0.0.1", async () => {
   const addr = { name: "Test User", phone: "9999999999", address: "1 Test Street", pin: "110001" };
   try {
     let r = await call("/api/products");
-    assert.equal(r.data.products.length, 9, "televisions only: the other categories are hidden (client decision 2026-10-12)");
-    assert.ok(r.data.products.every(p => p.cat === "Televisions" && p.os), "every TV carries its operating system");
+    assert.equal(r.data.products.length, 21, "televisions only: the other categories are hidden (client decision 2026-10-12); nine models plus the brochure's twelve");
+    assert.ok(r.data.products.every(p => p.cat === "Televisions" && (p.os || !p.specs.some(([k]) => /smart/i.test(k)))), "every smart TV carries its operating system (a sheet without a Smart TV row is a non-smart set)");
     assert.equal(r.data.products[0].emi, true); // sample products carry the No Cost EMI tag
 
     // orders need a signed-in customer
@@ -70,7 +70,7 @@ server.listen(0, "127.0.0.1", async () => {
     const admin = (await call("/api/login", "POST", { email: "admin@mytekkstore.local", password: pw })).cookie;
     assert.equal((await call("/api/admin/orders", "GET", null, admin)).data.orders.length, 2);
     assert.ok((await call("/api/admin/outbox", "GET", null, admin)).data.messages.some(m => m.text.includes(orderId) && m.sent === "recorded only"));
-    assert.equal((await call("/api/products?all=1", "GET", null, admin)).data.products.length, 14, "the admin still sees the hidden categories");
+    assert.equal((await call("/api/products?all=1", "GET", null, admin)).data.products.length, 26, "the admin still sees the hidden categories");
 
     // sign in with a mobile number: the code is hashed, expires, works once and (with no SMS provider, on localhost only) comes back for testing
     const wrongFor = c => String((+c + 1) % 1e6).padStart(6, "0");
@@ -161,7 +161,7 @@ server.listen(0, "127.0.0.1", async () => {
     assert.equal((await call("/api/admin/orders/" + orderId, "GET", null, admin)).status, 404); // no such admin route, orders come as a list
     const np = { brand: "Mytekkstore", cat: "Audio", name: "Test <b>Speaker", price: 100, mrp: 200, stock: 5, img: "img/p0.jpg" };
     r = await call("/api/admin/products", "POST", np, admin);
-    const nid = r.data.product.id; assert.equal(nid, 15); // one more than the biggest id in the catalogue
+    const nid = r.data.product.id; assert.equal(nid, 27); // one more than the biggest id in the catalogue (26 since the brochure models joined)
     assert.equal(r.data.product.emi, false);
     assert.equal((await call("/api/admin/products/" + nid, "PUT", { ...np, emi: true }, admin)).data.product.emi, true); // No Cost EMI flag from the admin
     assert.deepEqual((await call("/api/admin/products/" + nid, "PUT", { ...np, images: ["img/p1.jpg", "https://example.com/a.jpg"] }, admin)).data.product.images, ["img/p1.jpg", "https://example.com/a.jpg"]); // gallery photos
@@ -178,7 +178,7 @@ server.listen(0, "127.0.0.1", async () => {
     assert.equal((await call("/api/admin/products/" + nid, "PUT", { ...np, price: 150 }, admin)).data.product.price, 150);
     assert.equal((await call("/api/admin/products/" + nid, "DELETE", null, admin)).status, 200);
     assert.equal((await call("/api/admin/products/9", "DELETE", null, admin)).status, 200);
-    assert.equal((await call("/api/admin/products", "POST", np, admin)).data.product.id, 15); // the biggest remaining id is 14; an ordered product's id is never reused
+    assert.equal((await call("/api/admin/products", "POST", np, admin)).data.product.id, 27); // the biggest remaining id is 26; an ordered product's id is never reused
     assert.equal((await call("/api/admin/products", "POST", np, user)).status, 403);
 
     // sign out ends the session

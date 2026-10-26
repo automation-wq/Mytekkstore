@@ -53,8 +53,19 @@ export function autoStory(p) {
   // Design (client brief, A+ section 5): only what the specifications verify (display type, size, ports); otherwise neutral words
   const disp = spec("display type");
   blocks.push({ kicker: "Design", title: /bezel-?less/i.test(disp) ? "Slim, bezel-less design" : "Slim design", text: (disp ? disp + " panel" : "A slim panel") + (size ? " at " + size : "") + ", flat on the wall or on its stand, so the picture takes the room" + (ports ? ", with " + ports + " at the back for a set-top box, a console and a pen drive." : ".") });
-  const g = galleryOf(p), by = { Picture: g[0], Smart: g[1] || g[0], Sound: g[4] || g[0], Design: g.length > 1 ? life("aplusDesign", "img/kv-tv.jpg") : g[0] };
-  return blocks.map(b => ({ ...b, img: by[b.kicker] }));
+  const g = galleryOf(p), by = { Picture: g[0], Smart: g[1] || life("aplusSmart", "img/life-10.jpg"), Sound: g[4] || life("aplusSound", "img/life-11.jpg"), Design: life("aplusDesign", "img/kv-tv.jpg") }; // a product with one picture (a brochure photo) takes the lifestyle photographs for the chapters, never the same picture three times
+  // the brand's own brochure pictures, when the product carries them (public/img/br, cut at native size): the room shot for Picture,
+  // the feature panel for Smart, the render for Sound and Design, and the Magic Remote chapter for WebOS models
+  // each brochure picture is used once (the main photo already fronts the showcase, so it is not in the pool); a chapter without one
+  // keeps the store's lifestyle photograph, so no picture repeats down the page
+  const pool = (p.images || []).filter(x => /^img\/br\//.test(x)), take = re => { const k = pool.findIndex(x => re.test(x)); return k >= 0 ? pool.splice(k, 1)[0] : null; };
+  if (pool.length) {
+    take(/-room\./); // the room shot stays a gallery picture (the showcase above already shows the television)
+    const guide = take(/magic-remote-guide/);
+    Object.assign(by, { Smart: take(/-features\./) || take(/webos-hub-tv/) || life("aplusSmart", "img/life-10.jpg"), Sound: life("aplusSound", "img/life-11.jpg"), Design: life("aplusDesign", "img/kv-tv.jpg") });
+    if (guide) blocks.push({ kicker: "Remote", title: "One remote for everything", text: "The Magic Remote points, clicks and scrolls like a mouse, searches by voice, has quick-access buttons for your apps and a Netflix hot key, and controls your set-top box, speaker or DVD player as well.", img: guide });
+  }
+  return blocks.map(b => ({ ...b, img: b.img || by[b.kicker] }));
 }
 // the detail modules under the A+ story (product.jsx): every line read from this product's own specification sheet, plus two
 // range-level facts from the brand's November 2026 brochure (the WebOS Hub app row and the 1+1 year warranty table)
@@ -67,7 +78,8 @@ export function aplusExtras(p) {
   // seating distance by screen size (the buying guide's table), so the buyer knows the size suits the room before paying
   const room = inch >= 75 ? ["3.0 m and more", "large rooms and home cinemas"] : inch >= 65 ? ["2.5 – 3.0 m", "big living rooms"] : inch >= 50 ? ["2.0 – 2.6 m", "the living room"] : inch >= 40 ? ["1.8 – 2.2 m", "living rooms and bedrooms"] : inch ? ["1.2 – 1.8 m", "bedrooms, kitchens and compact rooms"] : null;
   // Elista's Google TV and WebOS models from 32 inch carry 1+1 year warranty on registration (brochure warranty table); anything else keeps the manufacturer's standard cover
-  const warranty = p.brand === "Elista" && p.os && inch >= 32 ? ["1 + 1 year warranty", "One year from the brand, and a second year free when you register the TV after purchase."] : ["Brand warranty", "Serviced through " + p.brand + "'s own service network."];
+  const w = spec("warranty"); // the product's own sheet first (the brochure's warranty table), the range rule otherwise
+  const warranty = /1 \+ 1/.test(w) || (!w && p.brand === "Elista" && p.os && inch >= 32) ? ["1 + 1 year warranty", "One year from the brand, and a second year free when you register the TV after purchase."] : w ? ["Brand warranty", w.replace(/^1 year$/, "One year") + " from the brand, serviced through its own network."] : ["Brand warranty", "Serviced through " + p.brand + "'s own service network."];
   return { glance, apps, ports: portList, portsText: ports, room: room && { inch, dist: room[0], note: room[1] },
     care: [warranty, ["Free delivery", "Delivered to your door, with cash on delivery available."], [POLICY.returnDays + "-day returns", "Return within " + POLICY.returnDays + " days of delivery under the returns policy."]] };
 }
