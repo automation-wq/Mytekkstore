@@ -2362,3 +2362,8 @@ main > section, main > .fest, main > .cols, .bigbrands.solo, .bankad.bleed, main
 .fstage { width:min(42vw, 860px) } .fstage .froom { width:100%; height:auto; max-width:860px }
 .card .img img[src*="/img/elista/"] { object-fit:cover } /* the owner's cards fill the square photo box edge to edge */
 .thumb img[src*="/img/elista/"] { object-fit:cover }
+
+/* ─ the owner’s front cards in small thumbnails (26 Oct, night): cropped to the television so it fills the box; the product page shows the whole card ─ */
+.card .cbody .img, .cimg, .thumb, .line .img, .quick .img { overflow:hidden }
+.card .img img[src*="/img/elista/"], .cimg img[src*="/img/elista/"], .line .img img[src*="/img/elista/"], .thumb img[src*="/img/elista/"], .quick .img img[src*="/img/elista/"] { object-fit:cover; transform:scale(1.38); transform-origin:50% 46% }
+.card:hover .img img[src*="/img/elista/"] { transform:scale(1.38) }
