@@ -2145,3 +2145,14 @@ dialog.welcome[open] .wcard { animation:wpop .5s cubic-bezier(.2,.8,.2,1) both }
 /* ─ welcome dialog: the photograph follows its ratio, not its height attribute; the heading is a sentence, not the flex row section headings use ─ */
 .wimg { height:auto }
 .wbody h2 { display:block; justify-content:normal; padding-bottom:0; margin-bottom:0 }
+
+/* ─ hero arrows (26 Oct): a pair of round glass buttons with drawn chevrons at the slide's bottom right, clear of the words; phones swipe and use the dots ─ */
+.hero .arrow { top:auto; bottom:clamp(16px,2.4vw,28px); translate:none; width:46px; height:46px; border:1px solid #ffffff3d; background:#0b0e1466; color:#fff; backdrop-filter:blur(8px); display:grid; place-items:center; font-size:0; opacity:.92; z-index:5; transition:background .2s, border-color .2s, opacity .2s, scale .2s }
+.hero .arrow svg { width:22px; height:22px; fill:none; stroke:currentColor; stroke-width:2.2; stroke-linecap:round; stroke-linejoin:round; pointer-events:none } /* the click lands on the button, as the hero’s handler expects */
+.hero .arrow.prev { left:auto; right:calc(clamp(12px,2.2vw,28px) + 56px) } .hero .arrow.next { left:auto; right:clamp(12px,2.2vw,28px) }
+.hero .arrow:hover { background:var(--accent); border-color:transparent; opacity:1; scale:1.06 } .hero .arrow:focus-visible { outline:2px solid #fff; outline-offset:3px }
+@media (max-width:760px) { .hero .arrow { display:none } }
+
+/* ─ festive backdrop (26 Oct): the brochure's Diwali room, softened and darkened so the lockup reads and its 860 px size never shows ─ */
+.festive .fbg img { object-position:50% 45%; filter:blur(10px) brightness(.5) saturate(1.25); scale:1.12 }
+.festive .festin::before { content:""; position:absolute; inset:0; z-index:0; pointer-events:none; background:linear-gradient(90deg,#1a0b2ecc 0%,#1a0b2e80 45%,#3a150a66 100%) }

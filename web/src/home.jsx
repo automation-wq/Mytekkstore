@@ -99,7 +99,7 @@ export function Home() {
           <m.div className="hcta" variants={RISE}><a className="btn" href={sl.href}>{sl.cta}</a><a className="btn ghost" href={sl.href2 || listUrl({ cat: "Televisions", sort: "off" })}>{sl.cta2 || "See deals"}</a></m.div>
         </div>
       </m.div>)}
-      {slides.length > 1 && <><button className="arrow prev" aria-label="Previous slide">‹</button><button className="arrow next" aria-label="Next slide">›</button>
+      {slides.length > 1 && <><button className="arrow prev" aria-label="Previous slide"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7" /></svg></button><button className="arrow next" aria-label="Next slide"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7" /></svg></button>
       <div className="dots">{slides.map((_, i) => <button aria-label={"Slide " + (i + 1)} data-i={i} className={i === cur ? "on" : undefined} key={i}></button>)}</div></>}
     </div>
     <FestiveBanner tvs={tvs} maxOff={maxOff} minEmi={minEmi} money={money} />
@@ -184,7 +184,7 @@ export function FestiveBanner({ tvs, maxOff, minEmi, money, href = "/offers", ct
   if (!tvs.length || !top || maxOff <= 0) return null;
   return <section className="festive bleed" ref={ref} aria-label={FESTIVE.title}>
     <a className="festin" href={href}>
-      <picture className="fbg" aria-hidden="true"><img src={pic("img/life-cinema.jpg", 960)} srcSet={picSet("img/life-cinema.jpg")} sizes="(max-width:1240px) 100vw, 1200px" alt="" loading="lazy" width="1536" height="1024" /></picture>
+      <picture className="fbg" aria-hidden="true"><img src="/img/fest-cover.webp" alt="" loading="lazy" width="860" height="545" /></picture>
       <span className="fsparkle" aria-hidden="true"></span>
       <span className="flights" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></span>
       <span className="ftext">
