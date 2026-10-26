@@ -53,6 +53,68 @@ function write(n) {
   const tmp = file(n) + ".tmp";
   fs.writeFileSync(tmp, JSON.stringify(db[n], null, 1));
   fs.renameSync(tmp, file(n));
+  if (DB_URL) dirty.add(n); // and it lands in the database at the next flush, which every response waits for
+}
+// ===== durable storage: Postgres through Neon's HTTP SQL endpoint, no dependencies (see docs/INTEGRATIONS.md) =====
+// DATABASE_URL set: users and orders are rows (one per record, so two serverless instances never overwrite each other's orders),
+// sessions are rows, and the admin-edited collections (products, banners, campaigns, outbox) are one JSON document each. Every page
+// and API request first pulls what other instances saved (sync); every response waits for its own writes (flush), because a
+// serverless instance freezes the moment it answers. DATABASE_URL absent: the JSON files above, exactly as before.
+// ponytail: sync re-reads every changed row on every request; fine for thousands of orders, move to per-request queries beyond that.
+const DB_URL = process.env.DATABASE_URL || "";
+const ROWS = new Set(["users", "orders"]); // the collections kept one row per record
+const SQL_ENDPOINT = (() => { if (!DB_URL) return ""; const u = new URL(DB_URL); return (/^(127\.0\.0\.1|localhost)$/.test(u.hostname) ? "http" : "https") + "://" + u.host + "/sql"; })();
+async function sql(query, params = []) {
+  const r = await fetch(SQL_ENDPOINT, { method: "POST", headers: { "Content-Type": "application/json", "Neon-Connection-String": DB_URL, "Neon-Raw-Text-Output": "true", "Neon-Array-Mode": "false" }, body: JSON.stringify({ query, params }), signal: AbortSignal.timeout(8000) });
+  if (!r.ok) throw new Error("database " + r.status + ": " + (await r.text()).slice(0, 200));
+  return (await r.json()).rows || [];
+}
+const dirty = new Set(), pending = [], snap = {}, kvAt = {}; let docsAt = 0; // snap: per-record collections, id -> JSON as last seen in the database
+async function initStore() {
+  await sql("CREATE TABLE IF NOT EXISTS kv (k text PRIMARY KEY, v jsonb NOT NULL, at bigint NOT NULL)");
+  await sql("CREATE TABLE IF NOT EXISTS docs (col text NOT NULL, id text NOT NULL, v jsonb NOT NULL, at bigint NOT NULL, PRIMARY KEY (col, id))");
+  await sql("CREATE TABLE IF NOT EXISTS sessions (token text PRIMARY KEY, user_id text NOT NULL, exp bigint NOT NULL)");
+  for (const n of Object.keys(db)) {
+    if (ROWS.has(n)) {
+      const rows = await sql("SELECT v, at FROM docs WHERE col = $1 ORDER BY at, id", [n]);
+      snap[n] = new Map();
+      if (rows.length) { db[n] = []; for (const r of rows) { const o = JSON.parse(r.v); db[n].push(o); snap[n].set(String(o.id), JSON.stringify(o)); docsAt = Math.max(docsAt, +r.at); } }
+      else dirty.add(n); // an empty database takes what the files hold (nothing on a fresh deployment)
+    } else {
+      const row = (await sql("SELECT v, at FROM kv WHERE k = $1", [n]))[0];
+      if (row) { db[n] = JSON.parse(row.v); kvAt[n] = +row.at; } else dirty.add(n); // the seed goes in once
+    }
+  }
+  await flush();
+  console.log("store: database");
+}
+async function sync() { // what other instances saved since this one last looked
+  const [kvs, changed] = await Promise.all([sql("SELECT k, at FROM kv"), sql("SELECT col, id, v, at FROM docs WHERE at > $1 ORDER BY at", [String(Math.max(0, docsAt - 5000))])]); // 5 s of clock skew between instances is re-read harmlessly
+  for (const r of kvs) if (kvAt[r.k] !== undefined && +r.at !== kvAt[r.k] && !dirty.has(r.k)) { const row = (await sql("SELECT v, at FROM kv WHERE k = $1", [r.k]))[0]; if (row) { db[r.k] = JSON.parse(row.v); kvAt[r.k] = +row.at; } }
+  for (const r of changed) {
+    const col = r.col; if (!ROWS.has(col) || !db[col]) continue;
+    const o = JSON.parse(r.v), id = String(o.id), json = JSON.stringify(o);
+    docsAt = Math.max(docsAt, +r.at);
+    if (snap[col].get(id) === json) continue; // this instance's own write, or one already merged
+    const i = db[col].findIndex(x => String(x.id) === id);
+    if (i >= 0) db[col][i] = o; else db[col].push(o);
+    snap[col].set(id, json);
+  }
+}
+async function flush() { // this instance's writes, before it answers
+  if (!DB_URL) return;
+  const jobs = pending.splice(0);
+  for (const n of [...dirty]) {
+    dirty.delete(n);
+    const now = Date.now();
+    if (ROWS.has(n)) {
+      const seen = new Set(), vals = [], params = [];
+      for (const o of db[n]) { const id = String(o.id), json = JSON.stringify(o); seen.add(id); if (snap[n].get(id) === json) continue; snap[n].set(id, json); params.push(n, id, json, String(now)); const k = params.length; vals.push(`(${k - 3}, ${k - 2}, ${k - 1}::jsonb, ${k})`); }
+      if (vals.length) jobs.push(sql("INSERT INTO docs (col, id, v, at) VALUES " + vals.join(", ") + " ON CONFLICT (col, id) DO UPDATE SET v = EXCLUDED.v, at = EXCLUDED.at", params));
+      for (const id of [...snap[n].keys()].filter(id => !seen.has(id))) { snap[n].delete(id); jobs.push(sql("DELETE FROM docs WHERE col = $1 AND id = $2", [n, id])); }
+    } else { kvAt[n] = now; jobs.push(sql("INSERT INTO kv (k, v, at) VALUES ($1, $2::jsonb, $3) ON CONFLICT (k) DO UPDATE SET v = EXCLUDED.v, at = EXCLUDED.at", [n, JSON.stringify(db[n]), String(now)])); }
+  }
+  await Promise.all(jobs);
 }
 const seedProducts = () => JSON.parse(fs.readFileSync(path.join(PUBLIC, "seed-data.js"), "utf8").replace(/^[^[]*/, "").replace(/;\s*$/, ""));
 const db = {
@@ -78,6 +140,7 @@ if (db.products.some(p => p.os === undefined)) {
 const SEED_CONTENT = require("./seed-content.js");
 db.banners = read("banners", null) || SEED_CONTENT.banners;
 db.campaigns = read("campaigns", null) || SEED_CONTENT.campaigns;
+const ready = DB_URL ? initStore() : Promise.resolve(); // pages and API calls wait for it; a failure answers 503 rather than serving /tmp
 
 // ===== passwords and sessions =====
 const hashPw = (pw, salt) => crypto.scryptSync(pw, salt, 64).toString("hex");
@@ -101,9 +164,14 @@ if (!db.users.some(u => u.admin)) {
 // ponytail: sessions live in memory, so everyone is signed out when the server restarts. Persist them if that matters.
 const sessions = new Map(); // token -> { userId, exp }
 const WEEK = 7 * 24 * 3600 * 1000;
-function currentUser(req) {
+async function currentUser(req) {
   const m = /(?:^|;\s*)sid=([A-Za-z0-9_-]+)/.exec(req.headers.cookie || "");
-  const s = m && sessions.get(m[1]);
+  if (!m) return null;
+  let s = sessions.get(m[1]);
+  if (!s && DB_URL) { // another instance signed this visitor in: the row is in the database
+    const row = (await sql("SELECT user_id, exp FROM sessions WHERE token = $1", [m[1]]))[0];
+    if (row) { s = { userId: row.user_id, exp: +row.exp }; sessions.set(m[1], s); }
+  }
   if (!s || s.exp < Date.now()) return null;
   return db.users.find(u => u.id === s.userId) || null;
 }
@@ -112,6 +180,7 @@ function startSession(req, res, user) {
   for (const [k, f] of fails) if (f.until < Date.now()) fails.delete(k);
   const token = crypto.randomBytes(32).toString("base64url");
   sessions.set(token, { userId: user.id, exp: Date.now() + WEEK });
+  if (DB_URL) pending.push(sql("INSERT INTO sessions (token, user_id, exp) VALUES ($1, $2, $3) ON CONFLICT (token) DO UPDATE SET exp = EXCLUDED.exp", [token, String(user.id), String(Date.now() + WEEK)]), sql("DELETE FROM sessions WHERE exp < $1", [String(Date.now())]));
   const secure = req.headers["x-forwarded-proto"] === "https" ? "; Secure" : "";
   res.setHeader("Set-Cookie", `sid=${token}; HttpOnly; SameSite=Lax; Path=/; Max-Age=${WEEK / 1000}${secure}`);
 }
@@ -258,7 +327,7 @@ on("POST", "login", ({ body, req, res }) => {
 });
 on("POST", "logout", ({ req, res }) => {
   const m = /(?:^|;\s*)sid=([A-Za-z0-9_-]+)/.exec(req.headers.cookie || "");
-  if (m) sessions.delete(m[1]);
+  if (m) { sessions.delete(m[1]); if (DB_URL) pending.push(sql("DELETE FROM sessions WHERE token = $1", [m[1]])); }
   res.setHeader("Set-Cookie", "sid=; HttpOnly; SameSite=Lax; Path=/; Max-Age=0");
   return {};
 });
@@ -398,10 +467,10 @@ function expirePending() { // a payment not completed within 30 minutes releases
   for (const o of db.orders) if (o.status === "Pending payment" && +new Date(o.at) < cut) { o.status = "Expired"; o.payment.history.push(stamp("Expired")); n++; }
   if (n) write("orders");
 }
-setInterval(expirePending, 300000).unref();
+setInterval(() => { expirePending(); flush().catch(e => console.error("flush:", e.message)); }, 300000).unref();
 const seenEvents = new Set(); // x-razorpay-event-id values already handled: Razorpay retries, and the same event can arrive twice
 async function razorpayWebhook(req, res) {
-  const done = (code, obj) => { res.writeHead(code, { "Content-Type": "application/json; charset=utf-8", "Cache-Control": "no-store" }); res.end(JSON.stringify(obj)); };
+  const done = async (code, obj) => { try { await flush(); } catch (x) { console.error("flush:", x.message); } res.writeHead(code, { "Content-Type": "application/json; charset=utf-8", "Cache-Control": "no-store" }); res.end(JSON.stringify(obj)); };
   if (!RZP.webhook) return done(503, { error: "Webhook secret not configured." });
   let raw = ""; for await (const c of req) { raw += c; if (raw.length > 200000) return done(413, { error: "Too large." }); }
   if (!verifyWebhookSignature(raw, req.headers["x-razorpay-signature"], RZP.webhook)) return done(400, { error: "Bad signature." }); // the raw body, never a re-serialised one
@@ -675,14 +744,17 @@ async function handleApi(req, res, pathname) {
     for (const r of routes) {
       const m = r.method === req.method && r.re.exec(pathname);
       if (!m) continue;
-      const user = currentUser(req);
+      const user = await currentUser(req);
       if (r.need && !user) throw new HttpError(401, "Please sign in.");
       if (r.need === "admin" && !user.admin) throw new HttpError(403, "Admins only.");
-      return send(200, await r.fn({ req, res, body, user, params: m.slice(1) }));
+      const out = await r.fn({ req, res, body, user, params: m.slice(1) });
+      await flush(); // a serverless instance freezes after it answers, so the order must be in the database before the reply
+      return send(200, out);
     }
     throw new HttpError(404, "Not found.");
   } catch (e) {
     if (!(e instanceof HttpError)) console.error(e);
+    try { await flush(); } catch (x) { console.error("flush:", x.message); }
     send(e instanceof HttpError ? e.code : 500, { error: e instanceof HttpError ? e.message : "Something went wrong. Please try again." });
   }
 }
@@ -897,13 +969,16 @@ function serveStatic(req, res, url, clean) {
     });
   });
 }
-const server = http.createServer((req, res) => {
+const server = http.createServer(async (req, res) => {
   let url;
   // a malformed address (for example "//") must get a 404, not crash the server
   try { url = new URL(req.url, "http://x"); } catch { res.writeHead(404); return res.end("Not found"); }
   for (const [k, v] of Object.entries(SECURITY)) res.setHeader(k, v);
   if (req.headers["x-forwarded-proto"] === "https") res.setHeader("Strict-Transport-Security", "max-age=31536000");
   const pathname = url.pathname;
+  if (DB_URL && (pathname.startsWith("/api/") || pathname.endsWith(".html") || !/\.[a-z0-9]+$/i.test(pathname))) { // pages and API calls, not photos or scripts
+    try { await ready; await sync(); } catch (e) { console.error("database:", e.message); res.writeHead(503, { "Content-Type": "text/plain; charset=utf-8", "Cache-Control": "no-store" }); return res.end("The store's database is unavailable. Please try again in a minute."); }
+  }
   if (pathname.startsWith("/api/")) return handleApi(req, res, pathname);
   if (req.method !== "GET" && req.method !== "HEAD") { res.writeHead(405); return res.end(); } // HEAD works like GET for health checks (Node sends no body)
   if (pathname === "/robots.txt") { res.writeHead(200, { "Content-Type": "text/plain; charset=utf-8" }); return res.end("User-agent: *\nAllow: /\nAllow: /api/products\nAllow: /api/config\nAllow: /api/me\nDisallow: /api/\nDisallow: /admin\nDisallow: /account\nDisallow: /cart\nDisallow: /checkout\nDisallow: /order\nSitemap: " + siteUrl(req) + "/sitemap.xml\n"); } // Google's renderer may fetch the product data; private pages and the rest of the API stay out

@@ -76,3 +76,13 @@ Why not keep the custom sign-in: it works, but it needs the business to run Brev
 - Clerk phone OTP for Indian numbers costs per SMS on the paid plan; email codes and Google are free and may be enough for launch.
 - Any gateway work needs test keys to be verified; I will not claim it works without a test transaction.
 - Prices and plan limits above are as published on 25 October 2026 and should be reconfirmed when accounts are created.
+
+## Durable storage — built 26 October 2026, behind DATABASE_URL
+
+**Why:** a cash-on-delivery order placed on the live site answered "Order not found": on Vercel the data sits in each serverless instance's /tmp and the sessions in its memory, so the instance that took the order is not the one that showed the order page, and the order is gone when the instance is recycled.
+
+**What is built (server.js, no dependencies):** with DATABASE_URL set, users and orders are one row per record (table docs), sessions are rows (table sessions), and the admin-edited collections are one JSON document each (table kv), all through Neon's HTTP SQL endpoint over fetch. Every page and API request first pulls what other instances saved; every response waits for its own writes to land. Without DATABASE_URL nothing changes.
+
+**Verified:** node test-db.js runs the whole API suite against a stand-in for the Neon endpoint and then proves the fix — an order placed through one server process is found, with the same sign-in cookie, by a second fresh process. **Not yet run against a real Neon database** (none exists yet); the first real run is the owner's next step.
+
+**To switch it on:** Vercel → the project → Storage → Create database → Neon (free plan) → Connect to project. Vercel writes DATABASE_URL into the project's environment; redeploy. From then on orders and accounts survive instance restarts and are the same on every instance.
