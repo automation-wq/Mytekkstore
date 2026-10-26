@@ -102,7 +102,6 @@ export function Home() {
       {slides.length > 1 && <><button className="arrow prev" aria-label="Previous slide"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7" /></svg></button><button className="arrow next" aria-label="Next slide"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7" /></svg></button>
       <div className="dots">{slides.map((_, i) => <button aria-label={"Slide " + (i + 1)} data-i={i} className={i === cur ? "on" : undefined} key={i}></button>)}</div></>}
     </div>
-    <FestiveBanner tvs={tvs} maxOff={maxOff} minEmi={minEmi} money={money} />
     {!me && <Welcome maxOff={maxOff} minTv={minTv} minEmi={minEmi} money={money} />}
     <section className="trustrow" aria-label="Why shop with Mytekkstore"><div className="why">
       <div><Ico shapes={DRAW_ICONS.truck} /><b>Fast delivery</b><p>Doorstep delivery across the country.</p></div>
@@ -114,6 +113,7 @@ export function Home() {
     <section className="disco"><h2>Shop by size</h2><p className="lead">Know the size you want? Start here. Every size we stock, with its starting price.</p>
       <div className="dgrid five">{sizeCards.map(s => <a className={"dcard" + (cutout(s.img) ? "" : " photo")} href={listUrl({ cat: "Televisions", size: s.inch + " inch TVs" })} key={s.inch}><span className="dimg"><img src={pic(s.img, 480)} srcSet={picSet(s.img)} sizes="240px" alt="" loading="lazy" width="800" height="800" /></span><span className="dbody"><b>{s.inch}"</b><small>{s.desc}</small><em>{s.from ? "from " + money(s.from) : "Coming soon"}</em></span><i className="darr" aria-hidden="true">→</i></a>)}</div></section>
     {BRANDS[0] && <section className="bigbrands solo">{brandBig(BRANDS[0], 0)}</section>}
+    <FestiveBanner tvs={tvs} maxOff={maxOff} minEmi={minEmi} money={money} /> {/* fourth on the page (owner note, 26 Oct): after the deals, the sizes and the brand, not a second banner under the hero */}
     {osCards.length > 0 && <section className="disco"><h2>Shop by technology</h2><p className="lead">Google TV or WebOS, with the apps built in. Pick the platform that fits you.</p>
       <div className="dgrid land">{osCards.map(c => <a className="dcard os" href={osUrl(c.os)} key={c.os}><span className="dimg"><img src={pic(c.img, 960)} srcSet={picSet(c.img)} sizes="(max-width:760px) 92vw, 46vw" alt="" loading="lazy" /></span><span className="dbody"><b>{c.os}</b><small>{c.text}</small><em>{c.from ? "from " + money(c.from) : ""}</em></span><i className="darr" aria-hidden="true">→</i></a>)}</div></section>}
     <OsChart P={tvs} lead="Not sure which operating system to pick? Here is what each one gives you, side by side." />
