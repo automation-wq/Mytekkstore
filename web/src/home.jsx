@@ -38,7 +38,7 @@ export function Home() {
   const [auto, setAuto] = useState(true); // autoplay stops for good once the visitor takes control (arrow/dot)
   useEffect(() => { if (!auto) return; const t = setInterval(() => { if (!heroRef.current || !heroRef.current.matches(":hover")) setCur(c => (c + 1) % slides.length); }, 6000); return () => clearInterval(t); }, [slides.length, auto]);
   useEffect(() => { const t = setTimeout(() => setSeen(new Set(slides.map((_, i) => i))), 2500); return () => clearTimeout(t); }, [slides.length]); // the rest mount 2.5 s after load, before the first rotation, so no slide ever shows before its photo is there
-  const deals = [...P].sort((a, b) => off(b) - off(a)).slice(0, 5);
+  const deals = [...P].sort((a, b) => off(b) - off(a)).filter(p => off(p) > 0).slice(0, 10); // enough to fill a row on a wide screen (the grid takes as many columns as fit)
   const quotes = P.flatMap(p => (p.reviews || []).map(r => ({ ...r, p }))).sort((a, b) => new Date(b.at) - new Date(a.at)).slice(0, 6); // newest reviews across the catalogue
   const oss = osList(P);
   const onHero = e => {
@@ -110,6 +110,7 @@ export function Home() {
       <div><Ico shapes={DRAW_ICONS.box} /><b>Order tracking</b><p>Follow every order from your account.</p></div>
     </div></section>
     <section><h2>Deals of the Day <a href="/products?sort=off">View all</a></h2><p className="lead">The biggest discounts right now. Free delivery on every order, cash on delivery.</p><div className="grid">{deals.map((p, i) => <Card p={p} i={i} key={p.id} />)}</div></section>
+    <Chooser tvs={tvs} money={money} />
     <section className="disco"><h2>Shop by size</h2><p className="lead">Know the size you want? Start here. Every size we stock, with its starting price.</p>
       <div className="dgrid five">{sizeCards.map(s => <a className={"dcard" + (cutout(s.img) ? "" : " photo")} href={listUrl({ cat: "Televisions", size: s.inch + " inch TVs" })} key={s.inch}><span className="dimg"><img src={pic(s.img, 480)} srcSet={picSet(s.img)} sizes="240px" alt="" loading="lazy" width="800" height="800" /></span><span className="dbody"><b>{s.inch}"</b><small>{s.desc}</small><em>{s.from ? "from " + money(s.from) : "Coming soon"}</em></span><i className="darr" aria-hidden="true">→</i></a>)}</div></section>
     {BRANDS[0] && <section className="bigbrands solo">{brandBig(BRANDS[0], 0)}</section>}
@@ -204,4 +205,27 @@ function Welcome({ maxOff, minTv, minEmi, money }) {
       </div>
     </div>
   </dialog>;
+}
+
+
+// The brochure's chooser (page 3, "Choose the Elista TV that's perfect for you"), built from the catalogue instead of copied: every
+// screen size down the side, every platform across, the starting price in each cell linking to that filtered list, and the warranty
+// each size carries (the brochure's 1 year or 1+1 year), so it stays true as prices and models change.
+function Chooser({ tvs, money }) {
+  const { all, sizeOf } = catSizes(tvs, "Televisions");
+  const spec = (p, k) => ((p.specs || []).find(([n]) => n.toLowerCase() === k) || [])[1] || "";
+  const isMini = p => /mini-?led/i.test(spec(p, "display type"));
+  const platforms = [["Google TV", p => p.os === "Google TV" && !isMini(p)], ["WebOS", p => p.os === "WebOS"], ["Mini-LED PRO", isMini], ["Android TV", p => p.os === "Android TV"], ["Coolita OS", p => p.os === "Coolita OS"], ["Non-smart", p => !p.os]]
+    .filter(([, f]) => tvs.some(f));
+  const rows = [...all].sort((a, b) => a.n - b.n).map(sz => { const ps = tvs.filter(p => (sizeOf(p) || {}).label === sz.label); const w = ps.map(p => spec(p, "warranty")).filter(Boolean); return { sz, ps, warranty: w.some(x => /1 \+ 1/.test(x)) ? (w.some(x => /^1 year$/i.test(x)) ? "1 year · 1+1 year" : "1+1 year") : w.length ? "1 year" : "Brand warranty" }; });
+  if (rows.length < 2 || platforms.length < 2) return null;
+  return <section className="chooser" aria-labelledby="chooser-h"><h2 id="chooser-h">Choose the Elista TV that's perfect for you</h2><p className="lead">Every size we stock against every smart platform, with the price each one starts at. Tap a price to see those models.</p>
+    <div className="scroll"><table>
+      <thead><tr><th>Size</th>{platforms.map(([name]) => <th key={name}>{name}</th>)}<th>Warranty</th></tr></thead>
+      <tbody>{rows.map(({ sz, ps, warranty }) => <tr key={sz.label}><th>{sz.label.replace(/ TVs$/, "").replace(/ inch$/, '"')}</th>
+        {platforms.map(([name, f]) => { const hit = ps.filter(f).sort((a, b) => a.price - b.price)[0]; return <td key={name}>{hit ? <a href={isMini(hit) ? listUrl({ cat: "Televisions", size: sz.label, type: "Mini-LED PRO" }) : hit.os ? listUrl({ cat: "Televisions", size: sz.label, os: hit.os }) : listUrl({ cat: "Televisions", size: sz.label })}><small>from</small>{money(hit.price)}</a> : <span className="na" aria-label="Not in this size">—</span>}</td>; })}
+        <td className="warranty">{warranty}</td></tr>)}</tbody>
+    </table></div>
+    <div className="badges"><div><Icon k="medal" /><span><b>Wide range</b><small>{rows.length} sizes, {rows[0].sz.label.replace(/ TVs$/, "").replace(" inch", "")} to {rows[rows.length - 1].sz.label.replace(/ TVs$/, "")}</small></span></div><div><Icon k="gear" /><span><b>Smart choices</b><small>{platforms.filter(([n]) => n !== "Non-smart").length} platforms to pick from</small></span></div><div><Icon k="shield" /><span><b>Trusted warranty</b><small>1 year, and 1+1 year on registration</small></span></div></div>
+  </section>;
 }

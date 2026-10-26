@@ -1200,8 +1200,8 @@ html { overflow-x:clip }
 .chip.on, .chip.sw.on { background:var(--accent) }
 /* hero edge to edge, text aligned with the page column */
 .hero { width:100vw; margin-left:calc(50% - 50vw); margin-top:0; border-radius:0; height:min(86vh,800px); box-shadow:none }
-.slide { padding-left:max(24px,calc(50vw - 738px)); padding-right:max(24px,calc(50vw - 738px)) }
-.slide .spot { right:max(24px,calc(50vw - 738px)); bottom:72px }
+.slide { padding-left:var(--gut); padding-right:var(--gut) }
+.slide .spot { right:var(--gut); bottom:72px }
 .hero .arrow.prev { left:max(14px,calc(50vw - 660px)) } .hero .arrow.next { right:max(14px,calc(50vw - 660px)) }
 main > .num { margin-top:38px }
 /* headline words */
@@ -1981,11 +1981,11 @@ main .dealbox h2 { display:block } /* the site lays h2s out as a row for a right
 .bleed { width:100vw; max-width:none; margin-left:calc(50% - 50vw); margin-right:0; padding:0; box-sizing:border-box }
 .festive.bleed, .dealbox.bleed, .bankad.bleed { margin-top:0 }
 .festive.bleed .festin, .dealbox.bleed .dealin, .dealbox.bleed .dealstage, .bankad.bleed { border-radius:0 }
-.festive.bleed .festin { padding-inline:max(24px,calc(50vw - 738px)); box-shadow:inset 0 1px 0 #ffd98a40 }
-.dealbox.bleed .dealin { padding-inline:max(24px,calc(50vw - 738px)) }
-.dealbox.bleed .dealctl { margin-top:0; padding:10px max(24px,calc(50vw - 738px)); background:var(--card); border-bottom:1px solid var(--line) }
-.bankad.bleed { padding:34px max(24px,calc(50vw - 738px)) 38px }
-.festive.bleed .fnote { left:max(24px,calc(50vw - 738px)) }
+.festive.bleed .festin { padding-inline:var(--gut); box-shadow:inset 0 1px 0 #ffd98a40 }
+.dealbox.bleed .dealin { padding-inline:var(--gut) }
+.dealbox.bleed .dealctl { margin-top:0; padding:10px var(--gut); background:var(--card); border-bottom:1px solid var(--line) }
+.bankad.bleed { padding:34px var(--gut) 38px }
+.festive.bleed .fnote { left:var(--gut) }
 /* a brand band on its own */
 .bigbrands.solo { margin-top:clamp(40px,6vw,72px) }
 /* the product card's detail block: size, resolution and screen type as chips; delivery; bank offers */
@@ -2296,8 +2296,33 @@ main > .trustrow { margin-top:clamp(48px,7vw,96px) }
 .wrap, .gbar { max-width:1480px; padding-inline:24px }
 main > section, main > .fest, main > .cols, .bigbrands.solo, .bankad.bleed, main > .trustrow, main > .festive.bleed { margin-top:clamp(40px,5vw,72px) }
 .hero { width:100vw; margin-left:calc(50% - 50vw); margin-top:0; border-radius:0; box-shadow:none; height:clamp(460px,38vw,640px) }
-.slide .hpanel { padding-left:max(24px,calc(50vw - 738px)) }
-.hero .arrow.next { right:max(24px,calc(50vw - 738px)) } .hero .arrow.prev { right:calc(max(24px,calc(50vw - 738px)) + 56px) }
+.slide .hpanel { padding-left:var(--gut) }
+.hero .arrow.next { right:var(--gut) } .hero .arrow.prev { right:calc(var(--gut) + 56px) }
 .grid { grid-template-columns:repeat(auto-fill,minmax(228px,1fr)); gap:18px }
 .dgrid.five { grid-template-columns:repeat(5,1fr) } .launchgrid { gap:18px }
 @media (max-width:760px) { .hero { height:min(64vh,520px) } .wrap, .gbar { padding-inline:16px } main > section, main > .fest, main > .cols, .bigbrands.solo, .bankad.bleed, main > .trustrow, main > .festive.bleed { margin-top:44px } }
+
+/* ─ fluid layout (26 Oct, night): one gutter, no fixed column; the content fills the window ─ */
+:root { --gut:clamp(16px,2.6vw,52px) }
+.wrap, .gbar, .ngrid { max-width:none; padding-inline:var(--gut) }
+.slide .hpanel { padding-left:var(--gut) }
+.hero .arrow.next { right:var(--gut) } .hero .arrow.prev { right:calc(var(--gut) + 56px) }
+.grid { grid-template-columns:repeat(auto-fill,minmax(236px,1fr)) }
+.policy { max-width:none }
+/* ─ the brochure's chooser (page 3): sizes down, platforms across, the starting price in each cell ─ */
+.chooser .scroll { overflow-x:auto; border:1px solid var(--line); background:var(--card) }
+.chooser table { border-collapse:collapse; width:100%; min-width:720px; font-size:14.5px }
+.chooser th, .chooser td { padding:12px 14px; text-align:center; border-top:1px solid var(--line) }
+.chooser thead th { background:var(--ink); color:#fff; border-top:0; font-weight:700; font-size:13px; letter-spacing:.3px }
+.chooser thead th:first-child { text-align:left; border-radius:0 }
+.chooser tbody th { text-align:left; font-family:Manrope,"Manrope Fallback",Inter,"Inter Fallback",system-ui,sans-serif; font-size:17px; font-weight:800; letter-spacing:-.3px; white-space:nowrap }
+.chooser td a { color:var(--text); font-weight:700; text-decoration:none; display:inline-grid; gap:1px } .chooser td a small { color:var(--deal); font-weight:700; font-size:11.5px } .chooser td a:hover { color:var(--accent) }
+.chooser td .na { color:var(--line); font-weight:400 }
+.chooser td.warranty { font-weight:700; color:var(--deal); white-space:nowrap }
+.chooser .badges { display:flex; flex-wrap:wrap; gap:18px 36px; margin-top:18px } .chooser .badges div { display:flex; align-items:center; gap:10px } .chooser .badges .ic { width:28px; height:28px; color:var(--accent); flex:none } .chooser .badges b { display:block; font-size:15px } .chooser .badges small { color:var(--soft) }
+@media (max-width:760px) { .chooser th, .chooser td { padding:10px 10px } .chooser tbody th { font-size:15px } }
+
+/* ─ the card grids take as many columns as the window fits (26 Oct, night): no empty third of the row on a wide screen ─ */
+.grid, .plp .grid { grid-template-columns:repeat(auto-fill,minmax(236px,1fr)) }
+@media (max-width:1000px) { .plp .grid { grid-template-columns:repeat(2,1fr) } }
+@media (max-width:560px) { .plp .grid, .grid { grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px } }

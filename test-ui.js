@@ -313,7 +313,7 @@ async function run() {
     await b.goto(base + "/category.html?cat=Televisions");
     assert.deepEqual(await b.ev(`[...document.querySelectorAll(".cdisco .dtabs button")].map(b => b.textContent)`), ["Shop by Size", "Shop by Budget", "Shop by OS", "Screen type / Resolution"], "four-tab discovery under the category banner: size, budget, operating system, screen type");
     assert.equal(await b.ev(`document.querySelectorAll(".cdisco .dcard .dimg img").length`), await b.ev(`document.querySelectorAll(".cdisco .dcard").length`), "every size option is a picture card with a from-price"); assert.ok(await b.ev(`document.querySelectorAll(".cdisco .dcard").length`) >= 6, "the catalogue's sizes");
-    assert.equal(await b.ev(`getComputedStyle(document.querySelector(".plp .grid")).gridTemplateColumns.split(" ").length`), 3, "three product cards per row on desktop");
+    assert.ok(await b.ev(`getComputedStyle(document.querySelector(".plp .grid")).gridTemplateColumns.split(" ").length`) >= 3, "the listing takes as many card columns as the window fits (three or more on a desktop)");
     assert.ok(await b.ev(`[...document.querySelectorAll(".plp .grid .card")].every(c => c.querySelector(".img img") && (c.querySelector(".img img").currentSrc || c.querySelector(".img img").src))`), "every TV in the list has a picture (one range may share one render)");
     await b.click(...await b.center(".cdisco .dtabs button", 2)); await sleep(300); // the third tab is Shop by OS (Budget sits second)
     assert.ok(await b.ev(`document.querySelectorAll(".cdisco .dcard").length`) >= 2, "the OS tab lists the operating systems in the catalogue");
