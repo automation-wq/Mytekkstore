@@ -104,7 +104,6 @@ export function Home() {
     </div>
     <FestiveBanner tvs={tvs} maxOff={maxOff} minEmi={minEmi} money={money} />
     {!me && <Welcome maxOff={maxOff} minTv={minTv} minEmi={minEmi} money={money} />}
-    <DealCarousel tvs={tvs} maxOff={maxOff} minTv={minTv} minEmi={minEmi} money={money} />
     <section className="trustrow" aria-label="Why shop with Mytekkstore"><div className="why">
       <div><Ico shapes={DRAW_ICONS.truck} /><b>Fast delivery</b><p>Doorstep delivery across the country.</p></div>
       <div><Ico shapes={DRAW_ICONS.shield} /><b>Genuine products</b><p>Brand warranty on everything we sell.</p></div>
@@ -140,30 +139,6 @@ export function Home() {
   </>;
 }
 
-// The deal carousel under the hero: the promo pattern Reliance Digital, Amazon and Vijay Sales run at the top of the page. Three
-// slides, every figure from the catalogue: the biggest saving overall, the single TV with the biggest saving, the buying guide.
-// Slides share one grid cell so the stage keeps one height (nothing below jumps); the inactive two are invisible, inert and hidden
-// from assistive tech. Advances every 7 s unless the visitor prefers reduced motion, hovers or focuses inside, or takes control.
-function DealCarousel({ tvs, maxOff, minTv, minEmi, money }) {
-  const still = useReducedMotion();
-  const [i, setI] = useState(0), [manual, setManual] = useState(false);
-  const paused = useRef(false);
-  const top = [...tvs].sort((a, b) => off(b) - off(a))[0];
-  const n = 2;
-  useEffect(() => { if (manual || still) return; const t = setInterval(() => { if (!paused.current) setI(v => (v + 1) % n); }, 7000); return () => clearInterval(t); }, [manual, still]);
-  if (!tvs.length || !top || maxOff <= 0) return null;
-  const go = v => { setManual(true); setI(((v % n) + n) % n); };
-  const labels = ["Smart TVs from " + money(minTv), top.brand + " " + top.name];
-  const slide = k => ({ className: "dealslide" + (i === k ? " on" : ""), ...(i === k ? {} : { "aria-hidden": true, inert: true }), "aria-roledescription": "slide", "aria-label": (k + 1) + " of " + n + ": " + labels[k] });
-  const topImg = cutout(top.img) || pic(top.img, 480);
-  return <section className="dealbox dealcar bleed" aria-roledescription="carousel" aria-label="Deals" onPointerEnter={() => { paused.current = true; }} onPointerLeave={() => { paused.current = false; }} onFocus={() => { paused.current = true; }} onBlur={() => { paused.current = false; }}>
-    <div className="dealstage">
-      <div {...slide(0)}><div className="dealin photo"><picture className="dbg" aria-hidden="true"><img src={pic("img/show-elista.jpg", 960)} srcSet={picSet("img/show-elista.jpg")} sizes="(max-width:1240px) 100vw, 1200px" alt="" loading="lazy" width="1376" height="768" /></picture><span className="deye">Deals on Smart TVs</span><h2>Smart TVs from <em>{money(minTv)}</em></h2><p>Up to {maxOff}% off{minEmi ? ", No Cost EMI from " + money(minEmi) + "/month" : ""}, bank offers and cash on delivery.</p><a className="btn" href={listUrl({ cat: "Televisions", sort: "off" })}>Shop all deals →</a></div></div>
-      <div {...slide(1)}><div className="dealin prod stage"><div><span className="deye">Biggest saving right now</span><h2>{top.brand} {top.name}</h2><p><b>{money(top.price)}</b> · MRP {money(top.mrp)} · <em>{off(top)}% off</em>{top.emi ? " · No Cost EMI from " + money(emiPlans(top.price)[2][1]) + "/month" : ""}</p><a className="btn" href={productUrl(top)}>Buy now →</a></div><img src={topImg} alt={top.brand + " " + top.name} loading="lazy" width="800" height="800" /></div></div>
-    </div>
-    <div className="dealctl"><div className="dcnav" role="group" aria-label="Deal controls"><button type="button" className="dcbtn" onClick={() => go(i - 1)} aria-label="Previous deal">‹</button><button type="button" className="dcbtn" onClick={() => go(i + 1)} aria-label="Next deal">›</button></div><div className="dcdots" role="tablist" aria-label="Deals">{labels.map((l, k) => <button type="button" role="tab" aria-selected={i === k} aria-label={l} className={i === k ? "on" : undefined} onClick={() => go(k)} key={l} />)}</div></div>
-  </section>;
-}
 
 // The festive discount banner under the hero (Reliance Digital and Amazon open their festival sales this way): festive colours,
 // lights drawn in CSS and still, the biggest real discount in gold, the biggest-saving TV's own render. The lights and the TV
