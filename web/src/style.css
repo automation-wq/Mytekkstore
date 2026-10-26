@@ -2202,3 +2202,23 @@ dialog.welcome[open] .wcard { animation:wpop .5s cubic-bezier(.2,.8,.2,1) both }
 .card .img img[src*="/img/br/"], .line .img img[src*="/img/br/"], .thumb img[src*="/img/br/"] { object-fit:contain }
 
 .pdp .img:has(img[src*="/img/br/"]) { display:grid; place-items:center } /* a brochure picture sits centred in the photo box at its own size */
+
+/* ─ 26 Oct, afternoon: A+ spacing and pictures, gallery thumbnails, the trust row's gap, the welcome stage, the sign-in card ─ */
+.aplus .showcase { margin-top:28px }
+.aplus .ablock.acare .afactory { grid-column:1; width:min(100%,430px); max-width:100%; margin:0 0 6px; justify-self:start; display:grid; gap:8px }
+.aplus .ablock.acare .afactory img { width:100%; height:auto; border-radius:14px; display:block }
+.aplus .ablock.acare .afactory figcaption { font-size:12.5px; color:var(--muted); line-height:1.4 }
+.thumb img[src*="/img/br/"] { object-fit:cover }
+main > .trustrow { margin-top:clamp(48px,7vw,96px) }
+.wstage { background:radial-gradient(60% 90% at 50% 100%,#ff8a2b33 0%,transparent 60%), linear-gradient(118deg,#160a2a 0%,#2a0f3f 48%,#4a1322 100%); padding:22px 28px 0; display:grid; place-items:end center; min-height:200px }
+.wimg { aspect-ratio:auto; width:min(100%,400px); height:auto; object-fit:contain; filter:drop-shadow(0 26px 30px #000b); display:block }
+@media (max-height:860px) { .wstage { min-height:150px; padding-top:14px } .wimg { width:min(100%,300px) } }
+.acard { padding:32px; border-radius:24px; border:1px solid transparent; background:linear-gradient(var(--card),var(--card)) padding-box, linear-gradient(135deg,#3b45c966,#5ec1ff55 60%,#f6c82966) border-box; box-shadow:0 30px 60px -36px #1c227066 }
+.acard .ahead:empty { display:none } .acard .ahead:has(> .srh:only-child) { display:none }
+.acard .tabbar { background:var(--tile); border-radius:999px; padding:4px; border-bottom:0; gap:4px; margin-bottom:22px }
+.acard .tabbar button { flex:1; border-radius:999px; padding:10px 14px; border-bottom:0; font-weight:700; color:var(--muted) }
+.acard .tabbar button.on { background:var(--card); color:var(--text); box-shadow:0 1px 3px #0f111522, 0 6px 14px -8px #1c227066 } .acard .tabbar .ink { display:none }
+.acard .atrust { display:flex; align-items:center; justify-content:center; gap:8px; margin:6px 0 0; font-size:12.5px; color:var(--muted) } .acard .atrust .ic { width:16px; height:16px; color:var(--deal) }
+@media (max-width:860px) { .acard { padding:22px 18px } }
+
+.wstage { padding:20px 28px 14px; min-height:0; place-items:center } .wimg { width:min(100%,340px) } /* the whole render, feet included */

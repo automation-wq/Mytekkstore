@@ -62,7 +62,7 @@ export function autoStory(p) {
   if (pool.length) {
     take(/-room\./); // the room shot stays a gallery picture (the showcase above already shows the television)
     const guide = take(/magic-remote-guide/);
-    Object.assign(by, { Smart: take(/-features\./) || take(/webos-hub-tv/) || life("aplusSmart", "img/life-10.jpg"), Sound: life("aplusSound", "img/life-11.jpg"), Design: life("aplusDesign", "img/kv-tv.jpg") });
+    Object.assign(by, { Smart: take(/-features\./) || life("aplusSmart", "img/life-10.jpg"), Sound: life("aplusSound", "img/life-11.jpg"), Design: life("aplusDesign", "img/kv-tv.jpg") });
     if (guide) blocks.push({ kicker: "Remote", title: "One remote for everything", text: "The Magic Remote points, clicks and scrolls like a mouse, searches by voice, has quick-access buttons for your apps and a Netflix hot key, and controls your set-top box, speaker or DVD player as well.", img: guide });
   }
   return blocks.map(b => ({ ...b, img: b.img || by[b.kicker] }));
@@ -256,7 +256,7 @@ export const cutout = src => /^img\/p\d+(-v\d+)?\.jpg$/.test(src || "") ? "/" + 
 // aplusSmart, aplusSound, aplusDesign, care, category): the generated photo when it exists, otherwise the fallback given here
 export const life = (slot, fallback) => LIFESTYLE[slot] || fallback;
 export const GALLERY_LABELS = ["Front view", "In the living room", "Studio view", "Screen detail", "Home cinema", "Stand detail"];
-export const galleryOf = p => { if (p.images && p.images.length) return [p.img, ...p.images]; const m = p.cat === "Televisions" && /^img\/(p\d+(?:-v\d+)?)\.jpg$/.exec(p.img || ""); if (!m) return [p.img]; const n = m[1]; return [p.img, life("room", "img/life-room.jpg"), `img/g/${n}-studio.webp`, `img/g/${n}-screen.webp`, life("cinema", "img/life-cinema.jpg"), `img/g/${n}-stand.webp`]; };
+export const galleryOf = p => { if (p.images && p.images.length) return [p.img, ...p.images.filter(i => !/-features\.|webos-hub-tv/.test(i))]; /* the brochure's icon strips and its pixelated home-screen crop stay out of the gallery */ const m = p.cat === "Televisions" && /^img\/(p\d+(?:-v\d+)?)\.jpg$/.exec(p.img || ""); if (!m) return [p.img]; const n = m[1]; return [p.img, life("room", "img/life-room.jpg"), `img/g/${n}-studio.webp`, `img/g/${n}-screen.webp`, life("cinema", "img/life-cinema.jpg"), `img/g/${n}-stand.webp`]; };
 export const picSet = src => hasWebp(src) ? `${pic(src, 480)} 480w, ${pic(src, 960)} 960w, ${pic(src)} ${dims(src)[0]}w` : undefined;
 export const off = p => Math.round((1 - p.price / p.mrp) * 100);
 export const avg = p => p.reviews && p.reviews.length ? p.reviews.reduce((t, r) => t + r.rating, 0) / p.reviews.length : 0;

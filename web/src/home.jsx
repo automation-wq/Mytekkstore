@@ -189,7 +189,7 @@ function Welcome({ maxOff, minTv, minEmi, money }) {
   const close = () => { save("welcome", Date.now()); if (ref.current && ref.current.open) ref.current.close(); };
   return <dialog className="welcome" ref={ref} aria-labelledby="welcome-title" onClose={close} onClick={e => { if (e.target === ref.current) close(); }}>
     <div className="wcard">
-      <img className="wimg" src="/img/fest-room.webp" alt="" width="860" height="430" loading="lazy" />
+      <div className="wstage" aria-hidden="true"><img className="wimg" src="/img/tv-festival.webp" alt="" width="863" height="588" loading="lazy" /></div>
       <button type="button" className="wclose" onClick={close} aria-label="Close">×</button>
       <div className="wbody">
         <span className="wkick">Festive Offers · Live now</span>

@@ -65,8 +65,8 @@ function SignIn({ CFG }) {
         <m.h2 variants={WORDS}>{"One account. Every TV deal.".split(" ").map((w, k) => <span className="ln" key={k}><m.span className="w" variants={RISE}>{w}&nbsp;</m.span></span>)}</m.h2>
         <m.ul variants={GROUP}>{["Faster checkout with a saved address", "Order tracking and history", "Reviews and wishlist", "Festive and bank offers first"].map(t => <m.li variants={UP} key={t}><Icon k="check" />{t}</m.li>)}</m.ul></div></m.aside>
     <m.div className="panel acard" initial="hide" animate="show" variants={GROUP}>
-      <m.div variants={UP}><h1>{next === "/checkout" ? "Sign in to continue to checkout" : "Sign in or create an account"}</h1>
-        <p className="muted small">{next === "/checkout" ? "An account keeps your orders, address and order tracking in one place. It takes a minute." : (real ? "A one-time code by SMS or email, your password" : "Your email and password") + (CFG.google ? ", or your Google account." : ".")}</p></m.div>
+      <m.div variants={UP} className="ahead"><h1 className={next === "/checkout" ? "" : "srh"}>{next === "/checkout" ? "Sign in to continue to checkout" : "Sign in or create an account"}</h1>
+        {next === "/checkout" && <p className="muted small">An account keeps your orders, address and order tracking in one place. It takes a minute.</p>}</m.div>
       {CFG.google && <m.div variants={UP}><div className="gbtn" id="gbtn"></div><div className="or"><span>or</span></div></m.div>}
       <m.div variants={UP}><Tabs tabs={tabs}>
         {tab => <>
@@ -93,6 +93,7 @@ function SignIn({ CFG }) {
           </div>
         </>}
       </Tabs></m.div>
+      <m.p className="atrust" variants={UP}><Icon k="shield" /> Secure sign-in · No card details stored · 7-day returns</m.p>
     </m.div></div>;
 }
 
