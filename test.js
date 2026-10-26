@@ -60,6 +60,10 @@ server.listen(0, "127.0.0.1", async () => {
     r = await call("/api/me", "PATCH", { name: "Asha Rao", phone: "9999999999", address: "2 New Street", pin: "400001" }, user);
     assert.equal(r.status, 200); assert.equal(r.data.user.name, "Asha Rao"); assert.equal(r.data.user.pin, "400001"); assert.equal(r.data.user.phone, "+919999999999");
     assert.equal((await call("/api/me", "PATCH", { name: "" }, user)).status, 400);
+    assert.equal((await call("/api/me/password", "POST", { password: "short" }, user)).status, 400, "a new password needs 8 characters");
+    assert.equal((await call("/api/me/password", "POST", { password: "brand-new-pass-1" }, user)).status, 200, "the signed-in customer sets a new password");
+    assert.equal((await call("/api/login", "POST", { email: "asha@example.com", password: "brand-new-pass-1" })).status, 200, "the new password signs in");
+    assert.equal((await call("/api/me/password", "POST", { password: "nobody-signed-in" })).status, 401, "not without a session");
     assert.equal((await call("/api/me", "PATCH", { name: "X" })).status, 401);
     assert.equal((await call("/api/me", "PATCH", { name: "Asha", phone: "9999999999", address: "1 Test Street", pin: "110001" }, user)).status, 200); // back as it was
 

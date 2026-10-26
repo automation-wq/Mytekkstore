@@ -2253,3 +2253,13 @@ main > .trustrow { margin-top:clamp(48px,7vw,96px) }
 @media (max-width:860px) { .auth.mono { grid-template-columns:1fr; border-radius:20px } .aside.cine.mono { min-height:0 } .amark { width:110px; margin-top:26px } .aside.cine.mono .atext { padding:20px 22px 26px } }
 
 .acard.mono #otp .arow { display:grid; gap:10px } .acard.mono #otp .arow .link { justify-self:center }
+
+/* ─ 26 Oct, evening: Peace of mind laid out, the showcase on a glow, compare-table blanks that explain themselves ─ */
+.aplus .ablock.acare { grid-template-columns:1.15fr 1fr; grid-template-areas:"text fig" "list fig"; align-items:start; column-gap:clamp(24px,4vw,56px) }
+.aplus .ablock.acare > div { grid-area:text } .aplus .ablock.acare > ul { grid-area:list } .aplus .ablock.acare .afactory { grid-area:fig; grid-column:auto; align-self:center; justify-self:center; width:min(100%,430px); margin:0 }
+.showcase::after { content:""; position:absolute; left:4%; top:38%; width:44%; height:40%; border-radius:50%; background:radial-gradient(ellipse,#5ec1ff55,#3b45c92e 45%,transparent 72%); filter:blur(42px); z-index:0; pointer-events:none }
+.showcase > * { z-index:1 }
+.showcase img.cut { filter:drop-shadow(0 50px 60px #000d) drop-shadow(0 0 40px #5ec1ff22) }
+.showcase h2 { background:linear-gradient(92deg,#fff 0%,#dfe6ff 70%,#c7d2fe 100%); -webkit-background-clip:text; background-clip:text; color:transparent }
+.ctable .na { color:var(--muted); font-style:italic; font-size:13px }
+@media (max-width:860px) { .aplus .ablock.acare { grid-template-columns:1fr; grid-template-areas:"text" "fig" "list" } .showcase::after { display:none } }

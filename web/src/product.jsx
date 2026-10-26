@@ -157,7 +157,6 @@ export function Product() {
         <div className="astats">{callouts(p).map(([big, small]) => <div key={big + small}><b>{big}</b><small>{small}</small></div>)}</div></div></div>
       <div className="showcase">{cutout(p.img) ? <img className="cut" src={cutout(p.img)} alt="" loading="lazy" /> : <img className="tilep" src={pic(p.img)} srcSet={picSet(p.img)} sizes="(max-width:860px) 80vw, 40vw" alt="" loading="lazy" width="800" height="800" />}
         <div><span className="kicker">{story[0].kicker}</span><h2>{story[0].title}.</h2><p>{story[0].text}</p>{p.features && p.features.length > 0 && <ul className="afeat" aria-label="Highlights from the brand's brochure">{p.features.map(f => <li key={f}>{f}</li>)}</ul>}</div></div>
-      {x.glance.length > 2 && <div className="ablock aglance"><div><span className="kicker">At a glance</span><h3>Every detail, in one place.</h3><p>What this {p.brand}{spec(p, "screen size") ? " " + spec(p, "screen size") : ""} gives you, straight from its specification sheet.</p></div><ul>{x.glance.map(([k, v]) => <li key={k}><small>{k}</small><b>{v}</b></li>)}</ul></div>}
       {story.slice(1).map((b, i) => <div className={"ablock" + (i % 2 ? " flip" : "") + (i === 1 ? " dark" : "")} key={i}>{b.img && (cutout(b.img) ? <img className="cut" src={cutout(b.img)} alt="" loading="lazy" /> : <img src={pic(b.img, 960)} srcSet={picSet(b.img)} sizes="(max-width:860px) 100vw, 50vw" alt="" loading="lazy" />)}<div>{b.kicker && <span className="kicker">{b.kicker}</span>}<h3>{b.title}</h3><p>{b.text}</p>{b.kicker === "Smart" && x.apps.length > 0 && <div className="aapps">{x.apps.map(a => <span key={a}>{a}</span>)}</div>}</div></div>)}
       {x.ports.length > 0 && <div className="ablock aports dark flip"><div className="portbay" aria-hidden="true">{x.ports.map(([k, n]) => <div key={k}><span className="pname">{k}</span>{Array.from({ length: n }, (_, i) => <i key={i} className={"port " + k.toLowerCase()}></i>)}</div>)}</div><div><span className="kicker">Connectivity</span><h3>Plug in everything.</h3><p>{x.portsText} at the back: a set-top box, a game console or a laptop on HDMI, and a pen drive or hard disk on USB for your own films and photos.</p></div></div>}
       {x.room && <div className="ablock aroom"><div className="roomfig" aria-hidden="true"><i className="tvline"><b>{x.room.inch + "\""}</b></i><span className="dist">{x.room.dist}</span><i className="sofa"></i></div><div><span className="kicker">The right size</span><h3>Made for {x.room.note}.</h3><p>Sit about {x.room.dist} from a {x.room.inch} inch screen: close enough to see the detail, far enough that the picture stays smooth. When in doubt, go one size up.</p></div></div>}
@@ -204,7 +203,10 @@ function Compare({ p }) {
   if (!others.length) return null;
   const cols = [p, ...others], cheapest = Math.min(...cols.map(x => x.price));
   const keys = [...new Set(cols.flatMap(x => (x.specs || []).map(([k]) => k)))];
-  const specOf = (x, k) => ((x.specs || []).find(([n]) => n === k) || [])[1] || "—";
+  const specOf = (x, k) => ((x.specs || []).find(([n]) => n === k) || [])[1] || "";
+  // a missing value says what it means: a smart feature on a non-smart set is "Not a smart TV"; anything else the brand's sheet does not state is "Not listed"
+  const SMART = /^(Smart TV|Voice|Wi-Fi|Apps|Memory|Bluetooth|Screen mirroring|Remote|Processor|Screen share)$/;
+  const missing = (x, k) => SMART.test(k) && !x.os ? <span className="na">Not a smart TV</span> : <span className="na">Not listed</span>;
   const line = (label, f, cls) => <tr className={cls || undefined} key={label}><th>{label}</th>{cols.map((x, i) => <td className={i ? undefined : "me"} key={x.id}>{f(x)}</td>)}</tr>;
   return <section className="cmp" id="compare"><h2>Compare with similar {p.cat.toLowerCase()}</h2>
     <p className="muted small">Rows marked with a dot are where these models differ.</p>
@@ -213,9 +215,9 @@ function Compare({ p }) {
       <tbody>
         {line("Price", x => <><b className="cprice">{money(x.price)}</b>{x.mrp > x.price && <><s>{money(x.mrp)}</s><span className="badge">{off(x)}% OFF</span></>}{x.price === cheapest && <><br /><span className="stock">Lowest price</span></>}</>)}
         {line("Rating", x => <Stars p={x} /> && (x.reviews && x.reviews.length ? <Stars p={x} /> : <span className="muted">No reviews yet</span>))}
-        {cols.some(x => x.os) && line("Operating system", x => x.os || "—", new Set(cols.map(x => x.os || "")).size > 1 ? "diff" : "")}
-        {keys.map(k => line(k, x => specOf(x, k), new Set(cols.map(x => specOf(x, k))).size > 1 ? "diff" : ""))}
-        {line("No Cost EMI", x => x.emi ? <><Icon k="check" /> Available</> : "—")}
+        {cols.some(x => x.os) && line("Operating system", x => x.os || <span className="na">Non-smart</span>, new Set(cols.map(x => x.os || "")).size > 1 ? "diff" : "")}
+        {keys.map(k => line(k, x => specOf(x, k) || missing(x, k), new Set(cols.map(x => specOf(x, k))).size > 1 ? "diff" : ""))}
+        {line("No Cost EMI", x => x.emi ? <><Icon k="check" /> Available</> : <span className="na">Not on this model</span>)}
         {line("", x => <Buy p={x} />)}
       </tbody></table></div></section>;
 }

@@ -75,7 +75,7 @@ function SignIn({ CFG }) {
       <m.div variants={UP}><Tabs tabs={tabs}>
         {(tab, setTab) => <>
           <div className="tabpane" id="t-phone" hidden={tab !== "t-phone"}><Form className="form auth-form" id="otp" noValidate ref={otpRef} onSubmit={submit} after={busy => <div className="arow"><button className="btn full" disabled={busy}>{btnText}</button>{stage === "verify" && <button type="button" className="link" id="resend" disabled={left > 0} onClick={resend}>{left > 0 ? `Send a new code in ${left}s` : "Send a new code"}</button>}</div>}>
-            <div className="fhead"><span className="avatar"><Icon k="user" /></span><h2>Sign in with a code</h2><p>{real ? "We send a one-time code to your mobile number or email." : "Demo mode: the code appears on this page until an SMS or email service is connected."}</p></div>
+            <div className="fhead"><span className="avatar"><Icon k="user" /></span><h2>Sign in with a code</h2><p>{real ? "We send a one-time code to your mobile number or email." : "Demo mode: the code appears on this page until an SMS or email service is connected."} Forgot your password? Sign in here, then set a new one from your account.</p></div>
             <label>Mobile number or email<input name="to" type="text" required autoComplete="username" placeholder="98765 43210 or you@example.com" maxLength="120" defaultValue={load("signin", "")} /></label>
             <label id="codeRow" hidden={!codeRow}>6-digit code from the message<input name="code" className="otp" inputMode="numeric" autoComplete="one-time-code" maxLength="6" placeholder="••••••" /></label>
             <label id="nameRow" hidden={!nameRow}>Your name<input name="name" maxLength="80" autoComplete="name" /></label>
@@ -88,7 +88,7 @@ function SignIn({ CFG }) {
               <div className="fhead"><span className="avatar"><Icon k="user" /></span><h2>Welcome back!</h2><p>Enter your sign-in details.</p></div>
               <label className="fld"><I k="mail" /><span>Email</span><input name="email" type="email" required autoComplete="email" placeholder="you@example.com" /></label>
               <PwField name="password" label="Password" autoComplete="current-password" />
-              {tabs.length > 1 && <p className="frow"><button type="button" className="link" onClick={() => setTab("t-phone")}>Forgot your password? Use a one-time code</button></p>}</Form>
+              {tabs.length > 1 && <p className="frow"><button type="button" className="link" onClick={() => setTab("t-phone")}>Forgot your password? Sign in with a code, then set a new one</button></p>}</Form>
             <Form className="form auth-form" id="register" hidden={!showReg} onSubmit={async f => { await api("register", "POST", f); done(); }} after={busy => <><button className="btn full" disabled={busy}>Create account</button>
               <p className="legal">By creating an account you agree to the <a href="/terms">Terms</a> and <a href="/privacy">Privacy policy</a>.</p>
               <ul className="regperks"><li><Icon k="truck" /> Track every order, from dispatch to delivery</li><li><Icon k="pin" /> A saved address for one-tap checkout</li><li><Icon k="star" /> Festive and bank offers before anyone else</li></ul>
@@ -127,6 +127,11 @@ function SignedIn({ me, money }) {
           <label>Phone<input name="phone" type="tel" pattern="[0-9+ ]{7,15}" autoComplete="tel" defaultValue={me.phone || ""} /></label>
           <label>Address<textarea name="address" rows="3" maxLength="400" autoComplete="street-address" defaultValue={me.address || ""}></textarea></label>
           <label>Pincode<input name="pin" pattern="[0-9A-Za-z ]{4,10}" autoComplete="postal-code" defaultValue={me.pin || ""} /></label>
+        </Form></details>
+      <details className="pedit"><summary className="btn ghost">{me.hasPassword ? "Change password" : "Set a password"}</summary>
+        <Form className="form auth-form" onSubmit={async f => { await api("me/password", "POST", f); location.reload(); }} after={busy => <button className="btn" disabled={busy}>Save password</button>}>
+          <p className="muted small">{me.hasPassword ? "Choose a new password for signing in with your email." : "Add a password so you can sign in with your email as well as a code."}</p>
+          <PwField name="password" label="New password" autoComplete="new-password" minLength="8" meter />
         </Form></details>
       {me.admin && <a className="btn" href="/admin">Open store admin</a>}
       <button className="btn ghost" id="logout" onClick={logout}>Sign out</button></aside></div>

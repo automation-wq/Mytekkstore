@@ -185,7 +185,7 @@ function startSession(req, res, user) {
   res.setHeader("Set-Cookie", `sid=${token}; HttpOnly; SameSite=Lax; Path=/; Max-Age=${WEEK / 1000}${secure}`);
 }
 const fails = new Map(); // "ip email" -> { n, until } : slows down password guessing
-const publicUser = u => u && { name: u.name, email: u.email, phone: u.phone, phoneVerified: !!u.phoneVerified, address: u.address, pin: u.pin, admin: u.admin };
+const publicUser = u => u && { hasPassword: !!u.hash, name: u.name, email: u.email, phone: u.phone, phoneVerified: !!u.phoneVerified, address: u.address, pin: u.pin, admin: u.admin };
 
 // ===== validation =====
 class HttpError extends Error { constructor(code, msg) { super(msg); this.code = code; } }
@@ -292,6 +292,12 @@ on("POST", "products/(\\d+)/questions/(\\d+)/answers", ({ params, body, user }) 
 }, "user");
 on("GET", "me", ({ user }) => ({ user: publicUser(user) }));
 // profile: name, phone and address, kept for the next checkout. A changed number has to be verified again.
+// a new password for the signed-in customer: the "forgot password" path is a one-time code sign-in followed by this
+on("POST", "me/password", ({ body, user }) => {
+  if (typeof body.password !== "string" || body.password.length < 8 || body.password.length > 200) bad("Password must be at least 8 characters.");
+  user.salt = crypto.randomBytes(16).toString("hex"); user.hash = hashPw(body.password, user.salt); write("users");
+  return { ok: true };
+}, "user");
 on("PATCH", "me", ({ body, user }) => {
   const name = str(body.name, "Name", 80);
   const phone = body.phone ? str(body.phone, "Phone", 15, /^[0-9+ ]{7,15}$/) : "", address = body.address ? str(body.address, "Address", 400) : "";

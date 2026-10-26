@@ -1556,7 +1556,7 @@ const SEED = [
     "178 degrees"
    ],
    [
-    "Connectivity",
+    "Ports",
     "HDMI and multiple connections"
    ],
    [
@@ -1612,7 +1612,7 @@ const SEED = [
     "178 degrees"
    ],
    [
-    "Connectivity",
+    "Ports",
     "HDMI and multiple connections"
    ],
    [
