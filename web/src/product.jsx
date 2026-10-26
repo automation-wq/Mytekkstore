@@ -77,14 +77,15 @@ export function Product() {
   const feats = (p.specs || []).slice(0, 6); // feature strip under the photo, from the product's own specifications
   const images = galleryOf(p); // the admin's photos, or the six-picture gallery built from the render (data.js galleryOf)
   const BR_LABELS = [[/-room\./, "In the living room"], [/magic-remote-guide/, "Magic Remote guide"], [/magic-remote/, "Magic Remote"], [/-tv\./, "Product picture"]]; // the brochure pictures by name
-  const labelOf = src => /^img\/br\//.test(src) ? (BR_LABELS.find(([re]) => re.test(src)) || [0, "From the brochure"])[1] : /^img\/p\d/.test(src) ? "Front view" : GALLERY_LABELS[images.indexOf(src)] || "Photo";
+  const labelOf = src => /^img\/br\//.test(src) ? (BR_LABELS.find(([re]) => re.test(src)) || [0, "From the brochure"])[1] : /^img\/p\d/.test(src) || /_1\.webp$/.test(src) ? "Front view" : /_2\.webp$/.test(src) ? "In the living room" : GALLERY_LABELS[images.indexOf(src)] || "Photo";
   const step = d => { const i = images.indexOf(img); setSpinView(false); setImg(images[(i + d + images.length) % images.length]); };
   const swipeStart = e => { touch.current = e.touches[0].clientX; };
   const swipeEnd = e => { const x = touch.current; touch.current = null; if (x === null) return; const dx = e.changedTouches[0].clientX - x; if (Math.abs(dx) > 40) step(dx < 0 ? 1 : -1); };
   const resName = (/4K/i.test(spec(p, "resolution")) ? "4K Ultra HD" : /Full HD/i.test(spec(p, "resolution")) ? "Full HD" : /HD/i.test(spec(p, "resolution")) ? "HD Ready" : "");
   const spin = p.spin && p.spin.length >= 8 ? p.spin : null; // 360° frames turn the viewer on; otherwise the normal photo + zoom
   const story = p.story && p.story.length ? p.story : autoStory(p); // A+ content: the admin's blocks, or blocks built from the specifications
-  const x = aplusExtras(p); // the detail modules under the story: at a glance, apps, ports, the right size, peace of mind
+  const x = aplusExtras(p);
+  const aheroImg = (p.images || []).find(i => /^img\/elista\/.*_2\.webp$/.test(i)) || life("aplusHero", "img/hero0.jpg"); // the A+ opener: this model's own room shot when the owner's set has one // the detail modules under the story: at a glance, apps, ports, the right size, peace of mind
   const inch = +((/\((\d+) inch\)/.exec(p.name) || [])[1] || 0); // A+ hero headline varies by screen size so it never reads templated
   const aheroTitle = inch >= 55 ? "The big screen, done right." : inch >= 43 ? "Made for the way you watch." : "Smart entertainment, made simple.";
   // the banner line is built from this TV's own specifications: picture, sound, system, then the store's three promises
@@ -126,7 +127,7 @@ export function Product() {
         {(spin || images.length > 1) && <div className="thumbs">{spin && <button className={"thumb spin" + (spinView ? " on" : "")} aria-label="360 degree view" onClick={() => setSpinView(true)}><img src={pic(spin[0], 480)} alt="" loading="lazy" width="800" height="800" /><span>360°</span></button>}{images.map((src, i) => <button className={"thumb" + (!spinView && src === img ? " on" : "")} data-img={src} aria-label={labelOf(src)} title={GALLERY_LABELS[i] || undefined} onClick={() => { setSpinView(false); setImg(src); }} key={src}><img src={pic(src, 480)} alt="" loading="lazy" width="800" height="800" /></button>)}</div>}
         <p className="muted hint">{spin && spinView ? "Drag the product to rotate it" : "Move the pointer over the photo to zoom in, tap to view full screen"}</p></div>
       <div className="pinfo">
-        <a className="pbrand" href={brandUrl(p.brand)}>{p.brand}</a>{p.os && <a className="ostag" href={osUrl(p.os)}>{p.os}</a>}
+        <a className="pbrand" href={brandUrl(p.brand)}>{p.brand}</a>{p.os ? <a className="ostag" href={osUrl(p.os)}>{p.os}</a> : <span className="ostag plain">Non-smart TV</span>}
         <h1>{p.brand} {p.name}</h1>
         <p className="rating"><Stars p={p} />{!(p.reviews || []).length && <span className="muted" style={{ fontSize: 13 }}>No reviews yet</span>} <a className="alink" href="#t-rev" data-tab="t-rev" style={{ fontSize: 13 }}>See reviews</a></p>
         <div className="price"><b>{money(p.price)}</b>{save$ && <><s>{money(p.mrp)}</s><span className="badge">{off(p)}% OFF</span></>}</div>
@@ -154,7 +155,7 @@ export function Product() {
     </div>
     {story.length > 0 && <section className="aplus" id="aplus">
       {me && me.admin && <p className="adminlink"><a href={"/admin?edit=" + p.id}>Edit this product in the admin (photos, A+ creatives, specifications) →</a></p>}
-      <div className="ahero"><img src={pic(life("aplusHero", "img/hero0.jpg"), 960)} srcSet={picSet(life("aplusHero", "img/hero0.jpg"))} sizes="(max-width:1240px) 100vw, 1240px" alt="" loading="lazy" /><div className="atext"><span className="kicker">{p.brand}{spec(p, "screen size") ? " · " + spec(p, "screen size") : ""}</span><h2>{aheroTitle}</h2><p>{aheroLead}</p>
+      <div className="ahero"><img src={pic(aheroImg, 960)} srcSet={picSet(aheroImg)} sizes="(max-width:1240px) 100vw, 1240px" alt="" loading="lazy" /><div className="atext"><span className="kicker">{p.brand}{spec(p, "screen size") ? " · " + spec(p, "screen size") : ""}</span><h2>{aheroTitle}</h2><p>{aheroLead}</p>
         <div className="astats">{callouts(p).map(([big, small]) => <div key={big + small}><b>{big}</b><small>{small}</small></div>)}</div></div></div>
       {(p.aplus || []).length > 0 && <div className="acreatives">{p.aplus.map(src => <img src={pic(src)} alt="" loading="lazy" key={src} />)}</div>}
       <div className="showcase">{cutout(p.img) ? <img className="cut" src={cutout(p.img)} alt="" loading="lazy" /> : <img className="tilep" src={pic(p.img)} srcSet={picSet(p.img)} sizes="(max-width:860px) 80vw, 40vw" alt="" loading="lazy" width="800" height="800" />}

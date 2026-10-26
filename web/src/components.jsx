@@ -58,7 +58,7 @@ export function Card({ p, i = 0, sizes, compare }) {
   const onLeave = () => { rx.set(0); ry.set(0); };
   const sp = k => ((p.specs || []).find(([n]) => n.toLowerCase().includes(k)) || [])[1] || ""; // the three facts a TV buyer reads first
   const inch = (/\((\d+)\s*inch\)/.exec(sp("screen size") || p.name) || [])[1];
-  const chips = [inch && inch + " inch", sp("resolution").split(",")[0].trim(), sp("display type").split(",")[0].trim()].filter(Boolean);
+  const chips = [inch && inch + " inch", sp("resolution").split(",")[0].trim(), sp("display type").split(",")[0].trim(), !p.os && p.cat === "Televisions" && "Non-smart"].filter(Boolean); // a non-smart set says so on its card
   // the design file's bank line: the biggest instant discount among the bank offers, worded "up to" because it depends on the card
   const bankTop = BANK_OFFERS.map(([bank, , note]) => [bank.replace(/ (Bank|Card)$/, ""), +(((/Up to ₹([\d,]+)/.exec(note) || [])[1] || "0").replace(/,/g, ""))]).sort((a, b) => b[1] - a[1])[0];
   const bankLine = bankTop && bankTop[1] ? "Extra up to " + money(bankTop[1]) + " off with " + bankTop[0] : "";

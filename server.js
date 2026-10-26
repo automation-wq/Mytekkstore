@@ -922,9 +922,9 @@ function staticHome() {
 // home page: the photo is the page's largest element, so it paints before the script runs. Same classes as the top of Product in
 // web/src/product.jsx; the app replaces it on mount. Skipped when the admin gave the product a banner above the fold.
 function staticProduct(p) {
-  const webp = /^img\/(?!u-)[\w-]+\.jpg$/.test(p.img || "");
-  const v = w => "/" + p.img.replace(/\.jpg$/, (w ? "-" + w : "") + ".webp"), alt = escHtml(p.brand + " " + p.name);
-  const img = webp ? `<img src="${v()}" srcset="${v(480)} 480w, ${v(960)} 960w, ${v()} 800w" sizes="(max-width:860px) 100vw, 50vw" alt="${alt}" width="800" height="800" fetchpriority="high" decoding="async">` : `<img src="/${escHtml(p.img)}" alt="${alt}" width="800" height="800" fetchpriority="high">`;
+  const webp = /^img\/(?!u-)[\w-]+\.jpg$/.test(p.img || ""), elista = /^img\/elista\/[\w-]+_\d\.webp$/.test(p.img || "");
+  const v = w => "/" + (elista ? p.img.replace(/\.webp$/, (w && w < 1500 ? "-" + w : "") + ".webp") : p.img.replace(/\.jpg$/, (w ? "-" + w : "") + ".webp")), alt = escHtml(p.brand + " " + p.name);
+  const img = elista ? `<img src="${v(960)}" srcset="${v(480)} 480w, ${v(960)} 960w, ${v()} 1500w" sizes="(max-width:860px) 100vw, 50vw" alt="${alt}" width="1500" height="1500" fetchpriority="high" decoding="async">` : webp ? `<img src="${v()}" srcset="${v(480)} 480w, ${v(960)} 960w, ${v()} 800w" sizes="(max-width:860px) 100vw, 50vw" alt="${alt}" width="800" height="800" fetchpriority="high" decoding="async">` : `<img src="/${escHtml(p.img)}" alt="${alt}" width="800" height="800" fetchpriority="high">`;
   const off = p.mrp > p.price ? Math.round((1 - p.price / p.mrp) * 100) : 0, rs = n => "₹" + n.toLocaleString("en-IN");
   const n = (p.reviews || []).length, avg = n ? p.reviews.reduce((t, r) => t + r.rating, 0) / n : 0;
   const rating = n ? `<span class="stars" title="${avg.toFixed(1)} out of 5"><span>${"★".repeat(Math.round(avg))}${"☆".repeat(5 - Math.round(avg))}</span> <small>${avg.toFixed(1)} (${n})</small></span>` : `<span class="muted" style="font-size:13px">No reviews yet</span>`;

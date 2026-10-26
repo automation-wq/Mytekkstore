@@ -2349,3 +2349,16 @@ main > section, main > .fest, main > .cols, .bigbrands.solo, .bankad.bleed, main
 /* phones: the hero ends above the bottom tab bar so its buttons are never behind it; the product tabs take the full width */
 @media (max-width:760px) { .hero, .hero.auto { height:min(62vh,520px); min-height:400px } .slide.k-banner .hpanel { padding-bottom:22px } }
 #tabs, #tabs .tabpane, #tabs .specgrid { max-width:none }
+
+/* ─ 26 Oct, night: the owner's product cards and A+ creatives, the home sections set straight ─ */
+.acreatives { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,380px),1fr)); gap:16px; margin:24px 0 0 } .acreatives img { width:100%; height:auto; border-radius:12px; display:block }
+.ostag.plain { background:var(--tile); color:var(--soft) }
+.launchgrid { grid-template-columns:repeat(3,1fr); gap:18px } .launch, .launch.big { grid-column:auto; aspect-ratio:16/10 }
+@media (max-width:760px) { .launchgrid { display:flex } }
+.quotes { grid-template-columns:repeat(auto-fill,minmax(360px,1fr)) }
+@media (min-width:1000px) { .faq .faqs { display:grid; grid-template-columns:1fr 1fr; gap:0 48px; align-items:start } }
+.slide.k-banner img { transform:scale(1.1); transform-origin:42% 50% } /* the owner's banner a little closer (its words were small at full width) */
+@media (max-width:760px) { .slide.k-banner img { transform:none } }
+.fstage { width:min(42vw, 860px) } .fstage .froom { width:100%; height:auto; max-width:860px }
+.card .img img[src*="/img/elista/"] { object-fit:cover } /* the owner's cards fill the square photo box edge to edge */
+.thumb img[src*="/img/elista/"] { object-fit:cover }

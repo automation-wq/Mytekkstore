@@ -96,7 +96,7 @@ export function brandPoints(P, brand) {
   const sizes = [...new Set(ps.map(p => (/\((\d+) inch\)/.exec(p.name) || [])[1]).filter(Boolean))].map(Number).sort((a, b) => a - b);
   if (sizes.length > 1) pts.push(sizes.length + " sizes, " + sizes[0] + " to " + sizes[sizes.length - 1] + " inch"); else if (sizes.length) pts.push(sizes[0] + " inch");
   const os = osList(ps);
-  if (os.length === 1 && ps.every(p => p.os)) pts.push(os[0] + " on every model"); else if (os.length) pts.push(os.join(" and ") + " models");
+  if (os.length === 1 && ps.every(p => p.os)) pts.push(os[0] + " on every model"); else if (os.length) pts.push((os.length > 1 ? os.slice(0, -1).join(", ") + " and " + os[os.length - 1] : os[0]) + " models");
   const spec = re => ps.some(p => re.test(p.name) || (p.specs || []).some(([k, v]) => re.test(k + " " + v)));
   if (spec(/4K/)) pts.push("4K Ultra HD" + (spec(/Dolby/) ? " with Dolby Audio" : ""));
   if (ps.length && ps.every(p => p.emi)) pts.push("No Cost EMI on every model");
@@ -244,9 +244,10 @@ export const listUrl = ({ cat, ...o }) => { const q = new URLSearchParams(Object
 // Uploaded photos (img/u-*.jpg) and outside links have no copies and are used as they are.
 const hasWebp = src => /^img\/(?!u-)[\w-]+\.jpg$/.test(src || "");
 // always an absolute address: a product page lives at /televisions/<model>, where a relative img/... would point one level too deep
-export const pic = (src, w) => { const s = hasWebp(src) ? src.replace(/\.jpg$/, (w ? "-" + w : "") + ".webp") : src; return /^img\//.test(s || "") ? "/" + s : s; };
+export const isElista = src => /^img\/elista\/[\w-]+_\d\.webp$/.test(src || ""); // the owner's product cards: 1500 px, with 960 and 480 px copies beside them
+export const pic = (src, w) => { const s = hasWebp(src) ? src.replace(/\.jpg$/, (w ? "-" + w : "") + ".webp") : isElista(src) && w && w < 1500 ? src.replace(/\.webp$/, "-" + w + ".webp") : src; return /^img\//.test(s || "") ? "/" + s : s; };
 const DIMS = { "img/hero-a.jpg": [1376, 768], "img/hero-a-m.jpg": [960, 1200], "img/hero-b.jpg": [1376, 768], "img/show-elista.jpg": [1376, 768], "img/show-telefunken.jpg": [1376, 768], "img/life-room.jpg": [1200, 800], "img/life-cinema.jpg": [1536, 1024], "img/hero0.jpg": [1344, 752], "img/hero1.jpg": [1344, 752], "img/hero2.jpg": [1344, 752], "img/kv-tv.jpg": [1600, 2350], "img/kv-ac.jpg": [1600, 1074], "img/kv-wash.jpg": [1600, 1067] };
-export const dims = src => DIMS[src] || (/^img\/life-\d\d\.jpg$/.test(src || "") ? [1536, 864] : [800, 800]); // the product photos are square
+export const dims = src => DIMS[src] || (/^img\/life-\d\d\.jpg$/.test(src || "") ? [1536, 864] : /^img\/elista\//.test(src || "") ? [1500, 1500] : [800, 800]); // the product photos are square
 // floating cutout of a product render (white background made transparent by `npm run cutouts`); only the seeded renders have one
 export const cutout = src => /^img\/p\d+(-v\d+)?\.jpg$/.test(src || "") ? "/" + src.replace(/\.jpg$/, "-cut.webp") : null;
 // The central gallery map (client brief, section 21): six different pictures per TV. The admin's own photos win; otherwise the render,
@@ -257,7 +258,7 @@ export const cutout = src => /^img\/p\d+(-v\d+)?\.jpg$/.test(src || "") ? "/" + 
 export const life = (slot, fallback) => LIFESTYLE[slot] || fallback;
 export const GALLERY_LABELS = ["Front view", "In the living room", "Studio view", "Screen detail", "Home cinema", "Stand detail"];
 export const galleryOf = p => { if (p.images && p.images.length) return [p.img, ...p.images.filter(i => !/-features\.|webos-hub-tv/.test(i))]; /* the brochure's icon strips and its pixelated home-screen crop stay out of the gallery */ const m = p.cat === "Televisions" && /^img\/(p\d+(?:-v\d+)?)\.jpg$/.exec(p.img || ""); if (!m) return [p.img]; const n = m[1]; return [p.img, life("room", "img/life-room.jpg"), `img/g/${n}-studio.webp`, `img/g/${n}-screen.webp`, life("cinema", "img/life-cinema.jpg"), `img/g/${n}-stand.webp`]; };
-export const picSet = src => hasWebp(src) ? `${pic(src, 480)} 480w, ${pic(src, 960)} 960w, ${pic(src)} ${dims(src)[0]}w` : undefined;
+export const picSet = src => hasWebp(src) ? `${pic(src, 480)} 480w, ${pic(src, 960)} 960w, ${pic(src)} ${dims(src)[0]}w` : isElista(src) ? `${pic(src, 480)} 480w, ${pic(src, 960)} 960w, ${pic(src)} 1500w` : undefined;
 export const off = p => Math.round((1 - p.price / p.mrp) * 100);
 export const avg = p => p.reviews && p.reviews.length ? p.reviews.reduce((t, r) => t + r.rating, 0) / p.reviews.length : 0;
 export const starRow = n => "★".repeat(n) + "☆".repeat(5 - n);

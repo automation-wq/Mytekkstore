@@ -39,7 +39,11 @@ export function Home() {
   const [auto, setAuto] = useState(true); // autoplay stops for good once the visitor takes control (arrow/dot)
   useEffect(() => { if (!auto) return; const t = setInterval(() => { if (!heroRef.current || !heroRef.current.matches(":hover")) setCur(c => (c + 1) % slides.length); }, 6000); return () => clearInterval(t); }, [slides.length, auto]);
   useEffect(() => { const t = setTimeout(() => setSeen(new Set(slides.map((_, i) => i))), 2500); return () => clearTimeout(t); }, [slides.length]); // the rest mount 2.5 s after load, before the first rotation, so no slide ever shows before its photo is there
-  const deals = [...P].sort((a, b) => off(b) - off(a) || a.price - b.price).slice(0, 10); // the biggest discounts first, then the rest by price: enough to fill a row on a wide screen // enough to fill a row on a wide screen (the grid takes as many columns as fit)
+  const dealsAll = [...P].sort((a, b) => off(b) - off(a) || a.price - b.price); // the biggest discounts first, then the rest by price
+  // the deals row fills exactly one row of the grid (two on a phone): the column count is measured, so no half-empty second row
+  const dealsRef = useRef(), [dealCols, setDealCols] = useState(5);
+  useEffect(() => { const el = dealsRef.current; if (!el || typeof ResizeObserver === "undefined") return; const ro = new ResizeObserver(() => setDealCols(getComputedStyle(el).gridTemplateColumns.split(" ").length)); ro.observe(el); return () => ro.disconnect(); }, []);
+  const deals = dealsAll.slice(0, dealCols <= 2 ? dealCols * 2 : dealCols); // enough to fill a row on a wide screen (the grid takes as many columns as fit)
   const quotes = P.flatMap(p => (p.reviews || []).map(r => ({ ...r, p }))).sort((a, b) => new Date(b.at) - new Date(a.at)).slice(0, 6); // newest reviews across the catalogue
   const oss = osList(P);
   const onHero = e => {
@@ -72,10 +76,11 @@ export function Home() {
   const BRAND_SHOW = { Elista: { title: "Brilliant Entertainment. Beautifully Yours.", text: "Discover the Elista television collection.", cta: "Explore Elista TVs", img: life("brandElista", "img/brand-elista.webp") }, Telefunken: { title: "Bring Every Moment to Life.", text: "Explore immersive entertainment with Telefunken.", cta: "Explore Telefunken TVs", img: life("brandTelefunken", "img/brand-telefunken.webp") } }; // brand rooms from the client's tv-store-design export, converted to WebP
   const LAUNCHES = [
     { kicker: "Elista", title: "Elista 4K Smart TV Collection", text: "Brilliant 4K entertainment, beautifully yours.", href: brandUrl("Elista"), img: life("launch1", "img/hero0.jpg"), dark: true },
-    { kicker: "Telefunken", title: "Cinematic Viewing, Reimagined", text: "Big-screen Google TV with Dolby Audio.", href: brandUrl("Telefunken"), img: life("launch2", "img/life-cinema.jpg"), dark: true },
+    { kicker: "Mini-LED PRO", title: "Brighter. Deeper. Smoother.", text: "Mini-LED PRO QLED with Dolby Vision and Atmos, on Google TV.", href: listUrl({ cat: "Televisions", type: "Mini-LED PRO" }), img: life("launch2", "img/life-cinema.jpg"), dark: true },
     { kicker: "Apps built in", title: "Smart Entertainment", text: "Every app built in, no set-top box.", href: "/televisions#os", img: life("launch3", "img/p2.jpg") },
     { kicker: "Big screen", title: "The Big-Screen Experience", text: "Made for movie nights.", href: listUrl({ cat: "Televisions", size: "65 inch TVs" }), img: life("launch4", "img/p3.jpg") },
     { kicker: "New", title: "Next-Generation Smart TVs", text: "Discover the latest from Elista.", href: "/televisions", img: life("launch5", "img/p0.jpg") },
+    { kicker: "Xplore series", title: "Google TV, 32 to 85 inch", text: "Chromecast built in, Hey Google, Dolby Audio.", href: osUrl("Google TV"), img: life("launch6", "img/life-15.jpg"), dark: true },
   ].map(l => ({ ...l, dark: l.dark || !cutout(l.img) })); // a room photo gets the darker shade; a render sits on its own dark stage
   const brandBig = (b, i) => { const prod = biggest(b), pts = brandPoints(P, b), n = P.filter(p => p.brand === b).length, tone = (HOME_BANNERS.find(s => s.brand === b) || {}).tone, show = BRAND_SHOW[b] || { title: b + ".", text: "Discover the " + b + " television collection.", cta: "Explore " + b + " TVs", img: "" };
         return prod ? <a className={"bbrand" + (i % 2 ? " flip" : "") + (show.img ? " photo" : "")} href={brandUrl(b)} key={b} style={tone && !show.img ? { background: tone } : undefined}>
@@ -111,12 +116,12 @@ export function Home() {
       <div><Ico shapes={DRAW_ICONS.cash} /><b>Cash on delivery</b><p>Pay when your order arrives.</p></div>
       <div><Ico shapes={DRAW_ICONS.box} /><b>Order tracking</b><p>Follow every order from your account.</p></div>
     </div></section>
-    <section><h2>Deals of the Day <a href="/products?sort=off">View all</a></h2><p className="lead">The biggest discounts right now. Free delivery on every order, cash on delivery.</p><div className="grid">{deals.map((p, i) => <Card p={p} i={i} key={p.id} />)}</div></section>
+    <section><h2>Deals of the Day <a href="/products?sort=off">View all</a></h2><p className="lead">The biggest discounts right now. Free delivery on every order, cash on delivery.</p><div className="grid" ref={dealsRef}>{deals.map((p, i) => <Card p={p} i={i} key={p.id} />)}</div></section>
     <section className="disco"><h2>Shop by size</h2><p className="lead">Know the size you want? Start here. Every size we stock, with its starting price.</p>
       <div className="dgrid five">{sizeCards.map(s => <a className={"dcard" + (cutout(s.img) ? "" : " photo")} href={listUrl({ cat: "Televisions", size: s.inch + " inch TVs" })} key={s.inch}><span className="dimg"><img src={pic(s.img, 480)} srcSet={picSet(s.img)} sizes="240px" alt="" loading="lazy" width="800" height="800" /></span><span className="dbody"><b>{s.inch}"</b><small>{s.desc}</small><em>{s.from ? "from " + money(s.from) : "Coming soon"}</em></span><i className="darr" aria-hidden="true">→</i></a>)}</div></section>
     {BRANDS[0] && <section className="bigbrands solo">{brandBig(BRANDS[0], 0)}</section>}
     <FestiveBanner tvs={tvs} maxOff={maxOff} minEmi={minEmi} money={money} /> {/* fourth on the page (owner note, 26 Oct): after the deals, the sizes and the brand, not a second banner under the hero */}
-    {osCards.length > 0 && <section className="disco"><h2>Shop by technology</h2><p className="lead">Google TV or WebOS, with the apps built in. Pick the platform that fits you.</p>
+    {osCards.length > 0 && <section className="disco"><h2>Shop by technology</h2><p className="lead">Pick the smart platform that fits you. The apps are built in.</p>
       <div className="dgrid land">{osCards.map(c => <a className="dcard os" href={osUrl(c.os)} key={c.os}><span className="dimg"><img src={pic(c.img, 960)} srcSet={picSet(c.img)} sizes="(max-width:760px) 92vw, 46vw" alt="" loading="lazy" /></span><span className="dbody"><b>{c.os}</b><small>{c.text}</small><em>{c.from ? "from " + money(c.from) : ""}</em></span><i className="darr" aria-hidden="true">→</i></a>)}</div></section>}
     <OsChart P={tvs} lead="Not sure which operating system to pick? Here is what each one gives you, side by side." />
     <BankStrip wrap full />
@@ -134,7 +139,7 @@ export function Home() {
 
 
 
-    {quotes.length > 0 && <section><h2>What customers say</h2><p className="lead">The newest reviews from across the catalogue.</p><div className="quotes">{quotes.map((r, i) => <a className="quote" href={productUrl(r.p)} key={i}>
+    {quotes.length >= 3 && <section><h2>What customers say</h2><p className="lead">The newest reviews from across the catalogue.</p><div className="quotes">{quotes.map((r, i) => <a className="quote" href={productUrl(r.p)} key={i}>
       <div className="stars"><span>{starRow(r.rating)}</span></div><p>“{r.text}”</p><b>{r.name}</b><small>{r.p.brand} {r.p.name}</small></a>)}</div></section>}
     <Qa id="faq" title="Frequently asked questions" lead="The questions buyers ask most, answered in short." list={FAQ.slice(0, 6)} more={["/buying-guide", "More about choosing a TV"]} />
     <Row title="Recently viewed" href="" list={recent.map(byId).filter(Boolean)} />
