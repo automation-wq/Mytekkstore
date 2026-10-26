@@ -203,17 +203,17 @@ function productFrom(b) {
   const p = {
     brand: str(b.brand, "Brand", 60), cat: str(b.cat, "Category", 60), name: str(b.name, "Name", 160),
     price: int(b.price, "Price", 1, 1e8), mrp: int(b.mrp, "MRP", 1, 1e8), stock: int(b.stock, "Stock", 0, 1e6),
-    img: str(b.img, "Image", 300, /^(img\/[\w.-]+|https:\/\/[^\s"'<>]+)$/),
+    img: str(b.img, "Image", 300, /^(img\/[\w.-]+(?:\/[\w.-]+)?|https:\/\/[^\s"'<>]+)$/),
     desc: typeof b.desc === "string" && b.desc.trim() ? str(b.desc, "Description", 2000) : "",
     emi: !!b.emi, // shows the "No Cost EMI" tag
     os: typeof b.os === "string" && b.os.trim() ? str(b.os, "Operating system", 40) : "", // Google TV, WebOS, Android TV: Shop by OS and the comparison chart
     // A+ content blocks on the product page: [{ title, text, img }], up to 8
-    story: Array.isArray(b.story) ? b.story.slice(0, 8).map(x => ({ title: str(x && x.title, "A+ title", 80), text: str(x && x.text, "A+ text", 600), img: x && typeof x.img === "string" && x.img.trim() ? str(x.img, "A+ photo", 300, /^(img\/[\w.-]+|https:\/\/[^\s"'<>]+)$/) : "" })) : [],
+    story: Array.isArray(b.story) ? b.story.slice(0, 8).map(x => ({ title: str(x && x.title, "A+ title", 80), text: str(x && x.text, "A+ text", 600), img: x && typeof x.img === "string" && x.img.trim() ? str(x.img, "A+ photo", 300, /^(img\/[\w.-]+(?:\/[\w.-]+)?|https:\/\/[^\s"'<>]+)$/) : "" })) : [],
     // extra photos for the product page gallery (thumbnails), up to 8 links
-    images: Array.isArray(b.images) ? b.images.slice(0, 8).map(s => str(s, "Photo link", 300, /^(img\/[\w.-]+|https:\/\/[^\s"'<>]+)$/)) : [],
-    aplus: Array.isArray(b.aplus) ? b.aplus.slice(0, 12).map(s => str(s, "A+ image link", 300, /^(img\/[\w.-]+|https:\/\/[^\s"'<>]+)$/)) : [], // full-width creatives, stacked down the product page
+    images: Array.isArray(b.images) ? b.images.slice(0, 8).map(s => str(s, "Photo link", 300, /^(img\/[\w.-]+(?:\/[\w.-]+)?|https:\/\/[^\s"'<>]+)$/)) : [],
+    aplus: Array.isArray(b.aplus) ? b.aplus.slice(0, 12).map(s => str(s, "A+ image link", 300, /^(img\/[\w.-]+(?:\/[\w.-]+)?|https:\/\/[^\s"'<>]+)$/)) : [], // full-width creatives, stacked down the product page
     // 360-degree spin: frames shot around the product (8 to 48), drag to rotate on the product page; empty = the normal photo
-    spin: Array.isArray(b.spin) ? b.spin.slice(0, 48).map(s => str(s, "Spin frame", 300, /^(img\/[\w.-]+|https:\/\/[^\s"'<>]+)$/)) : [],
+    spin: Array.isArray(b.spin) ? b.spin.slice(0, 48).map(s => str(s, "Spin frame", 300, /^(img\/[\w.-]+(?:\/[\w.-]+)?|https:\/\/[^\s"'<>]+)$/)) : [],
     specs: [],
   };
   if (p.mrp < p.price) bad("MRP cannot be lower than the price.");

@@ -12,23 +12,23 @@ server.listen(0, "127.0.0.1", async () => {
   const addr = { name: "Test User", phone: "9999999999", address: "1 Test Street", pin: "110001" };
   try {
     let r = await call("/api/products");
-    assert.equal(r.data.products.length, 21, "televisions only: the other categories are hidden (client decision 2026-10-12); nine models plus the brochure's twelve");
+    assert.equal(r.data.products.length, 16, "televisions only, and only the brochure's models (owner decision 2026-10-26)");
     assert.ok(r.data.products.every(p => p.cat === "Televisions" && (p.os || !p.specs.some(([k]) => /smart/i.test(k)))), "every smart TV carries its operating system (a sheet without a Smart TV row is a non-smart set)");
     assert.equal(r.data.products[0].emi, true); // sample products carry the No Cost EMI tag
 
     // orders need a signed-in customer
-    assert.equal((await call("/api/orders", "POST", { ...addr, items: [{ id: 2, qty: 2 }] })).status, 401);
+    assert.equal((await call("/api/orders", "POST", { ...addr, items: [{ id: 26, qty: 2 }] })).status, 401);
     const buyer = (await call("/api/register", "POST", { name: "Buyer One", email: "buyer@example.com", password: "longenough1" })).cookie;
     // order: total comes from server prices, stock goes down, a demo message is recorded
-    r = await call("/api/orders", "POST", { ...addr, pay: "online", items: [{ id: 2, qty: 2, price: 1 }, { id: 3, qty: 1 }] }, buyer);
+    r = await call("/api/orders", "POST", { ...addr, pay: "online", items: [{ id: 26, qty: 2, price: 1 }, { id: 3, qty: 1 }] }, buyer);
     assert.equal(r.status, 200);
     const orderId = r.data.id;
     r = await call("/api/orders/" + orderId, "GET", null, buyer);
-    assert.equal(r.data.order.total, 32990 * 2 + 28990);
+    assert.equal(r.data.order.total, 69990 * 2 + 28990);
     assert.equal(r.data.order.userId, undefined);
     assert.equal(r.data.order.pay, "Paid online (demo payment)");
     r = await call("/api/products");
-    assert.equal(r.data.products.find(p => p.id === 2).stock, 23);
+    assert.equal(r.data.products.find(p => p.id === 26).stock, 8);
 
     // bad orders are refused
     assert.equal((await call("/api/orders", "POST", { ...addr, items: [{ id: 9, qty: 1 }] }, buyer)).status, 400); // a product in a hidden category cannot be ordered
@@ -74,7 +74,7 @@ server.listen(0, "127.0.0.1", async () => {
     const admin = (await call("/api/login", "POST", { email: "admin@mytekkstore.local", password: pw })).cookie;
     assert.equal((await call("/api/admin/orders", "GET", null, admin)).data.orders.length, 2);
     assert.ok((await call("/api/admin/outbox", "GET", null, admin)).data.messages.some(m => m.text.includes(orderId) && m.sent === "recorded only"));
-    assert.equal((await call("/api/products?all=1", "GET", null, admin)).data.products.length, 26, "the admin still sees the hidden categories");
+    assert.equal((await call("/api/products?all=1", "GET", null, admin)).data.products.length, 21, "the admin still sees the hidden categories");
 
     // sign in with a mobile number: the code is hashed, expires, works once and (with no SMS provider, on localhost only) comes back for testing
     const wrongFor = c => String((+c + 1) % 1e6).padStart(6, "0");
@@ -153,13 +153,13 @@ server.listen(0, "127.0.0.1", async () => {
     assert.equal((await call("/api/admin/orders/" + orderId, "PATCH", { status: "Nope" }, admin)).status, 400);
     assert.equal((await call("/api/admin/orders/" + orderId, "PATCH", { status: "Cancelled" }, admin)).status, 200);
     r = await call("/api/products");
-    assert.equal(r.data.products.find(p => p.id === 2).stock, 25); // cancel returned the stock
+    assert.equal(r.data.products.find(p => p.id === 26).stock, 10); // cancel returned the stock
     // reopening a cancelled order takes the stock again, and is refused once someone else has bought it
-    const p4 = (await call("/api/products")).data.products.find(p => p.id === 4);
-    assert.equal((await call("/api/admin/products/4", "PUT", { ...p4, stock: 3 }, admin)).status, 200); // only 3 left of this TV
-    const small = (await call("/api/orders", "POST", { ...addr, items: [{ id: 4, qty: 3 }] }, buyer)).data.id; // all 3 in stock
+    const p4 = (await call("/api/products")).data.products.find(p => p.id === 15);
+    assert.equal((await call("/api/admin/products/15", "PUT", { ...p4, stock: 3 }, admin)).status, 200); // only 3 left of this TV
+    const small = (await call("/api/orders", "POST", { ...addr, items: [{ id: 15, qty: 3 }] }, buyer)).data.id; // all 3 in stock
     assert.equal((await call("/api/admin/orders/" + small, "PATCH", { status: "Cancelled" }, admin)).status, 200);
-    assert.equal((await call("/api/orders", "POST", { ...addr, items: [{ id: 4, qty: 3 }] }, user)).status, 200);
+    assert.equal((await call("/api/orders", "POST", { ...addr, items: [{ id: 15, qty: 3 }] }, user)).status, 200);
     assert.equal((await call("/api/admin/orders/" + small, "PATCH", { status: "Placed" }, admin)).status, 409);
     assert.equal((await call("/api/admin/orders/" + small, "PATCH", { status: "Cancelled" }, admin)).status, 200); // same status again is harmless
     assert.equal((await call("/api/admin/orders/" + orderId, "GET", null, admin)).status, 404); // no such admin route, orders come as a list
@@ -202,8 +202,8 @@ server.listen(0, "127.0.0.1", async () => {
 
     // web standards: SEO tags and structured data on pages, sitemap and robots, gzip, 304 caching, security headers, styled 404
     const raw = (p, headers) => new Promise(ok => http.get(base + p, { headers }, r => { r.resume(); r.on("end", () => ok(r)); }));
-    let html = await (await fetch(base + "/product.html?id=2")).text();
-    assert.ok(html.includes("<title>Telefunken 140 cm (55 inch) 4K Ultra HD Google TV | Mytekkstore</title>") && html.includes('"@type":"Product"') && html.includes('property="og:image"'), "product page carries its SEO tags");
+    let html = await (await fetch(base + "/product.html?id=26")).text();
+    assert.ok(html.includes("<title>Elista 139 cm (55 inch) 4K Ultra HD Smart TV | Mytekkstore</title>") && html.includes('"@type":"Product"') && html.includes('property="og:image"'), "product page carries its SEO tags");
     assert.ok((await (await fetch(base + "/category.html?cat=Televisions")).text()).includes("<title>Televisions | Mytekkstore</title>"));
     html = await (await fetch(base + "/")).text();
     assert.ok(html.includes('name="description"') && html.includes('"@type":"WebSite"') && html.includes('"SearchAction"'), "home page carries the site and search structured data");
@@ -213,11 +213,11 @@ server.listen(0, "127.0.0.1", async () => {
     assert.ok(!map.includes("washing-machines") && !map.includes("/stores"), "hidden categories and the store locator are not in the sitemap");
     assert.equal((await fetch(base + "/washing-machines")).status, 404, "a hidden category has no page"); assert.equal((await fetch(base + "/stores")).status, 404, "the store locator is hidden");
     // clean addresses: the server serves the page, its own tags, and tells the app what to draw
-    html = await (await fetch(base + "/televisions/telefunken-140-cm-55-inch-4k-ultra-hd-google-tv")).text();
-    assert.ok(html.includes("<title>Telefunken 140 cm (55 inch) 4K Ultra HD Google TV | Mytekkstore</title>") && html.includes('data-id="2"') && html.includes('"@type":"Product"') && html.includes('rel="canonical" href="' + base + '/televisions/telefunken-140-cm-55-inch-4k-ultra-hd-google-tv"'), "a clean product address");
+    html = await (await fetch(base + "/televisions/elista-139-cm-55-inch-4k-ultra-hd-smart-tv")).text();
+    assert.ok(html.includes("<title>Elista 139 cm (55 inch) 4K Ultra HD Smart TV | Mytekkstore</title>") && html.includes('data-id="26"') && html.includes('"@type":"Product"') && html.includes('rel="canonical" href="' + base + '/televisions/elista-139-cm-55-inch-4k-ultra-hd-smart-tv"'), "a clean product address");
     assert.ok((await (await fetch(base + "/televisions")).text()).includes('data-cat="Televisions"'), "a clean category address");
     assert.ok((await (await fetch(base + "/shipping")).text()).includes("<title>Shipping and delivery | Mytekkstore</title>"), "a clean info address with its own title");
-    assert.ok((await (await fetch(base + "/product.html?id=2")).text()).includes('rel="canonical" href="' + base + '/televisions/telefunken-140-cm-55-inch-4k-ultra-hd-google-tv"'), "the old address points at the clean one");
+    assert.ok((await (await fetch(base + "/product.html?id=26")).text()).includes('rel="canonical" href="' + base + '/televisions/elista-139-cm-55-inch-4k-ultra-hd-smart-tv"'), "the old address points at the clean one");
     assert.ok((await (await fetch(base + "/account")).text()).includes('name="robots" content="noindex'), "private pages are not indexed");
     assert.ok((await (await fetch(base + "/robots.txt")).text()).includes("Allow: /api/products"), "search engines may fetch the product data");
     assert.ok((await (await fetch(base + "/category.html")).text()).includes("<title>All products | Mytekkstore</title>"), "the full list has its own title");
@@ -235,7 +235,7 @@ server.listen(0, "127.0.0.1", async () => {
     assert.equal((await fetch(base + "/manifest.webmanifest")).headers.get("content-type"), "application/manifest+json");
 
     // banners and campaigns: public lists carry only live records, the admin edits them, campaign pages are clean addresses
-    r = await call("/api/banners"); assert.ok(r.data.banners.length >= 5 && r.data.banners.every(b => b.live) && r.data.banners.filter(b => b.slot === "home").length === 4, "the seeded banners: four home slides (factory, Elista, Telefunken, promo), product and campaign banners");
+    r = await call("/api/banners"); assert.ok(r.data.banners.length >= 5 && r.data.banners.every(b => b.live) && r.data.banners.filter(b => b.slot === "home").length === 3, "the seeded banners: three home slides (factory, Elista, promo), product and campaign banners");
     r = await call("/api/campaigns"); assert.equal(r.data.campaigns[0].slug, "festive-tv-days");
     assert.equal((await call("/api/admin/banners", "POST", { slot: "home", title: "x" })).status, 401, "banners are the admin's");
     assert.equal((await call("/api/admin/banners", "POST", { slot: "product:999", title: "Nope", preset: "cinematic" }, admin)).status, 400, "a banner needs a real product");
@@ -246,13 +246,13 @@ server.listen(0, "127.0.0.1", async () => {
     assert.ok((await call("/api/banners?all=1", "GET", null, admin)).data.banners.some(b => b.id === bid), "the admin sees it");
     assert.equal((await call("/api/admin/banners/" + bid, "PUT", { slot: "product:3", preset: "promo", title: "Elista 43 inch.", productId: 3, live: true }, admin)).data.banner.preset, "promo");
     assert.equal((await call("/api/admin/banners/" + bid, "DELETE", null, admin)).status, 200);
-    r = await call("/api/admin/campaigns", "POST", { slug: "diwali-week", title: "Diwali Week", lead: "Two picks.", theme: "green", productIds: [2, 3], features: [{ title: "4K", text: "Both are 4K." }], offers: true, faq: [["Q?", "A."]], seo: { title: "Diwali Week", desc: "Two picks." } }, admin);
+    r = await call("/api/admin/campaigns", "POST", { slug: "diwali-week", title: "Diwali Week", lead: "Two picks.", theme: "green", productIds: [26, 3], features: [{ title: "4K", text: "Both are 4K." }], offers: true, faq: [["Q?", "A."]], seo: { title: "Diwali Week", desc: "Two picks." } }, admin);
     assert.equal(r.status, 200, JSON.stringify(r.data)); const cid = r.data.campaign.id;
     assert.equal((await call("/api/admin/campaigns", "POST", { slug: "diwali-week", title: "Again", productIds: [] }, admin)).status, 400, "campaign addresses are unique");
     html = await (await fetch(base + "/campaigns/diwali-week")).text();
     assert.ok(html.includes("<title>Diwali Week | Mytekkstore</title>") && html.includes('data-slug="diwali-week"') && html.includes('rel="canonical" href="' + base + '/campaigns/diwali-week"'), "a campaign page with its own title");
     assert.ok((await (await fetch(base + "/sitemap.xml")).text()).includes("/campaigns/diwali-week"), "live campaigns are in the sitemap");
-    assert.equal((await call("/api/admin/campaigns/" + cid, "PUT", { slug: "diwali-week", title: "Diwali Week", productIds: [2], live: false }, admin)).status, 200);
+    assert.equal((await call("/api/admin/campaigns/" + cid, "PUT", { slug: "diwali-week", title: "Diwali Week", productIds: [26], live: false }, admin)).status, 200);
     assert.equal((await fetch(base + "/campaigns/diwali-week")).status, 404, "a campaign that is not live has no page");
     assert.equal((await call("/api/admin/campaigns/" + cid, "DELETE", null, admin)).status, 200);
     assert.ok((await (await fetch(base + "/compare?ids=2,3")).text()).includes('data-page="compare"'), "the compare page");

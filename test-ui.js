@@ -259,9 +259,9 @@ async function run() {
     await b.goto(base + "/campaigns/festive-tv-days"); await sleep(600);
     const camp = await b.ev(`({ h1: document.querySelector("main h1").textContent, preset: document.querySelector(".banner").dataset.preset, cards: document.querySelectorAll("#products .card").length, cols: document.querySelectorAll(".cmp .ctable thead th").length - 1, theme: document.querySelector(".campaign").className })`);
     assert.ok(/Four\s4K\sTVs/.test(camp.h1), "the campaign hero headline: " + camp.h1); assert.equal(camp.preset, "promo"); assert.equal(camp.cards, 4, "the four picks"); assert.equal(camp.cols, 4, "the picks compared"); assert.ok(camp.theme.includes("theme-dark"));
-    await b.goto(base + "/compare?ids=2,11");
+    await b.goto(base + "/compare?ids=26,11");
     assert.equal(await b.ev(`document.querySelectorAll(".cmp .ctable thead th").length - 1`), 2, "the compare page shows the two models");
-    await b.goto(base + "/televisions/telefunken-140-cm-55-inch-4k-ultra-hd-google-tv"); await sleep(400);
+    await b.goto(base + "/televisions/elista-108-cm-43-inch-4k-ultra-hd-smart-tv"); await sleep(400);
     assert.equal(await b.ev(`document.querySelector("main .banner.phero").dataset.preset`), "cinematic", "the product's own banner, before the buy box");
     assert.equal(await b.ev(`document.querySelectorAll("main h1").length`), 1, "one h1 on the product page");
     await b.click(...await b.center(".chatfab")); await sleep(500);
@@ -275,7 +275,7 @@ async function run() {
 
     step = "product page: size switcher, delivery check, share, rating bars";
     await b.ev(`localStorage.removeItem("cart")`); // the deals card above added the 32 inch model (the biggest discount since the brochure MRPs); this step adds it fresh
-    await b.goto(base + "/televisions/telefunken-140-cm-55-inch-4k-ultra-hd-google-tv");
+    await b.goto(base + "/televisions/elista-139-cm-55-inch-4k-ultra-hd-smart-tv");
     const sizeChips = await b.ev(`[...document.querySelectorAll(".sizes .chip b")].map(a => a.textContent)`);
     assert.ok(sizeChips.includes("32 inch") && sizeChips.includes("55 inch") && sizeChips.includes("65 inch") && sizeChips.length >= 6, "the size switcher lists the catalogue's sizes: " + sizeChips.join(", "));
     assert.equal(await b.ev(`document.querySelector(".sizes .chip.on b").textContent`), "55 inch");
@@ -308,7 +308,7 @@ async function run() {
     assert.equal(await b.ev(`getComputedStyle(document.querySelector(".pdp .actions .btn")).borderRadius`), "999px", "pill buttons");
     await b.goto(base + "/");
     const clips = await b.ev(`({ hero: document.querySelectorAll(".slide").length, oss: document.querySelectorAll(".disco .dcard.os").length, brands: document.querySelectorAll(".bbrand").length, arrows: [...document.querySelectorAll(".strip")].filter(x => !x.classList.contains("nos") && x.querySelector(".row").scrollWidth <= x.querySelector(".row").clientWidth + 2).length })`);
-    assert.equal(clips.hero, 3, "three hero slides per the client MOM of 23 October: factory price, Elista, Telefunken (the promo banner is not in the rotation)"); assert.ok(clips.oss >= 2 && clips.oss <= 4, "shop by operating system on the home page: one card per system in the catalogue (" + clips.oss + ")"); assert.equal(clips.brands, 2, "a giant tile per brand");
+    assert.ok(clips.hero >= 2, "the deal hero and a slide per brand in the catalogue (" + clips.hero + ")"); assert.ok(clips.oss >= 2 && clips.oss <= 4, "shop by operating system on the home page: one card per system in the catalogue (" + clips.oss + ")"); assert.ok(clips.brands >= 1, "a giant tile per brand in the catalogue");
     assert.equal(clips.arrows, 0, "a row that fits on the screen shows no scroll arrows");
     await b.goto(base + "/category.html?cat=Televisions");
     assert.deepEqual(await b.ev(`[...document.querySelectorAll(".cdisco .dtabs button")].map(b => b.textContent)`), ["Shop by Size", "Shop by Budget", "Shop by OS", "Screen type / Resolution"], "four-tab discovery under the category banner: size, budget, operating system, screen type");
@@ -361,7 +361,7 @@ async function run() {
 
     step = "every link on the main pages opens a real page";
     const seen = new Set(), skip = /\/(checkout|order|admin)(\.html|\?|$)|#/; // pages that need a sign-in or an order, and in-page anchors
-    for (const start of ["/", "/offers.html", "/televisions/telefunken-140-cm-55-inch-4k-ultra-hd-google-tv", "/account.html", "/shipping"]) {
+    for (const start of ["/", "/offers.html", "/televisions/elista-108-cm-43-inch-4k-ultra-hd-smart-tv", "/account.html", "/shipping"]) {
       await b.goto(base + start);
       for (const h of await b.ev(`[...document.querySelectorAll("a[href]")].map(a => a.href)`)) if (h.startsWith(base) && !skip.test(h)) seen.add(h);
     }
