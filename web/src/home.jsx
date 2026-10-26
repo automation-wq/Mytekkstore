@@ -89,7 +89,7 @@ export function Home() {
         {sl.prod && seen.has(i) && <m.a className={"bigtv" + (cutout(sl.prod.img) ? " cut" : "")} variants={RISE} href={productUrl(sl.prod)}>{cutout(sl.prod.img)
           ? <><span className="tvglow" aria-hidden="true"></span><img className="tvmain" src={cutout(sl.prod.img)} alt={sl.prod.brand + " " + sl.prod.name} loading={i ? "lazy" : "eager"} /><img className="tvrefl" src={cutout(sl.prod.img)} alt="" aria-hidden="true" loading="lazy" /></>
           : <img src={pic(sl.prod.img)} srcSet={picSet(sl.prod.img)} sizes="(max-width:760px) 40vw, 30vw" alt={sl.prod.brand + " " + sl.prod.name} width="800" height="800" loading={i ? "lazy" : "eager"} />}</m.a>}
-        {sl.art && <m.span className="bigtv cut art" variants={RISE} aria-hidden="true"><span className="tvglow"></span><img className="tvmain" src={sl.art} alt="" width="865" height="572" fetchPriority={i ? "low" : "high"} loading={i ? "lazy" : "eager"} decoding="async" /></m.span>}
+        {sl.art && <m.span className="bigtv cut art" variants={RISE} aria-hidden="true"><span className="tvglow"></span><img className="tvmain" src={sl.art} srcSet={sl.art.replace(".webp", "-480.webp") + " 480w, " + sl.art + " 865w"} sizes="(max-width:760px) 70vw, 40vw" alt="" width="865" height="572" fetchPriority={i ? "low" : "high"} loading={i ? "lazy" : "eager"} decoding="async" /></m.span>}
         <div className="hpanel">
           {sl.eyebrow && <m.span className="eyebrow" variants={RISE}>{sl.eyebrow}</m.span>}
           <m.h1 variants={WORDS}>{sl.h.map((l, j) => <span className="ln" key={j}>{l.split(" ").map((w, k) => <m.span className={"w" + (sl.hi && sl.hi.includes(w) ? " hi" : "")} variants={RISE} key={k}>{w}&nbsp;</m.span>)}</span>)}</m.h1>

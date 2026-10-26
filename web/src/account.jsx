@@ -56,8 +56,6 @@ function SignIn({ CFG }) {
   return <div className="auth">
     <m.aside className="aside cine" initial="hide" animate="show" variants={GROUP}>
       <picture className="aimg2" aria-hidden="true"><img src={pic("img/life-cinema.jpg", 960)} srcSet={picSet("img/life-cinema.jpg")} sizes="(max-width:860px) 100vw, 50vw" alt="" decoding="async" /></picture>
-      <span className="aglow" aria-hidden="true"></span>
-      <m.img className="atv" src="/img/p34-cut.webp" alt="" aria-hidden="true" variants={FLOAT} />
       <div className="atext"><m.p className="kicker" variants={UP}>Welcome to Mytekkstore</m.p>
         <m.h2 variants={WORDS}>{"One account. Every TV deal.".split(" ").map((w, k) => <span className="ln" key={k}><m.span className="w" variants={RISE}>{w}&nbsp;</m.span></span>)}</m.h2>
         <m.ul variants={GROUP}>{["Faster checkout with a saved address", "Order tracking and history", "Reviews and wishlist", "Festive and bank offers first"].map(t => <m.li variants={UP} key={t}><Icon k="check" />{t}</m.li>)}</m.ul></div></m.aside>

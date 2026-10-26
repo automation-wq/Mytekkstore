@@ -20,7 +20,7 @@ const shell = (page, title) => `<!doctype html>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="icon" href="/favicon.svg">
 <link rel="manifest" href="/manifest.webmanifest">
-<meta name="theme-color" content="#08805f">${page === "home" ? '\n<link rel="preload" as="image" href="/img/hero-a.webp" imagesrcset="/img/hero-a-480.webp 480w, /img/hero-a-960.webp 960w, /img/hero-a.webp 1376w" imagesizes="100vw" fetchpriority="high" media="(min-width: 761px)"><link rel="preload" as="image" href="/img/hero-a-m-960.webp" fetchpriority="high" media="(max-width: 760px)">' : ""}
+<meta name="theme-color" content="#08805f">${page === "home" ? '\n<link rel="preload" as="image" href="/img/tv-ocean.webp" imagesrcset="/img/tv-ocean-480.webp 480w, /img/tv-ocean.webp 865w" imagesizes="(max-width:760px) 70vw, 40vw" fetchpriority="high">' : ""}
 </head>
 <body data-page="${page}">
 <div id="root"></div>
