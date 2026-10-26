@@ -57,7 +57,7 @@ export function Home() {
   const spec = (p, k) => ((p.specs || []).find(([n]) => n.toLowerCase().includes(k)) || [])[1] || "";
   const inchOf = p => +((/\((\d+)\s*inch\)/.exec(p.name) || [])[1] || 0);
   const minP = ps => ps.length ? Math.min(...ps.map(p => p.price)) : 0;
-  const SHOTS = ["img/p1.jpg", "img/p3.jpg", "img/p0.jpg", "img/p2.jpg"], LIFE = [life("os1", "img/life-room.jpg"), life("os2", "img/hero0.jpg")];
+  const SHOTS = ["img/p1.jpg", "img/p3.jpg", "img/p0.jpg", "img/p2.jpg"], LIFE = [life("os1", "img/life-room.jpg"), life("os2", "img/hero0.jpg"), life("os3", "img/life-12.jpg"), life("os4", "img/life-13.jpg")]; // one photograph per operating system, none repeated
   const sizeCards = [[32, "Compact spaces"], [43, "Everyday viewing"], [55, "Living-room favourite"], [65, "Cinematic experience"], [75, "Go bigger"]].map(([inch, desc], i) => ({ inch, desc, img: life("size" + inch, SHOTS[i % SHOTS.length]), from: minP(tvs.filter(p => inchOf(p) === inch)) }));
   const osBenefit = { "Google TV": "Every app on one home screen, with Google Assistant and Chromecast.", "WebOS": "A quick card-style home screen with apps built in — no set-top box.", "Android TV": "Google Play apps and Chromecast, built in." };
   const osCards = oss.map((o, i) => ({ os: o, text: osBenefit[o] || "Smart apps built in.", img: LIFE[i % LIFE.length], from: minP(tvs.filter(p => p.os === o)) }));

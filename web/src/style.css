@@ -2263,3 +2263,6 @@ main > .trustrow { margin-top:clamp(48px,7vw,96px) }
 .showcase h2 { background:linear-gradient(92deg,#fff 0%,#dfe6ff 70%,#c7d2fe 100%); -webkit-background-clip:text; background-clip:text; color:transparent }
 .ctable .na { color:var(--muted); font-style:italic; font-size:13px }
 @media (max-width:860px) { .aplus .ablock.acare { grid-template-columns:1fr; grid-template-areas:"text" "fig" "list" } .showcase::after { display:none } }
+
+/* ─ tall picture cards (26 Oct): the photograph fills the whole card, the words sit on its shade; no white below the picture ─ */
+.dcard.tall { background:#0d1117 } .dcard.tall .dimg { position:absolute; inset:0; width:100%; height:100%; aspect-ratio:auto } .dcard.tall .dimg img { width:100%; height:100%; object-fit:cover; object-position:center } .dcard.tall .lshade { position:absolute; inset:auto 0 0; height:70%; background:linear-gradient(180deg,transparent,#0d1117e6 70%) }
