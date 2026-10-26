@@ -3,12 +3,12 @@ import { pic, TV_OS } from "./data.js";
 import { PRESETS, TONES, FOCUS } from "./banner.jsx";
 import { useEffect, useState } from "react";
 import { useStore } from "./store.jsx";
-import { api } from "./api.js";
+import { api, qs } from "./api.js";
 import { Form, Box } from "./components.jsx";
 import { reveal } from "./motion.js";
 
 const ALL = ["Placed", "Confirmed", "Shipped", "Delivered", "Cancelled"];
-const EMPTY = { id: "", brand: "", cat: "", name: "", price: "", mrp: "", stock: 10, img: "", desc: "", specs: "", emi: false, images: "", os: "", story: "", spin: "" };
+const EMPTY = { id: "", brand: "", cat: "", name: "", price: "", mrp: "", stock: 10, img: "", desc: "", specs: "", emi: false, images: "", os: "", story: "", spin: "", aplus: "" };
 const EMPTY_B = { id: "", slot: "home", order: 1, preset: "cinematic", kicker: "", title: "", text: "", cta: "", href: "", cta2: "", href2: "", img: "", imgMobile: "", focus: "center", align: "left", badge: "", tone: "photo", productId: "", brand: "", until: "", live: true };
 const EMPTY_C = { id: "", slug: "", title: "", lead: "", theme: "light", productIds: "", features: "", faq: "", seoTitle: "", seoDesc: "", offers: true, sample: false, live: true };
 const split = (s, n) => s.split("\n").map(l => l.split("|").map(x => x.trim())).filter(parts => parts.slice(0, n).every(Boolean)); // "a | b | c" lines
@@ -28,19 +28,20 @@ export function Admin() {
   };
   useEffect(() => { document.title = "Store admin | Mytekkstore"; if (allowed) draw(); }, []);
   useEffect(() => { if (ready) reveal(); }, [ready]);
+  useEffect(() => { if (!ready) return; const id = qs.get("edit"), p = id && products.find(x => String(x.id) === id); if (p) { edit(p); setTimeout(() => { const f = document.querySelector("form"); if (f) f.scrollIntoView({ block: "start" }); }, 50); } }, [ready]); // /admin?edit=<id>: straight to that product (the Edit in admin link on its page)
   if (!allowed) return <Box title="Admins only" text="Sign in with the store admin account to manage products and orders." href="/account?next=/admin" cta="Sign in" />;
   if (!ready) return null;
   const live = orders.filter(o => o.status !== "Cancelled");
   const set = k => e => setF(x => ({ ...x, [k]: e.target.type === "checkbox" ? e.target.checked : e.target.value }));
   const saveProduct = async () => {
-    const body = { brand: f.brand, cat: f.cat, name: f.name, price: +f.price, mrp: +f.mrp, stock: +f.stock, img: f.img, desc: f.desc, emi: !!f.emi, images: f.images.split("\n").map(s => s.trim()).filter(Boolean), spin: f.spin.split("\n").map(s => s.trim()).filter(Boolean), os: f.os.trim(),
+    const body = { brand: f.brand, cat: f.cat, name: f.name, price: +f.price, mrp: +f.mrp, stock: +f.stock, img: f.img, desc: f.desc, emi: !!f.emi, images: f.images.split("\n").map(s => s.trim()).filter(Boolean), aplus: f.aplus.split("\n").map(s => s.trim()).filter(Boolean), spin: f.spin.split("\n").map(s => s.trim()).filter(Boolean), os: f.os.trim(),
       story: f.story.split("\n").map(l => l.split("|").map(x => x.trim())).filter(([t, x]) => t && x).map(([title, text, img]) => ({ title, text, img: img || "" })),
       specs: f.specs.split("\n").map(l => l.split(/:(.*)/s).slice(0, 2).map(x => x.trim())).filter(([k, v]) => k && v) };
     await (f.id ? api("admin/products/" + f.id, "PUT", body) : api("admin/products", "POST", body));
     toast(f.id ? "Product updated" : "Product added");
     await draw();
   };
-  const edit = p => { setF({ id: p.id, brand: p.brand, cat: p.cat, name: p.name, price: p.price, mrp: p.mrp, stock: p.stock, img: p.img, desc: p.desc || "", specs: (p.specs || []).map(([k, v]) => k + ": " + v).join("\n"), emi: !!p.emi, images: (p.images || []).join("\n"), spin: (p.spin || []).join("\n"), os: p.os || "", story: (p.story || []).map(b => [b.title, b.text, b.img].filter(Boolean).join(" | ")).join("\n") }); document.getElementById("pform").scrollIntoView({ behavior: "smooth", block: "center" }); };
+  const edit = p => { setF({ id: p.id, brand: p.brand, cat: p.cat, name: p.name, price: p.price, mrp: p.mrp, stock: p.stock, img: p.img, desc: p.desc || "", specs: (p.specs || []).map(([k, v]) => k + ": " + v).join("\n"), emi: !!p.emi, images: (p.images || []).join("\n"), aplus: (p.aplus || []).join("\n"), spin: (p.spin || []).join("\n"), os: p.os || "", story: (p.story || []).map(b => [b.title, b.text, b.img].filter(Boolean).join(" | ")).join("\n") }); document.getElementById("pform").scrollIntoView({ behavior: "smooth", block: "center" }); };
   const del = async p => { // two clicks to delete instead of a pop-up
     if (sure !== p.id) { setSure(p.id); setTimeout(() => setSure(s => s === p.id ? null : s), 3000); return; }
     try { await api("admin/products/" + p.id, "DELETE"); toast("Product deleted"); } catch (ex) { toast(ex.message); }
@@ -107,6 +108,7 @@ export function Admin() {
         <label className="span2">Description<textarea name="desc" rows="4" maxLength="2000" value={f.desc} onChange={set("desc")}></textarea></label>
         <label className="span2">Specifications (one per line, as Name: Value)<textarea name="specs" rows="4" placeholder={"Screen size: 55 inch\nResolution: 4K Ultra HD"} value={f.specs} onChange={set("specs")}></textarea></label>
         <label className="span2">A+ content for the product page (one block per line: Title | Text | img/photo.jpg)<textarea name="story" rows="3" placeholder={"Cinema at home | A 55 inch 4K picture with Dolby Audio. | img/p1.jpg"} value={f.story} onChange={set("story")}></textarea></label>
+        <label className="span2">A+ creatives (full-width images stacked down the page, the way Croma and Amazon show them: one link per line, 1000 px wide or more, uploaded with the photo button above or linked from the brand)<textarea name="aplus" rows="3" placeholder={"img/u-aplus-1.jpg\nhttps://brand.example/creative-2.png"} value={f.aplus} onChange={set("aplus")}></textarea></label>
         <label className="radio span2"><input type="checkbox" name="emi" value="1" checked={f.emi} onChange={set("emi")} /> No Cost EMI available on this product (shows the tag on the site)</label>
         <datalist id="brands">{BRANDS.map(b => <option value={b} key={b} />)}</datalist><datalist id="cats">{CATS.map(c => <option value={c} key={c} />)}</datalist><datalist id="oss">{Object.keys(TV_OS).map(o => <option value={o} key={o} />)}</datalist>
       </Form>

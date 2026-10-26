@@ -2271,3 +2271,23 @@ main > .trustrow { margin-top:clamp(48px,7vw,96px) }
 .dgrid.four { grid-template-columns:repeat(3,1fr) } .dgrid.four .dcard.tall { aspect-ratio:16/11 }
 .dcard.tall img[src*="webos-43-room"], .dcard.tall img[src*="webos-75-room"] { object-position:18% 50% } /* the television stands at the left of these rooms */
 @media (max-width:760px) { .dgrid.four .dcard.tall { aspect-ratio:4/3 } }
+
+/* ─ plain pages (26 Oct, evening): the A+ story as full-width rows, creatives stacked, section containers without card chrome ─ */
+.acreatives { display:grid; margin:28px 0 0 } .acreatives img { width:100%; height:auto; display:block }
+.adminlink { margin:0 0 10px; font-size:13px } .adminlink a { color:var(--accent); font-weight:700 }
+.aplus .ablock, .aplus .showcase, .ahero { border-radius:0 }
+.aplus .ablock { grid-template-columns:1fr; background:none; box-shadow:none; padding:clamp(24px,3vw,40px) 0 0; margin-top:28px; border-top:1px solid var(--line); gap:18px; min-height:0 }
+.aplus .ablock.dark { background:#0b0e14; padding:clamp(24px,3vw,40px); border-top:0 }
+.aplus .ablock img { border-radius:0; width:100%; aspect-ratio:21/9; object-fit:cover; order:0 }
+.aplus .ablock > div { max-width:760px } .aplus .ablock p { max-width:640px }
+.aplus .ablock img[src*="/img/br/"] { aspect-ratio:auto; width:auto; max-width:100%; max-height:440px; object-fit:contain; justify-self:center; padding:0; background:none }
+.aplus .ablock.aports, .aplus .ablock.aroom { grid-template-columns:1fr 1fr; align-items:center } .aplus .ablock.acare { grid-template-columns:1.15fr 1fr }
+.aplus .ablock .portbay, .aplus .ablock .roomfig { border-radius:12px }
+.ablock.flip img { order:0 }
+.panel, .box, .mbox, .qbox, .npanel, .quote, .emiband, .guide, .help, .offer, .fstrip { border-radius:10px; box-shadow:none }
+.trustrow .why div { background:none; border:0; border-top:1px solid var(--line); border-radius:0; padding:16px 0 }
+.dcard, .card { border-radius:8px; box-shadow:none }
+.card:hover, .dcard:hover { box-shadow:none; translate:0 }
+.auth.mono { border-radius:12px; box-shadow:none; border:1px solid var(--line) }
+.amark { width:min(78%,440px); aspect-ratio:auto } .amark img { width:100%; height:auto; display:block; filter:drop-shadow(0 34px 44px #000) }
+@media (max-width:860px) { .aplus .ablock.aports, .aplus .ablock.aroom, .aplus .ablock.acare { grid-template-columns:1fr } }

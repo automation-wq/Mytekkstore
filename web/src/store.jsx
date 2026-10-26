@@ -22,8 +22,10 @@ export function StoreProvider({ children }) {
   const [bump, setBump] = useState(0);
   const toastTimer = useRef();
 
-  const country = useMemo(() => { const c = load("country", "India"); return Object.hasOwn(COUNTRIES, c) ? c : "India"; }, []);
-  const money = n => { const [s, l, r0] = COUNTRIES[country]; const code = { UAE: "AED", USA: "USD" }[country]; const r = (code && CFG && CFG.fx && CFG.fx.rates && CFG.fx.rates[code]) || r0; return s + Math.round(n * r).toLocaleString(l); }; // live display rates from the server when it has them; every order is charged in INR
+  const [country, setCountry] = useState(() => { const c = load("country", "India"); return Object.hasOwn(COUNTRIES, c) ? c : "India"; });
+  // a first visit takes the display currency from the visitor's country (the hosting's own header, no lookup service); a choice in the header always wins
+  useEffect(() => { if (!CFG || load("country", null) !== null) return; const guess = { AE: "UAE", SA: "Saudi Arabia", US: "USA" }[CFG.country]; if (guess) { save("country", guess); setCountry(guess); } }, [CFG]);
+  const money = n => { const [s, l, r0] = COUNTRIES[country]; const code = { UAE: "AED", "Saudi Arabia": "SAR", USA: "USD" }[country]; const r = (code && CFG && CFG.fx && CFG.fx.rates && CFG.fx.rates[code]) || r0; return s + Math.round(n * r).toLocaleString(l); }; // live display rates from the server when it has them; every order is charged in INR
 
   useEffect(() => {
     const apply = ({ products, user, cfg, banners }) => {

@@ -286,7 +286,7 @@ export function Header() {
     <div className="wrap">
       <a className="logo" href="/"><svg viewBox="0 0 32 32" width="30" height="30" aria-hidden="true"><rect width="32" height="32" rx="9" fill="var(--accent)" /><path d="M18 5 9 18h6l-2 9 10-14h-6z" fill="#ffffff" /></svg><span>mytekk<b>store</b></span></a>
       <Search /><Deliver />
-      <select id="country" aria-label="Country" defaultValue={country} onChange={e => { save("country", e.target.value); location.reload(); }}>{Object.keys(COUNTRIES).map(c => <option value={c} key={c}>{c}</option>)}</select>
+      <select id="country" aria-label="Country" value={country} onChange={e => { save("country", e.target.value); location.reload(); }}>{Object.keys(COUNTRIES).map(c => <option value={c} key={c}>{c}</option>)}</select>
       <a className="hlink" href="/account" aria-label={me ? "My account" : "Sign in"}><Icon k="user" /> <span>{me ? me.name.split(" ")[0] : "Sign in"}</span></a>
       <a className="hlink" href="/products?wish=1" aria-label="Wishlist"><Icon k="heart" /> <span id="wishN" className="count" hidden={!wish.length}>{wish.length}</span></a>
       <a className="hlink" href="/cart" data-drawer aria-label="Cart"><Icon k="cart" /> <span id="cartN" className={"count" + (bump ? " bump" : "")} key={bump} hidden={!n}>{n}</span></a>

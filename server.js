@@ -211,6 +211,7 @@ function productFrom(b) {
     story: Array.isArray(b.story) ? b.story.slice(0, 8).map(x => ({ title: str(x && x.title, "A+ title", 80), text: str(x && x.text, "A+ text", 600), img: x && typeof x.img === "string" && x.img.trim() ? str(x.img, "A+ photo", 300, /^(img\/[\w.-]+|https:\/\/[^\s"'<>]+)$/) : "" })) : [],
     // extra photos for the product page gallery (thumbnails), up to 8 links
     images: Array.isArray(b.images) ? b.images.slice(0, 8).map(s => str(s, "Photo link", 300, /^(img\/[\w.-]+|https:\/\/[^\s"'<>]+)$/)) : [],
+    aplus: Array.isArray(b.aplus) ? b.aplus.slice(0, 12).map(s => str(s, "A+ image link", 300, /^(img\/[\w.-]+|https:\/\/[^\s"'<>]+)$/)) : [], // full-width creatives, stacked down the product page
     // 360-degree spin: frames shot around the product (8 to 48), drag to rotate on the product page; empty = the normal photo
     spin: Array.isArray(b.spin) ? b.spin.slice(0, 48).map(s => str(s, "Spin frame", 300, /^(img\/[\w.-]+|https:\/\/[^\s"'<>]+)$/)) : [],
     specs: [],
@@ -408,6 +409,7 @@ const DESTINATIONS = {
   IN: { name: "India", display: "INR", charge: ["INR"], settle: "INR", methods: ["cod", "online"], ship: true, delivery: "3 to 5 days", tax: "GST included in the price" },
   AE: { name: "United Arab Emirates", display: "AED", charge: [], settle: "INR", methods: [], ship: false, delivery: "", tax: "Import duties would apply" },
   US: { name: "United States", display: "USD", charge: [], settle: "INR", methods: [], ship: false, delivery: "", tax: "Import duties would apply" },
+  SA: { name: "Saudi Arabia", display: "SAR", charge: [], settle: "INR", methods: [], ship: false, delivery: "", tax: "Import duties would apply" },
 };
 function destinationOf(body) {
   const code = body.country == null ? "IN" : str(body.country, "Country", 2, /^[A-Z]{2}$/);
@@ -416,13 +418,13 @@ function destinationOf(body) {
   return d;
 }
 // display rates from the European-sourced Frankfurter feed (free, no key, daily), the old constants as the fallback; refreshed every 6 hours
-const FX_STATIC = { AED: 0.044, USD: 0.012 };
+const FX_STATIC = { AED: 0.044, USD: 0.012, SAR: 0.0395 };
 let fx = { rates: FX_STATIC, date: "", source: "static", at: 0 };
 async function refreshFx() {
   if (Date.now() - fx.at < 6 * 3600000) return;
   fx.at = Date.now();
   try {
-    const r = await fetch("https://api.frankfurter.dev/v2/rates?base=INR&quotes=AED,USD", { signal: AbortSignal.timeout(2500) }); // short: the config call waits for it
+    const r = await fetch("https://api.frankfurter.dev/v2/rates?base=INR&quotes=AED,USD,SAR", { signal: AbortSignal.timeout(2500) }); // short: the config call waits for it
     if (!r.ok) return;
     const rows = await r.json(), rates = { ...FX_STATIC };
     for (const x of rows) if (x.quote && x.rate > 0) rates[x.quote] = x.rate;
@@ -542,7 +544,7 @@ async function askModel(system, history, message) {
   throw new HttpError(503, "The assistant is not available right now.");
 }
 
-on("GET", "config", async () => ({ google: GOOGLE, sms: smsReady, mail: mailReady, demoCodes: OTP_DEMO, clarity: !!CLARITY, chat: !!(GEMINI_KEY || CHAT_KEY), pay: PAY_PROVIDER, payKey: RZP.id, fx: await fxNow(), destinations: Object.fromEntries(Object.entries(DESTINATIONS).map(([k, d]) => [k, { name: d.name, display: d.display, ship: d.ship, methods: d.methods }])) }));
+on("GET", "config", async ({ req }) => ({ country: String(req.headers["x-vercel-ip-country"] || "").toUpperCase().slice(0, 2), /* the hosting's own geolocation header; empty on a local machine */ google: GOOGLE, sms: smsReady, mail: mailReady, demoCodes: OTP_DEMO, clarity: !!CLARITY, chat: !!(GEMINI_KEY || CHAT_KEY), pay: PAY_PROVIDER, payKey: RZP.id, fx: await fxNow(), destinations: Object.fromEntries(Object.entries(DESTINATIONS).map(([k, d]) => [k, { name: d.name, display: d.display, ship: d.ship, methods: d.methods }])) }));
 // Contact form (page.html?p=contact): the message is recorded in the admin outbox ("Customer messages"), so the store sees it
 // even before an email provider is connected. ponytail: no rate limit beyond the body size; add one if the form gets abused.
 on("POST", "contact", ({ body }) => {

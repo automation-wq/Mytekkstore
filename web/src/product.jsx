@@ -153,8 +153,10 @@ export function Product() {
       </div>
     </div>
     {story.length > 0 && <section className="aplus" id="aplus">
+      {me && me.admin && <p className="adminlink"><a href={"/admin?edit=" + p.id}>Edit this product in the admin (photos, A+ creatives, specifications) →</a></p>}
       <div className="ahero"><img src={pic(life("aplusHero", "img/hero0.jpg"), 960)} srcSet={picSet(life("aplusHero", "img/hero0.jpg"))} sizes="(max-width:1240px) 100vw, 1240px" alt="" loading="lazy" /><div className="atext"><span className="kicker">{p.brand}{spec(p, "screen size") ? " · " + spec(p, "screen size") : ""}</span><h2>{aheroTitle}</h2><p>{aheroLead}</p>
         <div className="astats">{callouts(p).map(([big, small]) => <div key={big + small}><b>{big}</b><small>{small}</small></div>)}</div></div></div>
+      {(p.aplus || []).length > 0 && <div className="acreatives">{p.aplus.map(src => <img src={pic(src)} alt="" loading="lazy" key={src} />)}</div>}
       <div className="showcase">{cutout(p.img) ? <img className="cut" src={cutout(p.img)} alt="" loading="lazy" /> : <img className="tilep" src={pic(p.img)} srcSet={picSet(p.img)} sizes="(max-width:860px) 80vw, 40vw" alt="" loading="lazy" width="800" height="800" />}
         <div><span className="kicker">{story[0].kicker}</span><h2>{story[0].title}.</h2><p>{story[0].text}</p>{p.features && p.features.length > 0 && <ul className="afeat" aria-label="Highlights from the brand's brochure">{p.features.map(f => <li key={f}>{f}</li>)}</ul>}</div></div>
       {story.slice(1).map((b, i) => <div className={"ablock" + (i % 2 ? " flip" : "") + (i === 1 ? " dark" : "")} key={i}>{b.img && (cutout(b.img) ? <img className="cut" src={cutout(b.img)} alt="" loading="lazy" /> : <img src={pic(b.img, 960)} srcSet={picSet(b.img)} sizes="(max-width:860px) 100vw, 50vw" alt="" loading="lazy" />)}<div>{b.kicker && <span className="kicker">{b.kicker}</span>}<h3>{b.title}</h3><p>{b.text}</p>{b.kicker === "Smart" && x.apps.length > 0 && <div className="aapps">{x.apps.map(a => <span key={a}>{a}</span>)}</div>}</div></div>)}
