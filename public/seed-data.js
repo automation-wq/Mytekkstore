@@ -11,7 +11,7 @@ const SEED = [
   "mrp": 29999,
   "stock": 25,
   "emi": true,
-  "img": "img/p0.jpg",
+  "img": "img/br/webos-32-room.webp",
   "desc": "Elista 80 cm (32 inch) HD Ready Smart LED TV. webOS Hub with ThinQ AI, Dolby Audio, 3 HDMI and 2 USB, Bluetooth 5.0 and dual-band Wi-Fi. Free delivery, cash on delivery, and the Elista warranty.",
   "specs": [
    [
@@ -82,7 +82,7 @@ const SEED = [
    "1 + 1 year warranty"
   ],
   "images": [
-   "img/br/webos-32-room.webp",
+   "img/p0.jpg",
    "img/br/webos-hub-tv.webp"
   ]
  },
@@ -95,7 +95,7 @@ const SEED = [
   "mrp": 48990,
   "stock": 25,
   "emi": true,
-  "img": "img/p2.jpg",
+  "img": "img/br/webos-43-room.webp",
   "desc": "Elista 108 cm (43 inch) 4K Ultra HD Smart TV. webOS Hub with ThinQ AI and the Magic Remote, Dolby Audio, 3 HDMI and 2 USB, Bluetooth 5.0 and dual-band Wi-Fi. Free delivery, cash on delivery, and the Elista warranty.",
   "specs": [
    [
@@ -165,7 +165,7 @@ const SEED = [
    "1 + 1 year warranty"
   ],
   "images": [
-   "img/br/webos-43-room.webp",
+   "img/p2.jpg",
    "img/br/webos-hub-tv.webp",
    "img/br/magic-remote.webp",
    "img/br/magic-remote-guide.webp"
@@ -389,7 +389,7 @@ const SEED = [
   "mrp": 59990,
   "stock": 18,
   "emi": true,
-  "img": "img/p2-v1.jpg",
+  "img": "img/br/webos-50-room.webp",
   "os": "WebOS",
   "specs": [
    [
@@ -446,7 +446,7 @@ const SEED = [
    ]
   ],
   "images": [
-   "img/br/webos-50-room.webp",
+   "img/p2-v1.jpg",
    "img/br/webos-hub-tv.webp",
    "img/br/magic-remote.webp",
    "img/br/magic-remote-guide.webp"
@@ -547,7 +547,7 @@ const SEED = [
   "mrp": 149999,
   "stock": 10,
   "emi": false,
-  "img": "img/p3-v1.jpg",
+  "img": "img/br/webos-85-room.webp",
   "desc": "Elista 215 cm (85 inch) QLED 4K Ultra HD Smart TV. QLED panel, webOS Hub with ThinQ AI and the Magic Remote, Dolby Audio, 3 HDMI and 2 USB. Free delivery, cash on delivery, and the Elista warranty.",
   "specs": [
    [
@@ -616,7 +616,7 @@ const SEED = [
    "1 + 1 year warranty"
   ],
   "images": [
-   "img/br/webos-85-room.webp",
+   "img/p3-v1.jpg",
    "img/br/webos-hub-tv.webp",
    "img/br/magic-remote.webp",
    "img/br/magic-remote-guide.webp"
@@ -631,7 +631,7 @@ const SEED = [
   "mrp": 90000,
   "stock": 10,
   "emi": false,
-  "img": "img/p3-v1.jpg",
+  "img": "img/br/webos-75-room.webp",
   "desc": "Elista 190 cm (75 inch) 4K Ultra HD Smart TV. webOS Hub with ThinQ AI, Alexa and the Magic Remote, Dolby Audio, 3 HDMI and 2 USB. Free delivery, cash on delivery, and the Elista warranty.",
   "specs": [
    [
@@ -700,7 +700,7 @@ const SEED = [
    "1 + 1 year warranty"
   ],
   "images": [
-   "img/br/webos-75-room.webp",
+   "img/p3-v1.jpg",
    "img/br/webos-hub-tv.webp",
    "img/br/magic-remote.webp",
    "img/br/magic-remote-guide.webp"
@@ -715,7 +715,7 @@ const SEED = [
   "mrp": 79990,
   "stock": 10,
   "emi": false,
-  "img": "img/p2-v1.jpg",
+  "img": "img/br/webos-65-room.webp",
   "desc": "Elista 164 cm (65 inch) 4K Ultra HD Smart TV. webOS Hub with ThinQ AI and the Magic Remote, Dolby Audio, 3 HDMI and 2 USB. Free delivery, cash on delivery, and the Elista warranty.",
   "specs": [
    [
@@ -783,7 +783,7 @@ const SEED = [
    "1 + 1 year warranty"
   ],
   "images": [
-   "img/br/webos-65-room.webp",
+   "img/p2-v1.jpg",
    "img/br/webos-hub-tv.webp",
    "img/br/magic-remote.webp",
    "img/br/magic-remote-guide.webp"
@@ -798,7 +798,7 @@ const SEED = [
   "mrp": 69990,
   "stock": 10,
   "emi": false,
-  "img": "img/p2-v1.jpg",
+  "img": "img/br/webos-55-room.webp",
   "desc": "Elista 139 cm (55 inch) 4K Ultra HD Smart TV. webOS Hub with ThinQ AI and the Magic Remote, Dolby Audio with a 50 W speaker, 3 HDMI and 2 USB. Free delivery, cash on delivery, and the Elista warranty.",
   "specs": [
    [
@@ -867,7 +867,7 @@ const SEED = [
    "1 + 1 year warranty"
   ],
   "images": [
-   "img/br/webos-55-room.webp",
+   "img/p2-v1.jpg",
    "img/br/webos-hub-tv.webp",
    "img/br/magic-remote.webp",
    "img/br/magic-remote-guide.webp"
@@ -1407,6 +1407,440 @@ const SEED = [
   ],
   "images": [
    "img/br/nonsmart-features.webp"
+  ]
+ },
+ {
+  "id": 27,
+  "brand": "Elista",
+  "cat": "Televisions",
+  "name": "108 cm (43 inch) Google TV (Xplore series)",
+  "price": 31500,
+  "mrp": 31500,
+  "stock": 10,
+  "emi": false,
+  "img": "img/br/xplore-tv.webp",
+  "os": "Google TV",
+  "desc": "Elista 108 cm (43 inch) Google TV, Xplore series. Google TV with Chromecast built-in and Hey Google, Dolby Audio with an in-built 48 W soundbar, 3 HDMI, dual-band Wi-Fi. Free delivery, cash on delivery, and the Elista warranty.",
+  "specs": [
+   [
+    "Screen size",
+    "108 cm (43 inch)"
+   ],
+   [
+    "Display type",
+    "LED, bezel-less"
+   ],
+   [
+    "Smart TV",
+    "Google TV with Chromecast built-in"
+   ],
+   [
+    "Voice",
+    "Hey Google"
+   ],
+   [
+    "Sound output",
+    "In-built soundbar, 48 W (also available without soundbar)"
+   ],
+   [
+    "Ports",
+    "3 HDMI"
+   ],
+   [
+    "Wi-Fi",
+    "Dual-band, 2.4 and 5 GHz"
+   ],
+   [
+    "Memory",
+    "1.5 GB RAM, 8 GB storage"
+   ],
+   [
+    "Apps",
+    "Netflix, YouTube, Prime Video and Google Play"
+   ],
+   [
+    "Warranty",
+    "1 + 1 year, second year on registration"
+   ]
+  ],
+  "reviews": [],
+  "features": [
+   "Google TV",
+   "Chromecast built-in",
+   "Hey Google",
+   "Dolby Audio",
+   "Dual-band Wi-Fi",
+   "In-built soundbar, 48 W",
+   "Bezel-less design",
+   "1 + 1 year warranty"
+  ],
+  "images": [
+   "img/br/xplore-features.webp"
+  ]
+ },
+ {
+  "id": 28,
+  "brand": "Elista",
+  "cat": "Televisions",
+  "name": "126 cm (50 inch) 4K Ultra HD Google TV (Xplore series)",
+  "price": 41000,
+  "mrp": 41000,
+  "stock": 10,
+  "emi": false,
+  "img": "img/br/xplore-tv.webp",
+  "os": "Google TV",
+  "desc": "Elista 126 cm (50 inch) Google TV, Xplore series. Google TV with Chromecast built-in and Hey Google, Dolby Audio with an in-built 48 W soundbar, 3 HDMI, dual-band Wi-Fi. Free delivery, cash on delivery, and the Elista warranty.",
+  "specs": [
+   [
+    "Screen size",
+    "126 cm (50 inch)"
+   ],
+   [
+    "Resolution",
+    "4K Ultra HD, 3840 x 2160"
+   ],
+   [
+    "Display type",
+    "LED, bezel-less"
+   ],
+   [
+    "Smart TV",
+    "Google TV with Chromecast built-in"
+   ],
+   [
+    "Voice",
+    "Hey Google"
+   ],
+   [
+    "Sound output",
+    "In-built soundbar, 48 W (also available without soundbar)"
+   ],
+   [
+    "Ports",
+    "3 HDMI"
+   ],
+   [
+    "Wi-Fi",
+    "Dual-band, 2.4 and 5 GHz"
+   ],
+   [
+    "Memory",
+    "1.5 GB RAM, 8 GB storage"
+   ],
+   [
+    "Apps",
+    "Netflix, YouTube, Prime Video and Google Play"
+   ],
+   [
+    "Warranty",
+    "1 + 1 year, second year on registration"
+   ]
+  ],
+  "reviews": [],
+  "features": [
+   "Google TV",
+   "Chromecast built-in",
+   "Hey Google",
+   "Dolby Audio",
+   "Dual-band Wi-Fi",
+   "In-built soundbar, 48 W",
+   "Bezel-less design",
+   "1 + 1 year warranty"
+  ],
+  "images": [
+   "img/br/xplore-features.webp"
+  ]
+ },
+ {
+  "id": 29,
+  "brand": "Elista",
+  "cat": "Televisions",
+  "name": "139 cm (55 inch) 4K Ultra HD Google TV (Xplore series)",
+  "price": 68990,
+  "mrp": 68990,
+  "stock": 10,
+  "emi": false,
+  "img": "img/br/xplore-tv.webp",
+  "os": "Google TV",
+  "desc": "Elista 139 cm (55 inch) Google TV, Xplore series. Google TV with Chromecast built-in and Hey Google, Dolby Audio with an in-built 48 W soundbar, 3 HDMI, dual-band Wi-Fi. Free delivery, cash on delivery, and the Elista warranty.",
+  "specs": [
+   [
+    "Screen size",
+    "139 cm (55 inch)"
+   ],
+   [
+    "Resolution",
+    "4K Ultra HD, 3840 x 2160"
+   ],
+   [
+    "Display type",
+    "QLED, bezel-less"
+   ],
+   [
+    "Smart TV",
+    "Google TV with Chromecast built-in"
+   ],
+   [
+    "Voice",
+    "Hey Google"
+   ],
+   [
+    "Sound output",
+    "In-built soundbar, 48 W (also available without soundbar)"
+   ],
+   [
+    "Ports",
+    "3 HDMI"
+   ],
+   [
+    "Wi-Fi",
+    "Dual-band, 2.4 and 5 GHz"
+   ],
+   [
+    "Memory",
+    "1.5 GB RAM, 8 GB storage"
+   ],
+   [
+    "Apps",
+    "Netflix, YouTube, Prime Video and Google Play"
+   ],
+   [
+    "Warranty",
+    "1 + 1 year, second year on registration"
+   ]
+  ],
+  "reviews": [],
+  "features": [
+   "Google TV",
+   "Chromecast built-in",
+   "Hey Google",
+   "Dolby Audio",
+   "Dual-band Wi-Fi",
+   "In-built soundbar, 48 W",
+   "Bezel-less design",
+   "1 + 1 year warranty"
+  ],
+  "images": [
+   "img/br/xplore-features.webp"
+  ]
+ },
+ {
+  "id": 30,
+  "brand": "Elista",
+  "cat": "Televisions",
+  "name": "164 cm (65 inch) 4K Ultra HD Google TV (Xplore series)",
+  "price": 73600,
+  "mrp": 73600,
+  "stock": 10,
+  "emi": false,
+  "img": "img/br/xplore-tv.webp",
+  "os": "Google TV",
+  "desc": "Elista 164 cm (65 inch) Google TV, Xplore series. Google TV with Chromecast built-in and Hey Google, Dolby Audio with an in-built 48 W soundbar, 3 HDMI, dual-band Wi-Fi. Free delivery, cash on delivery, and the Elista warranty.",
+  "specs": [
+   [
+    "Screen size",
+    "164 cm (65 inch)"
+   ],
+   [
+    "Resolution",
+    "4K Ultra HD, 3840 x 2160"
+   ],
+   [
+    "Display type",
+    "QLED, bezel-less"
+   ],
+   [
+    "Smart TV",
+    "Google TV with Chromecast built-in"
+   ],
+   [
+    "Voice",
+    "Hey Google"
+   ],
+   [
+    "Sound output",
+    "In-built soundbar, 48 W (also available without soundbar)"
+   ],
+   [
+    "Ports",
+    "3 HDMI"
+   ],
+   [
+    "Wi-Fi",
+    "Dual-band, 2.4 and 5 GHz"
+   ],
+   [
+    "Memory",
+    "1.5 GB RAM, 8 GB storage"
+   ],
+   [
+    "Apps",
+    "Netflix, YouTube, Prime Video and Google Play"
+   ],
+   [
+    "Warranty",
+    "1 + 1 year, second year on registration"
+   ]
+  ],
+  "reviews": [],
+  "features": [
+   "Google TV",
+   "Chromecast built-in",
+   "Hey Google",
+   "Dolby Audio",
+   "Dual-band Wi-Fi",
+   "In-built soundbar, 48 W",
+   "Bezel-less design",
+   "1 + 1 year warranty"
+  ],
+  "images": [
+   "img/br/xplore-features.webp"
+  ]
+ },
+ {
+  "id": 31,
+  "brand": "Elista",
+  "cat": "Televisions",
+  "name": "190 cm (75 inch) 4K Ultra HD Google TV (Xplore series)",
+  "price": 90000,
+  "mrp": 90000,
+  "stock": 10,
+  "emi": false,
+  "img": "img/br/xplore-tv.webp",
+  "os": "Google TV",
+  "desc": "Elista 190 cm (75 inch) Google TV, Xplore series. Google TV with Chromecast built-in and Hey Google, Dolby Audio with an in-built 48 W soundbar, 3 HDMI, dual-band Wi-Fi. Free delivery, cash on delivery, and the Elista warranty.",
+  "specs": [
+   [
+    "Screen size",
+    "190 cm (75 inch)"
+   ],
+   [
+    "Resolution",
+    "4K Ultra HD, 3840 x 2160"
+   ],
+   [
+    "Display type",
+    "QLED, bezel-less"
+   ],
+   [
+    "Smart TV",
+    "Google TV with Chromecast built-in"
+   ],
+   [
+    "Voice",
+    "Hey Google"
+   ],
+   [
+    "Sound output",
+    "In-built soundbar, 48 W (also available without soundbar)"
+   ],
+   [
+    "Ports",
+    "3 HDMI"
+   ],
+   [
+    "Wi-Fi",
+    "Dual-band, 2.4 and 5 GHz"
+   ],
+   [
+    "Memory",
+    "1.5 GB RAM, 8 GB storage"
+   ],
+   [
+    "Apps",
+    "Netflix, YouTube, Prime Video and Google Play"
+   ],
+   [
+    "Warranty",
+    "1 + 1 year, second year on registration"
+   ]
+  ],
+  "reviews": [],
+  "features": [
+   "Google TV",
+   "Chromecast built-in",
+   "Hey Google",
+   "Dolby Audio",
+   "Dual-band Wi-Fi",
+   "In-built soundbar, 48 W",
+   "Bezel-less design",
+   "1 + 1 year warranty"
+  ],
+  "images": [
+   "img/br/xplore-features.webp"
+  ]
+ },
+ {
+  "id": 32,
+  "brand": "Elista",
+  "cat": "Televisions",
+  "name": "215 cm (85 inch) 4K Ultra HD Google TV (Xplore series)",
+  "price": 149999,
+  "mrp": 149999,
+  "stock": 10,
+  "emi": false,
+  "img": "img/br/xplore-tv.webp",
+  "os": "Google TV",
+  "desc": "Elista 215 cm (85 inch) Google TV, Xplore series. Google TV with Chromecast built-in and Hey Google, Dolby Audio with an in-built 48 W soundbar, 3 HDMI, dual-band Wi-Fi. Free delivery, cash on delivery, and the Elista warranty.",
+  "specs": [
+   [
+    "Screen size",
+    "215 cm (85 inch)"
+   ],
+   [
+    "Resolution",
+    "4K Ultra HD, 3840 x 2160"
+   ],
+   [
+    "Display type",
+    "QLED, bezel-less"
+   ],
+   [
+    "Smart TV",
+    "Google TV with Chromecast built-in"
+   ],
+   [
+    "Voice",
+    "Hey Google"
+   ],
+   [
+    "Sound output",
+    "In-built soundbar, 48 W (also available without soundbar)"
+   ],
+   [
+    "Ports",
+    "3 HDMI"
+   ],
+   [
+    "Wi-Fi",
+    "Dual-band, 2.4 and 5 GHz"
+   ],
+   [
+    "Memory",
+    "1.5 GB RAM, 8 GB storage"
+   ],
+   [
+    "Apps",
+    "Netflix, YouTube, Prime Video and Google Play"
+   ],
+   [
+    "Warranty",
+    "1 + 1 year, second year on registration"
+   ]
+  ],
+  "reviews": [],
+  "features": [
+   "Google TV",
+   "Chromecast built-in",
+   "Hey Google",
+   "Dolby Audio",
+   "Dual-band Wi-Fi",
+   "In-built soundbar, 48 W",
+   "Bezel-less design",
+   "1 + 1 year warranty"
+  ],
+  "images": [
+   "img/br/xplore-features.webp"
   ]
  }
 ];

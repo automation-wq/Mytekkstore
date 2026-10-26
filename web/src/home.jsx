@@ -30,7 +30,8 @@ export function Home() {
   const minTv = tvs.length ? Math.min(...tvs.map(p => p.price)) : 0, minEmi = tvs.some(p => p.emi) ? Math.min(...tvs.filter(p => p.emi).map(p => emiPlans(p.price)[2][1])) : 0; // the deal box: every figure from the catalogue
   const home = banners.filter(b => b.slot === "home");
   const raw = home.length ? home.map(b => ({ kind: b.brand ? "brand" : b.preset === "promo" ? "promo" : "photo", preset: b.preset, eyebrow: b.kicker, h: lines(b.title), s: b.text, href: b.href, cta: b.cta, cta2: b.cta2, href2: b.href2, im: b.img, imMobile: b.imgMobile, brand: b.brand, tone: TONES[b.tone] || undefined, prod: b.productId ? byId(b.productId) : null })) : HOME_BANNERS;
-  const slides = raw.filter(s => s.kind !== "promo" && (s.kind !== "brand" || biggest(s.brand))).map(s => s.kind === "brand" ? { ...s, pts: brandPoints(P, s.brand), prod: s.prod || biggest(s.brand), href: s.href || brandUrl(s.brand), cta: s.cta || "Shop " + s.brand, eyebrow: s.eyebrow || s.brand }
+  const slides = [{ kind: "banner", h: ["Bring the big-screen experience home."], s: "Premium Elista TVs at factory-direct prices. Free delivery, cash on delivery, No Cost EMI.", href: "/televisions", cta: "Shop TVs" }]; // the owner's banner alone (26 Oct); the banners below stay in the admin for the day they return
+  const unusedSlides = raw.filter(s => s.kind !== "promo" && (s.kind !== "brand" || biggest(s.brand))).map(s => s.kind === "brand" ? { ...s, pts: brandPoints(P, s.brand), prod: s.prod || biggest(s.brand), href: s.href || brandUrl(s.brand), cta: s.cta || "Shop " + s.brand, eyebrow: s.eyebrow || s.brand }
     : s.kind === "promo" ? { ...s, s: s.s || "Up to " + maxOff + "% off, bank offers, and No Cost EMI on the models that carry it." }
     : s.kind === "photo" ? { ...s, kind: "deal", im: "", imMobile: "", vid: "", eyebrow: "Straight from the factory · Live now", h: ["Up to " + maxOff + "% off on Smart TVs."], hi: [maxOff + "%", "off"],
       s: "Starting at " + money(minTv) + "." + (minEmi ? " No Cost EMI from " + money(minEmi) + "/month," : "") + " extra bank discounts and cash on delivery.", cta: "Shop all deals", href: listUrl({ cat: "Televisions", sort: "off" }), cta2: "Compare TVs", href2: "/compare", art: "/img/tv-ocean.webp", tone: "" } : s); // the lead slide is the design file's deal hero (owner note, 25 October): the biggest real discount, the lowest price and EMI, one television on a glow; no photograph, no clip
@@ -90,6 +91,7 @@ export function Home() {
         {sl.prod && !sl.im && seen.has(i) && <m.a className={"bigtv" + (cutout(sl.prod.img) ? " cut" : "")} variants={RISE} href={productUrl(sl.prod)}>{cutout(sl.prod.img)
           ? <><span className="tvglow" aria-hidden="true"></span><img className="tvmain" src={cutout(sl.prod.img)} alt={sl.prod.brand + " " + sl.prod.name} loading={i ? "lazy" : "eager"} /><img className="tvrefl" src={cutout(sl.prod.img)} alt="" aria-hidden="true" loading="lazy" /></>
           : <img src={pic(sl.prod.img)} srcSet={picSet(sl.prod.img)} sizes="(max-width:760px) 40vw, 30vw" alt={sl.prod.brand + " " + sl.prod.name} width="800" height="800" loading={i ? "lazy" : "eager"} />}</m.a>}
+        {sl.kind === "banner" && <a className="bannerlink" href={sl.href} aria-label="Shop TVs"><picture><source media="(max-width:760px)" srcSet="/img/hero-banner-960.webp" /><img src="/img/hero-banner.webp" srcSet="/img/hero-banner-480.webp 480w, /img/hero-banner-960.webp 960w, /img/hero-banner.webp 1672w" sizes="100vw" alt="Bring the big-screen experience home: premium Elista TVs at factory-direct prices" width="1672" height="941" fetchPriority="high" decoding="async" /></picture></a>}
         {sl.art && <m.span className="bigtv cut art" variants={RISE} aria-hidden="true"><span className="tvglow"></span><img className="tvmain" src={sl.art} srcSet={sl.art.replace(".webp", "-480.webp") + " 480w, " + sl.art + " 865w"} sizes="(max-width:760px) 70vw, 40vw" alt="" width="865" height="572" fetchPriority={i ? "low" : "high"} loading={i ? "lazy" : "eager"} decoding="async" /></m.span>}
         <div className="hpanel">
           {sl.eyebrow && <m.span className="eyebrow" variants={RISE}>{sl.eyebrow}</m.span>}
@@ -110,7 +112,6 @@ export function Home() {
       <div><Ico shapes={DRAW_ICONS.box} /><b>Order tracking</b><p>Follow every order from your account.</p></div>
     </div></section>
     <section><h2>Deals of the Day <a href="/products?sort=off">View all</a></h2><p className="lead">The biggest discounts right now. Free delivery on every order, cash on delivery.</p><div className="grid">{deals.map((p, i) => <Card p={p} i={i} key={p.id} />)}</div></section>
-    <Chooser tvs={tvs} money={money} />
     <section className="disco"><h2>Shop by size</h2><p className="lead">Know the size you want? Start here. Every size we stock, with its starting price.</p>
       <div className="dgrid five">{sizeCards.map(s => <a className={"dcard" + (cutout(s.img) ? "" : " photo")} href={listUrl({ cat: "Televisions", size: s.inch + " inch TVs" })} key={s.inch}><span className="dimg"><img src={pic(s.img, 480)} srcSet={picSet(s.img)} sizes="240px" alt="" loading="lazy" width="800" height="800" /></span><span className="dbody"><b>{s.inch}"</b><small>{s.desc}</small><em>{s.from ? "from " + money(s.from) : "Coming soon"}</em></span><i className="darr" aria-hidden="true">→</i></a>)}</div></section>
     {BRANDS[0] && <section className="bigbrands solo">{brandBig(BRANDS[0], 0)}</section>}
@@ -208,24 +209,3 @@ function Welcome({ maxOff, minTv, minEmi, money }) {
 }
 
 
-// The brochure's chooser (page 3, "Choose the Elista TV that's perfect for you"), built from the catalogue instead of copied: every
-// screen size down the side, every platform across, the starting price in each cell linking to that filtered list, and the warranty
-// each size carries (the brochure's 1 year or 1+1 year), so it stays true as prices and models change.
-function Chooser({ tvs, money }) {
-  const { all, sizeOf } = catSizes(tvs, "Televisions");
-  const spec = (p, k) => ((p.specs || []).find(([n]) => n.toLowerCase() === k) || [])[1] || "";
-  const isMini = p => /mini-?led/i.test(spec(p, "display type"));
-  const platforms = [["Google TV", p => p.os === "Google TV" && !isMini(p)], ["WebOS", p => p.os === "WebOS"], ["Mini-LED PRO", isMini], ["Android TV", p => p.os === "Android TV"], ["Coolita OS", p => p.os === "Coolita OS"], ["Non-smart", p => !p.os]]
-    .filter(([, f]) => tvs.some(f));
-  const rows = [...all].sort((a, b) => a.n - b.n).map(sz => { const ps = tvs.filter(p => (sizeOf(p) || {}).label === sz.label); const w = ps.map(p => spec(p, "warranty")).filter(Boolean); return { sz, ps, warranty: w.some(x => /1 \+ 1/.test(x)) ? (w.some(x => /^1 year$/i.test(x)) ? "1 year · 1+1 year" : "1+1 year") : w.length ? "1 year" : "Brand warranty" }; });
-  if (rows.length < 2 || platforms.length < 2) return null;
-  return <section className="chooser" aria-labelledby="chooser-h"><h2 id="chooser-h">Choose the Elista TV that's perfect for you</h2><p className="lead">Every size we stock against every smart platform, with the price each one starts at. Tap a price to see those models.</p>
-    <div className="scroll"><table>
-      <thead><tr><th>Size</th>{platforms.map(([name]) => <th key={name}>{name}</th>)}<th>Warranty</th></tr></thead>
-      <tbody>{rows.map(({ sz, ps, warranty }) => <tr key={sz.label}><th>{sz.label.replace(/ TVs$/, "").replace(/ inch$/, '"')}</th>
-        {platforms.map(([name, f]) => { const hit = ps.filter(f).sort((a, b) => a.price - b.price)[0]; return <td key={name}>{hit ? <a href={isMini(hit) ? listUrl({ cat: "Televisions", size: sz.label, type: "Mini-LED PRO" }) : hit.os ? listUrl({ cat: "Televisions", size: sz.label, os: hit.os }) : listUrl({ cat: "Televisions", size: sz.label })}><small>from</small>{money(hit.price)}</a> : <span className="na" aria-label="Not in this size">—</span>}</td>; })}
-        <td className="warranty">{warranty}</td></tr>)}</tbody>
-    </table></div>
-    <div className="badges"><div><Icon k="medal" /><span><b>Wide range</b><small>{rows.length} sizes, {rows[0].sz.label.replace(/ TVs$/, "").replace(" inch", "")} to {rows[rows.length - 1].sz.label.replace(/ TVs$/, "")}</small></span></div><div><Icon k="gear" /><span><b>Smart choices</b><small>{platforms.filter(([n]) => n !== "Non-smart").length} platforms to pick from</small></span></div><div><Icon k="shield" /><span><b>Trusted warranty</b><small>1 year, and 1+1 year on registration</small></span></div></div>
-  </section>;
-}

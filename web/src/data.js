@@ -190,7 +190,7 @@ export const SPEC_ICONS = [
   [/warranty|guarantee/i, '<path pathLength="1" d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/><path pathLength="1" d="M9 12l2 2 4-4"/>'],
 ];
 // the Specifications tab groups rows the way the big stores do; a row that matches none of these goes under General
-export const SPEC_GROUPS = [["Display", /screen|size|inch|\bcm\b|resolution|4k|hd|pixel|refresh|hz|panel/i], ["Sound", /sound|audio|speaker|dolby/i], ["Smart features", /smart|google|android|app|os\b|voice|remote/i],
+export const SPEC_GROUPS = [["Display", /screen|size|inch|\bcm\b|resolution|4k|hd|pixel|refresh|hz|panel|display|hdr|bright|motion|viewing/i], ["Sound", /sound|audio|speaker|dolby/i], ["Smart features", /smart|google|android|app|os\b|voice|remote|memory|processor|mirror|share|cast/i],
   ["Connectivity", /port|hdmi|usb|connect|wi-?fi|bluetooth/i], ["Performance", /capacity|kg|load|drum|spin|rpm|energy|star|power|watt|cool|ton|compressor|inverter|motor|program|wash/i], ["Warranty", /warranty|guarantee/i]];
 export const specIcon = k => (SPEC_ICONS.find(([re]) => re.test(k)) || [0, '<circle pathLength="1" cx="12" cy="12" r="9"/><path pathLength="1" d="M8 12l3 3 5-6"/>'])[1];
 

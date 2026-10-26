@@ -20,11 +20,11 @@ const shell = (page, title) => `<!doctype html>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="icon" href="/favicon.svg">
 <link rel="manifest" href="/manifest.webmanifest">
-<meta name="theme-color" content="#08805f">${page === "home" ? '\n<link rel="preload" as="image" href="/img/tv-ocean.webp" imagesrcset="/img/tv-ocean-480.webp 480w, /img/tv-ocean.webp 865w" imagesizes="(max-width:760px) 70vw, 40vw" fetchpriority="high">' : ""}
+<meta name="theme-color" content="#08805f">${page === "home" ? '\n<link rel="preload" as="image" href="/img/hero-banner.webp" imagesrcset="/img/hero-banner-480.webp 480w, /img/hero-banner-960.webp 960w, /img/hero-banner.webp 1672w" imagesizes="100vw" fetchpriority="high">' : ""}
 </head>
 <body data-page="${page}">
 <div id="root"></div>
-<script type="speculationrules">{"prerender":[{"where":{"and":[{"href_matches":"/*"},{"not":{"href_matches":["/cart","/checkout","/account*","/order*","/admin*","/api/*","/products?*wish=*"]}}]},"eagerness":"moderate"}]}</script>
+<script type="speculationrules">{"prerender":[{"where":{"and":[{"href_matches":"/*"},{"not":{"href_matches":["/cart","/checkout","/account*","/order*","/admin*","/api/*","/products?*wish=*"]}},{"not":{"selector_matches":".bannerlink"}}]},"eagerness":"moderate"}]}</script>
 <script type="module" src="/src/main.jsx"></script>
 </body>
 </html>

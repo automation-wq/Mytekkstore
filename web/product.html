@@ -12,7 +12,7 @@
 </head>
 <body data-page="product">
 <div id="root"></div>
-<script type="speculationrules">{"prerender":[{"where":{"and":[{"href_matches":"/*"},{"not":{"href_matches":["/cart","/checkout","/account*","/order*","/admin*","/api/*","/products?*wish=*"]}}]},"eagerness":"moderate"}]}</script>
+<script type="speculationrules">{"prerender":[{"where":{"and":[{"href_matches":"/*"},{"not":{"href_matches":["/cart","/checkout","/account*","/order*","/admin*","/api/*","/products?*wish=*"]}},{"not":{"selector_matches":".bannerlink"}}]},"eagerness":"moderate"}]}</script>
 <script type="module" src="/src/main.jsx"></script>
 </body>
 </html>

@@ -18,7 +18,7 @@ function startStore() {
 }
 
 // Opens a headless browser window and returns helpers to drive it. Give each browser running at the same time its own port.
-async function launch({ port = 9555, width = 1366, height = 800, mobile = false } = {}) {
+async function launch({ port = 9555, width = 1366, height = 1100, mobile = false } = {}) {
   if (!BROWSER) throw new Error("No Edge or Chrome found");
   const profile = fs.mkdtempSync(path.join(os.tmpdir(), "mytekk-browser-"));
   const proc = spawn(BROWSER, ["--headless=new", "--disable-gpu", "--no-first-run", "--no-default-browser-check", "--remote-debugging-port=" + port,
@@ -117,7 +117,7 @@ async function run() {
     await b.ev(`window.navLog = []; document.querySelectorAll(".l0").forEach(l => l.addEventListener("pointerenter", () => navLog.push(["enter", performance.now()])));
       new MutationObserver(ms => ms.forEach(m => (m.target.classList?.contains("open") || [...m.addedNodes].some(n => n.nodeType === 1 && (n.classList.contains("open") || n.querySelector(".open")))) && navLog.push(["open", performance.now()])))
         .observe(document.querySelector(".gbar"), { subtree: true, attributes: true, attributeFilter: ["class"], childList: true }); 0`); // the open class can arrive on a re-created node, not only as an attribute change
-    const tv = await b.center(".l0link", 0), away = [700, 620]; // on the hero photo, below the open menu panel (bottom 563 px) and above the band, which is one big link now; inert on every slide
+    const tv = await b.center(".l0link", 0), away = [700, 980]; // below the hero (a full-height banner link since 26 Oct) and the open menu panel: a spot that is neither a menu nor a link
     await b.move(...away);
     await b.glide(...tv, 120);
     // wait for the panel and the dim layer to finish fading in (the machine may be busy)
@@ -308,7 +308,7 @@ async function run() {
     assert.equal(await b.ev(`getComputedStyle(document.querySelector(".pdp .actions .btn")).borderRadius`), "999px", "pill buttons");
     await b.goto(base + "/");
     const clips = await b.ev(`({ hero: document.querySelectorAll(".slide").length, oss: document.querySelectorAll(".disco .dcard.os").length, brands: document.querySelectorAll(".bbrand").length, arrows: [...document.querySelectorAll(".strip")].filter(x => !x.classList.contains("nos") && x.querySelector(".row").scrollWidth <= x.querySelector(".row").clientWidth + 2).length })`);
-    assert.ok(clips.hero >= 2, "the deal hero and a slide per brand in the catalogue (" + clips.hero + ")"); assert.ok(clips.oss >= 2 && clips.oss <= 4, "shop by operating system on the home page: one card per system in the catalogue (" + clips.oss + ")"); assert.ok(clips.brands >= 1, "a giant tile per brand in the catalogue");
+    assert.ok(clips.hero >= 1, "the hero banner (" + clips.hero + " slide)"); assert.ok(clips.oss >= 2 && clips.oss <= 4, "shop by operating system on the home page: one card per system in the catalogue (" + clips.oss + ")"); assert.ok(clips.brands >= 1, "a giant tile per brand in the catalogue");
     assert.equal(clips.arrows, 0, "a row that fits on the screen shows no scroll arrows");
     await b.goto(base + "/category.html?cat=Televisions");
     assert.deepEqual(await b.ev(`[...document.querySelectorAll(".cdisco .dtabs button")].map(b => b.textContent)`), ["Shop by Size", "Shop by Budget", "Shop by OS", "Screen type / Resolution"], "four-tab discovery under the category banner: size, budget, operating system, screen type");
@@ -347,7 +347,7 @@ async function run() {
     assert.ok(await b.ev(`document.querySelectorAll(".faqs details").length >= 5 && document.querySelectorAll(".quote").length > 0`), "Good to know questions and customer quotes on the home page");
     await b.goto(base + "/product.html?id=1");
     assert.ok(await b.ev(`!!document.querySelector(".pdp .emiline") && document.querySelectorAll(".pofs div").length === 3`), "EMI line and offers box on the product page");
-    assert.ok(await b.ev(`document.querySelectorAll("#t-specs .grp").length >= 2`), "grouped specifications on the product page");
+    assert.ok(await b.ev(`document.querySelectorAll("#t-specs .specgroup").length >= 3`), "grouped specifications on the product page");
     assert.ok(await b.ev(`!!document.querySelector(".qna h2")`), "the Q&A section is on the product page");
 
     step = "buying guide page and recent searches";

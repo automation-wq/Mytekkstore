@@ -70,14 +70,14 @@ export function Product() {
 
   const stock = p.stock <= 0 ? <span className="stock out">Out of stock</span> : p.stock <= 5 ? <span className="stock low">Only {p.stock} left</span> : <span className="stock">In stock</span>;
   // the Specifications tab, grouped (Display, Sound, ...); warranty comes from the product's own specifications
-  const groups = [["General", [["Brand", p.brand], ["Category", p.cat]]], ...SPEC_GROUPS.map(([g, re]) => [g, [], re])];
+  const groups = [["General", [["Brand", p.brand], ["Model", p.name]]], ...SPEC_GROUPS.map(([g, re]) => [g, [], re])]; // grouped the way the big stores group them: General, Display, Sound, Smart, Connectivity, Warranty
   (p.specs || []).forEach(([k, v]) => (groups.find(([, , re]) => re && re.test(k)) || groups[0])[1].push([k, v]));
   if (p.os) groups[0][1].unshift(["Operating system", p.os]);
-  groups[0][1].push(["Sold by", "Mytekkstore"]);
+
   const feats = (p.specs || []).slice(0, 6); // feature strip under the photo, from the product's own specifications
   const images = galleryOf(p); // the admin's photos, or the six-picture gallery built from the render (data.js galleryOf)
   const BR_LABELS = [[/-room\./, "In the living room"], [/magic-remote-guide/, "Magic Remote guide"], [/magic-remote/, "Magic Remote"], [/-tv\./, "Product picture"]]; // the brochure pictures by name
-  const labelOf = src => /^img\/br\//.test(src) ? (BR_LABELS.find(([re]) => re.test(src)) || [0, "From the brochure"])[1] : GALLERY_LABELS[images.indexOf(src)] || "Photo";
+  const labelOf = src => /^img\/br\//.test(src) ? (BR_LABELS.find(([re]) => re.test(src)) || [0, "From the brochure"])[1] : /^img\/p\d/.test(src) ? "Front view" : GALLERY_LABELS[images.indexOf(src)] || "Photo";
   const step = d => { const i = images.indexOf(img); setSpinView(false); setImg(images[(i + d + images.length) % images.length]); };
   const swipeStart = e => { touch.current = e.touches[0].clientX; };
   const swipeEnd = e => { const x = touch.current; touch.current = null; if (x === null) return; const dx = e.changedTouches[0].clientX - x; if (Math.abs(dx) > 40) step(dx < 0 ? 1 : -1); };
@@ -167,7 +167,7 @@ export function Product() {
     <section id="tabs">
       <div className="tabbar">{[["t-desc", "Description"], ["t-specs", "Specifications"], ["t-del", "Delivery and returns"], ["t-rev", "Reviews (" + (p.reviews || []).length + ")"]].map(([id, label]) => <button className={tab === id ? "on" : undefined} data-tab={id} key={id}>{label}{tab === id && <m.i className="ink" layoutId="tab-ink" transition={INK} />}</button>)}</div>
       <div className="tabpane" id="t-desc" hidden={tab !== "t-desc"}><p>{p.desc || p.brand + " " + p.name}</p><ul>{DEFAULT_FEATURES.map(f => <li key={f}>{f}</li>)}</ul></div>
-      <div className="tabpane" id="t-specs" hidden={tab !== "t-specs"}><table className="specs">{groups.filter(([, rows]) => rows.length).map(([g, rows]) => <tbody key={g}><tr className="grp"><th colSpan="2">{g}</th></tr>{rows.map(([k, v], i) => <tr key={i}><th>{k}</th><td>{v}</td></tr>)}</tbody>)}</table></div>
+      <div className="tabpane" id="t-specs" hidden={tab !== "t-specs"}><div className="specgrid">{groups.filter(([, rows]) => rows.length).map(([g, rows]) => <section className="specgroup" key={g}><h3>{g}</h3><dl>{rows.map(([k, v], i) => <div key={i}><dt>{k}</dt><dd>{v}</dd></div>)}</dl></section>)}</div></div>
       <div className="tabpane" id="t-rev" hidden={tab !== "t-rev"}>
         {(p.reviews || []).length ? <><div className="rsum"><b>{avg(p).toFixed(1)}</b><div><span className="stars"><span>{starRow(Math.round(avg(p)))}</span></span><br /><small className="muted">{p.reviews.length} review{p.reviews.length > 1 ? "s" : ""}</small></div>
           <div className="rbars">{[5, 4, 3, 2, 1].map(n => { const c = p.reviews.filter(r => r.rating === n).length; return <div key={n}><span>{n}★</span><i><b style={{ width: Math.round(c / p.reviews.length * 100) + "%" }}></b></i><small>{c}</small></div>; })}</div></div>
