@@ -2113,3 +2113,35 @@ main > .festive.bleed:first-of-type { margin-top:0 }
 .card > :last-child:not(.cbody):not(.heart) { margin-bottom:12px }
 .card .csizes { margin-top:0 }
 .card .ccmp { margin-top:6px; padding-top:8px; border-top:1px solid var(--line) }
+
+/* ─ the welcome dialog (26 Oct): the festive figures over the brochure room, the sign-up invitation under them ─ */
+dialog.welcome { border:0; padding:0; background:transparent; max-width:min(92vw,520px); max-height:none; width:100%; margin:auto; color:var(--text); overflow:visible }
+dialog.welcome::backdrop { background:#070910a6; backdrop-filter:blur(4px) }
+dialog.welcome[open] .wcard { animation:wpop .5s cubic-bezier(.2,.8,.2,1) both }
+@keyframes wpop { from { opacity:0; translate:0 18px; scale:.98 } to { opacity:1; translate:0 0; scale:1 } }
+@media (prefers-reduced-motion:reduce) { dialog.welcome[open] .wcard { animation:none } }
+.wcard { position:relative; overflow:auto; max-height:92vh; border-radius:24px; background:var(--card); box-shadow:0 40px 80px -30px #000c; scrollbar-width:none }
+.wimg { display:block; width:100%; aspect-ratio:2.3/1; object-fit:cover; object-position:center 40% }
+.wclose { position:absolute; top:12px; right:12px; width:36px; height:36px; border-radius:50%; border:0; background:#0b0e14b3; color:#fff; font-size:22px; line-height:1; cursor:pointer; backdrop-filter:blur(6px) }
+.wclose:hover { background:var(--accent) }
+.wbody { padding:22px 24px 18px; display:grid; gap:8px }
+.wkick { font-size:11px; font-weight:800; letter-spacing:1px; text-transform:uppercase; color:var(--accent) }
+.wbody h2 { font-size:clamp(24px,4vw,32px); letter-spacing:-1px; line-height:1.05; margin:0 } .wbody h2 b { color:var(--deal) }
+.wbody p { margin:0; color:var(--soft); font-size:15px; line-height:1.5 }
+.wsign { margin-top:8px; padding:14px 16px; border-radius:16px; background:var(--tile); display:grid; gap:4px }
+.wsign b { font-size:16px } .wsign span { font-size:13.5px; color:var(--soft) }
+.wbtns { display:flex; flex-wrap:wrap; gap:8px; margin-top:8px } .wbtns .btn { padding:10px 18px }
+.wlater { justify-self:center; border:0; background:none; color:var(--muted); font-size:13px; font-weight:600; cursor:pointer; padding:6px 10px }
+.wlater:hover { color:var(--accent) }
+@media (max-width:480px) { dialog.welcome { max-width:94vw } .wbody { padding:18px 16px 14px } }
+
+/* ─ phones: the brand slides’ photograph takes the single column (a stronger desktop rule kept it in column 2, which has no width on a phone, so the slide was black) ─ */
+@media (max-width:760px) { .slide.k-brand .bg, .slide.k-promo .bg { grid-column:1; grid-row:1 } }
+
+/* ─ welcome dialog: the figure sits in the sentence like any word; on a short screen the photograph gives way so Maybe later stays in view ─ */
+.wbody h2 b { display:inline; padding:0; margin:0; background:none; border:0; font:inherit; font-weight:800; color:var(--deal); letter-spacing:inherit }
+@media (max-height:860px) { .wimg { aspect-ratio:2.9/1 } .wbody { gap:6px; padding:16px 20px 10px } .wsign { padding:12px 14px } }
+
+/* ─ welcome dialog: the photograph follows its ratio, not its height attribute; the heading is a sentence, not the flex row section headings use ─ */
+.wimg { height:auto }
+.wbody h2 { display:block; justify-content:normal; padding-bottom:0; margin-bottom:0 }

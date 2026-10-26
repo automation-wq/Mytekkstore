@@ -9,6 +9,7 @@ import { Card, Row, BankOffers, Ico, Icon, Qa, OsChart, BankStrip, BankBoxes } f
 import { DRAW_ICONS, HOME_BANNERS, FESTIVE, FAQ, catSizes, brandUrl, listUrl, off, starRow, productUrl, pic, picSet, osList, osUrl, brandPoints, cutout, life, emiPlans } from "./data.js";
 import { lines, TONES } from "./banner.jsx";
 import { resOf } from "./category.jsx"; // resolution of a TV from its specifications, for the screen-type cards
+import { qs, load, save } from "./api.js";
 
 // hero parts rise in one after another on a spring, and the headline staggers word by word (Motion variants)
 const RISE = { hide: { y: "115%", opacity: 0 }, show: { y: 0, opacity: 1, transition: { type: "spring", stiffness: 280, damping: 28 } } };
@@ -16,7 +17,7 @@ const WORDS = { hide: {}, show: { transition: { staggerChildren: .06, delayChild
 const GROUP = { hide: {}, show: { transition: { staggerChildren: .12 } } };
 
 export function Home() {
-  const { P, CATS, BRANDS, recent, byId, money, banners } = useStore();
+  const { P, CATS, BRANDS, recent, byId, money, banners, me } = useStore();
   const [cur, setCur] = useState(0);
   const [seen, setSeen] = useState(() => new Set([0])); // a slide's photos mount the first time it shows, so the first paint carries only the first slide
   useEffect(() => { setSeen(s => s.has(cur) ? s : new Set(s).add(cur)); }, [cur]);
@@ -86,7 +87,7 @@ export function Home() {
       {slides.map((sl, i) => <m.div className={"slide k-" + sl.kind + (i === cur ? " on" : "")} data-preset={sl.preset || "cinematic"} key={i} initial={i === 0 ? false : "hide"} animate={i === cur ? "show" : "hide"} variants={GROUP} style={sl.tone ? { background: sl.tone } : undefined}>
         {(sl.brand || sl.kind === "promo") && <span className="ghostmark" aria-hidden="true">{sl.brand || "Offers"}</span>}
         {sl.im && seen.has(i) && <div className="bg"><picture>{sl.imMobile && <source media="(max-width:760px)" srcSet={picSet(sl.imMobile) || pic(sl.imMobile, 960)} sizes="100vw" />}<img {...picOf(sl.im)} sizes="100vw" alt="" width="1344" height="752" fetchPriority={i ? "low" : "high"} loading={i ? "lazy" : "eager"} decoding="async" /></picture>{sl.vid && <video className="vid" muted loop playsInline preload="none" data-src={sl.vid} aria-hidden="true"></video>}</div>}
-        {sl.prod && seen.has(i) && <m.a className={"bigtv" + (cutout(sl.prod.img) ? " cut" : "")} variants={RISE} href={productUrl(sl.prod)}>{cutout(sl.prod.img)
+        {sl.prod && !sl.im && seen.has(i) && <m.a className={"bigtv" + (cutout(sl.prod.img) ? " cut" : "")} variants={RISE} href={productUrl(sl.prod)}>{cutout(sl.prod.img)
           ? <><span className="tvglow" aria-hidden="true"></span><img className="tvmain" src={cutout(sl.prod.img)} alt={sl.prod.brand + " " + sl.prod.name} loading={i ? "lazy" : "eager"} /><img className="tvrefl" src={cutout(sl.prod.img)} alt="" aria-hidden="true" loading="lazy" /></>
           : <img src={pic(sl.prod.img)} srcSet={picSet(sl.prod.img)} sizes="(max-width:760px) 40vw, 30vw" alt={sl.prod.brand + " " + sl.prod.name} width="800" height="800" loading={i ? "lazy" : "eager"} />}</m.a>}
         {sl.art && <m.span className="bigtv cut art" variants={RISE} aria-hidden="true"><span className="tvglow"></span><img className="tvmain" src={sl.art} srcSet={sl.art.replace(".webp", "-480.webp") + " 480w, " + sl.art + " 865w"} sizes="(max-width:760px) 70vw, 40vw" alt="" width="865" height="572" fetchPriority={i ? "low" : "high"} loading={i ? "lazy" : "eager"} decoding="async" /></m.span>}
@@ -102,6 +103,7 @@ export function Home() {
       <div className="dots">{slides.map((_, i) => <button aria-label={"Slide " + (i + 1)} data-i={i} className={i === cur ? "on" : undefined} key={i}></button>)}</div></>}
     </div>
     <FestiveBanner tvs={tvs} maxOff={maxOff} minEmi={minEmi} money={money} />
+    {!me && <Welcome maxOff={maxOff} minTv={minTv} minEmi={minEmi} money={money} />}
     <DealCarousel tvs={tvs} maxOff={maxOff} minTv={minTv} minEmi={minEmi} money={money} />
     <section className="trustrow" aria-label="Why shop with Mytekkstore"><div className="why">
       <div><Ico shapes={DRAW_ICONS.truck} /><b>Fast delivery</b><p>Doorstep delivery across the country.</p></div>
@@ -196,4 +198,36 @@ export function FestiveBanner({ tvs, maxOff, minEmi, money, href = "/offers", ct
       <span className="fbanks"><BankBoxes /><small>*T&amp;C apply · Savings are MRP against our price</small></span>
     </a>
   </section>;
+}
+
+
+// The welcome dialog (owner request, 26 Oct): the festive figures, real and from the catalogue, with the sign-up invitation under
+// them. The browser's own <dialog> gives the focus trap, Esc and the backdrop; it opens once per visitor after a short pause, not
+// for a signed-in visitor, not under automation unless the address carries ?welcome=1, and not again once closed.
+function Welcome({ maxOff, minTv, minEmi, money }) {
+  const ref = useRef();
+  useEffect(() => {
+    const forced = qs.get("welcome") === "1";
+    if (maxOff <= 0 || (!forced && (load("welcome", 0) || navigator.webdriver))) return;
+    const t = setTimeout(() => { const d = ref.current; if (d && !d.open) { try { d.showModal(); } catch { /* an older browser without <dialog>: nothing opens */ } } }, forced ? 300 : 5000);
+    return () => clearTimeout(t);
+  }, [maxOff]);
+  const close = () => { save("welcome", Date.now()); if (ref.current && ref.current.open) ref.current.close(); };
+  return <dialog className="welcome" ref={ref} aria-labelledby="welcome-title" onClose={close} onClick={e => { if (e.target === ref.current) close(); }}>
+    <div className="wcard">
+      <img className="wimg" src="/img/fest-room.webp" alt="" width="860" height="430" loading="lazy" />
+      <button type="button" className="wclose" onClick={close} aria-label="Close">×</button>
+      <div className="wbody">
+        <span className="wkick">Festive Offers · Live now</span>
+        <h2 id="welcome-title">Up to <b>{maxOff}% off</b> on Smart TVs</h2>
+        <p>From {money(minTv)}{minEmi ? ", No Cost EMI from " + money(minEmi) + "/month" : ""}, extra bank discounts and cash on delivery.</p>
+        <div className="wsign">
+          <b>Sign up in a minute</b>
+          <span>Faster checkout, order tracking and the festive and bank offers first.</span>
+          <div className="wbtns"><a className="btn" href="/account?next=/televisions%3Fsort%3Doff">Sign up</a><a className="btn ghost" href="/televisions?sort=off" onClick={close}>Shop deals</a></div>
+        </div>
+        <button type="button" className="wlater" onClick={close}>Maybe later</button>
+      </div>
+    </div>
+  </dialog>;
 }

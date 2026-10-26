@@ -43,6 +43,7 @@ async function launch({ port = 9555, width = 1366, height = 800, mobile = false 
   };
   const send = (method, params = {}) => new Promise((res, rej) => { waiting.set(++seq, { res, rej }); ws.send(JSON.stringify({ id: seq, method, params })); });
   for (const d of ["Page", "Runtime", "Log"]) await send(d + ".enable");
+  await send("Page.addScriptToEvaluateOnNewDocument", { source: "try { localStorage.setItem(\"welcome\", \"1\"); } catch {}" }); // the welcome dialog is modal and stays closed under the suite; the probes open it with ?welcome=1
   await send("Emulation.setDeviceMetricsOverride", { width, height, deviceScaleFactor: 1, mobile });
   if (mobile) await send("Emulation.setTouchEmulationEnabled", { enabled: true });
   const KEYS = { Tab: 9, Enter: 13, Escape: 27 };
