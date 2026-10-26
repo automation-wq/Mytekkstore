@@ -94,9 +94,11 @@ export function Checkout() {
         <label>Address<textarea name="address" rows="3" required maxLength="400" autoComplete="street-address" defaultValue={me.address || ""}></textarea></label>
         <label>Pincode<input name="pin" required pattern="[0-9A-Za-z ]{4,10}" autoComplete="postal-code" defaultValue={me.pin || ""} onChange={e => placeOf(e.target.value.trim())} /><span id="pinplace" className="small" role="status">{place}</span></label>
         <h3>2. Payment</h3>
-        <label className="radio"><input type="radio" name="pay" value="cod" defaultChecked /> Cash on delivery</label>
-        {["UPI", "Card", "Net banking"].map(m => <label className="radio" key={m}><input type="radio" name="pay" value={m} /> {m} <span className="stock low">demo</span></label>)}
-        <p className="muted" style={{ fontSize: 13 }}>Online payment is a demo for now. No real money is taken.</p>
+        <div className="paygrid" role="radiogroup" aria-label="Payment method">
+          {[["cod", "Cash on delivery", "Pay when the order arrives", "cash"], ["UPI", "UPI", "Google Pay, PhonePe, Paytm, any UPI app", "bolt"], ["Card", "Credit or debit card", Object.keys(cart).some(id => (byId(id) || {}).emi) ? "No Cost EMI on participating cards" : "Visa, Mastercard, RuPay", "cart"], ["Net banking", "Net banking", "All major banks", "shield"]]
+            .map(([v, t, sub, ic]) => <label className={"radio paytile" + (v !== "cod" && !(payCfg && payCfg.pay === "razorpay") ? " test" : "")} key={v}><input type="radio" name="pay" value={v} defaultChecked={v === "cod"} /><Icon k={ic} /><span><b>{t}</b><small>{sub}</small></span>{v !== "cod" && !(payCfg && payCfg.pay === "razorpay") && <em>Test mode</em>}</label>)}
+        </div>
+        <p className="muted paynote">{payCfg && payCfg.pay === "razorpay" ? "Online payments are processed securely by Razorpay; the store never sees your card or UPI details." : "Online payments go live the moment the store's Razorpay account is connected. Until then the online options open a test window and no money moves. Cash on delivery is live today."}</p>
         <div className="perks paytrust"><span><Icon k="shield" /> Secure checkout</span><span><Icon k="check" /> 100% genuine</span><span><Icon k="undo" /> Easy returns</span></div>
       </Form>
       <aside className="panel sum"><h3>Order summary</h3><div id="sum">

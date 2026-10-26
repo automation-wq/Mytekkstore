@@ -78,13 +78,18 @@ function SignIn({ CFG }) {
             {gErr && <p className="err">{gErr}</p>}
           </Form></div>
           <div className="tabpane" id="t-email" hidden={tab !== "t-email"}>
-            <Form className="form" id="login" hidden={showReg} onSubmit={async f => { await api("login", "POST", f); done(); }} after={busy => <div className="arow"><button className="btn" disabled={busy}>Sign in</button><button type="button" className="link" data-swap="register" onClick={() => setShowReg(true)}>New customer? Create an account</button></div>}>
-              <label>Email<input name="email" type="email" required autoComplete="email" /></label>
-              <label>Password<input name="password" type="password" required autoComplete="current-password" /></label></Form>
-            <Form className="form" id="register" hidden={!showReg} onSubmit={async f => { await api("register", "POST", f); done(); }} after={busy => <div className="arow"><button className="btn" disabled={busy}>Create account</button><button type="button" className="link" data-swap="login" onClick={() => setShowReg(false)}>Already have an account? Sign in</button></div>}>
-              <label>Full name<input name="name" required maxLength="80" autoComplete="name" /></label>
-              <label>Email<input name="email" type="email" required autoComplete="email" /></label>
-              <label>Password (at least 8 characters)<input name="password" type="password" required minLength="8" autoComplete="new-password" /></label></Form>
+            <Form className="form auth-form" id="login" hidden={showReg} onSubmit={async f => { await api("login", "POST", f); done(); }} after={busy => <><button className="btn full" disabled={busy}>Sign in</button><p className="swap">New to Mytekkstore? <button type="button" className="link" data-swap="register" onClick={() => setShowReg(true)}>Create an account</button></p></>}>
+              <div className="fhead"><h2>Welcome back</h2><p>Your orders, addresses and wishlist are waiting.</p></div>
+              <label className="fld"><I k="mail" /><span>Email</span><input name="email" type="email" required autoComplete="email" placeholder="you@example.com" /></label>
+              <PwField name="password" label="Password" autoComplete="current-password" /></Form>
+            <Form className="form auth-form" id="register" hidden={!showReg} onSubmit={async f => { await api("register", "POST", f); done(); }} after={busy => <><button className="btn full" disabled={busy}>Create account</button>
+              <p className="legal">By creating an account you agree to the <a href="/terms">Terms</a> and <a href="/privacy">Privacy policy</a>.</p>
+              <ul className="regperks"><li><Icon k="truck" /> Track every order, from dispatch to delivery</li><li><Icon k="pin" /> A saved address for one-tap checkout</li><li><Icon k="star" /> Festive and bank offers before anyone else</li></ul>
+              <p className="swap">Already have an account? <button type="button" className="link" data-swap="login" onClick={() => setShowReg(false)}>Sign in</button></p></>}>
+              <div className="fhead"><h2>Create your account</h2><p>Takes a minute. Orders, addresses and offers in one place.</p></div>
+              <label className="fld"><Icon k="user" /><span>Full name</span><input name="name" required maxLength="80" autoComplete="name" placeholder="Your name" /></label>
+              <label className="fld"><I k="mail" /><span>Email</span><input name="email" type="email" required autoComplete="email" placeholder="you@example.com" /></label>
+              <PwField name="password" label="Password" autoComplete="new-password" minLength="8" meter /></Form>
           </div>
         </>}
       </Tabs></m.div>
@@ -124,4 +129,20 @@ function SignedIn({ me, money }) {
       <a className="way" href="/shipping"><i className="kico"><Icon k="truck" /></i><b>Delivery</b><span>Where we deliver and how long it takes.</span></a>
       <a className="way" href="/contact"><i className="kico"><Icon k="user" /></i><b>Contact us</b><span>Write to us with your order number.</span></a></div></section>
     {!wish.length && <Row title="Deals of the Day" href="/products?sort=off" list={[...P].sort((a, b) => off(b) - off(a)).slice(0, 5)} />}</>;
+}
+
+
+// the three small drawn icons the forms need that the store's icon set does not carry
+const I = ({ k }) => <svg className="ic" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+  {k === "mail" ? <><rect x="3" y="5" width="18" height="14" rx="2" /><path d="m3 7 9 6 9-6" /></> : k === "lock" ? <><rect x="4" y="11" width="16" height="10" rx="2" /><path d="M8 11V7a4 4 0 0 1 8 0v4" /></>
+    : k === "eye" ? <><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z" /><circle cx="12" cy="12" r="3" /></> : <path d="M3 3l18 18M10.6 10.6a3 3 0 0 0 4.2 4.2M9.9 5.2A10.5 10.5 0 0 1 12 5c6.5 0 10 7 10 7a17.6 17.6 0 0 1-3.2 4.1M6.3 6.3C3.6 8.3 2 12 2 12s3.5 7 10 7a9.8 9.8 0 0 0 4.3-1" />}
+</svg>;
+// a password field with an eye to show it and, for a new password, a strength hint (the server asks for 8 characters; the rest is advice)
+function PwField({ name, label, autoComplete, minLength, meter }) {
+  const [show, setShow] = useState(false), [v, setV] = useState("");
+  const n = v.length < 8 ? 1 : 1 + (v.length >= 12) + /\d/.test(v) + (/[A-Z]/.test(v) || /[^A-Za-z0-9]/.test(v));
+  const word = v.length < 8 ? "Too short · at least 8 characters" : ["", "Weak", "Fair", "Good", "Strong"][n];
+  return <div className="pw"><label className="fld"><I k="lock" /><span>{label}</span><input name={name} type={show ? "text" : "password"} required minLength={minLength} autoComplete={autoComplete} placeholder={minLength ? "At least 8 characters" : "Your password"} onChange={e => setV(e.target.value)} />
+    <button type="button" className="eye" onClick={() => setShow(x => !x)} aria-label={show ? "Hide password" : "Show password"} aria-pressed={show}><I k={show ? "eyeoff" : "eye"} /></button></label>
+    {meter && v && <div className="pwm" aria-live="polite"><i className={"l" + n}></i><small>{word}</small></div>}</div>;
 }
