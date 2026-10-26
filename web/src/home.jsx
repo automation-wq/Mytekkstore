@@ -38,7 +38,7 @@ export function Home() {
   const [auto, setAuto] = useState(true); // autoplay stops for good once the visitor takes control (arrow/dot)
   useEffect(() => { if (!auto) return; const t = setInterval(() => { if (!heroRef.current || !heroRef.current.matches(":hover")) setCur(c => (c + 1) % slides.length); }, 6000); return () => clearInterval(t); }, [slides.length, auto]);
   useEffect(() => { const t = setTimeout(() => setSeen(new Set(slides.map((_, i) => i))), 2500); return () => clearTimeout(t); }, [slides.length]); // the rest mount 2.5 s after load, before the first rotation, so no slide ever shows before its photo is there
-  const deals = [...P].sort((a, b) => off(b) - off(a)).filter(p => off(p) > 0).slice(0, 10); // enough to fill a row on a wide screen (the grid takes as many columns as fit)
+  const deals = [...P].sort((a, b) => off(b) - off(a) || a.price - b.price).slice(0, 10); // the biggest discounts first, then the rest by price: enough to fill a row on a wide screen // enough to fill a row on a wide screen (the grid takes as many columns as fit)
   const quotes = P.flatMap(p => (p.reviews || []).map(r => ({ ...r, p }))).sort((a, b) => new Date(b.at) - new Date(a.at)).slice(0, 6); // newest reviews across the catalogue
   const oss = osList(P);
   const onHero = e => {
