@@ -2156,3 +2156,9 @@ dialog.welcome[open] .wcard { animation:wpop .5s cubic-bezier(.2,.8,.2,1) both }
 /* ─ festive backdrop (26 Oct): the brochure's Diwali room, softened and darkened so the lockup reads and its 860 px size never shows ─ */
 .festive .fbg img { object-position:50% 45%; filter:blur(10px) brightness(.5) saturate(1.25); scale:1.12 }
 .festive .festin::before { content:""; position:absolute; inset:0; z-index:0; pointer-events:none; background:linear-gradient(90deg,#1a0b2ecc 0%,#1a0b2e80 45%,#3a150a66 100%) }
+
+/* ─ festive stage (26 Oct): a drawn festive gradient instead of a blurred copy of the room, and a warm halo on the card instead of the blurred blob ─ */
+.festive .festin { background:radial-gradient(60% 90% at 82% 45%,#ff8a2b2e 0%,transparent 60%), radial-gradient(45% 70% at 12% 15%,#7c3aed33 0%,transparent 60%), linear-gradient(118deg,#160a2a 0%,#2a0f3f 48%,#4a1322 100%) }
+.festive .festin::before { content:none }
+.festive .fglow { display:none }
+.festive .froom { border-radius:18px; box-shadow:0 34px 60px -24px #000d, 0 0 0 1px #ffffff2a, 0 0 90px 6px #ff9f4338 }

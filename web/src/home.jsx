@@ -184,7 +184,6 @@ export function FestiveBanner({ tvs, maxOff, minEmi, money, href = "/offers", ct
   if (!tvs.length || !top || maxOff <= 0) return null;
   return <section className="festive bleed" ref={ref} aria-label={FESTIVE.title}>
     <a className="festin" href={href}>
-      <picture className="fbg" aria-hidden="true"><img src="/img/fest-cover.webp" alt="" loading="lazy" width="860" height="545" /></picture>
       <span className="fsparkle" aria-hidden="true"></span>
       <span className="flights" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></span>
       <span className="ftext">
