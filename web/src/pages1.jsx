@@ -62,10 +62,10 @@ export function Checkout() {
   const [addrId, setAddrId] = useState(dfltAddr ? dfltAddr.id : "new"); // a saved address card, or "new" for the form
   const wallet = ((me && me.coupons) || []).find(c => !c.used && new Date(c.expires) > new Date());
   const [coupon, setCoupon] = useState(""), [couponMsg, setCouponMsg] = useState("");
-  const discount = (() => { const c = ((me && me.coupons) || []).find(c => c.code === coupon.trim().toUpperCase()); return c && !c.used && new Date(c.expires) > new Date() && cartTotal() >= c.minOrder ? Math.min(c.value, cartTotal()) : 0; })();
-  const applyCoupon = code => { const v = (code || "").trim().toUpperCase(); setCoupon(v); const c = ((me && me.coupons) || []).find(c => c.code === v); setCouponMsg(!v ? "" : !c ? "That code is not in your account." : c.used ? "This coupon has already been used." : new Date(c.expires) < new Date() ? "This coupon has expired." : cartTotal() < c.minOrder ? `Needs an order of at least ${money(c.minOrder)}.` : `${money(c.value)} off applied.`); };
+  const [discount, setDiscount] = useState(0); // the server's answer, the same rule the order route enforces
+  const applyCoupon = async code => { const v = (code || "").trim().toUpperCase(); setCoupon(v); setDiscount(0); if (!v) return setCouponMsg(""); try { const r = await api("coupons/validate", "POST", { code: v, items: Object.entries(cart).map(([id, qty]) => ({ id: +id, qty })) }); setDiscount(r.discount); setCouponMsg(`${money(r.discount)} off applied.`); } catch (e) { setCouponMsg(e.message); } };
   useEffect(() => { document.title = "Checkout | Mytekkstore"; }, []);
-  useEffect(() => { if (cartCount()) track("begin_checkout", { value: cartTotal(), signedIn: !!me }); if (cartCount() && !me) location.replace("/account?next=/checkout"); }, []); // customers must sign in before checkout
+  useEffect(() => { if (cartCount()) track("begin_checkout", { value: cartTotal(), signedIn: !!me }); if (cartCount() && !me) location.replace("/account?next=/checkout"); else if (cartCount() && me && !me.phoneVerified) location.replace("/account?verify=1&next=%2Fcheckout"); }, []); // customers must sign in, with a verified mobile number, before checkout
   // the delivery place under the pincode, from India Post (the field still accepts any pincode)
   const placeOf = async v => { setPlace(""); if (/^\d{6}$/.test(v)) try { const d = await api("pincode/" + v); if (d.district) setPlace("Delivering to " + d.district + ", " + d.state); } catch {} };
   useEffect(() => { if (me) placeOf(me.pin || ""); }, [me && me.id]); // above the early returns: after them it rendered fewer hooks once the cart emptied (React error 300 on every placed order)
@@ -108,7 +108,7 @@ export function Checkout() {
         <label>Address<textarea name="address" rows="3" required maxLength="400" autoComplete="street-address" defaultValue={saved.length ? "" : me.address || ""}></textarea></label>
         <label>Pincode<input name="pin" required pattern="[0-9A-Za-z ]{4,10}" autoComplete="postal-code" defaultValue={saved.length ? "" : me.pin || ""} onChange={e => placeOf(e.target.value.trim())} /><span id="pinplace" className="small" role="status">{place}</span></label></>}
         <h3>Coupon</h3>
-        <div className="ck-coupon"><input type="text" name="couponText" aria-label="Coupon code" placeholder={wallet ? wallet.code + " is in your wallet" : "Coupon code"} value={coupon} onChange={e => setCoupon(e.target.value.toUpperCase())} maxLength="20" /><button type="button" className="btn ghost" onClick={() => applyCoupon(coupon || (wallet ? wallet.code : ""))}>Apply</button></div>
+        <div className="ck-coupon"><input type="text" name="couponText" aria-label="Coupon code" placeholder={wallet ? wallet.code + " is in your wallet" : "Coupon code"} value={coupon} onChange={e => { setCoupon(e.target.value.toUpperCase()); setDiscount(0); setCouponMsg(""); }} maxLength="20" /><button type="button" className="btn ghost" onClick={() => applyCoupon(coupon || (wallet ? wallet.code : ""))}>Apply</button></div>
         {couponMsg && <p className="small" role="status" style={{ color: discount ? "#08805f" : "var(--muted)" }}>{couponMsg}</p>}
         <h3>2. Payment</h3>
         <div className="paygrid" role="radiogroup" aria-label="Payment method">

@@ -3,7 +3,8 @@
 // before it, the pincode after it, the welcome coupon at the end; the account as a dashboard with a left menu: orders with their
 // timeline, profile, addresses (pincode → address → confirm), wishlist, saved cards, EMI and bank offers, TVs and warranty,
 // coupons, reviews, notifications, help. Everything shown comes from the account and the catalogue; the parts that wait for a
-// service (saved cards, WhatsApp messages, the map pin) say so instead of pretending.
+// service (saved cards, the map pin, the SMS sender) say so instead of pretending. A signed-in account without a verified number (Google, or an
+// old email sign-up) verifies one here before it can order: the same card, in its "verify" state.
 import { useEffect, useRef, useState } from "react";
 import { useStore } from "./store.jsx";
 import { api, qs, load, save } from "./api.js";
@@ -18,28 +19,34 @@ const TickGold = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="non
 export function Account() {
   const { me, CFG, money } = useStore();
   useEffect(() => { document.title = (me ? "My account" : "Sign up or sign in") + " | Mytekkstore"; document.body.classList.toggle("su-page", !me); return () => document.body.classList.remove("su-page"); }, [me]);
-  return me ? <Dashboard me={me} money={money} CFG={CFG} /> : <SignUp CFG={CFG} money={money} />;
+  const verifying = me && !me.phoneVerified && (qs.get("verify") || qs.get("next"));
+  useEffect(() => { document.body.classList.toggle("su-page", !me || !!verifying); }, [me, verifying]);
+  return verifying ? <SignUp CFG={CFG} money={money} linkUser={me} /> : me ? <Dashboard me={me} money={money} CFG={CFG} /> : <SignUp CFG={CFG} money={money} />;
 }
 
 // ===== the sign-up / sign-in page (the prototype) =====
-function SignUp({ CFG, money }) {
+function SignUp({ CFG, money, linkUser }) {
+  const linking = !!linkUser;
   const { P } = useStore();
   const tvs = (P || []).filter(p => p.cat === "Televisions"), emis = tvs.filter(p => p.emi).map(p => emiPlans(p.price)[2][1]), minEmi = emis.length ? Math.min(...emis) : 0;
   const reviews = tvs.flatMap(p => p.reviews || []), rating = reviews.length >= 3 ? (reviews.reduce((s, r) => s + r.rating, 0) / reviews.length).toFixed(1) : "";
   const next = /^\/(?!\/)[\w\/-]*(\?[\w=&%-]*)?$/.test(qs.get("next") || "") ? qs.get("next") : "/account";
-  const [mode, setMode] = useState(qs.get("mode") === "login" || qs.get("next") ? "login" : "signup");
+  const [mode, setMode] = useState(linking || qs.get("mode") === "login" || qs.get("next") ? "login" : "signup");
   const [step, setStep] = useState(1); // 1 the form, 3 the pincode, 4 done
-  const [name, setName] = useState(load("su-name", "")), [email, setEmail] = useState(""), [phone, setPhone] = useState(load("signin", "").replace(/^\+91/, "").replace(/\D/g, "").slice(-10));
+  const [name, setName] = useState(linking ? linkUser.name || "" : load("su-name", "")), [email, setEmail] = useState(""), [phone, setPhone] = useState(load("signin", "").replace(/^\+91/, "").replace(/\D/g, "").slice(-10));
   const [sent, setSent] = useState(false), [digits, setDigits] = useState(["", "", "", "", "", ""]), [verified, setVerified] = useState(false), [hint, setHint] = useState(""), [left, setLeft] = useState(0);
-  const [err, setErr] = useState(""), [busy, setBusy] = useState(false), [shake, setShake] = useState(""), [whatsapp, setWhatsapp] = useState(true), [needName, setNeedName] = useState(false);
+  const [err, setErr] = useState(""), [busy, setBusy] = useState(false), [shake, setShake] = useState(""), [needName, setNeedName] = useState(false);
   const [pin, setPin] = useState(""), [pinInfo, setPinInfo] = useState(null), [usePw, setUsePw] = useState(false), [created, setCreated] = useState(false);
   const boxes = useRef([]), phoneRef = useRef();
   const signup = mode === "signup";
   const real = !!CFG.sms, isLocal = /^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname), demo = !real && (CFG.demoCodes || isLocal);
   useEffect(() => { if (left <= 0) return; const t = setTimeout(() => setLeft(left - 1), 1000); return () => clearTimeout(t); }, [left]);
   useEffect(() => { if (!CFG.google) return; const g = document.createElement("script"); g.src = "https://accounts.google.com/gsi/client"; g.async = true;
-    g.onload = () => { window.google.accounts.id.initialize({ client_id: CFG.google, callback: async r => { try { await api("login/google", "POST", { credential: r.credential }); location.href = next; } catch (e) { setErr(e.message); } } }); window.google.accounts.id.renderButton(document.getElementById("gbtn"), { theme: "outline", size: "large", shape: "rectangular", text: "continue_with", width: 392 }); };
+    g.onload = () => { window.google.accounts.id.initialize({ client_id: CFG.google, callback: async r => { try { const g = await api("login/google", "POST", { credential: r.credential }); location.href = g.user.phoneVerified ? next : "/account?verify=1&google=1&next=" + encodeURIComponent(next); } catch (e) { setErr(e.message); } } }); /* Google once, then the mobile number once: an order needs it */ window.google.accounts.id.renderButton(document.getElementById("gbtn"), { theme: "outline", size: "large", shape: "rectangular", text: "continue_with", width: 392 }); };
     document.head.append(g); }, []);
+  useEffect(() => { if (!CFG.recaptcha || document.querySelector('script[src*="recaptcha/api.js"]')) return; const r = document.createElement("script"); r.src = "https://www.google.com/recaptcha/api.js?render=" + encodeURIComponent(CFG.recaptcha); r.async = true; document.head.append(r); }, []);
+  const captcha = () => CFG.recaptcha && window.grecaptcha ? new Promise(res => window.grecaptcha.ready(() => window.grecaptcha.execute(CFG.recaptcha, { action: "send_otp" }).then(res, () => res("")))) : Promise.resolve("");
+  const detect = () => { if (!navigator.geolocation) return setErr("Your browser does not share its location. Please type your pincode."); setErr(""); navigator.geolocation.getCurrentPosition(async pos => { try { const d = await api("geo/reverse", "POST", { lat: pos.coords.latitude, lng: pos.coords.longitude }); if (d.postalCode) checkPin(d.postalCode.replace(/\D/g, "").slice(0, 6)); else setErr("We could not read a pincode from your location. Please type it."); } catch (x) { setErr(x.message); } }, () => setErr("Location permission was not given. Please type your pincode."), { timeout: 8000 }); };
   const wobble = k => { setShake(k); setTimeout(() => setShake(""), 450); };
   const to = "+91" + phone;
   const sendOtp = async () => {
@@ -47,7 +54,7 @@ function SignUp({ CFG, money }) {
     if (!/^\d{10}$/.test(phone)) { wobble("phone"); phoneRef.current && phoneRef.current.focus(); return; }
     if (signup && !name.trim()) { wobble("name"); return; }
     setBusy(true);
-    try { const r = await api("otp/send", "POST", { to }); save("signin", to); save("su-name", name); setSent(true); setDigits(["", "", "", "", "", ""]); setLeft(30);
+    try { const r = await api("otp/send", "POST", { to, recaptchaToken: await captcha() }); save("signin", to); save("su-name", name); setSent(true); setDigits(["", "", "", "", "", ""]); setLeft(30);
       setHint(r.via === "demo" ? `Demo mode until the SMS service is connected: your code is ${r.demoCode}.` : `Enter the 6-digit OTP sent to +91 ${phone.slice(0, 5)} ${phone.slice(5)}.`);
       setTimeout(() => boxes.current[0] && boxes.current[0].focus(), 0);
     } catch (e) { setErr(e.message); } finally { setBusy(false); }
@@ -55,7 +62,8 @@ function SignUp({ CFG, money }) {
   const verify = async code => {
     setBusy(true); setErr("");
     try {
-      const r = await api("otp/verify", "POST", { to, code, name: name.trim(), email: email.trim(), whatsapp });
+      const r = await api("otp/verify", "POST", { to, code, name: name.trim(), email: email.trim() });
+      if (r.linked) { location.href = next; return; } // the signed-in account now has its number
       if (r.newUser) { setNeedName(true); setMode("signup"); setHint("New number. Add your name to create your account."); return; } // a sign-in with a number we have never seen: the sign-up fields open
       setVerified(true); setCreated(!!r.created);
       if (!r.created) { location.href = next; return; } // a known customer is signed in; the welcome code is only for a first account
@@ -64,7 +72,7 @@ function SignUp({ CFG, money }) {
   const onDigit = (i, v) => { const d = v.replace(/\D/g, "").slice(-1); const n = [...digits]; n[i] = d; setDigits(n); if (d && boxes.current[i + 1]) boxes.current[i + 1].focus(); if (n.every(Boolean)) verify(n.join("")); };
   const onPaste = e => { const t = (e.clipboardData.getData("text") || "").replace(/\D/g, "").slice(0, 6); if (!t) return; e.preventDefault(); const n = t.split("").concat(Array(6).fill("")).slice(0, 6); setDigits(n); boxes.current[Math.min(t.length, 5)].focus(); if (t.length === 6) verify(t); };
   const submit = async e => { e.preventDefault(); if (!sent) return sendOtp(); if (!verified) { if (digits.every(Boolean)) return verify(digits.join("")); return boxes.current[0] && boxes.current[0].focus(); } setStep(3); };
-  const checkPin = async v => { setPin(v); setPinInfo(null); if (!/^\d{6}$/.test(v)) return; try { const d = await api("pincode/" + v); setPinInfo({ ok: true, text: `${d.area || d.district}, ${d.district} · We deliver here · Cash on delivery available` }); } catch (x) { setPinInfo({ ok: false, text: x.message }); } };
+  const checkPin = async v => { setPin(v); setPinInfo(null); if (!/^\d{6}$/.test(v)) return; try { const d = await api("pincode/" + v); setPinInfo({ ok: true, text: `${[d.area, d.district || d.state].filter(Boolean).join(", ") || "Pincode " + v} · We deliver here · Cash on delivery available` }); } catch (x) { setPinInfo({ ok: true, text: `Pincode ${v} · We deliver to every Indian pincode · Cash on delivery available` }); } };
   const finish = async e => { e.preventDefault(); if (!/^\d{6}$/.test(pin)) return; setBusy(true); try { await api("me", "PATCH", { pin }); setStep(4); } catch (x) { setErr(x.message); } finally { setBusy(false); } };
   const switchMode = m => { setMode(m); setNeedName(false); setSent(false); setVerified(false); setDigits(["", "", "", "", "", ""]); setErr(""); setHint(""); setUsePw(false); };
   return <div className="su">
@@ -89,9 +97,10 @@ function SignUp({ CFG, money }) {
         <div className="su-card" id="card">
           <div className="su-steps" aria-hidden="true"><span className="on"></span><span className={sent || step > 1 ? "on" : ""}></span><span className={step >= 3 ? "on" : ""}></span></div>
           {step === 1 && <form className="su-step" id="su" noValidate onSubmit={submit}>
-            <h2>{signup ? (needName ? "New number, new account" : "Sign up in 30 seconds") : "Welcome back"}</h2>
-            <p className="su-sub">{signup ? <>Already have an account? <button type="button" className="su-link" onClick={() => switchMode("login")}>Sign in</button></> : <>New here? <button type="button" className="su-link" onClick={() => switchMode("signup")}>Create an account and get ₹500 off</button></>}</p>
-            {CFG.google && <><div className="su-gbtn" id="gbtn"></div><div className="su-or">or with mobile number</div></>}
+            <h2>{linking ? "Verify your mobile number" : signup ? (needName ? "New number, new account" : "Sign up in 30 seconds") : "Welcome back"}</h2>
+            {linking && qs.get("google") && <div className="su-ok show"><Tick /><span>Signed in with Google as {linkUser.email} · now verify your mobile number below</span></div>}
+            {linking ? <p className="su-sub">Signed in as <b>{linkUser.email || linkUser.name}</b>. Delivery and cash on delivery need a verified number; we text a one-time code.</p> : <p className="su-sub">{signup ? <>Already have an account? <button type="button" className="su-link" onClick={() => switchMode("login")}>Sign in</button></> : <>New here? <button type="button" className="su-link" onClick={() => switchMode("signup")}>Create an account and get ₹500 off</button></>}</p>}
+            {CFG.google && !linking && <><div className="su-gbtn" id="gbtn"></div><div className="su-or">or with mobile number</div></>}
             {signup && <div className="su-row">
               <label className={shake === "name" ? "su-shake" : ""} style={{ flex: 1 }}>Full name<input type="text" name="name" value={name} onChange={e => setName(e.target.value)} placeholder="As on your ID" maxLength="80" autoComplete="name" /></label>
               <label style={{ flex: 1 }}>Email (optional)<input type="email" name="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="For invoices" maxLength="120" autoComplete="email" /></label>
@@ -108,18 +117,17 @@ function SignUp({ CFG, money }) {
               <p className="su-tiny" id="resend">{left > 0 ? `Resend in 00:${String(left).padStart(2, "0")}` : <>Didn't get it? <button type="button" className="su-link" onClick={sendOtp}>Resend OTP</button></>}</p>
             </div>}
             {verified && <div className="su-ok show" id="verified"><Tick />Mobile number verified</div>}
-            {signup && <label className="su-chk"><input type="checkbox" checked={whatsapp} onChange={e => setWhatsapp(e.target.checked)} /> Send my ₹500 welcome code, deals and price-drop alerts on WhatsApp (messages start once the WhatsApp service is connected)</label>}
             {err && <p className="su-err" role="alert">{err}</p>}
-            <button type="submit" className="su-btn" id="send" disabled={busy || (sent && !verified && !digits.every(Boolean))}>{signup ? (sent ? "Create account" : "Send OTP and create account") : (sent ? "Sign in" : "Send OTP")}</button>
+            <button type="submit" className="su-btn" id="send" disabled={busy || (sent && !verified && !digits.every(Boolean))}>{linking ? (sent ? "Verify and continue" : "Send OTP") : signup ? (sent ? "Create account" : "Send OTP and create account") : (sent ? "Sign in" : "Send OTP")}</button>
             <p className="su-tiny">By continuing you agree to our <a href="/terms">Terms</a> and <a href="/privacy">Privacy policy</a>. No password needed; we text a one-time code.</p>
-            <p className="su-tiny"><button type="button" className="su-link" onClick={() => setUsePw(v => !v)}>{usePw ? "Hide the password sign-in" : "Have a password? Sign in with email and password"}</button></p>
-            {usePw && <PasswordSignIn next={next} />}
+            {!linking && <p className="su-tiny"><button type="button" className="su-link" onClick={() => setUsePw(v => !v)}>{usePw ? "Hide the password sign-in" : "Have a password? Sign in with email and password"}</button></p>}
             <div className="su-trust"><span>🔒 OTP verified</span><span>· No password needed</span><span>· Sign in with the same number on any device</span></div>
           </form>}
+          {step === 1 && usePw && !linking && <PasswordSignIn next={next} />}
           {step === 3 && <form className="su-step" id="su-pin" noValidate onSubmit={finish}>
             <h2>Where should we deliver?</h2>
             <p className="su-sub">Your pincode sets delivery time and cash-on-delivery availability.</p>
-            <label>Pincode<div className="su-row"><input type="text" name="pin" value={pin} onChange={e => checkPin(e.target.value.replace(/\D/g, "").slice(0, 6))} placeholder="6 digits" inputMode="numeric" maxLength="6" autoFocus /></div></label>
+            <label>Pincode<div className="su-row"><input type="text" name="pin" value={pin} onChange={e => checkPin(e.target.value.replace(/\D/g, "").slice(0, 6))} placeholder="6 digits" inputMode="numeric" maxLength="6" autoFocus />{CFG.geo && <button type="button" className="su-btn su-otpbtn" onClick={detect}>Detect</button>}</div></label>
             {pinInfo && <div className={"su-ok show" + (pinInfo.ok ? "" : " bad")} id="pinok"><Tick /><span>{pinInfo.text}</span></div>}
             {err && <p className="su-err" role="alert">{err}</p>}
             <button type="submit" className="su-btn" disabled={busy || !/^\d{6}$/.test(pin)}>Finish and go to my account</button>
@@ -172,6 +180,7 @@ function Dashboard({ me, money, CFG }) {
       <div className="acc-head"><div><h1 className="acc-h">{title[0]}</h1><p className="acc-sub">{title[1]}</p></div>
         {s === "home" && coupon && <a className="acc-pill" href="/account?s=coupons"><Icon k="tag" />{money(coupon.value)} coupon in your wallet</a>}
         {s === "addresses" && <a className="acc-btn" href="/account?s=addresses&add=1">+ Add new address</a>}</div>
+      {!me.phoneVerified && <a className="acc-card acc-notice" href={"/account?verify=1&next=" + encodeURIComponent("/account?s=" + s)}><b>Verify your mobile number</b><span className="acc-muted">Delivery and cash on delivery need it. It takes a minute: we text a one-time code.</span><span className="acc-link">Verify now →</span></a>}
       {s === "home" && <Overview {...props} />}{s === "orders" && <Orders {...props} />}{s === "profile" && <Profile {...props} />}{s === "addresses" && <Addresses {...props} />}{s === "wishlist" && <Wishlist {...props} />}
       {s === "cards" && <Cards {...props} />}{s === "emi" && <Emi {...props} />}{s === "tvs" && <Tvs {...props} />}{s === "coupons" && <Coupons {...props} />}{s === "reviews" && <Reviews {...props} />}{s === "notifications" && <Notifications {...props} />}{s === "help" && <Help {...props} />}
     </section>
@@ -256,18 +265,21 @@ function Addresses({ me, dflt }) {
   </>;
 }
 function AddressFlow({ me, address, onDone, onCancel }) {
+  const { CFG } = useStore();
   const [step, setStep] = useState(address ? 2 : 1), [pin, setPin] = useState(address ? address.pin : me.pin || ""), [look, setLook] = useState(null), [err, setErr] = useState(""), [busy, setBusy] = useState(false);
   const [a, setA] = useState(address || { label: "Home", name: me.name || "", line1: "", line2: "", landmark: "", city: "", state: "", phone: me.phone || "", isDefault: !(me.addresses || []).length });
   const set = (k, v) => setA(x => ({ ...x, [k]: v }));
-  const check = async () => { setErr(""); if (!/^\d{6}$/.test(pin)) return setErr("Please enter a 6-digit pincode."); setBusy(true); try { const d = await api("pincode/" + pin); setLook(d); setA(x => ({ ...x, city: d.district || x.city, state: d.state || x.state, line2: x.line2 || (d.area ? d.area : "") })); } catch (x) { setErr(x.message); setLook(null); } finally { setBusy(false); } };
+  const check = async () => { setErr(""); if (!/^\d{6}$/.test(pin)) return setErr("Please enter a 6-digit pincode."); setBusy(true); try { const d = await api("pincode/" + pin); setLook(d); setA(x => ({ ...x, city: d.district || x.city, state: d.state || x.state, line2: x.line2 || (d.area ? d.area : "") })); } catch (x) { setLook({ pin, soft: x.message }); } finally { setBusy(false); } };
   const save = async e => { e.preventDefault(); setErr(""); setBusy(true); try { await api(address ? "me/addresses/" + address.id : "me/addresses", "POST", { ...a, pin }); setStep(3); } catch (x) { setErr(x.message); } finally { setBusy(false); } };
   return <div className="acc-flow">
     {step === 1 && <div className="acc-card acc-step"><span className="acc-pill2">Step 1 · Where should we deliver?</span><h2 className="acc-h2">Enter your pincode</h2>
       <div className="acc-row"><input className="acc-in" type="text" inputMode="numeric" maxLength="6" value={pin} onChange={e => setPin(e.target.value.replace(/\D/g, "").slice(0, 6))} placeholder="6 digits" aria-label="Pincode" /><button type="button" className="acc-btn" onClick={check} disabled={busy}>Check</button></div>
-      {look && <div className="acc-ok"><b>{look.area || look.district}, {look.district} {look.pin}</b> · We deliver here. Free delivery, cash on delivery available. Delivery in 3 to 5 days.</div>}
+      {CFG.geo && <button type="button" className="acc-linkbtn" style={{ color: "#08805f", textAlign: "left" }} onClick={() => navigator.geolocation && navigator.geolocation.getCurrentPosition(async pos => { try { const d = await api("geo/reverse", "POST", { lat: pos.coords.latitude, lng: pos.coords.longitude }); if (d.postalCode) setPin(d.postalCode.replace(/\D/g, "").slice(0, 6)); } catch (x) { setErr(x.message); } }, () => setErr("Location permission was not given. Please type your pincode."))}>Use my current location</button>}
+      {look && !look.soft && <div className="acc-ok"><b>{[look.area, look.district || look.state].filter(Boolean).join(", ") || "Pincode " + look.pin}{look.area || look.district ? " " + look.pin : ""}</b> · We deliver here. Free delivery, cash on delivery available. Delivery in 3 to 5 days.</div>}
+      {look && look.soft && <div className="acc-ok">We deliver to every Indian pincode, free, with cash on delivery. {look.soft} Fill in the city and state on the next step.</div>}
       {err && <p className="acc-err" role="alert">{err}</p>}
-      <p className="acc-muted">The pincode is checked with India Post and fills the city and state. "Use my current location" arrives with the maps key.</p>
-      <div className="acc-actions start"><button type="button" className="acc-btn" disabled={!look} onClick={() => setStep(2)}>Continue</button><button type="button" className="acc-btn ghost" onClick={onCancel}>Cancel</button></div></div>}
+      <p className="acc-muted">The pincode is checked with India Post and fills the city and state.{CFG.geo ? "" : " Location detection arrives with the maps key."}</p>
+      <div className="acc-actions start"><button type="button" className="acc-btn" disabled={!/^\d{6}$/.test(pin)} onClick={() => { if (!look) check(); setStep(2); }}>Continue</button><button type="button" className="acc-btn ghost" onClick={onCancel}>Cancel</button></div></div>}
     {step === 2 && <form className="acc-card acc-step" onSubmit={save}><span className="acc-pill2">Step 2 · Add the address</span><h2 className="acc-h2">Delivery address</h2>
       <div className="acc-grid2 tight">
         <label className="acc-f">Flat / house no., building<input className="acc-in" value={a.line1} onChange={e => set("line1", e.target.value)} required maxLength="160" autoComplete="address-line1" /></label>
@@ -317,10 +329,10 @@ function Reviews({ byId }) {
     : <div className="acc-card acc-empty"><b>No reviews yet.</b><span className="acc-muted">Rate a delivered TV from My orders.</span></div>;
 }
 function Notifications({ me }) {
-  const [v, setV] = useState({ whatsapp: !!me.whatsapp, emailOffers: me.emailOffers !== false }), [saved, setSaved] = useState("");
+  const [v, setV] = useState({ smsOffers: me.smsOffers !== false, emailOffers: me.emailOffers !== false }), [saved, setSaved] = useState("");
   const toggle = async k => { const n = { ...v, [k]: !v[k] }; setV(n); try { await api("me", "PATCH", { [k]: n[k] }); setSaved("Saved."); setTimeout(() => setSaved(""), 1500); } catch (e) { setSaved(e.message); } };
   return <div className="acc-card acc-form"><b>Where we message you</b>
-    <label className="acc-chk"><input type="checkbox" checked={v.whatsapp} onChange={() => toggle("whatsapp")} /> Deals, price-drop alerts and order updates on WhatsApp ({fmtPhone(me.phone) || "add a mobile number"}). Messages start once the WhatsApp service is connected.</label>
+    <label className="acc-chk"><input type="checkbox" checked={v.smsOffers} onChange={() => toggle("smsOffers")} /> Order updates and offers by SMS{me.phone ? " to " + fmtPhone(me.phone) : " (verify a mobile number first)"}.</label>
     <label className="acc-chk"><input type="checkbox" checked={v.emailOffers} onChange={() => toggle("emailOffers")} /> Offers and buying guides by email{me.email ? " (" + me.email + ")" : " (add an email in Profile)"}.</label>
     <span className="acc-muted small">Order confirmations always go out by the channel the store has connected. {saved}</span></div>;
 }

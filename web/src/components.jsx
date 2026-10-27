@@ -288,7 +288,7 @@ export function Header() {
       <a className="logo" href="/"><svg viewBox="0 0 32 32" width="30" height="30" aria-hidden="true"><rect width="32" height="32" rx="9" fill="var(--accent)" /><path d="M18 5 9 18h6l-2 9 10-14h-6z" fill="#ffffff" /></svg><span>mytekk<b>store</b></span></a>
       <Search /><Deliver />
       <select id="country" aria-label="Country" value={country} onChange={e => { save("country", e.target.value); location.reload(); }}>{Object.keys(COUNTRIES).map(c => <option value={c} key={c}>{c}</option>)}</select>
-      <a className="hlink" href="/account" aria-label={me ? "My account" : "Sign in"}><Icon k="user" /> <span>{me ? me.name.split(" ")[0] : "Sign in"}</span></a>
+      <a className="hlink" href={me || location.pathname === "/account" ? "/account" : "/account?next=" + encodeURIComponent(location.pathname + location.search)} aria-label={me ? "My account" : "Sign in"}><Icon k="user" /> <span>{me ? me.name.split(" ")[0] : "Sign in"}</span></a>
       <a className="hlink" href="/products?wish=1" aria-label="Wishlist"><Icon k="heart" /> <span id="wishN" className="count" hidden={!wish.length}>{wish.length}</span></a>
       <a className="hlink" href="/cart" data-drawer aria-label="Cart"><Icon k="cart" /> <span id="cartN" className={"count" + (bump ? " bump" : "")} key={bump} hidden={!n}>{n}</span></a>
     </div>
@@ -310,7 +310,7 @@ export function Footer() {
     <div className="wrap">
       <div className="f-cols">
         <div><span className="f-brand">mytekk<b>store</b></span><p className="f-about">Premium Elista TVs at factory-direct prices. Genuine products with brand warranty, free delivery, cash on delivery and No Cost EMI, across India.</p>
-          {(CONTACT.phone || CONTACT.email || CONTACT.hours) && <div className="f-contact">{CONTACT.phone && <span><strong>WhatsApp:</strong> {CONTACT.phone}</span>}{CONTACT.email && <span><strong>Email:</strong> {CONTACT.email}</span>}{CONTACT.hours && <span><strong>Hours:</strong> {CONTACT.hours}</span>}</div>}</div>
+          {(CONTACT.phone || CONTACT.email || CONTACT.hours) && <div className="f-contact">{CONTACT.phone && <span><strong>Phone:</strong> {CONTACT.phone}</span>}{CONTACT.email && <span><strong>Email:</strong> {CONTACT.email}</span>}{CONTACT.hours && <span><strong>Hours:</strong> {CONTACT.hours}</span>}</div>}</div>
         <div><strong className="f-head">Shop</strong><a href="/televisions">Televisions</a><a href="/offers">Best Deals</a><a href="/televisions?os=Google+TV">Google TV</a><a href="/televisions?os=WebOS">webOS Hub</a><a href="/televisions?type=Mini-LED+PRO">Mini-LED PRO</a><a href="/televisions?type=QLED">QLED TVs</a><a href="/televisions?max=30000">Under ₹30,000</a><a href="/televisions?size=65">65" &amp; above</a></div>
         <div><strong className="f-head">Help</strong><a href="/account">Track order</a><a href="/shipping">Delivery &amp; tracking</a><a href="/returns">Returns &amp; replacement</a><a href="/returns">Warranty registration</a><a href="/offers">No Cost EMI</a><a href="/contact">Contact support</a></div>
         <div><strong className="f-head">Company</strong><a href="/about">About MyTekkStore</a><a href="/buying-guide">Buying guides</a><a href="/account">My account</a></div>

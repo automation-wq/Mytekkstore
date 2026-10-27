@@ -2548,7 +2548,7 @@ body::before, body::after { display:none }
 @media (max-width:760px) { .d-fimg img { object-position:80% 50% } }
 
 /* ===== 27 Oct 2026: the owner's sign-up prototype and account designs ===== */
-body.su-page #hdr, body.su-page #ftr, body.su-page .mnav, body.su-page .chatfab { display:none }
+/* the sign-up page sits under the site header like every other page (owner, 27 Oct) */
 body.su-page main.wrap { padding:0; max-width:none; min-height:100vh }
 .su { position:relative; min-height:100vh; background:#0e0f12; color:#111; font-family:Inter,"Inter Fallback",system-ui,sans-serif; overflow:hidden }
 .su-bg { position:absolute; inset:0 } .su-bg img { width:100%; height:100%; object-fit:cover; filter:brightness(.62); display:block }
@@ -2649,3 +2649,27 @@ body[data-page="account"] main.wrap { max-width:1320px; margin:0 auto; padding:2
 body.su-page[data-page="account"] main.wrap { padding:0; max-width:none }
 .acc-who .acc-avatar { color:#fff; font-size:18px }
 .acc-photo img { transform:scale(1.6) }
+
+/* 27 Oct, hero pass: live words over the owner's living-room cards, the design's left gradient; no arrows */
+.d-hero { line-height:1.3 } .d-arrow { display:none }
+.d-slide { position:relative; min-height:clamp(440px,32vw,620px); color:#fff; text-decoration:none; overflow:hidden }
+.d-slide.on { display:grid; grid-template-columns:minmax(0,1fr); align-items:center }
+.d-sphoto { position:absolute; inset:0 } .d-sphoto img { width:100%; height:100%; object-fit:cover; object-position:62% 46%; display:block; transform:scale(1.28); transform-origin:62% 46% }
+.d-sphoto::after { content:""; position:absolute; inset:0; background:linear-gradient(90deg,rgba(14,15,18,.94) 0%,rgba(14,15,18,.8) 34%,rgba(14,15,18,.28) 56%,rgba(14,15,18,0) 75%), linear-gradient(0deg,rgba(14,15,18,.6) 0%,rgba(14,15,18,0) 30%) }
+.d-stext { position:relative; display:flex; flex-direction:column; gap:16px; padding:56px var(--gut,32px) 64px; max-width:720px }
+.d-seyebrow { font-size:13px; letter-spacing:.24em; font-weight:700; color:#E8CF8C; text-transform:uppercase }
+.d-sh { font-family:var(--d-font); font-size:clamp(34px,4.2vw,62px); font-weight:800; line-height:1.02; letter-spacing:-.02em; color:#fff; max-width:14ch }
+.d-sp { font-size:clamp(15px,1.2vw,18px); color:#C9CDD6; max-width:480px; line-height:1.5 }
+.d-schips { display:flex; gap:10px; flex-wrap:wrap; font-size:14px } .d-schips span { padding:8px 12px; border:1px solid #3A3D45; border-radius:6px; color:#fff } .d-schips span.gold { color:#E8CF8C; font-weight:700 }
+.d-scta { display:flex; gap:12px; flex-wrap:wrap; margin-top:6px } .d-scta .d-btn { height:56px; padding:0 32px; font-size:16px }
+.d-dots { bottom:22px }
+@media (max-width:760px) { .d-slide { min-height:0 } .d-slide.on { display:block } .d-sphoto { position:relative; height:64vw; display:block } .d-sphoto img { transform:scale(1.2); object-position:50% 46% } .d-sphoto::after { background:linear-gradient(0deg,#0E0F12 0%,rgba(14,15,18,.2) 40%,rgba(14,15,18,0) 70%) } .d-stext { padding:4px 16px 44px; gap:12px } .d-sh { font-size:30px; max-width:none } .d-sp { font-size:15px } .d-schips { font-size:12px } .d-schips span { padding:6px 9px } .d-scta .d-btn { height:46px; padding:0 18px; font-size:14px } .d-dots { bottom:14px } }
+
+.acc-notice { border:1.5px solid #B8923A; background:#fdf6e7 } .acc-notice b { font-size:16px }
+.su-ok.show { display:flex }
+
+/* polish, 27 Oct */
+.d-promo { min-height:0; aspect-ratio:1.05 } .d-promo img { transform:scale(1.34); transform-origin:50% 50%; object-position:50% 50% } .d-t > span:last-child { color:#fff; font-weight:500; font-size:15px }
+.hp .d-sub, .hp .d-emi, .hp .d-pts, .hp .d-stars span, .hp .d-how, .hp .d-tbl td.muted, .hp .d-paybox .d-emi { color:#3F4551 } .hp .d-emi.green { color:#08805F }
+.su { min-height:calc(100vh - var(--hh,150px)) } .su-wrap { min-height:calc(100vh - var(--hh,150px)) } .su-logo { display:none }
+@media (max-width:760px) { .su-wrap { padding-bottom:96px } .d-promo { aspect-ratio:1.3 } }

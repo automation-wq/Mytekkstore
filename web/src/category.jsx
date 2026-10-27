@@ -192,11 +192,10 @@ function FindYour({ cat, list, short }) {
   </div></section>;
 }
 // LG ends every page with ways to reach a person. Appears once the client fills in CONTACT (data.js); the phone number needs its
-// country code (for example +91 98765 43210) for the WhatsApp link to work.
+// country code (for example +91 98765 43210).
 function Help() {
   if (!CONTACT.phone && !CONTACT.email) return null;
-  const wa = CONTACT.phone.replace(/\D/g, "");
-  return <section className="help"><div><h2>Not sure which one?</h2><p>Talk to us before you order{CONTACT.hours ? ", " + CONTACT.hours : ""}.</p></div><div className="btns">{CONTACT.phone && <a className="btn" href={"tel:" + CONTACT.phone}>Call {CONTACT.phone}</a>}{wa && <a className="btn ghost" href={"https://wa.me/" + wa} target="_blank" rel="noopener">WhatsApp</a>}{CONTACT.email && <a className="btn ghost" href={"mailto:" + CONTACT.email}>Email</a>}</div></section>;
+  return <section className="help"><div><h2>Not sure which one?</h2><p>Talk to us before you order{CONTACT.hours ? ", " + CONTACT.hours : ""}.</p></div><div className="btns">{CONTACT.phone && <a className="btn" href={"tel:" + CONTACT.phone}>Call {CONTACT.phone}</a>}{CONTACT.email && <a className="btn ghost" href={"mailto:" + CONTACT.email}>Email</a>}</div></section>;
 }
 // /compare?ids=2,11: the ticked models on a page of their own (the compare bar links here, and so does the help bot)
 export function ComparePage() {

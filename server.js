@@ -24,6 +24,11 @@ const catWords = () => { const n = [...new Set(live().map(p => p.cat))].map(c =>
 const TW = { sid: process.env.TWILIO_ACCOUNT_SID, token: process.env.TWILIO_AUTH_TOKEN, from: process.env.TWILIO_FROM };
 const smsReady = !!(TW.sid && TW.token && TW.from);
 const CC = process.env.SMS_COUNTRY_CODE || "+91"; // country code added to mobile numbers typed without one
+// OTP by SMS for Indian numbers through MSG91 (a DLT-registered OTP template; the owner's spec of 27 Oct); Twilio for other numbers or when MSG91 is not set
+const MSG91 = { key: process.env.MSG91_AUTH_KEY || "", template: process.env.MSG91_TEMPLATE_ID || "" }, msg91Ready = !!(MSG91.key && MSG91.template);
+const otpSmsReady = msg91Ready || smsReady;
+const RECAPTCHA = { site: process.env.RECAPTCHA_SITE_KEY || "", secret: process.env.RECAPTCHA_SECRET || "" }; // reCAPTCHA v3 on the send-code route, once both keys exist
+const MAPS_KEY = process.env.GOOGLE_MAPS_SERVER_KEY || ""; // "Use my current location": the browser's position becomes a pincode through Google Geocoding
 // Google sign-in: the OAuth client id from console.cloud.google.com. Without it the Google button is not shown.
 const GOOGLE = process.env.GOOGLE_CLIENT_ID || "";
 // Microsoft Clarity (free heatmaps and session recordings): set CLARITY_ID to the project id from clarity.microsoft.com and the
@@ -180,12 +185,13 @@ function startSession(req, res, user) {
   for (const [k, f] of fails) if (f.until < Date.now()) fails.delete(k);
   const token = crypto.randomBytes(32).toString("base64url");
   sessions.set(token, { userId: user.id, exp: Date.now() + WEEK });
+  user.lastLogin = new Date().toISOString(); write("users");
   if (DB_URL) pending.push(sql("INSERT INTO sessions (token, user_id, exp) VALUES ($1, $2, $3) ON CONFLICT (token) DO UPDATE SET exp = EXCLUDED.exp", [token, String(user.id), String(Date.now() + WEEK)]), sql("DELETE FROM sessions WHERE exp < $1", [String(Date.now())]));
   const secure = req.headers["x-forwarded-proto"] === "https" ? "; Secure" : "";
   res.setHeader("Set-Cookie", `sid=${token}; HttpOnly; SameSite=Lax; Path=/; Max-Age=${WEEK / 1000}${secure}`);
 }
 const fails = new Map(); // "ip email" -> { n, until } : slows down password guessing
-const publicUser = u => u && { hasPassword: !!u.hash, name: u.name, email: u.email, phone: u.phone, phoneVerified: !!u.phoneVerified, address: u.address, pin: u.pin, admin: u.admin, addresses: u.addresses || [], coupons: u.coupons || [], whatsapp: !!u.whatsapp, emailOffers: u.emailOffers !== false, since: u.since || "" };
+const publicUser = u => u && { hasPassword: !!u.hash, name: u.name, email: u.email, phone: u.phone, phoneVerified: !!u.phoneVerified, address: u.address, pin: u.pin, admin: u.admin, addresses: u.addresses || [], coupons: u.coupons || [], smsOffers: u.smsOffers !== false, emailOffers: u.emailOffers !== false, since: u.since || "" };
 // the welcome coupon of the owner's sign-up design: ₹500 on the first order of ₹15,000 or more, 30 days, once
 const welcomeCoupon = () => ({ code: "MYTEKK500", value: 500, minOrder: 15000, expires: new Date(Date.now() + 30 * 86400000).toISOString(), used: false, issued: new Date().toISOString() });
 // a coupon the customer typed at checkout: its discount, or a plain reason it does not apply
@@ -253,6 +259,22 @@ async function sendSms(to, text) {
     body: new URLSearchParams({ To: TW.from.startsWith("whatsapp:") ? "whatsapp:" + to : to, From: TW.from, Body: text }),
   });
   if (!r.ok) throw new Error(`Twilio ${r.status}: ${(await r.text()).slice(0, 200)}`);
+}
+async function sendOtpSms(to, code, text) { // the code is ours, so the hash check stays here whichever service carries the message
+  if (msg91Ready && to.startsWith("+91")) {
+    const r = await fetch(`https://control.msg91.com/api/v5/otp?template_id=${encodeURIComponent(MSG91.template)}&mobile=${to.slice(1)}&otp=${code}`, { method: "POST", headers: { authkey: MSG91.key, "Content-Type": "application/json" }, body: JSON.stringify({ OTP: code }) });
+    const j = r.ok ? await r.json().catch(() => ({})) : {};
+    if (!r.ok || j.type === "error") throw new Error(`MSG91 ${r.status}: ${String(j.message || "").slice(0, 200)}`);
+    return "msg91";
+  }
+  await sendSms(to, text); return "twilio";
+}
+async function welcome(u) { // the welcome message of the sign-up design: SMS when a sender exists, email when one exists, recorded in the outbox either way
+  const text = `Welcome to Mytekkstore, ${u.name}. Your welcome code MYTEKK500 gives ₹500 off your first order of ₹15,000 or more, valid 30 days. Free delivery and cash on delivery on every TV.`;
+  try {
+    if (u.phone && smsReady) { await sendSms(u.phone, text); record(u.phone, text, "sent by sms"); } else if (u.phone) record(u.phone, text, "recorded only");
+    if (u.email && mailReady) { await sendMail(u.email, "Welcome to Mytekkstore", text); record(u.email, text, "sent by email"); }
+  } catch (e) { console.error("welcome:", e.message); }
 }
 async function sendMail(to, subject, text) {
   const r = await fetch("https://api.brevo.com/v3/smtp/email", { method: "POST", headers: { "api-key": BREVO, "Content-Type": "application/json" },
@@ -324,7 +346,7 @@ on("PATCH", "me", ({ body, user }) => {
   if (body.address !== undefined) patch.address = body.address ? str(body.address, "Address", 400) : "";
   if (body.pin !== undefined) patch.pin = body.pin ? str(body.pin, "Pincode", 10, /^[0-9A-Za-z ]{4,10}$/) : "";
   if (body.email !== undefined && body.email !== user.email) { const em = body.email ? str(body.email, "Email", 120, /^[^\s@]+@[^\s@]+\.[^\s@]+$/).toLowerCase() : ""; if (em && db.users.some(x => x.email === em && x.id !== user.id)) throw new HttpError(409, "An account with this email already exists."); patch.email = em; if (em) patch.emailVerified = false; }
-  if (body.whatsapp !== undefined) patch.whatsapp = !!body.whatsapp;
+  if (body.smsOffers !== undefined) patch.smsOffers = !!body.smsOffers;
   if (body.emailOffers !== undefined) patch.emailOffers = !!body.emailOffers;
   Object.assign(user, patch); write("users");
   return { user: publicUser(user) };
@@ -388,51 +410,72 @@ on("POST", "logout", ({ req, res }) => {
 // The server makes a 6-digit code, keeps only its hash for 5 minutes and sends it. Without a provider the code is returned to the
 // page on localhost (or anywhere with OTP_DEMO=1) so the flow can be tried; otherwise the route says codes are not set up.
 const otps = new Map(); // destination -> { hash, salt, exp, tries, sentAt }
-const isLocal = req => /^(::1|127\.0\.0\.1|::ffff:127\.0\.0\.1)$/.test(req.socket.remoteAddress || "");
+const isLocal = req => !req.headers["x-forwarded-for"] && /^(::1|127\.0\.0\.1|::ffff:127\.0\.0\.1)$/.test(req.socket.remoteAddress || ""); // the developer's own machine only, never a request that came through a proxy
 const phoneOf = v => { const p = str(v, "Mobile number", 20).replace(/[\s-]/g, ""); if (!/^\+?\d{10,15}$/.test(p)) bad("Please enter a valid mobile number or email address."); return e164(p); };
 const isEmail = v => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(v || "").trim());
 // the page sends { to }; older callers send { phone } or { email }
 const destOf = body => { const v = body.to !== undefined ? body.to : body.email !== undefined ? body.email : body.phone; return isEmail(v) ? { kind: "email", to: str(v, "Email", 120).toLowerCase() } : { kind: "sms", to: phoneOf(v) }; };
+const otpLocks = new Map(); // destination -> until: fifteen minutes after five wrong codes
+const otpIp = new Map(); // address -> [sentAt]: ten codes per address per hour (the local machine is exempt so the suites can run)
+const lockedUntil = to => { const u = otpLocks.get(to); if (u && u > Date.now()) return u; otpLocks.delete(to); return 0; };
+const lockText = until => { const m = Math.max(1, Math.ceil((until - Date.now()) / 60000)); return `Too many wrong attempts. Please try again in ${m} minute${m === 1 ? "" : "s"}.`; };
+async function checkRecaptcha(token, req) { // reCAPTCHA v3, only once the keys exist
+  if (!RECAPTCHA.secret) return;
+  if (!token) throw new HttpError(403, "The security check did not load. Please reload the page and try again.");
+  const r = await fetch("https://www.google.com/recaptcha/api/siteverify", { method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded" }, body: new URLSearchParams({ secret: RECAPTCHA.secret, response: String(token).slice(0, 3000), remoteip: ipOf(req) || "" }) });
+  const j = r.ok ? await r.json().catch(() => ({})) : {};
+  if (!j.success || (typeof j.score === "number" && j.score < 0.5)) throw new HttpError(403, "The security check failed. Please try again.");
+}
 on("POST", "otp/send", async ({ body, req }) => {
-  const { kind, to } = destOf(body), now = Date.now(), ready = kind === "sms" ? smsReady : mailReady;
+  const { kind, to } = destOf(body), now = Date.now(), ready = kind === "sms" ? otpSmsReady : mailReady;
   if (!ready && !isLocal(req) && !OTP_DEMO) throw new HttpError(503, (kind === "sms" ? "SMS codes are not set up yet." : "Email codes are not set up yet.") + (kind === "sms" && mailReady ? " Use your email address instead, or" : " Please") + " sign in with your password.");
-  for (const [k, v] of otps) if (v.sentAt[v.sentAt.length - 1] < now - 10 * 60 * 1000) otps.delete(k); // forget destinations with no code in the last 10 minutes
-  const sentAt = ((otps.get(to) || {}).sentAt || []).filter(t => t > now - 10 * 60 * 1000);
-  if (sentAt.length >= 3) throw new HttpError(429, "Too many codes requested. Please try again in 10 minutes.");
+  await checkRecaptcha(body.recaptchaToken, req);
+  const until = lockedUntil(to); if (until) throw new HttpError(423, lockText(until));
+  for (const [k, v] of otps) if (v.sentAt[v.sentAt.length - 1] < now - 15 * 60 * 1000) otps.delete(k); // forget destinations with no code in the last 15 minutes
+  const sentAt = ((otps.get(to) || {}).sentAt || []).filter(t => t > now - 15 * 60 * 1000);
+  if (sentAt.length >= 3) throw new HttpError(429, "Too many codes requested. Please try again in 15 minutes.");
+  if (!isLocal(req)) { const ip = ipOf(req), hits = (otpIp.get(ip) || []).filter(t => t > now - 3600000); if (hits.length >= 10) throw new HttpError(429, "Too many codes requested from this connection. Please try again in an hour."); otpIp.set(ip, [...hits, now]); if (otpIp.size > 5000) otpIp.clear(); }
   const code = String(crypto.randomInt(0, 1e6)).padStart(6, "0"), salt = crypto.randomBytes(8).toString("hex");
-  otps.set(to, { hash: hashPw(code, salt), salt, exp: now + 5 * 60 * 1000, tries: 0, sentAt: [...sentAt, now] });
+  otps.set(to, { hash: hashPw(code, salt), salt, exp: now + 5 * 60 * 1000, tries: 0, sentAt: [...sentAt, now] }); // a new code replaces the old one
   const text = `${code} is your Mytekkstore sign-in code. It is valid for 5 minutes. Do not share it.`;
-  if (ready) { await (kind === "sms" ? sendSms(to, text) : sendMail(to, "Your Mytekkstore sign-in code", text)); record(to, text, "sent by " + kind); return { sent: true, via: kind }; }
+  const known = db.users.some(u => kind === "email" ? u.email === to : u.phone === to && u.phoneVerified); // the page only uses this for a hint
+  if (ready) { const via = kind === "sms" ? await sendOtpSms(to, code, text) : (await sendMail(to, "Your Mytekkstore sign-in code", text), "email"); record(to, text, "sent by " + via); return { sent: true, via: kind, resendAfter: 30, newUser: !known }; }
   record(to, text, "recorded only");
-  return { sent: true, via: "demo", demoCode: code }; // only on localhost or with OTP_DEMO=1 (see the 503 above)
+  return { sent: true, via: "demo", demoCode: code, resendAfter: 30, newUser: !known }; // only on localhost or with OTP_DEMO=1 (see the 503 above)
 });
-on("POST", "otp/verify", ({ body, req, res }) => {
+on("POST", "otp/verify", async ({ body, req, res, user: signedIn }) => {
   const { kind, to } = destOf(body), code = String(body.code || "").trim(), o = otps.get(to);
+  const until = lockedUntil(to); if (until) throw new HttpError(423, lockText(until));
   if (!o || o.exp < Date.now()) throw new HttpError(400, "That code has expired. Please request a new one.");
-  if (o.tries >= 5) { o.exp = 0; throw new HttpError(429, "Too many wrong attempts. Please request a new code."); }
   const a = Buffer.from(hashPw(code, o.salt), "hex"), b = Buffer.from(o.hash, "hex");
-  if (!/^\d{6}$/.test(code) || !crypto.timingSafeEqual(a, b)) { o.tries++; throw new HttpError(401, "Wrong code. Please check the message and try again."); }
-  let u;
-  if (kind === "email") {
-    u = db.users.find(u => u.email === to); // an email code signs into the account with that email, password or not
-    if (u && !u.emailVerified) { u.emailVerified = true; write("users"); }
-  } else {
-    // the number's own account: a verified one, or the one customer who used this number on orders (so nobody gets a duplicate account)
-    const owners = db.users.filter(u => u.phone === to);
-    u = owners.find(u => u.phoneVerified) || (owners.length === 1 ? owners[0] : null);
-    if (u && !u.phoneVerified) { u.phoneVerified = true; write("users"); }
+  if (!/^\d{6}$/.test(code) || !crypto.timingSafeEqual(a, b)) {
+    o.tries++;
+    if (o.tries >= 5) { o.exp = 0; otpLocks.set(to, Date.now() + 15 * 60 * 1000); throw new HttpError(423, "Too many wrong attempts. Please try again in 15 minutes."); }
+    throw new HttpError(401, `Wrong code. Please check the message and try again (${5 - o.tries} ${5 - o.tries === 1 ? "try" : "tries"} left).`);
   }
+  let u;
+  if (kind === "email") u = db.users.find(u => u.email === to); // an email code signs into the account with that email, password or not
+  else { const owners = db.users.filter(u => u.phone === to); u = owners.find(u => u.phoneVerified) || (owners.length === 1 ? owners[0] : null); } // the number's own account, or the one customer who used it on orders
+  // a signed-in account without a verified number (Google, or an email sign-up) claims the number it just verified
+  if (kind === "sms" && signedIn && !signedIn.phoneVerified) {
+    if (u && u.id !== signedIn.id && u.phoneVerified) throw new HttpError(409, "This number is already on another account. Sign out and sign in with the number, or use a different number.");
+    signedIn.phone = to; signedIn.phoneVerified = true; write("users"); o.exp = 0;
+    return { user: publicUser(signedIn), linked: true };
+  }
+  if (u && kind === "email" && !u.emailVerified) { u.emailVerified = true; write("users"); }
+  if (u && kind === "sms" && !u.phoneVerified) { u.phoneVerified = true; write("users"); }
   let created = false;
   if (!u) {
     if (typeof body.name !== "string" || !body.name.trim()) return { newUser: true }; // the page asks for a name, then verifies again
     const email = kind === "email" ? to : isEmail(body.email) ? String(body.email).trim().toLowerCase() : "";
     if (email && kind !== "email" && db.users.some(x => x.email === email)) throw new HttpError(409, "An account with this email already exists. Sign in with that email, or leave the email empty.");
     const pin = /^\d{6}$/.test(String(body.pin || "")) ? String(body.pin) : "";
-    u = makeUser(str(body.name, "Name", 80), email, "", false, { ...(kind === "email" ? { emailVerified: true } : { phone: to, phoneVerified: true }), pin, whatsapp: !!body.whatsapp, since: new Date().toISOString(), coupons: [welcomeCoupon()] }); // the sign-up design: ₹500 off the first order
+    u = makeUser(str(body.name, "Name", 80), email, "", false, { ...(kind === "email" ? { emailVerified: true } : { phone: to, phoneVerified: true }), pin, since: new Date().toISOString(), coupons: [welcomeCoupon()] }); // the sign-up design: ₹500 off the first order
     created = true;
   }
   o.exp = 0; // the code is used up; the send count for this number is kept for the rate limit
   startSession(req, res, u);
+  if (created) await welcome(u);
   return { user: publicUser(u), created };
 });
 // ===== sign in with Google =====
@@ -550,6 +593,7 @@ async function razorpayWebhook(req, res) {
 }
 // start a gateway payment: a pending order (no stock taken yet) and the gateway's order id for the checkout
 on("POST", "pay/order", async ({ body, user }) => {
+  if (!user.phoneVerified) throw new HttpError(403, "Please verify your mobile number before placing an order.");
   if (PAY_PROVIDER === "demo") return { provider: "demo" }; // the client keeps the demo flow until keys exist
   const dest = destinationOf(body);
   if (!dest.methods.includes("online")) bad("Online payment is not available for this destination.");
@@ -595,7 +639,7 @@ async function askModel(system, history, message) {
   throw new HttpError(503, "The assistant is not available right now.");
 }
 
-on("GET", "config", async ({ req }) => ({ country: String(req.headers["x-vercel-ip-country"] || "").toUpperCase().slice(0, 2), /* the hosting's own geolocation header; empty on a local machine */ google: GOOGLE, sms: smsReady, mail: mailReady, demoCodes: OTP_DEMO, clarity: !!CLARITY, chat: !!(GEMINI_KEY || CHAT_KEY), pay: PAY_PROVIDER, payKey: RZP.id, fx: await fxNow(), destinations: Object.fromEntries(Object.entries(DESTINATIONS).map(([k, d]) => [k, { name: d.name, display: d.display, ship: d.ship, methods: d.methods }])) }));
+on("GET", "config", async ({ req }) => ({ country: String(req.headers["x-vercel-ip-country"] || "").toUpperCase().slice(0, 2), /* the hosting's own geolocation header; empty on a local machine */ google: GOOGLE, sms: otpSmsReady, mail: mailReady, demoCodes: OTP_DEMO, recaptcha: RECAPTCHA.site, geo: !!MAPS_KEY, clarity: !!CLARITY, chat: !!(GEMINI_KEY || CHAT_KEY), pay: PAY_PROVIDER, payKey: RZP.id, fx: await fxNow(), destinations: Object.fromEntries(Object.entries(DESTINATIONS).map(([k, d]) => [k, { name: d.name, display: d.display, ship: d.ship, methods: d.methods }])) }));
 // Contact form (page.html?p=contact): the message is recorded in the admin outbox ("Customer messages"), so the store sees it
 // even before an email provider is connected. ponytail: no rate limit beyond the body size; add one if the form gets abused.
 on("POST", "contact", ({ body }) => {
@@ -607,6 +651,7 @@ on("POST", "contact", ({ body }) => {
 
 // ===== delivery check: India Post's free pincode service (no key), answers cached for a day =====
 const pins = new Map(); // pin -> { at, data }
+const PIN_STATES = { 11: "Delhi", 12: "Haryana", 13: "Haryana", 14: "Punjab", 15: "Punjab", 16: "Punjab", 17: "Himachal Pradesh", 18: "Jammu and Kashmir", 19: "Jammu and Kashmir", 20: "Uttar Pradesh", 21: "Uttar Pradesh", 22: "Uttar Pradesh", 23: "Uttar Pradesh", 24: "Uttarakhand", 25: "Uttar Pradesh", 26: "Uttarakhand", 27: "Uttar Pradesh", 28: "Uttar Pradesh", 30: "Rajasthan", 31: "Rajasthan", 32: "Rajasthan", 33: "Rajasthan", 34: "Rajasthan", 36: "Gujarat", 37: "Gujarat", 38: "Gujarat", 39: "Gujarat", 40: "Maharashtra", 41: "Maharashtra", 42: "Maharashtra", 43: "Maharashtra", 44: "Maharashtra", 45: "Madhya Pradesh", 46: "Madhya Pradesh", 47: "Madhya Pradesh", 48: "Madhya Pradesh", 49: "Chhattisgarh", 50: "Telangana", 51: "Andhra Pradesh", 52: "Andhra Pradesh", 53: "Andhra Pradesh", 56: "Karnataka", 57: "Karnataka", 58: "Karnataka", 59: "Karnataka", 60: "Tamil Nadu", 61: "Tamil Nadu", 62: "Tamil Nadu", 63: "Tamil Nadu", 64: "Tamil Nadu", 67: "Kerala", 68: "Kerala", 69: "Kerala", 70: "West Bengal", 71: "West Bengal", 72: "West Bengal", 73: "West Bengal", 74: "West Bengal", 75: "Odisha", 76: "Odisha", 77: "Odisha", 78: "Assam", 79: "North East", 80: "Bihar", 81: "Bihar", 82: "Jharkhand", 83: "Jharkhand", 84: "Bihar", 85: "Bihar" }; // the postal circles by the first two digits: the fallback when India Post does not answer
 on("GET", "pincode/(\\d{6})", async ({ params }) => {
   const pin = params[0], hit = pins.get(pin);
   if (hit && hit.at > Date.now() - 86400000) return hit.data;
@@ -615,13 +660,34 @@ on("GET", "pincode/(\\d{6})", async ({ params }) => {
     const r = await fetch("https://api.postalpincode.in/pincode/" + pin, { signal: AbortSignal.timeout(6000) });
     const j = r.ok ? await r.json() : null, po = j && j[0] && Array.isArray(j[0].PostOffice) && j[0].PostOffice[0];
     if (!po) throw new HttpError(404, "We could not find that pincode. Please check it.");
-    data = { pin, area: po.Name, district: po.District, state: po.State };
-  } catch (e) { if (e instanceof HttpError) throw e; throw new HttpError(503, "The pincode service is not reachable right now."); }
+    data = { pin, area: po.Name, district: po.District, state: po.State, serviceable: true, deliveryDays: "3 to 5", codAllowed: true }; // the store delivers everywhere India Post reaches, cash on delivery included
+  } catch (e) {
+    if (e instanceof HttpError) throw e;
+    const state = PIN_STATES[pin.slice(0, 2)]; // India Post is down: the first two digits name the postal circle, which is enough to carry on
+    if (!state) throw new HttpError(503, "The pincode service is not reachable right now.");
+    return { pin, area: "", district: "", state, serviceable: true, deliveryDays: "3 to 5", codAllowed: true, source: "prefix" }; // not cached: the next look-up tries India Post again
+  }
   pins.set(pin, { at: Date.now(), data });
   return data;
 });
+// the browser's position becomes a pincode (Google Geocoding, server key); twenty lookups per address per hour
+const geoIp = new Map();
+on("POST", "geo/reverse", async ({ body, req }) => {
+  if (!MAPS_KEY) throw new HttpError(503, "Location detection is not set up yet. Please type your pincode.");
+  const lat = +body.lat, lng = +body.lng; if (!(Math.abs(lat) <= 90 && Math.abs(lng) <= 180)) bad("Location not valid.");
+  const ip = ipOf(req), now = Date.now(), hits = (geoIp.get(ip) || []).filter(t => t > now - 3600000);
+  if (hits.length >= 20) throw new HttpError(429, "Too many location requests. Please type your pincode."); geoIp.set(ip, [...hits, now]); if (geoIp.size > 5000) geoIp.clear();
+  const r = await fetch(`https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&result_type=postal_code|locality&key=${MAPS_KEY}`, { signal: AbortSignal.timeout(6000) });
+  const j = r.ok ? await r.json() : {}, first = (j.results || [])[0];
+  if (!first) throw new HttpError(404, "We could not read a pincode from your location. Please type it.");
+  const comp = (t, k = "long_name") => ((first.address_components || []).find(c => c.types.includes(t)) || {})[k] || "";
+  return { country: comp("country", "short_name"), postalCode: comp("postal_code"), city: comp("locality") || comp("administrative_area_level_2"), formattedAddress: first.formatted_address || "" };
+});
+// the checkout asks before the order whether a coupon applies to the cart (the same rule the order route enforces)
+on("POST", "coupons/validate", ({ body, user }) => { const lines = buildLines(body.items), subtotal = lines.reduce((t, l) => t + l.p.price * l.qty, 0), cp = couponFor(user, body.code, subtotal); return { ok: true, discount: cp.discount, code: cp.code }; }, "user");
 
-on("POST", "orders", ({ body, user }) => { // sign-in required
+on("POST", "orders", ({ body, user }) => { // sign-in required, with a verified mobile number (delivery and cash on delivery need it; the owner's spec)
+  if (!user.phoneVerified) throw new HttpError(403, "Please verify your mobile number before placing an order.");
   const name = str(body.name, "Name", 80), phone = str(body.phone, "Phone", 15, /^[0-9+ ]{7,15}$/);
   const address = str(body.address, "Address", 400), pin = str(body.pin, "Pincode", 10, /^[0-9A-Za-z ]{4,10}$/);
   const dest = destinationOf(body); // India only until a destination is approved
@@ -640,9 +706,8 @@ on("POST", "orders", ({ body, user }) => { // sign-in required
   };
   db.orders.push(order); write("orders"); write("products");
   notify(order, `Your Mytekkstore order ${order.id} is placed. Total ₹${order.total}. ${order.pay}.`);
-  if (user) { // remembered for next time; a different number than the verified one has to be verified again
-    const np = e164(phone);
-    if (np !== user.phone) { user.phone = np; user.phoneVerified = false; }
+  if (user) { // the address is remembered for next time; the order's contact number stays on the order and never replaces the account's verified number
+    if (!user.phone) user.phone = e164(phone);
     Object.assign(user, { address, pin }); write("users");
   }
   return { id: order.id };
@@ -793,7 +858,7 @@ async function handleApi(req, res, pathname) {
       // ponytail: counted in this process's memory; share the counter if more than one server runs
       const ip = ipOf(req), now = Date.now(), h = hits.get(ip) || { n: 0, since: now };
       if (now - h.since > 600000) { h.n = 0; h.since = now; }
-      if (++h.n > 120) throw new HttpError(429, "Too many requests from this address. Please try again in a few minutes.");
+      if (++h.n > 120 && !isLocal(req)) throw new HttpError(429, "Too many requests from this address. Please try again in a few minutes."); // the suites on the local machine make more
       hits.set(ip, h); if (hits.size > 5000) hits.clear();
       // Cross-site request protection: browsers cannot send JSON cross-site without permission, and the origin must be ours.
       if (!/^application\/json/.test(req.headers["content-type"] || "")) throw new HttpError(415, "Invalid request.");
@@ -829,7 +894,7 @@ const TYPES = { ".html": "text/html; charset=utf-8", ".css": "text/css; charset=
 const SECURITY = {
   "X-Content-Type-Options": "nosniff", "X-Frame-Options": "DENY", "Referrer-Policy": "strict-origin-when-cross-origin",
   "Permissions-Policy": "camera=(), microphone=(), geolocation=()",
-  "Content-Security-Policy": `default-src 'self'; script-src 'self' 'inline-speculation-rules'${GOOGLE ? " https://accounts.google.com" : ""}${CLARITY ? " https://www.clarity.ms" : ""}${RZP.id ? " https://checkout.razorpay.com" : ""}; connect-src 'self'${GOOGLE ? " https://accounts.google.com" : ""}${CLARITY ? " https://*.clarity.ms" : ""}${RZP.id ? " https://api.razorpay.com https://lumberjack.razorpay.com" : ""}; frame-src ${[GOOGLE && "https://accounts.google.com", RZP.id && "https://api.razorpay.com https://checkout.razorpay.com"].filter(Boolean).join(" ") || "'none'"}; img-src 'self' data: https:; style-src 'self' 'unsafe-inline'${GOOGLE ? " https://accounts.google.com" : ""}; font-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'`,
+  "Content-Security-Policy": `default-src 'self'; script-src 'self' 'inline-speculation-rules'${GOOGLE ? " https://accounts.google.com" : ""}${CLARITY ? " https://www.clarity.ms" : ""}${RZP.id ? " https://checkout.razorpay.com" : ""}${RECAPTCHA.site ? " https://www.google.com https://www.gstatic.com" : ""}; connect-src 'self'${GOOGLE ? " https://accounts.google.com" : ""}${CLARITY ? " https://*.clarity.ms" : ""}${RZP.id ? " https://api.razorpay.com https://lumberjack.razorpay.com" : ""}; frame-src ${[GOOGLE && "https://accounts.google.com", RZP.id && "https://api.razorpay.com https://checkout.razorpay.com", RECAPTCHA.site && "https://www.google.com"].filter(Boolean).join(" ") || "'none'"}; img-src 'self' data: https:; style-src 'self' 'unsafe-inline'${GOOGLE ? " https://accounts.google.com" : ""}; font-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'`,
 };
 const escHtml = s => String(s).replace(/[&<>"']/g, c => "&#" + c.charCodeAt(0) + ";");
 const siteUrl = req => (req.headers["x-forwarded-proto"] || "http") + "://" + (req.headers.host || "localhost:" + PORT);
@@ -963,7 +1028,9 @@ function staticHome() {
   const maxOff = Math.max(0, ...live().map(p => Math.round((1 - p.price / p.mrp) * 100))), minTv = tvs.length ? Math.min(...tvs.map(p => p.price)) : 0;
   const emis = tvs.filter(p => p.emi).map(p => Math.ceil(p.price / 9)), minEmi = emis.length ? Math.min(...emis) : 0;
   const hi = w => `<span class="w hi">${escHtml(w)}&nbsp;</span>`; // the figure in gold
-  const hero = `<div class="hp"><section class="d-hero" aria-roledescription="carousel" aria-label="Offers"><a class="d-slide on" href="/offers"><picture><source media="(max-width:760px)" srcset="/img/home/Hero1_Diwali_Big_Screen_Fest_mobile-640.webp 640w, /img/home/Hero1_Diwali_Big_Screen_Fest_mobile.webp 1080w" sizes="100vw"><img src="/img/home/Hero1_Diwali_Big_Screen_Fest-1280.webp" srcset="/img/home/Hero1_Diwali_Big_Screen_Fest-768.webp 768w, /img/home/Hero1_Diwali_Big_Screen_Fest-1280.webp 1280w, /img/home/Hero1_Diwali_Big_Screen_Fest.webp 1920w" sizes="100vw" alt="Light up Diwali on a bigger screen: Elista and more top brands, factory-direct prices on every size, 24 to 85 inch. Smart TVs from ₹17,000. Shop festive deals." width="1920" height="600" fetchpriority="high" decoding="async"></picture></a><div class="d-dots" role="tablist"><button type="button" role="tab" aria-selected="true" aria-label="Slide 1" class="on"></button><button type="button" role="tab" aria-selected="false" aria-label="Slide 2"></button><button type="button" role="tab" aria-selected="false" aria-label="Slide 3"></button><button type="button" role="tab" aria-selected="false" aria-label="Slide 4"></button></div></section></div>`; // the owner's first hero banner, the same markup as web/src/home.jsx
+  const smartMin = tvs.filter(p => p.os).length ? Math.min(...tvs.filter(p => p.os).map(p => p.price)) : 0; // the first hero slide, the same words and picture as web/src/home.jsx
+  const chips = [smartMin ? "Smart TVs from " + rs(smartMin) : "", "24 to 85 inch", minEmi ? "No Cost EMI from " + rs(minEmi) + "/month" : ""].filter(Boolean);
+  const hero = `<div class="hp"><section class="d-hero" aria-roledescription="carousel" aria-label="Offers"><a class="d-slide on" href="/televisions"><span class="d-sphoto" aria-hidden="true"><img src="/img/elista/webOS-Smart-TV-65in_2-960.webp" srcset="/img/elista/webOS-Smart-TV-65in_2-480.webp 480w, /img/elista/webOS-Smart-TV-65in_2-960.webp 960w, /img/elista/webOS-Smart-TV-65in_2.webp 1500w" sizes="(max-width:760px) 100vw, 70vw" alt="" width="1500" height="1500" fetchpriority="high" decoding="async"></span><span class="d-stext"><span class="d-seyebrow">MyTekkStore · Elista</span><strong class="d-sh">Bring the big-screen experience home.</strong><span class="d-sp">Factory-direct prices on every size, 24 to 85 inch. Free delivery, cash on delivery and No Cost EMI.</span><span class="d-schips">${chips.map((c, i) => `<span${i === 0 ? ' class="gold"' : ""}>${escHtml(c)}</span>`).join("")}</span><span class="d-scta"><span class="d-btn">Shop TVs</span><span class="d-btn gold">Best Deals</span></span></span></a><div class="d-dots" role="tablist"><button type="button" role="tab" aria-selected="true" aria-label="Slide 1" class="on"></button><button type="button" role="tab" aria-selected="false" aria-label="Slide 2"></button><button type="button" role="tab" aria-selected="false" aria-label="Slide 3"></button><button type="button" role="tab" aria-selected="false" aria-label="Slide 4"></button></div></section></div>`;
   // the discount banner under the hero, painted with it so the page's largest first-screen text does not wait for the script
   // (same markup and figures as the deal box in web/src/home.jsx: biggest discount, lowest price, lowest 9-month No Cost EMI)
   const topDeal = tvs.length ? [...tvs].sort((a, b) => (b.mrp - b.price) / b.mrp - (a.mrp - a.price) / a.mrp)[0] : null;

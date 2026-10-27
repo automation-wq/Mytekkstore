@@ -21,7 +21,7 @@ const shell = (page, title) => `<!doctype html>
 <link rel="preload" href="/fonts/manrope.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="icon" href="/favicon.svg">
 <link rel="manifest" href="/manifest.webmanifest">
-<meta name="theme-color" content="#08805f">${page === "home" ? '\n<link rel="preload" as="image" href="/img/home/Hero1_Diwali_Big_Screen_Fest-1280.webp" imagesrcset="/img/home/Hero1_Diwali_Big_Screen_Fest-768.webp 768w, /img/home/Hero1_Diwali_Big_Screen_Fest-1280.webp 1280w, /img/home/Hero1_Diwali_Big_Screen_Fest.webp 1920w" imagesizes="100vw">' : ""}
+<meta name="theme-color" content="#08805f">${page === "home" ? '\n<link rel="preload" as="image" href="/img/elista/webOS-Smart-TV-65in_2-960.webp" imagesrcset="/img/elista/webOS-Smart-TV-65in_2-480.webp 480w, /img/elista/webOS-Smart-TV-65in_2-960.webp 960w, /img/elista/webOS-Smart-TV-65in_2.webp 1500w" imagesizes="(max-width:760px) 100vw, 70vw">' : ""}
 </head>
 <body data-page="${page}">
 <div id="root"></div>

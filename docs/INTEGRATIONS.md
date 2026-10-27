@@ -86,3 +86,22 @@ Why not keep the custom sign-in: it works, but it needs the business to run Brev
 **Verified:** node test-db.js runs the whole API suite against a stand-in for the Neon endpoint and then proves the fix — an order placed through one server process is found, with the same sign-in cookie, by a second fresh process. **Not yet run against a real Neon database** (none exists yet); the first real run is the owner's next step.
 
 **To switch it on:** Vercel → the project → Storage → Create database → Neon (free plan) → Connect to project. Vercel writes DATABASE_URL into the project's environment; redeploy. From then on orders and accounts survive instance restarts and are the same on every instance.
+
+
+## Sign-up flow — built 27 October 2026 to the owner's spec, behind these keys
+
+The flow (details → mobile → OTP → verified → create account → pincode → welcome code → dashboard; login: mobile → OTP → back to the page; Google → mobile OTP once) runs on this server. The rules of the spec are in: codes hashed only, 5-minute expiry, five attempts then a 15-minute lock, three codes per number per 15 minutes, ten per address per hour, a new code replaces the old, same-site JSON only, httpOnly cookies, prices and coupons checked on the server, an order needs a verified mobile number. WhatsApp was removed from the site on 27 October at the owner's request.
+
+What switches each piece on (Vercel → Project → Settings → Environment Variables, then redeploy):
+
+| Piece | Keys | Where the owner gets them |
+|---|---|---|
+| OTP by SMS, India | MSG91_AUTH_KEY, MSG91_TEMPLATE_ID | control.msg91.com: an account on the business's own email, DLT registration of the sender id and an OTP template whose variable is ##OTP##, then the Authkey and the template id |
+| SMS outside India, order and welcome texts | TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_FROM | twilio.com |
+| Bot check on send-code | RECAPTCHA_SITE_KEY, RECAPTCHA_SECRET | google.com/recaptcha/admin → v3 → add mytekkstore.vercel.app |
+| Google sign-in | GOOGLE_CLIENT_ID | console.cloud.google.com → OAuth client (web) with https://mytekkstore.vercel.app as an authorised origin |
+| Use my current location | GOOGLE_MAPS_SERVER_KEY | console.cloud.google.com → Geocoding API → a server key restricted to that API |
+| Email codes, order and welcome mails | BREVO_API_KEY, MAIL_FROM | brevo.com |
+| Durable accounts and orders | DATABASE_URL | Vercel → Storage → Neon |
+
+Until the SMS keys exist the code is shown on the page only on localhost or with OTP_DEMO=1; on the live site the send-code route answers 503 and the page says SMS codes are not set up yet.

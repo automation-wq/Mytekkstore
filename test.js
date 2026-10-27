@@ -19,6 +19,8 @@ server.listen(0, "127.0.0.1", async () => {
     // orders need a signed-in customer
     assert.equal((await call("/api/orders", "POST", { ...addr, items: [{ id: 26, qty: 2 }] })).status, 401);
     const buyer = (await call("/api/register", "POST", { name: "Buyer One", email: "buyer@example.com", password: "longenough1" })).cookie;
+    assert.equal((await call("/api/orders", "POST", { ...addr, items: [{ id: 26, qty: 2 }] }, buyer)).status, 403, "an order needs a verified mobile number");
+    { const s = await call("/api/otp/send", "POST", { to: "9000000001" }, buyer); const v = await call("/api/otp/verify", "POST", { to: "9000000001", code: s.data.demoCode }, buyer); assert.equal(v.status, 200); assert.equal(v.data.linked, true, "a signed-in account claims the number it verifies"); assert.equal(v.data.user.email, "buyer@example.com"); assert.equal(v.data.user.phone, "+919000000001"); assert.equal(s.data.newUser, true); }
     // order: total comes from server prices, stock goes down, a demo message is recorded
     r = await call("/api/orders", "POST", { ...addr, pay: "online", items: [{ id: 26, qty: 2, price: 1 }, { id: 3, qty: 1 }] }, buyer);
     assert.equal(r.status, 200);
@@ -44,6 +46,7 @@ server.listen(0, "127.0.0.1", async () => {
     assert.equal(r.status, 200);
     const user = r.cookie;
     assert.match(user, /^sid=/);
+    { const s = await call("/api/otp/send", "POST", { to: "9000000002" }, user); assert.equal((await call("/api/otp/verify", "POST", { to: "9000000002", code: s.data.demoCode }, user)).data.linked, true); }
     assert.equal((await call("/api/orders/" + orderId, "GET", null, user)).status, 404); // another customer cannot see it
     assert.equal((await call("/api/register", "POST", { name: "A", email: "asha@example.com", password: "longenough1" })).status, 409);
     assert.equal((await call("/api/register", "POST", { name: "A", email: "b@example.com", password: "short" })).status, 400);
@@ -66,6 +69,8 @@ server.listen(0, "127.0.0.1", async () => {
     assert.equal((await call("/api/me/password", "POST", { password: "nobody-signed-in" })).status, 401, "not without a session");
     assert.equal((await call("/api/me", "PATCH", { name: "X" })).status, 401);
     assert.equal((await call("/api/me", "PATCH", { name: "Asha", phone: "9999999999", address: "1 Test Street", pin: "110001" }, user)).status, 200); // back as it was
+    assert.equal((await call("/api/me", "GET", null, user)).data.user.phoneVerified, false, "a changed number has to be verified again");
+    { const s = await call("/api/otp/send", "POST", { to: "9999999999" }, user); assert.equal((await call("/api/otp/verify", "POST", { to: "9999999999", code: s.data.demoCode }, user)).data.linked, true, "and the same account claims it on verification"); }
 
     // admin
     assert.equal((await call("/api/admin/orders", "GET", null, user)).status, 403);
@@ -81,8 +86,8 @@ server.listen(0, "127.0.0.1", async () => {
     assert.equal((await call("/api/otp/send", "POST", { phone: "12" })).status, 400);
     { // the sign-up design's routes: a new number with a name creates the account and its welcome coupon; addresses; the coupon on an order
       const s1 = await call("/api/otp/send", "POST", { to: "9123456780" }); assert.equal(s1.status, 200);
-      const v1 = await call("/api/otp/verify", "POST", { to: "9123456780", code: s1.data.demoCode, name: "Rahul Sharma", email: "rahul@example.com", pin: "560038", whatsapp: true });
-      assert.equal(v1.status, 200); assert.equal(v1.data.created, true); assert.equal(v1.data.user.coupons.length, 1); assert.equal(v1.data.user.coupons[0].code, "MYTEKK500"); assert.equal(v1.data.user.pin, "560038"); assert.equal(v1.data.user.whatsapp, true);
+      const v1 = await call("/api/otp/verify", "POST", { to: "9123456780", code: s1.data.demoCode, name: "Rahul Sharma", email: "rahul@example.com", pin: "560038" });
+      assert.equal(v1.status, 200); assert.equal(v1.data.created, true); assert.equal(v1.data.user.coupons.length, 1); assert.equal(v1.data.user.coupons[0].code, "MYTEKK500"); assert.equal(v1.data.user.pin, "560038");
       const rahul = v1.cookie;
       const a1 = await call("/api/me/addresses", "POST", { label: "Home", name: "Rahul Sharma", line1: "Flat 402, Sunrise Residency", line2: "12th Main Road", landmark: "Opp. Indiranagar Club", city: "Bengaluru", state: "Karnataka", pin: "560038", phone: "9123456780" }, rahul);
       assert.equal(a1.status, 200); assert.equal(a1.data.addresses.length, 1); assert.equal(a1.data.addresses[0].isDefault, true); assert.equal(a1.data.user.pin, "560038"); assert.match(a1.data.user.address, /Sunrise Residency/);
@@ -92,7 +97,7 @@ server.listen(0, "127.0.0.1", async () => {
       const id1 = a1.data.addresses[0].id;
       assert.equal((await call("/api/me/addresses/" + id1 + "/default", "POST", {}, rahul)).data.user.pin, "560038", "set as default");
       assert.equal((await call("/api/me/addresses/" + id1 + "/delete", "POST", {}, rahul)).data.addresses.length, 1, "deleted; the other becomes default");
-      assert.equal((await call("/api/me", "PATCH", { whatsapp: false }, rahul)).data.user.whatsapp, false, "one field at a time");
+      assert.equal((await call("/api/me", "PATCH", { smsOffers: false }, rahul)).data.user.smsOffers, false, "one field at a time");
       assert.equal((await call("/api/me", "GET", null, rahul)).data.user.name, "Rahul Sharma", "the other fields stay");
       assert.equal((await call("/api/orders", "POST", { ...addr, items: [{ id: 1, qty: 1 }], coupon: "NOPE" }, rahul)).status, 400, "an unknown coupon is refused");
       assert.equal((await call("/api/orders", "POST", { ...addr, items: [{ id: 25, qty: 1 }], coupon: "MYTEKK500" }, rahul)).status, 400, "the coupon needs the minimum order");
@@ -100,6 +105,8 @@ server.listen(0, "127.0.0.1", async () => {
       const g1 = await call("/api/orders/" + o1.data.id, "GET", null, rahul); assert.equal(g1.data.order.discount, 500); assert.equal(g1.data.order.total, 73600 - 500); assert.equal(g1.data.order.coupon, "MYTEKK500");
       assert.equal((await call("/api/orders", "POST", { ...addr, items: [{ id: 30, qty: 1 }], coupon: "MYTEKK500" }, rahul)).status, 400, "the coupon is single use");
       assert.equal((await call("/api/me/reviews", "GET", null, rahul)).data.reviews.length, 0);
+      assert.equal((await call("/api/coupons/validate", "POST", { code: "MYTEKK500", items: [{ id: 30, qty: 1 }] }, rahul)).status, 400, "the checkout's coupon check says a used coupon no longer applies");
+      { const s2 = await call("/api/otp/send", "POST", { to: "9123456781" }); const v2 = await call("/api/otp/verify", "POST", { to: "9123456781", code: s2.data.demoCode, name: "Meera" }); const c2 = await call("/api/coupons/validate", "POST", { code: "mytekk500", items: [{ id: 30, qty: 1 }] }, v2.cookie); assert.equal(c2.status, 200); assert.equal(c2.data.discount, 500, "the checkout's coupon check prices the cart on the server"); assert.equal((await call("/api/coupons/validate", "POST", { code: "MYTEKK500", items: [{ id: 25, qty: 1 }] }, v2.cookie)).status, 400, "below the minimum order"); }
     }
     r = await call("/api/otp/send", "POST", { phone: "98765 43210" });
     assert.equal(r.status, 200); assert.match(r.data.demoCode, /^\d{6}$/);
@@ -120,10 +127,11 @@ server.listen(0, "127.0.0.1", async () => {
     r = await call("/api/otp/verify", "POST", { phone: "9876543210", code: r.data.demoCode });
     assert.equal(r.data.user.name, "Priya");
     assert.equal((await call("/api/otp/send", "POST", { phone: "9876543210" })).status, 200);
-    assert.equal((await call("/api/otp/send", "POST", { phone: "9876543210" })).status, 429); // three codes per ten minutes
+    assert.equal((await call("/api/otp/send", "POST", { phone: "9876543210" })).status, 429); // three codes per fifteen minutes
     r = await call("/api/otp/send", "POST", { phone: "9876500000" });
     for (let i = 0; i < 5; i++) await call("/api/otp/verify", "POST", { phone: "9876500000", code: wrongFor(r.data.demoCode) });
-    assert.equal((await call("/api/otp/verify", "POST", { phone: "9876500000", code: r.data.demoCode })).status, 429); // five wrong tries burn the code
+    assert.equal((await call("/api/otp/verify", "POST", { phone: "9876500000", code: r.data.demoCode })).status, 423, "five wrong tries lock the number for 15 minutes");
+    assert.equal((await call("/api/otp/send", "POST", { phone: "9876500000" })).status, 423, "no new code while locked");
     assert.ok((await call("/api/admin/outbox", "GET", null, admin)).data.messages.some(m => /sign-in code/.test(m.text) && m.sent === "recorded only"));
     // contact form: a valid message lands in the admin outbox; a bad one is refused
     assert.equal((await call("/api/contact", "POST", { name: "Asha", email: "asha@example.com", message: "Do you deliver to Pune?" })).status, 200);

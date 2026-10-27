@@ -8,16 +8,19 @@ import { BANK_OFFERS, off, emiPlans, etaText, productUrl, listUrl, catSizes, pic
 const HOME = "img/home/";
 const src = (name, w) => "/" + HOME + name + (w ? "-" + w : "") + ".webp";
 // the five hero banners the owner made (1920 x 600, with a 1080 x 1080 version for phones); the exchange banner waits for an exchange programme
-export const HERO_SLIDES = [
-  { file: "Hero1_Diwali_Big_Screen_Fest", alt: "Light up Diwali on a bigger screen: Elista and more top brands, factory-direct prices on every size, 24 to 85 inch. Smart TVs from ₹17,000. Shop festive deals.", href: "/offers" },
-  { file: "Hero2_Go_Big_65_to_85", alt: "Go big, 65 to 85 inch: cinema-size screens for your living room, from 165 to 215 cm. Big screens from ₹73,600. Shop 65 inch and above.", href: "/televisions?size=65" },
-  { file: "Hero3_Mini_LED_PRO", alt: "New, Mini-LED PRO: brighter, deeper, smoother. Mini-LED with QLED, over 500 nits, Dolby Vision and Dolby Atmos. Mini-LED PRO from ₹99,999. Explore Mini-LED.", href: "/televisions?type=Mini-LED+PRO" },
-  { file: "Hero4_QLED_Colour", alt: "QLED Smart TVs: colour that pops, prices that don't. QLED picture quality from 32 inch upwards, with all your apps built in. QLED from ₹26,990. Shop QLED TVs.", href: "/televisions?type=QLED" },
+// the four hero slides: live words over four different living-room cards of the owner's set (the owner's banner pack repeated one photo and named a festival; 27 Oct). Every figure comes from the catalogue.
+export const heroSlides = ({ smart, big, mini, qled, minEmi, money }) => [
+  { key: "home", card: "webOS-Smart-TV-65in", eyebrow: "MyTekkStore · Elista", h: "Bring the big-screen experience home.", p: "Factory-direct prices on every size, 24 to 85 inch. Free delivery, cash on delivery and No Cost EMI.", chips: [smart ? "Smart TVs from " + money(smart) : "", "24 to 85 inch", minEmi ? "No Cost EMI from " + money(minEmi) + "/month" : ""], cta: "Shop TVs", href: "/televisions", cta2: "Best Deals", href2: "/offers" },
+  { key: "big", card: "Google-TV-Xplore-85in", eyebrow: "Cinema at home", h: "Go big. 65 to 85 inch.", p: "Cinema-size screens for your living room, 165 to 215 cm, with Google TV or webOS Hub built in.", chips: [big ? "Big screens from " + money(big) : "", "Free delivery", "Cash on delivery"], cta: "Shop 65\" and above", href: "/televisions?size=65" },
+  { key: "mini", card: "Mini-LED-PRO-65in", eyebrow: "New · Mini-LED PRO", h: "Brighter. Deeper. Smoother.", p: "Mini-LED backlight with QLED colour, over 500 nits, Dolby Vision, HDR10, HLG and Dolby Atmos. Google TV 5.0 built in.", chips: [mini ? "Mini-LED PRO from " + money(mini) : "", "55\" and 65\"", "1+1 year warranty*"], cta: "Explore Mini-LED PRO", href: "/televisions?type=Mini-LED+PRO" },
+  { key: "qled", card: "Cloud-TV-QLED-43in", eyebrow: "QLED Smart TVs", h: "Colour that pops. Prices that don't.", p: "QLED picture quality from 32 inch upwards, with all your apps built in.", chips: [qled ? "QLED from " + money(qled) : "", "32\" and 43\"", "Android TV"], cta: "Shop QLED TVs", href: "/televisions?type=QLED" },
 ];
-const HeroPicture = ({ s, eager }) => <picture>
-  <source media="(max-width:760px)" srcSet={`${src(s.file + "_mobile", 640)} 640w, ${src(s.file + "_mobile")} 1080w`} sizes="100vw" />
-  <img src={src(s.file, 1280)} srcSet={`${src(s.file, 768)} 768w, ${src(s.file, 1280)} 1280w, ${src(s.file)} 1920w`} sizes="100vw" alt={s.alt} width="1920" height="600" fetchPriority={eager ? "high" : undefined} loading={eager ? "eager" : "lazy"} decoding="async" />
-</picture>;
+const HeroSlide = ({ s, on, eager }) => <a className={"d-slide" + (on ? " on" : "")} href={s.href} aria-hidden={!on} tabIndex={on ? 0 : -1}>
+  <span className="d-sphoto" aria-hidden="true"><img src={pic("img/elista/" + s.card + "_2.webp", 960)} srcSet={picSet("img/elista/" + s.card + "_2.webp")} sizes="(max-width:760px) 100vw, 70vw" alt="" width="1500" height="1500" fetchPriority={eager ? "high" : undefined} loading={eager ? "eager" : "lazy"} decoding="async" /></span>
+  <span className="d-stext"><span className="d-seyebrow">{s.eyebrow}</span><strong className="d-sh">{s.h}</strong><span className="d-sp">{s.p}</span>
+    <span className="d-schips">{s.chips.filter(Boolean).map((c, i) => <span className={i === 0 ? "gold" : undefined} key={c}>{c}</span>)}</span>
+    <span className="d-scta"><span className="d-btn">{s.cta} {I.arrow}</span>{s.cta2 && <span className="d-btn gold">{s.cta2}</span>}</span></span>
+</a>;
 
 // the design's icons, drawn once
 const I = {
@@ -81,7 +84,7 @@ export function Home() {
   useEffect(() => { const tick = () => { const ist = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Kolkata" })); setLeft(24 * 60 - ist.getHours() * 60 - ist.getMinutes()); }; tick(); const t = setInterval(tick, 30000); return () => clearInterval(t); }, []);
   useEffect(() => { document.title = "Mytekkstore | Elista Smart TVs at factory-direct prices"; }, []);
   const swipeStart = e => { touch.current = e.touches[0].clientX; };
-  const swipeEnd = e => { const dx = e.changedTouches[0].clientX - touch.current; if (Math.abs(dx) > 40) setCur(c => (c + (dx < 0 ? 1 : HERO_SLIDES.length - 1)) % HERO_SLIDES.length); };
+  const swipeEnd = e => { const dx = e.changedTouches[0].clientX - touch.current; if (Math.abs(dx) > 40) setCur(c => (c + (dx < 0 ? 1 : 3)) % 4); };
 
   // the design's picks, by catalogue id (26 the 55 inch webOS, 30 the 65 inch Xplore, 20 the 43 inch Coolita, 18 the 65 inch Mini-LED PRO ...)
   const deals = [[26, "Bestseller", "dark"], [30, "Big screen", "gold"], [20, "Value pick", "green"], [18, "Premium", "dark"]].map(([id, tag, tone]) => ({ p: by(id), tag, tone })).filter(x => x.p);
@@ -108,13 +111,13 @@ export function Home() {
     ["50\" / 55\"", "126 / 140 cm", "about 112 to 124 cm", "2.0 to 3.0 m", "Living room, 2 BHK", [50, 55]], ["65\"", "165 cm", "about 145 cm", "2.5 to 3.5 m", "Large living room, villa", [65]], ["75\" / 85\"", "190 / 215 cm", "about 167 to 190 cm", "3.0 to 4.5 m", "Home theatre, hall", [75, 85]]];
   const bankTone = i => i < 2 ? "green" : "gold";
 
+  const minOf = l => l.length ? Math.min(...l.map(p => p.price)) : 0;
+  const slides = heroSlides({ smart: minOf(tvs.filter(p => p.os)), big: minOf(tvs.filter(p => inchOf(p) >= 65)), mini: minOf(miniAll), qled: minOf(tvs.filter(p => typeOf(p) === "QLED")), minEmi, money });
   return <div className="hp">
     {/* the hero: the owner's banners, one at a time, dots below, a swipe on a phone; nothing moves on its own */}
     <section className="d-hero" aria-roledescription="carousel" aria-label="Offers" onTouchStart={swipeStart} onTouchEnd={swipeEnd}>
-      {HERO_SLIDES.map((s, i) => <a className={"d-slide" + (i === cur ? " on" : "")} href={s.href} key={s.file} aria-hidden={i !== cur} tabIndex={i === cur ? 0 : -1}><HeroPicture s={s} eager={i === 0} /></a>)}
-      <div className="d-dots" role="tablist">{HERO_SLIDES.map((s, i) => <button type="button" role="tab" aria-selected={i === cur} aria-label={"Slide " + (i + 1)} className={i === cur ? "on" : undefined} onClick={() => setCur(i)} key={s.file}></button>)}</div>
-      <button type="button" className="d-arrow prev" aria-label="Previous offer" onClick={() => setCur(c => (c + HERO_SLIDES.length - 1) % HERO_SLIDES.length)}>‹</button>
-      <button type="button" className="d-arrow next" aria-label="Next offer" onClick={() => setCur(c => (c + 1) % HERO_SLIDES.length)}>›</button>
+      {slides.map((s, i) => <HeroSlide s={s} on={i === cur} eager={i === 0} key={s.key} />)}
+      <div className="d-dots" role="tablist">{slides.map((s, i) => <button type="button" role="tab" aria-selected={i === cur} aria-label={"Slide " + (i + 1) + ": " + s.h} className={i === cur ? "on" : undefined} onClick={() => setCur(i)} key={s.key}></button>)}</div>
     </section>
 
     <section className="d-wrap" style={{ paddingTop: 48 }}>
