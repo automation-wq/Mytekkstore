@@ -3,7 +3,7 @@
 // ([PRICE], [XX]% OFF, [n], [City], [X] days) are filled from the catalogue or left out when the store has nothing honest to show.
 import { useEffect, useRef, useState } from "react";
 import { useStore } from "./store.jsx";
-import { BANK_OFFERS, off, emiPlans, etaText, productUrl, listUrl, catSizes, pic, picSet, avg } from "./data.js";
+import { BANK_OFFERS, off, emiPlans, etaText, productUrl, listUrl, catSizes, pic, picSet, avg, brandLogo } from "./data.js";
 
 const HOME = "img/home/";
 const src = (name, w) => "/" + HOME + name + (w ? "-" + w : "") + ".webp";
@@ -234,7 +234,7 @@ export function Home() {
 
     <section className="d-wrap d-sec">
       <Head h="Brands we stock" link="All brands" href="/products" />
-      <div className="d-brands">{[...new Set(tvs.map(p => p.brand))].map(b => <a className="d-brand" href={"/products?brand=" + encodeURIComponent(b)} key={b}>{b.toUpperCase()}</a>)}</div>
+      <div className="d-brands">{[...new Set(tvs.map(p => p.brand))].map(b => <a className="d-brand" href={"/products?brand=" + encodeURIComponent(b)} key={b}>{brandLogo(b) ? <img src={brandLogo(b)} alt={b} width="297" height="109" /> : b.toUpperCase()}</a>)}</div>
     </section>
 
     {allReviews.length >= 3 && <section className="d-wrap d-sec">
@@ -245,7 +245,7 @@ export function Home() {
     <section className="d-wrap d-sec" id="faq">
       <Head h="Questions people ask before buying" link="Help centre" href="/contact" />
       <div className="d-faq">
-        {[["Is the price lower than Amazon or Croma?", "Our prices are factory-direct for Elista, with no seller margin added."], ["How fast is delivery?", "Free delivery across India, usually within 3 to 5 days. You get tracking by email and from your account."],
+        {[["Is the price lower than Amazon or Croma?", "Our prices are factory-direct for Elista, with no seller margin added."], ["How is MyTekkStore different from Croma, Amazon or Flipkart?", "We sell one brand we stand behind, straight from the maker: factory-direct prices, free delivery and cash on delivery on every TV, No Cost EMI on every smart TV, and the brand's own warranty. The big stores list hundreds of brands with seller margins and delivery that varies by seller; what they have that we do not yet is a store you can walk into and thousands of reviews, which this store earns one delivered TV at a time."], ["How fast is delivery?", "Free delivery across India, usually within 3 to 5 days. You get tracking by email and from your account."],
           ["Can I pay cash on delivery?", "Yes. Cash on delivery is available on every TV. You can also pay online by UPI, card or net banking."], ["Which cards get No Cost EMI?", "HDFC, ICICI, SBI, Axis and Kotak credit cards, for 3 to 12 months. The interest is borne by us."],
           ["What about warranty and service?", "Every TV carries Elista's 1 or 1+1 year warranty. Register it with the brand after delivery; Elista's service network handles repairs."], ["Is the TV genuine?", "Yes. Every TV is a new, sealed Elista unit with the brand warranty card, sourced directly from the manufacturer."]].map(([q, a]) => <div key={q}><strong>{q}</strong><span className="d-sub">{a}</span></div>)}
       </div>

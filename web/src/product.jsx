@@ -6,7 +6,7 @@ import { useStore } from "./store.jsx";
 import { api, qs, load, save, track, whenShown } from "./api.js";
 import { Photo, Stars, Buy, Heart, Row, Box, Form, Ico, Icon, Qa, BankStrip } from "./components.jsx";
 import { Banner } from "./banner.jsx";
-import { DEFAULT_FEATURES, BANK_OFFERS, WARRANTY_QA, SPEC_GROUPS, osUrl, autoStory, aplusExtras, callouts, cutout, galleryOf, GALLERY_LABELS, life, specIcon, catSizes, catUrl, brandUrl, off, avg, starRow, etaText, emiPlans, productUrl, pic, picSet } from "./data.js";
+import { brandLogo, DEFAULT_FEATURES, BANK_OFFERS, WARRANTY_QA, SPEC_GROUPS, osUrl, autoStory, aplusExtras, callouts, cutout, galleryOf, GALLERY_LABELS, life, specIcon, catSizes, catUrl, brandUrl, off, avg, starRow, etaText, emiPlans, productUrl, pic, picSet } from "./data.js";
 
 const $ = (s, el = document) => el.querySelector(s);
 const $$ = (s, el = document) => [...el.querySelectorAll(s)];
@@ -128,7 +128,7 @@ export function Product() {
         {(spin || images.length > 1) && <div className="thumbs">{spin && <button className={"thumb spin" + (spinView ? " on" : "")} aria-label="360 degree view" onClick={() => setSpinView(true)}><img src={pic(spin[0], 480)} alt="" loading="lazy" width="800" height="800" /><span>360°</span></button>}{images.map((src, i) => <button className={"thumb" + (!spinView && src === img ? " on" : "")} data-img={src} aria-label={labelOf(src)} title={GALLERY_LABELS[i] || undefined} onClick={() => { setSpinView(false); setImg(src); }} onMouseEnter={() => { setSpinView(false); setImg(src); }} key={src}><img src={pic(src, 480)} alt="" loading="lazy" width="800" height="800" /></button>)}</div>}
         <p className="muted hint">{spin && spinView ? "Drag the product to rotate it" : "Move the pointer over the photo to zoom in, tap to view full screen"}</p></div>
       <div className="pinfo">
-        <a className="pbrand" href={brandUrl(p.brand)}>{p.brand}</a>{p.os ? <a className="ostag" href={osUrl(p.os)}>{p.os}</a> : <span className="ostag plain">Non-smart TV</span>}
+        <a className={"pbrand" + (brandLogo(p.brand) ? " logo" : "")} href={brandUrl(p.brand)} aria-label={"All " + p.brand + " televisions"}>{brandLogo(p.brand) ? <img src={brandLogo(p.brand)} alt={p.brand} width="297" height="109" /> : p.brand}</a>{p.os ? <a className="ostag" href={osUrl(p.os)}>{p.os}</a> : <span className="ostag plain">Non-smart TV</span>}
         <h1>{p.brand} {p.name}</h1>
         <p className="rating"><Stars p={p} />{!(p.reviews || []).length && <span className="muted" style={{ fontSize: 13 }}>No reviews yet</span>} <a className="alink" href="#t-rev" data-tab="t-rev" style={{ fontSize: 13 }}>See reviews</a></p>
         <div className="price"><b>{money(p.price)}</b>{save$ && <><s>{money(p.mrp)}</s><span className="badge">{off(p)}% OFF</span></>}</div>
@@ -151,11 +151,16 @@ export function Product() {
         <div className="actions"><b className="aprice">{money(p.price)}</b><Buy p={p} />{p.stock > 0 && <button className="btn ghost" data-buy={p.id}>Buy now</button>}<Heart p={p} /></div>
         <div className="perks"><span><Icon k="truck" /> Free delivery</span><span><Icon k="shield" /> Brand warranty</span><span><Icon k="undo" /> Easy returns</span><span><Icon k="check" /> Genuine product</span></div>
         <details className="qbox"><summary><Icon k="shield" /> Warranty, returns and replacement</summary><div>{WARRANTY_QA.slice(0, 3).map(([q, a]) => <p key={q}><b>{q}</b><br />{a}</p>)}<a className="alink" href="#warranty">All warranty and return questions →</a></div></details>
-        <div className="sharerow"><span>Share:</span><a href={`https://wa.me/?text=${shareText}%20${share}`} target="_blank" rel="noopener">WhatsApp</a><a href={`https://www.facebook.com/sharer/sharer.php?u=${share}`} target="_blank" rel="noopener">Facebook</a><a href={`https://twitter.com/intent/tweet?url=${share}&text=${shareText}`} target="_blank" rel="noopener">X</a><button className="link" id="share" type="button" onClick={shareLink}>Copy link</button></div>
+        <div className="sharerow"><span>Share</span>
+          <a className="shbtn wa" href={`https://wa.me/?text=${shareText}%20${share}`} target="_blank" rel="noopener" aria-label="Share on WhatsApp" title="WhatsApp"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm0 1.8a8.2 8.2 0 1 1-4.2 15.3l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 0 1 12 3.8zm-3 4.4c-.2 0-.5.1-.7.3-.3.3-1 1-1 2.4s1 2.8 1.2 3c.1.2 2 3.2 5 4.4 2.5 1 3 .8 3.6.7.5-.1 1.7-.7 2-1.4.2-.7.2-1.2.1-1.4-.1-.2-.3-.2-.6-.4l-2.1-1c-.3-.1-.5-.2-.7.2l-1 1.2c-.2.2-.4.2-.7.1a6.7 6.7 0 0 1-3.3-2.9c-.2-.4.2-.4.7-1.4.1-.2 0-.4 0-.5L10.5 9c-.3-.7-.6-.6-.8-.6h-.7z"/></svg></a>
+          <a className="shbtn fb" href={`https://www.facebook.com/sharer/sharer.php?u=${share}`} target="_blank" rel="noopener" aria-label="Share on Facebook" title="Facebook"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M13.5 22v-8h2.7l.4-3.2h-3.1V8.8c0-.9.3-1.6 1.6-1.6h1.7V4.4c-.3 0-1.3-.1-2.5-.1-2.5 0-4.1 1.5-4.1 4.2v2.3H7.4V14h2.8v8h3.3z"/></svg></a>
+          <a className="shbtn x" href={`https://twitter.com/intent/tweet?url=${share}&text=${shareText}`} target="_blank" rel="noopener" aria-label="Share on X" title="X"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M17.5 3h3l-6.6 7.6L21.7 21h-6.1l-4.8-6.2L5.3 21h-3l7.1-8.1L2 3h6.2l4.3 5.7L17.5 3zm-1.1 16.2h1.7L7.1 4.7H5.3l11.1 14.5z"/></svg></a>
+          <button className="shbtn copy" id="share" type="button" onClick={shareLink} aria-label="Copy link" title="Copy link"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M10 13a5 5 0 0 0 7.1 0l3-3a5 5 0 0 0-7.1-7.1l-1.7 1.7"/><path d="M14 11a5 5 0 0 0-7.1 0l-3 3a5 5 0 0 0 7.1 7.1l1.7-1.7"/></svg></button></div>
       </div>
     </div>
     {(p.aplus || []).length > 0 ? <section className="aplus strips" id="aplus"> {/* the owner's A+ strips (27 Oct), stacked the way Amazon and Croma stack A+ banners; the drawn story below stays for a product without them */}
       {me && me.admin && <p className="adminlink"><a href={"/admin?edit=" + p.id}>Edit this product in the admin (photos, A+ creatives, specifications) →</a></p>}
+      <div className="ahead-brand">{brandLogo(p.brand) && <img src={brandLogo(p.brand)} alt="" width="297" height="109" />}<div><span className="kicker">From the brand</span><h2>{p.brand} on the {spec(p, "screen size") || ""} {p.name.replace(/^\d+ cm \(\d+ inch\) /, "")}</h2></div></div>
       <div className="astrips">{p.aplus.map((src, i) => <img src={pic(src)} srcSet={picSet(src)} sizes="(max-width:1500px) 100vw, 1464px" alt={p.brand + " " + p.name + ": product story " + (i + 1) + " of " + p.aplus.length} loading="lazy" width="1464" height="600" key={src} />)}</div>
     </section> : story.length > 0 && <section className="aplus" id="aplus">
       {me && me.admin && <p className="adminlink"><a href={"/admin?edit=" + p.id}>Edit this product in the admin (photos, A+ creatives, specifications) →</a></p>}

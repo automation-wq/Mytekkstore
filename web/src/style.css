@@ -2673,3 +2673,12 @@ body.su-page[data-page="account"] main.wrap { padding:0; max-width:none }
 .hp .d-sub, .hp .d-emi, .hp .d-pts, .hp .d-stars span, .hp .d-how, .hp .d-tbl td.muted, .hp .d-paybox .d-emi { color:#3F4551 } .hp .d-emi.green { color:#08805F }
 .su { min-height:calc(100vh - var(--hh,150px)) } .su-wrap { min-height:calc(100vh - var(--hh,150px)) } .su-logo { display:none }
 @media (max-width:760px) { .su-wrap { padding-bottom:96px } .d-promo { aspect-ratio:1.3 } }
+
+/* the brand's logo wherever the brand is named (27 Oct) */
+.pbrand.logo { display:inline-flex; align-items:center } .pbrand.logo img { height:34px; width:auto; display:block }
+.ahead-brand { display:flex; align-items:center; gap:18px; max-width:1464px; margin:8px auto 0; padding:0 4px } .ahead-brand img { height:48px; width:auto; flex:none } .ahead-brand .kicker { display:block; color:#8A6512; font-size:12px; letter-spacing:.2em; text-transform:uppercase; font-weight:700 } .ahead-brand h2 { margin:2px 0 0; font-size:clamp(20px,2vw,28px) }
+.d-brand img { height:44px; width:auto } .qlogo { height:22px; width:auto; vertical-align:middle; margin-right:6px }
+/* the share row as icon buttons */
+.sharerow { gap:10px } .sharerow > span { color:var(--muted); font-size:13px } .sharerow .shbtn { width:38px; height:38px; padding:0; border-radius:50%; border:1px solid var(--line); background:#fff; display:inline-grid; place-items:center; cursor:pointer; color:#111; transition:transform .15s, box-shadow .15s } .sharerow .shbtn svg { width:18px; height:18px } .sharerow .shbtn:hover { transform:translateY(-1px); box-shadow:0 6px 14px rgba(0,0,0,.12) }
+.sharerow .shbtn.wa { color:#fff; background:#25D366; border-color:#25D366 } .sharerow .shbtn.fb { color:#fff; background:#1877F2; border-color:#1877F2 } .sharerow .shbtn.x { color:#fff; background:#111; border-color:#111 } .sharerow .shbtn.copy { color:#08805F }
+@media (max-width:760px) { .ahead-brand { gap:12px; padding:0 16px } .ahead-brand img { height:36px } }

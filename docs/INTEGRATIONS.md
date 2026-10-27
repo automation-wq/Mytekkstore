@@ -105,3 +105,15 @@ What switches each piece on (Vercel → Project → Settings → Environment Var
 | Durable accounts and orders | DATABASE_URL | Vercel → Storage → Neon |
 
 Until the SMS keys exist the code is shown on the page only on localhost or with OTP_DEMO=1; on the live site the send-code route answers 503 and the page says SMS codes are not set up yet.
+
+
+## Going live — the checklist, 27 October 2026
+
+1. **Database.** Vercel → Storage → Create database → Neon → connect to the project. It sets DATABASE_URL; redeploy. Until then accounts, orders and sessions live in the instance's temporary disk and can vanish between visits ("Order not found", "Please sign in"). This is Neon Postgres, a managed database the store reaches over HTTPS; the store's tables are created on first start.
+2. **SMS codes.** MSG91 keys (India) and/or Twilio keys; then remove OTP_DEMO from the Vercel environment, or sign-in codes keep showing on the page.
+3. **Payments.** Razorpay test keys, then live keys after Razorpay approves the site; the webhook secret with the webhook pointed at /api/pay/webhook. Until then cash on delivery is the only live payment.
+4. **Email.** Brevo key and sender address: order confirmations, sign-in codes by email, the welcome mail.
+5. **Google sign-in, bot check, location.** GOOGLE_CLIENT_ID, RECAPTCHA keys, GOOGLE_MAPS_SERVER_KEY (each optional; the page hides what is not set).
+6. **Domain.** Vercel → Project → Settings → Domains → add the real domain and point its DNS at Vercel; also add the domain to the Google OAuth client, reCAPTCHA and Razorpay settings.
+7. **Prices and policies.** Selling prices in the admin (the site shows MRPs until then), the real return window, GSTIN and contact details (CONTACT in web/src/data.js, the footer).
+8. **Check.** Place one cash-on-delivery order on the live site with a real number, confirm it in the admin, mark it Delivered, and check the account shows the timeline and the warranty card.

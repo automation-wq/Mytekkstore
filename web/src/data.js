@@ -121,6 +121,7 @@ export const FAQ = [
   ["How do warranty and installation work?", "Every TV carries the brand's own warranty. To claim it, write to us from the Contact page with your order number and we connect you with the brand's service centre. Wall mounting is arranged with the delivery partner where the brand offers it; ask us before you order.", ["/returns", "Warranty and returns"]],
   ["Can I compare different television models?", "Yes. Tick Compare on up to four products in any list to see them side by side, or open the comparison table on a product page.", ["/televisions#compare", "Compare the models"]],
   ["What payment offers are available?", "No Cost EMI over 3, 6 or 9 months on participating bank credit cards, plus the bank offers on the Offers page. Cash on delivery is available on every order.", ["/offers", "See the offers"]],
+  ["How is MyTekkStore different from Croma, Amazon or Flipkart?", "We sell one brand we stand behind, straight from the maker: factory-direct prices, free delivery and cash on delivery on every TV, No Cost EMI on every smart TV, and the brand's own warranty. The big stores list hundreds of brands with seller margins and delivery that varies by seller.", null],
   ["Is delivery free?", "Yes. Every order is delivered free, usually within 3 to 5 days. Enter your pincode on any product page to check your area.", null],
   ["Can I pay when the order arrives?", "Yes. Cash on delivery is available on every order.", null],
   ["How does No Cost EMI work?", "On products marked No Cost EMI, the price is split over 3, 6 or 9 months on participating bank credit cards with no extra interest. The plans are listed on each product page.", ["/offers", "See the offers"]],
@@ -244,6 +245,9 @@ export const listUrl = ({ cat, ...o }) => { const q = new URLSearchParams(Object
 // Uploaded photos (img/u-*.jpg) and outside links have no copies and are used as they are.
 const hasWebp = src => /^img\/(?!u-)[\w-]+\.jpg$/.test(src || "");
 // always an absolute address: a product page lives at /televisions/<model>, where a relative img/... would point one level too deep
+// the brand's own logo (the owner's file, 27 Oct): drawn wherever the brand is named; other brands fall back to their name
+export const BRAND_LOGOS = { Elista: "/img/elista-logo.png" };
+export const brandLogo = b => BRAND_LOGOS[b] || "";
 export const isElista = src => /^img\/elista\/[\w-]+_\d\.webp$/.test(src || ""); // the owner's product cards: 1500 px, with 960 and 480 px copies beside them
 export const isAplus = src => /^img\/aplus\/[\w-]+_\d+\.webp$/.test(src || ""); // the owner's A+ strips: 1464 x 600, with a 732 px copy beside each
 export const pic = (src, w) => { const s = hasWebp(src) ? src.replace(/\.jpg$/, (w ? "-" + w : "") + ".webp") : isElista(src) && w && w < 1500 ? src.replace(/\.webp$/, "-" + w + ".webp") : isAplus(src) && w && w <= 732 ? src.replace(/\.webp$/, "-732.webp") : src; return /^img\//.test(s || "") ? "/" + s : s; };

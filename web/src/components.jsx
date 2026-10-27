@@ -4,7 +4,7 @@ import { m, AnimatePresence, useScroll, useSpring, useReducedMotion } from "moti
 import { animate, stagger } from "motion";
 import { reduced } from "./motion.js";
 import { useStore } from "./store.jsx";
-import { CONTACT } from "./data.js";
+import { CONTACT, brandLogo } from "./data.js";
 import { api, qs, load, save, track } from "./api.js";
 import { POLICY, ICONS, DRAW_ICONS, COUNTRIES, BANK_OFFERS, TOP_FEATURES, CAT_SIZE, TV_OS, OS_ROWS, SHOW_STORES, COMING_SOON, catSizes, emiPlans, catUrl, brandUrl, listUrl, off, avg, starRow, eta, productUrl, pic, picSet, dims, osList, osUrl } from "./data.js";
 
@@ -376,7 +376,7 @@ export function QuickView() {
       <button type="button" className="x" aria-label="Close" onClick={closeQuick}>×</button>
       <div className="qimg"><Photo p={p} main />{off(p) > 0 && <span className="badge">{off(p)}% OFF</span>}</div>
       <div className="qinfo">
-        <a className="qbrand" href={brandUrl(p.brand)}>{p.brand}{p.os ? " · " + p.os : ""}</a>
+        <a className="qbrand" href={brandUrl(p.brand)}>{brandLogo(p.brand) ? <img className="qlogo" src={brandLogo(p.brand)} alt={p.brand} width="297" height="109" /> : p.brand}{p.os ? " · " + p.os : ""}</a>
         <h2>{p.brand} {p.name}</h2>
         <Stars p={p} />
         <div className="price"><b>{money(p.price)}</b>{p.mrp > p.price && <><s>{money(p.mrp)}</s><span className="badge">{off(p)}% OFF</span></>}</div>
