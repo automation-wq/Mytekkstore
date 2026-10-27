@@ -120,7 +120,24 @@ export function Home() {
       <div className="d-dots" role="tablist">{slides.map((s, i) => <button type="button" role="tab" aria-selected={i === cur} aria-label={"Slide " + (i + 1) + ": " + s.h} className={i === cur ? "on" : undefined} onClick={() => setCur(i)} key={s.key}></button>)}</div>
     </section>
 
-    <section className="d-wrap" style={{ paddingTop: 48 }}>
+    <section className="d-wrap" id="deals" style={{ paddingTop: 48 }}>
+      <Head h="Deals of the Day" link="All deals" href={listUrl({ cat: "Televisions", sort: "off" })}><span className="d-count">Refreshes in <b>{String(Math.floor(left / 60)).padStart(2, "0")}</b>h <b>{String(left % 60).padStart(2, "0")}</b>m</span></Head>
+      <div className="d-g4 d-roomy">{deals.map(({ p, tag, tone }) => <DCard p={p} tag={tag} tagTone={tone} money={money} compare={compare} key={p.id} />)}</div>
+    </section>
+
+    <section className="d-wrap d-sec">
+      <Head h="With every order" sub="What you get when you buy direct from MyTekkStore." />
+      <div className="d-g4">
+        <div className="d-card d-perk">{I.truck}<strong>Free delivery</strong><span className="d-emi">On every TV, across India. Delivered in 3 to 5 days.</span></div>
+        <div className="d-card d-perk">{I.cod}<strong>Cash on delivery</strong><span className="d-emi">Pay at your door, or pay online with UPI, card or net banking.</span></div>
+        <div className="d-card d-perk">{I.emi}<strong>No Cost EMI</strong><span className="d-emi">{minEmi ? "From " + money(minEmi) + "/month" : "Monthly instalments"} on HDFC, ICICI, SBI, Axis and Kotak cards.</span></div>
+        <div className="d-card d-perk">{I.shield}<strong>Genuine, brand warranty</strong><span className="d-emi">1 year or 1+1 year Elista warranty on every TV*.</span></div>
+      </div>
+    </section>
+
+    <section className="d-wrap d-sec"><FestiveBanner tvs={tvs} maxOff={maxOff} minEmi={minEmi} money={money} /></section>
+
+    <section className="d-wrap d-sec" id="bank-offers">
       <Head h="Bank & payment offers" sub="Stack a bank offer with No Cost EMI. Applied automatically at checkout." link="All offers & T&C" href="/offers" />
       <div className="d-g4">{BANK_OFFERS.map(([bank, big, terms, , chip, badge, foot], i) => <div className={"d-card d-bank " + bankTone(i)} key={bank}>
         <div className="d-bankhead"><span className={"d-chip" + (i === 2 ? " dark" : "")}>{bank}</span><span className={"d-badge" + (i === 2 ? " gold" : i === 3 ? " dark" : "")}>{badge}</span></div>
@@ -131,23 +148,6 @@ export function Home() {
       </div>)}</div>
       <div className="d-how"><span><strong>How to avail:</strong> add a TV to cart → choose your card at checkout → discount shows before you pay.</span><span>One bank offer per order. Bank offers can be combined with No Cost EMI.</span></div>
     </section>
-
-    <section className="d-wrap d-sec" style={{ paddingTop: 44 }}>
-      <Head h="With every order" sub="What you get when you buy direct from MyTekkStore." />
-      <div className="d-g4">
-        <div className="d-card d-perk">{I.truck}<strong>Free delivery</strong><span className="d-emi">On every TV, across India. Delivered in 3 to 5 days.</span></div>
-        <div className="d-card d-perk">{I.cod}<strong>Cash on delivery</strong><span className="d-emi">Pay at your door, or pay online with UPI, card or net banking.</span></div>
-        <div className="d-card d-perk">{I.emi}<strong>No Cost EMI</strong><span className="d-emi">{minEmi ? "From " + money(minEmi) + "/month" : "Monthly instalments"} on HDFC, ICICI, SBI, Axis and Kotak cards.</span></div>
-        <div className="d-card d-perk">{I.shield}<strong>Genuine, brand warranty</strong><span className="d-emi">1 year or 1+1 year Elista warranty on every TV*.</span></div>
-      </div>
-    </section>
-
-    <section className="d-wrap d-sec" id="deals">
-      <Head h="Deals of the Day" link="All deals" href={listUrl({ cat: "Televisions", sort: "off" })}><span className="d-count">Refreshes in <b>{String(Math.floor(left / 60)).padStart(2, "0")}</b>h <b>{String(left % 60).padStart(2, "0")}</b>m</span></Head>
-      <div className="d-g4 wide">{deals.map(({ p, tag, tone }) => <DCard p={p} tag={tag} tagTone={tone} money={money} compare={compare} key={p.id} />)}</div>
-    </section>
-
-    <section className="d-wrap d-sec"><FestiveBanner tvs={tvs} maxOff={maxOff} minEmi={minEmi} money={money} /></section>
 
     <section className="d-wrap d-sec">
       <Head h="Bestsellers this week" sub="What customers are buying most." link="View all" href="/televisions" />
@@ -222,13 +222,6 @@ export function Home() {
       </a>)}</div>
     </section>
 
-    <section className="d-wrap d-sec">
-      <div className="d-why"><span className="d-kick">Why buy direct</span><h3 className="d-h" style={{ fontSize: 30 }}>MyTekkStore vs marketplaces</h3>
-        <div className="d-tbl"><table><thead><tr><th></th><th>MyTekkStore</th><th>Marketplace</th></tr></thead><tbody>
-          {[["Price", "Factory-direct", "Seller margin added"], ["Delivery", "Free on every TV", "Varies by seller"], ["Cash on delivery", "Yes", "Not always"], ["No Cost EMI", minEmi ? "From " + money(minEmi) + "/month" : "On every TV", "Selected items only"], ["Product", "Genuine, brand warranty", "Depends on seller"], ["Support", "Direct, from the store", "Call centre"]].map(([a, b, c]) => <tr key={a}><td>{a}</td><td><strong>{b}</strong></td><td>{c}</td></tr>)}
-        </tbody></table></div></div>
-    </section>
-
     {/* the owner's trust strip (Strip_Trust.jpg) where the design keeps its figures band */}
     <section className="d-strip"><img src={src("Strip_Trust", 960)} srcSet={`${src("Strip_Trust", 960)} 960w, ${src("Strip_Trust")} 1920w`} sizes="100vw" alt="Premium TVs · Multiple Brands · Factory-Direct Prices · No-Cost EMI Options" loading="lazy" width="1920" height="250" /></section>
 
@@ -245,7 +238,7 @@ export function Home() {
     <section className="d-wrap d-sec" id="faq">
       <Head h="Questions people ask before buying" link="Help centre" href="/contact" />
       <div className="d-faq">
-        {[["Is the price lower than Amazon or Croma?", "Our prices are factory-direct for Elista, with no seller margin added."], ["How is MyTekkStore different from Croma, Amazon or Flipkart?", "We sell one brand we stand behind, straight from the maker: factory-direct prices, free delivery and cash on delivery on every TV, No Cost EMI on every smart TV, and the brand's own warranty. The big stores list hundreds of brands with seller margins and delivery that varies by seller; what they have that we do not yet is a store you can walk into and thousands of reviews, which this store earns one delivered TV at a time."], ["How fast is delivery?", "Free delivery across India, usually within 3 to 5 days. You get tracking by email and from your account."],
+        {[["Is the price lower than Amazon or Croma?", "Our prices are factory-direct for Elista, with no seller margin added."], ["How is MyTekkStore different from Croma, Amazon or Flipkart?", "Price: factory-direct, no seller margin added. Delivery: free on every TV, not varying by seller. Cash on delivery: on every TV. No Cost EMI: on every smart TV, not selected items only. Product: genuine, with the brand's warranty. Support: direct from the store, not a call centre. What the big stores have that we do not yet is a shop you can walk into and thousands of reviews, which this store earns one delivered TV at a time."], ["How fast is delivery?", "Free delivery across India, usually within 3 to 5 days. You get tracking by email and from your account."],
           ["Can I pay cash on delivery?", "Yes. Cash on delivery is available on every TV. You can also pay online by UPI, card or net banking."], ["Which cards get No Cost EMI?", "HDFC, ICICI, SBI, Axis and Kotak credit cards, for 3 to 12 months. The interest is borne by us."],
           ["What about warranty and service?", "Every TV carries Elista's 1 or 1+1 year warranty. Register it with the brand after delivery; Elista's service network handles repairs."], ["Is the TV genuine?", "Yes. Every TV is a new, sealed Elista unit with the brand warranty card, sourced directly from the manufacturer."]].map(([q, a]) => <div key={q}><strong>{q}</strong><span className="d-sub">{a}</span></div>)}
       </div>

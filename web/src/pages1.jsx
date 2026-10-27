@@ -58,6 +58,7 @@ export function Checkout() {
   const { CFG: payCfg } = useStore(); // pay: "razorpay" once the server has gateway keys, "demo" otherwise
   useEffect(() => { if (payCfg && payCfg.pay === "razorpay" && !document.querySelector('script[src^="https://checkout.razorpay.com/"]')) { const sc = document.createElement("script"); sc.src = "https://checkout.razorpay.com/v1/checkout.js"; sc.async = true; document.head.appendChild(sc); } }, [payCfg && payCfg.pay]);
   const [place, setPlace] = useState("");
+  const placeRef = useRef(); // above the early returns (React error 300 once the cart empties after an order)
   const saved = (me && me.addresses) || [], dfltAddr = saved.find(a => a.isDefault) || saved[0];
   const [addrId, setAddrId] = useState(dfltAddr ? dfltAddr.id : "new"); // a saved address card, or "new" for the form
   const wallet = ((me && me.coupons) || []).find(c => !c.used && new Date(c.expires) > new Date());
@@ -95,36 +96,42 @@ export function Checkout() {
     clearCart();
     location.href = "/order?id=" + id;
   };
-  return <>
-    <h1 className="ptitle">Checkout</h1>
-    <p className="lead">Signed in as {me.email || me.phone}. Two steps: where to deliver, and how you pay.</p>
-    <div className="cols">
-      <Form className="form panel" onSubmit={submit} after={busy => <button className="btn" disabled={busy}>Place order</button>}>
-        <h3>1. Delivery details</h3>
-        {saved.length > 0 && <div className="ck-addrs" role="radiogroup" aria-label="Saved addresses">{saved.map(a => <label className="ck-addr" key={a.id}><input type="radio" name="addrId" value={a.id} checked={addrId === a.id} onChange={() => setAddrId(a.id)} /><span><b>{a.name} · {a.label} {a.isDefault && <i>Default</i>}</b>{[a.line1, a.line2, a.landmark].filter(Boolean).join(", ")}<br />{a.city}, {a.state} {a.pin} · {a.phone}</span></label>)}<label className="ck-addr"><input type="radio" name="addrId" value="new" checked={addrId === "new"} onChange={() => setAddrId("new")} /><span><b>Deliver somewhere else</b>Type a new address below.</span></label></div>}
-        {(addrId === "new" || !saved.length) && <>
-        <label>Full name<input name="name" required maxLength="80" autoComplete="name" defaultValue={me.name || ""} /></label>
-        <label>Phone<input name="phone" type="tel" required pattern="[0-9+ ]{7,15}" autoComplete="tel" defaultValue={me.phone || ""} /></label>
-        <label>Address<textarea name="address" rows="3" required maxLength="400" autoComplete="street-address" defaultValue={saved.length ? "" : me.address || ""}></textarea></label>
-        <label>Pincode<input name="pin" required pattern="[0-9A-Za-z ]{4,10}" autoComplete="postal-code" defaultValue={saved.length ? "" : me.pin || ""} onChange={e => placeOf(e.target.value.trim())} /><span id="pinplace" className="small" role="status">{place}</span></label></>}
-        <h3>Coupon</h3>
-        <div className="ck-coupon"><input type="text" name="couponText" aria-label="Coupon code" placeholder={wallet ? wallet.code + " is in your wallet" : "Coupon code"} value={coupon} onChange={e => { setCoupon(e.target.value.toUpperCase()); setDiscount(0); setCouponMsg(""); }} maxLength="20" /><button type="button" className="btn ghost" onClick={() => applyCoupon(coupon || (wallet ? wallet.code : ""))}>Apply</button></div>
-        {couponMsg && <p className="small" role="status" style={{ color: discount ? "#08805f" : "var(--muted)" }}>{couponMsg}</p>}
-        <h3>2. Payment</h3>
-        <div className="paygrid" role="radiogroup" aria-label="Payment method">
-          {[["cod", "Cash on delivery", "Pay when the order arrives", "cash"], ["UPI", "UPI", "Google Pay, PhonePe, Paytm, any UPI app", "bolt"], ["Card", "Credit or debit card", Object.keys(cart).some(id => (byId(id) || {}).emi) ? "No Cost EMI on participating cards" : "Visa, Mastercard, RuPay", "cart"], ["Net banking", "Net banking", "All major banks", "shield"]]
-            .map(([v, t, sub, ic]) => <label className={"radio paytile" + (v !== "cod" && !(payCfg && payCfg.pay === "razorpay") ? " test" : "")} key={v}><input type="radio" name="pay" value={v} defaultChecked={v === "cod"} /><Icon k={ic} /><span><b>{t}</b><small>{sub}</small></span>{v !== "cod" && !(payCfg && payCfg.pay === "razorpay") && <em>Test mode</em>}</label>)}
-        </div>
-        <p className="muted paynote">{payCfg && payCfg.pay === "razorpay" ? "Online payments are processed securely by Razorpay; the store never sees your card or UPI details." : "Online payments go live the moment the store's Razorpay account is connected. Until then the online options open a test window and no money moves. Cash on delivery is live today."}</p>
-        <div className="perks paytrust"><span><Icon k="shield" /> Secure checkout</span><span><Icon k="check" /> 100% genuine</span><span><Icon k="undo" /> Easy returns</span></div>
+  const items = Object.keys(cart).map(byId).filter(Boolean), count = Object.values(cart).reduce((n, q) => n + q, 0), emiAny = items.some(p => p.emi), online = !!(payCfg && payCfg.pay === "razorpay");
+  const PAY = [["cod", "Cash on delivery", "Pay at your door when the TV arrives", "cash", "Live today"], ["UPI", "UPI", "Google Pay, PhonePe, Paytm, any UPI app", "bolt"], ["Card", "Credit or debit card", emiAny ? "No Cost EMI on HDFC, ICICI, SBI, Axis and Kotak cards" : "Visa, Mastercard, RuPay", "cart"], ["Net banking", "Net banking", "All major Indian banks", "shield"]];
+  return <div className="ck">
+    <div className="ck-head"><h1 className="acc-h">Checkout</h1><ol className="ck-steps"><li className="on"><i>1</i>Delivery</li><li className="on"><i>2</i>Payment</li><li><i>3</i>Order placed</li></ol></div>
+    <div className="ck-cols">
+      <Form className="ck-form panel" id="ckform" onSubmit={submit} after={() => null}>
+        <section className="ck-card"><h2 className="ck-h2"><i>1</i>Delivery address</h2>
+          {saved.length > 0 && <div className="ck-addrs" role="radiogroup" aria-label="Saved addresses">{saved.map(a => <label className="ck-addr" key={a.id}><input type="radio" name="addrId" value={a.id} checked={addrId === a.id} onChange={() => setAddrId(a.id)} /><span><b>{a.name} · {a.label} {a.isDefault && <i>Default</i>}</b>{[a.line1, a.line2, a.landmark].filter(Boolean).join(", ")}<br />{a.city}, {a.state} {a.pin} · {a.phone}</span></label>)}<label className="ck-addr"><input type="radio" name="addrId" value="new" checked={addrId === "new"} onChange={() => setAddrId("new")} /><span><b>Deliver somewhere else</b>Type a new address below.</span></label></div>}
+          {(addrId === "new" || !saved.length) && <div className="ck-grid">
+            <label className="acc-f">Full name<input className="acc-in" name="name" required maxLength="80" autoComplete="name" defaultValue={me.name || ""} /></label>
+            <label className="acc-f">Mobile number for delivery<input className="acc-in" name="phone" type="tel" required pattern="[0-9+ ]{7,15}" autoComplete="tel" defaultValue={me.phone || ""} /></label>
+            <label className="acc-f span2">Address (flat, building, street, area)<textarea className="acc-in ta" name="address" rows="3" required maxLength="400" autoComplete="street-address" defaultValue={saved.length ? "" : me.address || ""}></textarea></label>
+            <label className="acc-f">Pincode<input className="acc-in" name="pin" required pattern="[0-9A-Za-z ]{4,10}" autoComplete="postal-code" defaultValue={saved.length ? "" : me.pin || ""} onChange={e => placeOf(e.target.value.trim())} /><span id="pinplace" className="acc-muted small" role="status">{place || "Free delivery across India in 3 to 5 days."}</span></label>
+          </div>}
+          <p className="acc-muted small">Signed in as {me.email || me.phone}. Saved addresses are in <a className="alink" href="/account?s=addresses">your account</a>.</p>
+        </section>
+        <section className="ck-card"><h2 className="ck-h2"><i>2</i>Payment</h2>
+          <div className="ck-pay" role="radiogroup" aria-label="Payment method">{PAY.map(([v, t, sub, ic, tag]) => <label className={"ck-tile" + (v !== "cod" && !online ? " test" : "")} key={v}><input type="radio" name="pay" value={v} defaultChecked={v === "cod"} /><span className="ck-ico"><Icon k={ic} /></span><span className="ck-tt"><b>{t}</b><small>{sub}</small></span>{tag ? <em className="ck-live">{tag}</em> : !online && <em className="ck-test">Test mode</em>}</label>)}</div>
+          <p className="acc-muted small">{online ? "Online payments are processed securely by Razorpay; the store never sees your card or UPI details." : "Online payments go live the moment the store's Razorpay account is connected; until then the online options open a test window and no money moves. Cash on delivery is live today."}</p>
+          <div className="ck-coupon-wrap"><b>Coupon</b><div className="ck-coupon"><input className="acc-in" type="text" name="couponText" aria-label="Coupon code" placeholder={wallet ? wallet.code + " is in your wallet" : "Coupon code"} value={coupon} onChange={e => { setCoupon(e.target.value.toUpperCase()); setDiscount(0); setCouponMsg(""); }} maxLength="20" /><button type="button" className="acc-btn ghost" onClick={() => applyCoupon(coupon || (wallet ? wallet.code : ""))}>Apply</button></div>
+            {couponMsg && <p className="small" role="status" style={{ margin: 0, color: discount ? "#08805f" : "#8a1f1f", fontWeight: 600 }}>{couponMsg}</p>}</div>
+        </section>
       </Form>
-      <aside className="panel sum"><h3>Order summary</h3><div id="sum">
-        <div className="lines">{Object.keys(cart).map(id => <Line p={byId(id)} key={id} />)}</div>
-        {discount > 0 && <div className="tot"><span>Coupon {coupon}</span><span className="off">−{money(discount)}</span></div>}
-        <div className="tot"><span>Delivery</span><span className="free">Free</span></div>
-        <div className="tot grand"><span>Total</span><b>{money(cartTotal() - discount)}</b></div><p className="muted small">Usually delivered by {etaText()}.</p></div><div className="perks"><span><Icon k="truck" /> Free delivery</span><span><Icon k="cash" /> Cash on delivery</span><span><Icon k="undo" /> Easy returns</span><span><Icon k="shield" /> Brand warranty</span></div><p className="muted small">Questions? <a className="alink" href="/shipping">Delivery</a> · <a className="alink" href="/returns">Returns</a> · <a className="alink" href="/contact">Contact us</a></p></aside>
+      <aside className="ck-sum">
+        <div className="ck-card"><h2 className="ck-h2">Order summary</h2>
+          <div className="lines ck-lines">{Object.keys(cart).map(id => <Line p={byId(id)} key={id} />)}</div>
+          <div className="ck-price"><div><span>Price ({count} item{count === 1 ? "" : "s"})</span><span>{money(cartTotal())}</span></div>{discount > 0 && <div className="off"><span>Coupon {coupon}</span><span>−{money(discount)}</span></div>}<div><span>Delivery</span><span className="free">Free</span></div><div className="tot grand"><span>Total</span><b>{money(cartTotal() - discount)}</b></div>{discount > 0 && <p className="ck-save">You save {money(discount)} on this order.</p>}</div>
+          {emiAny && <p className="acc-muted small">No Cost EMI from {money(emiPlans(cartTotal() - discount)[2][1])}/month over 9 months on participating cards.</p>}
+          <button type="submit" form="ckform" className="d-btn ck-place" ref={placeRef} onClick={() => { const b = placeRef.current; setTimeout(() => { if (b) b.disabled = true; }, 0); setTimeout(() => { if (b) b.disabled = false; }, 6000); }}>Place order · {money(cartTotal() - discount)}</button>
+          <p className="acc-muted small" style={{ textAlign: "center" }}>Usually delivered by {etaText()}. Inclusive of all taxes; GST invoice with the order.</p>
+        </div>
+        <div className="ck-trust"><span><Icon k="lock" />Secure checkout</span><span><Icon k="check" />100% genuine, brand warranty</span><span><Icon k="truck" />Free delivery, cash on delivery</span><span><Icon k="undo" />Easy returns</span></div>
+        <p className="acc-muted small">Questions? <a className="alink" href="/shipping">Delivery</a> · <a className="alink" href="/returns">Returns</a> · <a className="alink" href="/contact">Contact us</a></p>
+      </aside>
     </div>
-  </>;
+  </div>;
 }
 
 export function Order() {
