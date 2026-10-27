@@ -170,7 +170,7 @@ async function run() {
     step = "a click right after leaving a hover menu reaches the page";
     await b.glide(...await b.center(".l0link", 0), 120); await sleep(450);
     assert.equal(await open(), "Televisions");
-    const cardLink = await b.center("main .card h3", 0); // the product name: the link's centre now sits on the Quick view button, which is its own control
+    const cardLink = await b.center("main .d-title", 0); // the product name: the link's centre now sits on the Quick view button, which is its own control
     await b.glide(...cardLink, 120); // leave the menu and click a product at once, inside the menu's closing delay
     await b.afterLoad(async () => b.click(...cardLink));
     assert.equal(await b.ev(`document.body.dataset.page`), "product", "the dim layer must not swallow that click");
@@ -261,7 +261,7 @@ async function run() {
     assert.ok(/Four\s4K\sTVs/.test(camp.h1), "the campaign hero headline: " + camp.h1); assert.equal(camp.preset, "promo"); assert.equal(camp.cards, 4, "the four picks"); assert.equal(camp.cols, 4, "the picks compared"); assert.ok(camp.theme.includes("theme-dark"));
     await b.goto(base + "/compare?ids=26,11");
     assert.equal(await b.ev(`document.querySelectorAll(".cmp .ctable thead th").length - 1`), 2, "the compare page shows the two models");
-    await b.goto(base + "/televisions/elista-108-cm-43-inch-4k-ultra-hd-smart-tv"); await sleep(400);
+    await b.goto(base + "/televisions/elista-109-cm-43-inch-4k-ultra-hd-smart-tv"); await sleep(400);
     assert.equal(await b.ev(`!!document.querySelector("main .banner.phero")`), false, "no banner above the product: the page opens on the gallery and the buy box (27 Oct), the owner's A+ strip 1 is the product's banner; the admin can still add one");
     assert.equal(await b.ev(`document.querySelectorAll("main h1").length`), 1, "one h1 on the product page");
     await b.click(...await b.center(".chatfab")); await sleep(500);
@@ -275,7 +275,7 @@ async function run() {
 
     step = "product page: size switcher, delivery check, share, rating bars";
     await b.ev(`localStorage.removeItem("cart")`); // the deals card above added the 32 inch model (the biggest discount since the brochure MRPs); this step adds it fresh
-    await b.goto(base + "/televisions/elista-139-cm-55-inch-4k-ultra-hd-smart-tv");
+    await b.goto(base + "/televisions/elista-140-cm-55-inch-4k-ultra-hd-smart-tv");
     const sizeChips = await b.ev(`[...document.querySelectorAll(".sizes .chip b")].map(a => a.textContent)`);
     assert.ok(sizeChips.includes("32 inch") && sizeChips.includes("55 inch") && sizeChips.includes("65 inch") && sizeChips.length >= 6, "the size switcher lists the catalogue's sizes: " + sizeChips.join(", "));
     assert.equal(await b.ev(`document.querySelector(".sizes .chip.on b").textContent`), "55 inch");
@@ -307,8 +307,8 @@ async function run() {
     assert.equal(await b.ev(`document.querySelector(".stabs a.on").textContent`), "Compare", "the sub-nav marks the section in view");
     assert.equal(await b.ev(`getComputedStyle(document.querySelector(".pdp .actions .btn")).borderRadius`), "999px", "pill buttons");
     await b.goto(base + "/");
-    const clips = await b.ev(`({ hero: document.querySelectorAll(".slide").length, oss: document.querySelectorAll(".disco .dcard.os").length, brands: document.querySelectorAll(".bbrand").length, arrows: [...document.querySelectorAll(".strip")].filter(x => !x.classList.contains("nos") && x.querySelector(".row").scrollWidth <= x.querySelector(".row").clientWidth + 2).length })`);
-    assert.ok(clips.hero >= 1, "the hero banner (" + clips.hero + " slide)"); assert.ok(clips.oss >= 2 && clips.oss <= 4, "shop by operating system on the home page: one card per system in the catalogue (" + clips.oss + ")"); assert.ok(clips.brands >= 1, "a giant tile per brand in the catalogue");
+    const clips = await b.ev(`({ hero: document.querySelectorAll(".d-slide").length, oss: document.querySelectorAll(".d-type").length, brands: document.querySelectorAll(".d-brand").length, arrows: [...document.querySelectorAll(".strip")].filter(x => !x.classList.contains("nos") && x.querySelector(".row").scrollWidth <= x.querySelector(".row").clientWidth + 2).length })`);
+    assert.ok(clips.hero >= 1, "the hero banner (" + clips.hero + " slide)"); assert.ok(clips.oss >= 2 && clips.oss <= 6, "shop by type on the home page: one tile per type in the catalogue (" + clips.oss + ")"); assert.ok(clips.brands >= 1, "a giant tile per brand in the catalogue");
     assert.equal(clips.arrows, 0, "a row that fits on the screen shows no scroll arrows");
     await b.goto(base + "/category.html?cat=Televisions");
     assert.deepEqual(await b.ev(`[...document.querySelectorAll(".cdisco .dtabs button")].map(b => b.textContent)`), ["Shop by Size", "Shop by Budget", "Shop by OS", "Screen type / Resolution"], "four-tab discovery under the category banner: size, budget, operating system, screen type");
@@ -335,16 +335,16 @@ async function run() {
 
     step = "offers page, bank offers and the No Cost EMI tag";
     await b.goto(base + "/offers.html");
-    assert.ok(await b.ev(`!!document.querySelector(".festive .froom")`), "the festive banner opens the offers page"); // the brochure room photo is its stage
+    assert.ok(await b.ev(`!!document.querySelector(".d-fest .d-festimg img")`), "the festive banner opens the offers page"); // the owner's festive-lights living-room card is its picture
     assert.equal(await b.ev(`document.querySelectorAll(".ftile").length`), 0, "the offers-by-category tiles appear only with more than one category on sale");
     assert.equal(await b.ev(`document.querySelectorAll(".offer").length`), 4, "bank offer cards");
     assert.ok(await b.ev(`document.querySelectorAll(".card .emi").length`) > 0, "No Cost EMI tags on deal cards");
     assert.equal(await b.ev(`document.querySelector(".l0.cur .l0link").textContent`), "Best Deals", "Deals is marked current in the bar");
     await b.goto(base + "/");
-    assert.ok(await b.ev(`!document.querySelector("main .box") && document.querySelectorAll(".dcard").length >= 5 && document.querySelectorAll(".launch").length >= 5`), "the home page draws its sections, not the error box (a missing import broke it on 22 Oct 2026)");
-    assert.equal(await b.ev(`document.querySelectorAll(".bankad .bacard").length`), 4, "the four bank-offer cards on the home page");
+    assert.ok(await b.ev(`!document.querySelector("main .box") && document.querySelectorAll(".d-prod").length >= 8 && document.querySelectorAll(".d-size").length >= 5`), "the home page draws its sections, not the error box (a missing import broke it on 22 Oct 2026)");
+    assert.equal(await b.ev(`document.querySelectorAll(".d-bank").length`), 4, "the four bank-offer cards on the home page");
     assert.equal(await b.ev(`document.querySelectorAll(".sizerow").length`), 0, "no shop-by-size rows on the home page (client decision 2026-10-09; sizes live on the category pages)");
-    assert.ok(await b.ev(`document.querySelectorAll(".faqs details").length >= 5 && (document.querySelectorAll(".quote").length > 0 || !document.querySelector(".quotes"))`), "Good to know questions on the home page, and customer quotes once there are three reviews");
+    assert.ok(await b.ev(`document.querySelectorAll(".d-faq > div").length >= 5`), "the questions people ask before buying, on the home page");
     await b.goto(base + "/product.html?id=1");
     assert.ok(await b.ev(`!!document.querySelector(".pdp .emiline") && document.querySelectorAll(".pofs div").length === 3`), "EMI line and offers box on the product page");
     assert.ok(await b.ev(`document.querySelectorAll("#t-specs .specgroup").length >= 3`), "grouped specifications on the product page");
@@ -361,7 +361,7 @@ async function run() {
 
     step = "every link on the main pages opens a real page";
     const seen = new Set(), skip = /\/(checkout|order|admin)(\.html|\?|$)|#/; // pages that need a sign-in or an order, and in-page anchors
-    for (const start of ["/", "/offers.html", "/televisions/elista-108-cm-43-inch-4k-ultra-hd-smart-tv", "/account.html", "/shipping"]) {
+    for (const start of ["/", "/offers.html", "/televisions/elista-109-cm-43-inch-4k-ultra-hd-smart-tv", "/account.html", "/shipping"]) {
       await b.goto(base + start);
       for (const h of await b.ev(`[...document.querySelectorAll("a[href]")].map(a => a.href)`)) if (h.startsWith(base) && !skip.test(h)) seen.add(h);
     }

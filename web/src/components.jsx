@@ -4,6 +4,7 @@ import { m, AnimatePresence, useScroll, useSpring, useReducedMotion } from "moti
 import { animate, stagger } from "motion";
 import { reduced } from "./motion.js";
 import { useStore } from "./store.jsx";
+import { CONTACT } from "./data.js";
 import { api, qs, load, save, track } from "./api.js";
 import { POLICY, ICONS, DRAW_ICONS, COUNTRIES, BANK_OFFERS, TOP_FEATURES, CAT_SIZE, TV_OS, OS_ROWS, SHOW_STORES, COMING_SOON, catSizes, emiPlans, catUrl, brandUrl, listUrl, off, avg, starRow, eta, productUrl, pic, picSet, dims, osList, osUrl } from "./data.js";
 
@@ -186,7 +187,7 @@ function Search() {
     else if (e.key === "Escape") setOpen(false);
   };
   return <form role="search" action="/products" className="sbox" onSubmit={e => { if (!q.trim()) e.preventDefault(); else { remember(q); track("search", { q: q.trim() }); } }}>
-    <input type="search" name="q" value={q} placeholder="What are you looking for?" aria-label="Search products" autoComplete="off"
+    <input type="search" name="q" value={q} placeholder={"Search \"55 inch 4K TV under 50000\""} aria-label="Search products" autoComplete="off"
       role="combobox" aria-expanded={show} aria-controls="sugg" aria-autocomplete="list" aria-activedescendant={sel >= 0 ? "sg" + sel : undefined}
       onChange={e => { setQ(e.target.value); setSel(-1); setOpen(true); }} onFocus={() => setOpen(true)} onBlur={() => setOpen(false)} onKeyDown={onKey} />
     {show && <div className="sugg" id="sugg" role="listbox" onMouseDown={e => e.preventDefault()}>
@@ -280,9 +281,9 @@ export function Header() {
     return () => offs.forEach(f => f());
   }, [P]);
 
-  const n = cartCount();
+  const n = cartCount(), emis = P.filter(p => p.cat === "Televisions" && p.emi).map(p => emiPlans(p.price)[2][1]), emiFrom = emis.length ? Math.min(...emis) : 0;
   return <header id="hdr">
-    <div className="ticker" aria-label="Store offers"><div>{[0, 1].flatMap(r => [["truck", "Free delivery on every order"], ["shield", "100% genuine products with brand warranty"], ["cash", "Cash on delivery available"], ["undo", "Easy returns"], ["box", "Track every order from your account"]].map(([i, t]) => <span key={r + i}><Icon k={i} /> {t}</span>))}</div></div>
+    <div className="abar" aria-label="Store offers">Free delivery · Cash on delivery{emiFrom ? " · No Cost EMI from " + money(emiFrom) + "/month" : ""} · Genuine Elista TVs with brand warranty</div>
     <div className="wrap">
       <a className="logo" href="/"><svg viewBox="0 0 32 32" width="30" height="30" aria-hidden="true"><rect width="32" height="32" rx="9" fill="var(--accent)" /><path d="M18 5 9 18h6l-2 9 10-14h-6z" fill="#ffffff" /></svg><span>mytekk<b>store</b></span></a>
       <Search /><Deliver />
@@ -304,17 +305,26 @@ export function Header() {
 // the build date in the footer: tells a page left open from an old build apart from the live site at a glance (server.js writes data-built)
 const built = () => { const b = document.documentElement.dataset.built; return b ? new Date(b).toLocaleString("en-IN", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit", timeZone: "Asia/Kolkata" }) + " IST" : ""; };
 export function Footer() {
-  const { CATS, BRANDS } = useStore();
-  return <footer id="ftr"><div className="wrap">
-    <div className="ftrust">{[["lock", "No card details stored"], ["cash", "Cash on delivery"], ["undo", "Easy returns"], ["shield", "Brand warranty on everything"], ["truck", "Free delivery on every order"]].map(([i, t]) => <span key={t}><Icon k={i} />{t}</span>)}</div>
-    <div className="fcols">
-      <div><b>Shop</b>{CATS.slice(0, 6).map(c => <a href={catUrl(c)} key={c}>{c}</a>)}</div>
-      <div><b>Brands</b>{BRANDS.slice(0, 6).map(b => <a href={brandUrl(b)} key={b}>{b}</a>)}</div>
-      <div><b>Help</b><a href="/buying-guide">How to choose a TV</a><a href="/contact">Contact</a><a href="/shipping">Shipping</a><a href="/returns">Warranty and returns</a>{SHOW_STORES && <a href="/stores">Store locator</a>}</div>
-      <div><b>Mytekkstore</b><a href="/about">About</a><a href="/account">My account</a><a href="/terms">Terms</a><a href="/privacy">Privacy</a></div>
+  return <footer id="ftr">
+    <a className="f-top" href="#">Back to top ↑</a><div className="f-line"></div>
+    <div className="wrap">
+      <div className="f-cols">
+        <div><span className="f-brand">mytekk<b>store</b></span><p className="f-about">Premium Elista TVs at factory-direct prices. Genuine products with brand warranty, free delivery, cash on delivery and No Cost EMI, across India.</p>
+          {(CONTACT.phone || CONTACT.email || CONTACT.hours) && <div className="f-contact">{CONTACT.phone && <span><strong>WhatsApp:</strong> {CONTACT.phone}</span>}{CONTACT.email && <span><strong>Email:</strong> {CONTACT.email}</span>}{CONTACT.hours && <span><strong>Hours:</strong> {CONTACT.hours}</span>}</div>}</div>
+        <div><strong className="f-head">Shop</strong><a href="/televisions">Televisions</a><a href="/offers">Best Deals</a><a href="/televisions?os=Google+TV">Google TV</a><a href="/televisions?os=WebOS">webOS Hub</a><a href="/televisions?type=Mini-LED+PRO">Mini-LED PRO</a><a href="/televisions?type=QLED">QLED TVs</a><a href="/televisions?max=30000">Under ₹30,000</a><a href="/televisions?size=65">65" &amp; above</a></div>
+        <div><strong className="f-head">Help</strong><a href="/account">Track order</a><a href="/shipping">Delivery &amp; tracking</a><a href="/returns">Returns &amp; replacement</a><a href="/returns">Warranty registration</a><a href="/offers">No Cost EMI</a><a href="/contact">Contact support</a></div>
+        <div><strong className="f-head">Company</strong><a href="/about">About MyTekkStore</a><a href="/buying-guide">Buying guides</a><a href="/account">My account</a></div>
+        <div><strong className="f-head">Legal</strong><a href="/privacy">Privacy policy</a><a href="/terms">Terms of use</a><a href="/shipping">Shipping policy</a><a href="/returns">Refund policy</a></div>
+      </div>
+      <div className="f-trust">
+        <div><svg aria-hidden="true" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#E8CF8C" strokeWidth="1.8"><path d="M12 2l8 4v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6z" /><path d="M9 12l2 2 4-4" /></svg><div><strong>100% genuine, brand warranty</strong><span>New, sealed units direct from the brand*</span></div></div>
+        <div><svg aria-hidden="true" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#E8CF8C" strokeWidth="1.8"><path d="M3 7h11v9H3zM14 10h4l3 3v3h-7z" /><circle cx="7" cy="18" r="1.5" /><circle cx="17" cy="18" r="1.5" /></svg><div><strong>Free delivery, cash on delivery</strong><span>Across India · delivered in 3 to 5 days</span></div></div>
+        <div><svg aria-hidden="true" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#E8CF8C" strokeWidth="1.8"><rect x="4" y="10" width="16" height="11" rx="2" /><path d="M8 10V7a4 4 0 0 1 8 0v3" /></svg><div><strong>Secure payments</strong><span>UPI · Cards · Net banking · No Cost EMI · GST invoice</span></div></div>
+      </div>
+      <div className="f-accept"><span>We accept</span><i>UPI</i><i>Visa</i><i>Mastercard</i><i>RuPay</i><i>Net banking</i><i className="gold">No Cost EMI</i><i className="gold">Cash on delivery</i></div>
+      <div className="f-copy"><span>© 2026 MyTekkStore. All rights reserved.{built() && <span className="built"> · Site updated {built()}</span>}</span><span>*Register with the brand to avail warranty. Prices are MRP unless marked as deal price. T&amp;C apply.</span></div>
     </div>
-    <div className="copy">© 2026 Mytekkstore. All rights reserved.{built() && <span className="built"> · Site updated {built()}</span>}</div>
-  </div></footer>;
+  </footer>;
 }
 
 // cart drawer, dim layers, toast, scroll progress and back-to-top

@@ -103,17 +103,17 @@ const SEED = [
   "id": 3,
   "brand": "Elista",
   "cat": "Televisions",
-  "name": "108 cm (43 inch) 4K Ultra HD Smart TV",
+  "name": "109 cm (43 inch) 4K Ultra HD Smart TV",
   "price": 48990,
   "mrp": 48990,
   "stock": 25,
   "emi": true,
   "img": "img/elista/webOS-Smart-TV-43in_1.webp",
-  "desc": "Elista 108 cm (43 inch) 4K Ultra HD Smart TV. webOS Hub with ThinQ AI and the Magic Remote, Dolby Audio, 3 HDMI and 2 USB, Bluetooth 5.0 and dual-band Wi-Fi. Free delivery, cash on delivery, and the Elista warranty.",
+  "desc": "Elista 109 cm (43 inch) 4K Ultra HD Smart TV. webOS Hub with ThinQ AI and the Magic Remote, Dolby Audio, 3 HDMI and 2 USB, Bluetooth 5.0 and dual-band Wi-Fi. Free delivery, cash on delivery, and the Elista warranty.",
   "specs": [
    [
     "Screen size",
-    "108 cm (43 inch)"
+    "109 cm (43 inch)"
    ],
    [
     "Resolution",
@@ -596,7 +596,7 @@ const SEED = [
   "price": 149999,
   "mrp": 149999,
   "stock": 10,
-  "emi": false,
+  "emi": true,
   "img": "img/elista/webOS-Smart-TV-85in_1.webp",
   "desc": "Elista 215 cm (85 inch) QLED 4K Ultra HD Smart TV. QLED panel, webOS Hub with ThinQ AI and the Magic Remote, Dolby Audio, 3 HDMI and 2 USB. Free delivery, cash on delivery, and the Elista warranty.",
   "specs": [
@@ -692,7 +692,7 @@ const SEED = [
   "price": 90000,
   "mrp": 90000,
   "stock": 10,
-  "emi": false,
+  "emi": true,
   "img": "img/elista/webOS-Smart-TV-75in_1.webp",
   "desc": "Elista 190 cm (75 inch) 4K Ultra HD Smart TV. webOS Hub with ThinQ AI, Alexa and the Magic Remote, Dolby Audio, 3 HDMI and 2 USB. Free delivery, cash on delivery, and the Elista warranty.",
   "specs": [
@@ -784,17 +784,17 @@ const SEED = [
   "id": 17,
   "brand": "Elista",
   "cat": "Televisions",
-  "name": "164 cm (65 inch) 4K Ultra HD Smart TV",
+  "name": "165 cm (65 inch) 4K Ultra HD Smart TV",
   "price": 79990,
   "mrp": 79990,
   "stock": 10,
-  "emi": false,
+  "emi": true,
   "img": "img/elista/webOS-Smart-TV-65in_1.webp",
-  "desc": "Elista 164 cm (65 inch) 4K Ultra HD Smart TV. webOS Hub with ThinQ AI and the Magic Remote, Dolby Audio, 3 HDMI and 2 USB. Free delivery, cash on delivery, and the Elista warranty.",
+  "desc": "Elista 165 cm (65 inch) 4K Ultra HD Smart TV. webOS Hub with ThinQ AI and the Magic Remote, Dolby Audio, 3 HDMI and 2 USB. Free delivery, cash on delivery, and the Elista warranty.",
   "specs": [
    [
     "Screen size",
-    "164 cm (65 inch)"
+    "165 cm (65 inch)"
    ],
    [
     "Resolution",
@@ -879,17 +879,17 @@ const SEED = [
   "id": 26,
   "brand": "Elista",
   "cat": "Televisions",
-  "name": "139 cm (55 inch) 4K Ultra HD Smart TV",
+  "name": "140 cm (55 inch) 4K Ultra HD Smart TV",
   "price": 69990,
   "mrp": 69990,
   "stock": 10,
-  "emi": false,
+  "emi": true,
   "img": "img/elista/webOS-Smart-TV-55in_1.webp",
-  "desc": "Elista 139 cm (55 inch) 4K Ultra HD Smart TV. webOS Hub with ThinQ AI and the Magic Remote, Dolby Audio with a 50 W speaker, 3 HDMI and 2 USB. Free delivery, cash on delivery, and the Elista warranty.",
+  "desc": "Elista 140 cm (55 inch) 4K Ultra HD Smart TV. webOS Hub with ThinQ AI and the Magic Remote, Dolby Audio with a 50 W speaker, 3 HDMI and 2 USB. Free delivery, cash on delivery, and the Elista warranty.",
   "specs": [
    [
     "Screen size",
-    "139 cm (55 inch)"
+    "140 cm (55 inch)"
    ],
    [
     "Resolution",
@@ -975,17 +975,17 @@ const SEED = [
   "id": 18,
   "brand": "Elista",
   "cat": "Televisions",
-  "name": "164 cm (65 inch) Mini-LED PRO QLED Google TV",
+  "name": "165 cm (65 inch) Mini-LED PRO QLED Google TV",
   "price": 134999,
   "mrp": 134999,
   "stock": 10,
-  "emi": false,
+  "emi": true,
   "img": "img/elista/Mini-LED-PRO-65in_1.webp",
-  "desc": "Elista 164 cm (65 inch) Mini-LED PRO QLED Google TV. Mini-LED PRO QLED panel over 500 nits, Dolby Vision and Dolby Atmos, HDR10, HLG and MEMC, Google TV 5.0. Free delivery, cash on delivery, and the Elista warranty.",
+  "desc": "Elista 165 cm (65 inch) Mini-LED PRO QLED Google TV. Mini-LED PRO QLED panel over 500 nits, Dolby Vision and Dolby Atmos, HDR10, HLG and MEMC, Google TV 5.0. Free delivery, cash on delivery, and the Elista warranty.",
   "specs": [
    [
     "Screen size",
-    "164 cm (65 inch)"
+    "165 cm (65 inch)"
    ],
    [
     "Display type",
@@ -1059,17 +1059,17 @@ const SEED = [
   "id": 19,
   "brand": "Elista",
   "cat": "Televisions",
-  "name": "139 cm (55 inch) Mini-LED PRO QLED Google TV",
+  "name": "140 cm (55 inch) Mini-LED PRO QLED Google TV",
   "price": 99999,
   "mrp": 99999,
   "stock": 10,
-  "emi": false,
+  "emi": true,
   "img": "img/elista/Mini-LED-PRO-55in_1.webp",
-  "desc": "Elista 139 cm (55 inch) Mini-LED PRO QLED Google TV. Mini-LED PRO QLED panel over 500 nits, Dolby Vision and Dolby Atmos, HDR10, HLG and MEMC, Google TV 5.0. Free delivery, cash on delivery, and the Elista warranty.",
+  "desc": "Elista 140 cm (55 inch) Mini-LED PRO QLED Google TV. Mini-LED PRO QLED panel over 500 nits, Dolby Vision and Dolby Atmos, HDR10, HLG and MEMC, Google TV 5.0. Free delivery, cash on delivery, and the Elista warranty.",
   "specs": [
    [
     "Screen size",
-    "139 cm (55 inch)"
+    "140 cm (55 inch)"
    ],
    [
     "Display type",
@@ -1143,17 +1143,17 @@ const SEED = [
   "id": 20,
   "brand": "Elista",
   "cat": "Televisions",
-  "name": "108 cm (43 inch) Full HD Smart TV (Coolita OS)",
+  "name": "109 cm (43 inch) Full HD Smart TV (Coolita OS)",
   "price": 34990,
   "mrp": 34990,
   "stock": 10,
-  "emi": false,
+  "emi": true,
   "img": "img/elista/Coolita-OS-FHD-Smart-TV-43in_1.webp",
-  "desc": "Elista 108 cm (43 inch) Full HD Smart TV. Coolita OS with certified apps, an in-built 48 W soundbar, quad-core processor, 2 HDMI. Free delivery, cash on delivery, and the Elista warranty.",
+  "desc": "Elista 109 cm (43 inch) Full HD Smart TV. Coolita OS with certified apps, an in-built 48 W soundbar, quad-core processor, 2 HDMI. Free delivery, cash on delivery, and the Elista warranty.",
   "specs": [
    [
     "Screen size",
-    "108 cm (43 inch)"
+    "109 cm (43 inch)"
    ],
    [
     "Resolution",
@@ -1233,7 +1233,7 @@ const SEED = [
   "price": 27990,
   "mrp": 27990,
   "stock": 10,
-  "emi": false,
+  "emi": true,
   "img": "img/elista/Coolita-OS-HD-Smart-TV-32in_1.webp",
   "desc": "Elista 80 cm (32 inch) HD Ready Smart TV. Coolita OS with certified apps, an in-built 48 W soundbar, quad-core processor, 2 HDMI. Free delivery, cash on delivery, and the Elista warranty.",
   "specs": [
@@ -1315,17 +1315,17 @@ const SEED = [
   "id": 22,
   "brand": "Elista",
   "cat": "Televisions",
-  "name": "108 cm (43 inch) Full HD Android TV (Cloud TV)",
+  "name": "109 cm (43 inch) Full HD Android TV (Cloud TV)",
   "price": 32990,
   "mrp": 32990,
   "stock": 10,
-  "emi": false,
+  "emi": true,
   "img": "img/elista/Cloud-TV-Android14-FHD-43in_1.webp",
-  "desc": "Elista 108 cm (43 inch) Full HD Android TV. Android 14, A+ grade panel, side-fire sound, 2 HDMI. Free delivery, cash on delivery, and the Elista warranty.",
+  "desc": "Elista 109 cm (43 inch) Full HD Android TV. Android 14, A+ grade panel, side-fire sound, 2 HDMI. Free delivery, cash on delivery, and the Elista warranty.",
   "specs": [
    [
     "Screen size",
-    "108 cm (43 inch)"
+    "109 cm (43 inch)"
    ],
    [
     "Resolution",
@@ -1405,7 +1405,7 @@ const SEED = [
   "price": 26990,
   "mrp": 26990,
   "stock": 10,
-  "emi": false,
+  "emi": true,
   "img": "img/elista/Cloud-TV-Android14-HD-32in_1.webp",
   "desc": "Elista 80 cm (32 inch) HD Ready Android TV. Android 14, A+ grade panel, side-fire sound, 2 HDMI. Free delivery, cash on delivery, and the Elista warranty.",
   "specs": [
@@ -1625,18 +1625,18 @@ const SEED = [
   "id": 27,
   "brand": "Elista",
   "cat": "Televisions",
-  "name": "108 cm (43 inch) Google TV (Xplore series)",
+  "name": "109 cm (43 inch) Google TV (Xplore series)",
   "price": 31500,
   "mrp": 31500,
   "stock": 10,
-  "emi": false,
+  "emi": true,
   "img": "img/elista/Google-TV-Xplore-43in_1.webp",
   "os": "Google TV",
-  "desc": "Elista 108 cm (43 inch) Google TV, Xplore series. Google TV with Chromecast built-in and Hey Google, Dolby Audio with an in-built 48 W soundbar, 3 HDMI, dual-band Wi-Fi. Free delivery, cash on delivery, and the Elista warranty.",
+  "desc": "Elista 109 cm (43 inch) Google TV, Xplore series. Google TV with Chromecast built-in and Hey Google, Dolby Audio with an in-built 48 W soundbar, 3 HDMI, dual-band Wi-Fi. Free delivery, cash on delivery, and the Elista warranty.",
   "specs": [
    [
     "Screen size",
-    "108 cm (43 inch)"
+    "109 cm (43 inch)"
    ],
    [
     "Display type",
@@ -1712,7 +1712,7 @@ const SEED = [
   "price": 41000,
   "mrp": 41000,
   "stock": 10,
-  "emi": false,
+  "emi": true,
   "img": "img/elista/Google-TV-Xplore-50in_1.webp",
   "os": "Google TV",
   "desc": "Elista 126 cm (50 inch) Google TV, Xplore series. Google TV with Chromecast built-in and Hey Google, Dolby Audio with an in-built 48 W soundbar, 3 HDMI, dual-band Wi-Fi. Free delivery, cash on delivery, and the Elista warranty.",
@@ -1795,18 +1795,18 @@ const SEED = [
   "id": 29,
   "brand": "Elista",
   "cat": "Televisions",
-  "name": "139 cm (55 inch) 4K Ultra HD Google TV (Xplore series)",
+  "name": "140 cm (55 inch) 4K Ultra HD Google TV (Xplore series)",
   "price": 68990,
   "mrp": 68990,
   "stock": 10,
-  "emi": false,
+  "emi": true,
   "img": "img/elista/Google-TV-Xplore-55in_1.webp",
   "os": "Google TV",
-  "desc": "Elista 139 cm (55 inch) Google TV, Xplore series. Google TV with Chromecast built-in and Hey Google, Dolby Audio with an in-built 48 W soundbar, 3 HDMI, dual-band Wi-Fi. Free delivery, cash on delivery, and the Elista warranty.",
+  "desc": "Elista 140 cm (55 inch) Google TV, Xplore series. Google TV with Chromecast built-in and Hey Google, Dolby Audio with an in-built 48 W soundbar, 3 HDMI, dual-band Wi-Fi. Free delivery, cash on delivery, and the Elista warranty.",
   "specs": [
    [
     "Screen size",
-    "139 cm (55 inch)"
+    "140 cm (55 inch)"
    ],
    [
     "Resolution",
@@ -1882,18 +1882,18 @@ const SEED = [
   "id": 30,
   "brand": "Elista",
   "cat": "Televisions",
-  "name": "164 cm (65 inch) 4K Ultra HD Google TV (Xplore series)",
+  "name": "165 cm (65 inch) 4K Ultra HD Google TV (Xplore series)",
   "price": 73600,
   "mrp": 73600,
   "stock": 10,
-  "emi": false,
+  "emi": true,
   "img": "img/elista/Google-TV-Xplore-65in_1.webp",
   "os": "Google TV",
-  "desc": "Elista 164 cm (65 inch) Google TV, Xplore series. Google TV with Chromecast built-in and Hey Google, Dolby Audio with an in-built 48 W soundbar, 3 HDMI, dual-band Wi-Fi. Free delivery, cash on delivery, and the Elista warranty.",
+  "desc": "Elista 165 cm (65 inch) Google TV, Xplore series. Google TV with Chromecast built-in and Hey Google, Dolby Audio with an in-built 48 W soundbar, 3 HDMI, dual-band Wi-Fi. Free delivery, cash on delivery, and the Elista warranty.",
   "specs": [
    [
     "Screen size",
-    "164 cm (65 inch)"
+    "165 cm (65 inch)"
    ],
    [
     "Resolution",
@@ -1973,7 +1973,7 @@ const SEED = [
   "price": 90000,
   "mrp": 90000,
   "stock": 10,
-  "emi": false,
+  "emi": true,
   "img": "img/elista/Google-TV-Xplore-75in_1.webp",
   "os": "Google TV",
   "desc": "Elista 190 cm (75 inch) Google TV, Xplore series. Google TV with Chromecast built-in and Hey Google, Dolby Audio with an in-built 48 W soundbar, 3 HDMI, dual-band Wi-Fi. Free delivery, cash on delivery, and the Elista warranty.",
@@ -2060,7 +2060,7 @@ const SEED = [
   "price": 149999,
   "mrp": 149999,
   "stock": 10,
-  "emi": false,
+  "emi": true,
   "img": "img/elista/Google-TV-Xplore-85in_1.webp",
   "os": "Google TV",
   "desc": "Elista 215 cm (85 inch) Google TV, Xplore series. Google TV with Chromecast built-in and Hey Google, Dolby Audio with an in-built 48 W soundbar, 3 HDMI, dual-band Wi-Fi. Free delivery, cash on delivery, and the Elista warranty.",
@@ -2147,7 +2147,7 @@ const SEED = [
   "price": 26990,
   "mrp": 26990,
   "stock": 10,
-  "emi": false,
+  "emi": true,
   "img": "img/elista/Cloud-TV-QLED-32in_1.webp",
   "os": "Android TV",
   "desc": "Elista 80 cm (32 inch) Cloud TV QLED. Vivid QLED colour on an HD Smart TV running Android (Cloud TV), bezel-less design. Free delivery, cash on delivery, and the Elista warranty.",
@@ -2206,7 +2206,7 @@ const SEED = [
   "price": 34990,
   "mrp": 34990,
   "stock": 10,
-  "emi": false,
+  "emi": true,
   "img": "img/elista/Cloud-TV-QLED-43in_1.webp",
   "os": "Android TV",
   "desc": "Elista 109 cm (43 inch) Cloud TV QLED. Vivid QLED colour on an HD Smart TV running Android (Cloud TV), bezel-less design. Free delivery, cash on delivery, and the Elista warranty.",

@@ -2436,3 +2436,105 @@ main > section, main > .fest, main > .cols, .bigbrands.solo, .bankad.bleed, main
 
 /* phones: the hero panel spans the full width again (the laptop width rule above had narrowed it to half the screen) */
 @media (max-width:760px) { .slide.k-banner .hpanel { width:auto; inset:auto 0 0 0 } }
+
+/* ===== 27 Oct 2026: the owner's homepage design ("MyTekkStore Homepage Design – Homepage · desktop"), its palette and type across the site ===== */
+@font-face { font-family:"Inter Tight"; font-style:normal; font-weight:500 900; font-display:swap; src:url(/fonts/intertight.woff2) format("woff2") }
+:root { --accent:#08805F; --accent-dk:#06704F; --ink:#111111; --hi:#E8CF8C; --hi-fg:#111111; --d-green:#08805F; --d-gold:#B8923A; --d-goldtx:#8A6512; --d-goldlt:#E8CF8C; --d-ink:#111111; --d-muted:#5F6775; --d-line:#ECEEF1; --d-line2:#E6E8EC; --d-bg2:#F7F7F8; --d-dark:#0E0F12; --d-font:"Inter Tight",Inter,"Inter Fallback",system-ui,sans-serif }
+body { background:#FFFFFF; color:#111111 }
+h1, h2, h3, .slide h1, main h2, .atext h2, .fest h1, .ktext b, .brand b, .offer b, .explore, .num b, .bt h3, .cban h2, .topf h2, .gcopy h2, .d-h { font-family:var(--d-font); font-weight:800; letter-spacing:-0.02em }
+.btn, .btn.full, .btn.alt { border-radius:8px }
+a { color:#111111 } a:hover { color:#08805F }
+
+/* header, the design's way: a still announcement bar, the wordmark alone, the grey search pill, boxed icons, a 46 px bar with green and gold */
+.abar { background:#111111; color:#E8CF8C; text-align:center; padding:10px 20px; font-size:13px; font-weight:600; letter-spacing:.06em } .abar strong { color:#fff }
+#hdr .ticker { display:none }
+#hdr .logo svg { display:none } #hdr .logo span { font-family:var(--d-font); font-size:26px; font-weight:500; letter-spacing:-.02em; color:#111 } #hdr .logo b { font-weight:800; color:#08805F }
+#hdr .sbox input { background:#F3F4F6; border:0; border-radius:6px; padding:11px 16px; font-size:14px; color:#111 } #hdr .sbox input::placeholder { color:#6B7280 }
+#hdr .hlink { font-size:14px; font-weight:600; color:#111 } #hdr .hlink[aria-label="Wishlist"], #hdr .hlink[aria-label="Cart"] { width:44px; height:44px; border:1px solid #E6E8EC; border-radius:6px; justify-content:center; padding:0 }
+#hdr .gbar { font-size:14px; font-weight:600 } #hdr .l0link { color:#111 } #hdr .l0.cur .l0link, #hdr .l0link:hover { color:#08805F } #hdr .l0link[href="/offers"] { color:#8A6512 }
+#hdr .gnav { border-top:1px solid #F0F1F3 }
+
+/* the home page: full-bleed hero and strip, the design's 1320 px column for everything else */
+body[data-page="home"] main.wrap { padding:0; max-width:none }
+.hp { font-family:Inter,"Inter Fallback",system-ui,sans-serif; color:#111 }
+.d-wrap { max-width:1320px; margin:0 auto; padding:0 32px } .d-sec { padding:80px 0 0 }
+.d-h { margin:0; color:#111 } .d-sub { margin:0; font-size:15px; color:#5F6775; line-height:1.5 }
+.d-hd { display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:24px; gap:20px } .d-hd h2 { font-size:32px }
+.d-link { font-weight:600; font-size:14px; letter-spacing:.04em; text-transform:uppercase; text-decoration:none; border-bottom:1.5px solid #B8923A; padding-bottom:2px; white-space:nowrap; color:#111 }
+.d-btn { display:inline-flex; align-items:center; justify-content:center; gap:8px; height:52px; padding:0 26px; background:#08805F; color:#fff; font-weight:600; font-size:15px; letter-spacing:.01em; text-decoration:none; border:0; border-radius:8px; cursor:pointer; box-shadow:0 1px 2px rgba(0,0,0,.12), inset 0 1px 0 rgba(255,255,255,.12); transition:transform .12s ease, box-shadow .12s ease, background .12s ease; font-family:inherit }
+.d-btn:hover { background:#06704F; box-shadow:0 6px 16px rgba(8,128,95,.28); transform:translateY(-1px); color:#fff }
+.d-btn.gold { background:#B8923A; color:#111 } .d-btn.gold:hover { background:#A98330; box-shadow:0 6px 16px rgba(184,146,58,.3); color:#111 }
+.d-btn.black { background:#111; color:#fff } .d-btn.black:hover { background:#000; box-shadow:0 6px 16px rgba(0,0,0,.3) }
+.d-btn.ghost { background:transparent; color:#111; border:1.5px solid #111; box-shadow:none } .d-btn.ghost:hover { background:#111; color:#fff }
+.d-btn.ghost.white { color:#fff; border-color:#fff } .d-btn.ghost.white:hover { background:#fff; color:#111 }
+.d-card { background:#fff; border:1px solid #ECEEF1; border-radius:12px; box-shadow:0 1px 2px rgba(17,17,17,.04); padding:14px; display:flex; flex-direction:column; gap:7px; color:#111; text-decoration:none; position:relative }
+.d-badge { display:inline-block; background:#111; color:#E8CF8C; letter-spacing:.06em; text-transform:uppercase; font-size:11px; font-weight:700; padding:5px 8px; border-radius:4px; white-space:nowrap; line-height:1.2 }
+.d-badge.dark, .d-badge.green { background:#F3F4F6; color:#111 } .d-badge.gold { background:#B8923A; color:#111 }
+.d-mrp { color:#8A8F99; text-decoration:line-through; font-size:14px } .d-price { font-family:var(--d-font); font-size:22px; font-weight:800; color:#111 }
+.d-save { color:#8A6512; font-weight:700; font-size:14px } .d-emi { font-size:13px; color:#5F6775 } .d-emi.small { font-size:12px } .d-emi.green { color:#08805F; font-weight:600 } .d-emi.gold { color:#8A6512; font-weight:700 }
+.d-stars { color:#B8923A; font-size:13px; letter-spacing:.1em } .d-stars span { color:#5F6775; letter-spacing:0 } .d-stars.muted { color:#8A8F99; letter-spacing:0 } .d-stars.big { font-size:15px }
+.d-count { font-size:13px; color:#5F6775 } .d-count b { display:inline-flex; min-width:40px; height:38px; align-items:center; justify-content:center; background:#111; color:#fff; border-radius:4px; font-family:var(--d-font); font-size:18px; margin:0 4px 0 8px }
+.d-g4, .d-g3, .d-g6, .d-g7 { display:grid; gap:16px } .d-g4 { grid-template-columns:repeat(4,1fr) } .d-g4.wide { gap:18px } .d-g3 { grid-template-columns:repeat(3,1fr); gap:18px } .d-g6 { grid-template-columns:repeat(6,1fr); gap:14px } .d-g7 { grid-template-columns:repeat(7,1fr); gap:12px }
+.d-tbl { border:1px solid #ECEEF1; border-radius:12px; overflow:auto } .d-tbl table { border-collapse:collapse; width:100%; margin:0 } .d-tbl th, .d-tbl td { padding:14px 16px; border-bottom:1px solid #E6E8EC; text-align:left; font-size:14px; vertical-align:top } .d-tbl th { font-size:13px; color:#5F6775; font-weight:600; background:#F7F7F8 } .d-tbl th a { text-decoration:none; color:#5F6775 } .d-tbl tr:last-child td { border-bottom:0 } .d-tbl td.muted { color:#5F6775 }
+.d-kick { font-size:12px; letter-spacing:.22em; font-weight:700; color:#8A6512; text-transform:uppercase } .d-kick.gold { color:#E8CF8C }
+
+/* hero */
+.d-hero { position:relative; background:#0E0F12; line-height:0 } .d-slide { display:none } .d-slide.on { display:block } .d-slide img { width:100%; height:auto; display:block }
+.d-dots { position:absolute; left:50%; bottom:18px; transform:translateX(-50%); display:flex; gap:8px; line-height:1 } .d-dots button { width:8px; height:5px; border-radius:3px; border:0; padding:0; background:rgba(255,255,255,.4); cursor:pointer; transition:width .2s } .d-dots button.on { width:32px; background:#fff }
+.d-arrow { position:absolute; top:50%; transform:translateY(-50%); width:44px; height:44px; border-radius:50%; border:1px solid #ffffff55; background:#0E0F1299; color:#fff; font-size:26px; line-height:1; cursor:pointer; display:grid; place-items:center; opacity:0; transition:opacity .2s } .d-arrow.prev { left:18px } .d-arrow.next { right:18px } .d-hero:hover .d-arrow, .d-arrow:focus-visible { opacity:1 }
+
+/* bank offers, perks */
+.d-bank { padding:22px; gap:10px; border-top:3px solid #08805F } .d-bank.gold { border-top-color:#B8923A }
+.d-bankhead { display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px }
+.d-chip { height:30px; padding:0 10px; white-space:nowrap; border-radius:6px; background:#F3F4F6; display:inline-flex; align-items:center; font-size:12px; font-weight:700; color:#5F6775; text-transform:uppercase } .d-chip.dark { background:#111; color:#E8CF8C }
+.d-how { display:flex; flex-wrap:wrap; gap:24px; margin-top:16px; font-size:13px; color:#5F6775 } .d-how strong { color:#111 }
+.d-perk { padding:26px; gap:12px } .d-perk strong { font-size:16px }
+
+/* product cards */
+.d-badges { display:flex; justify-content:space-between; flex-wrap:wrap; gap:6px; padding-right:44px; min-height:24px }
+.d-wish { position:absolute; top:52px; right:24px; width:34px; height:34px; border-radius:50%; background:#fff; border:1px solid #E6E8EC; display:flex; align-items:center; justify-content:center; box-shadow:0 1px 3px rgba(0,0,0,.08); cursor:pointer; padding:0; z-index:1 }
+.d-ph { display:block; width:100%; aspect-ratio:16/10; border-radius:8px; background:#F7F7F8; overflow:hidden } .d-ph img { width:100%; height:100%; object-fit:cover; display:block; transform:scale(1.3); transform-origin:50% 46% }
+.d-title { font-size:14px; font-weight:700; line-height:1.35; color:#111; text-decoration:none } .d-title:hover { color:#08805F }
+.d-pts { margin:0; padding-left:16px; font-size:12px; color:#5F6775; line-height:1.45 }
+.d-pricerow { display:flex; align-items:baseline; gap:10px; flex-wrap:wrap }
+.d-btns { display:flex; gap:8px; margin-top:4px } .d-btns .d-btn { height:40px; flex:1 1 0; font-size:13px; padding:0 10px } .d-btns.start { gap:12px; margin-top:6px } .d-btns.start .d-btn { flex:0 0 auto; height:52px; font-size:15px; padding:0 26px }
+.d-cmp { display:flex; align-items:center; gap:8px; font-size:13px; color:#5F6775; cursor:pointer } .d-cmp input { width:16px; height:16px; accent-color:#08805F; margin:0 }
+.d-cmpbar { position:fixed; left:50%; bottom:max(24px, calc(var(--mnav,0px) + 16px)); transform:translateX(-50%); background:#111; color:#E8CF8C; padding:12px 22px; border-radius:999px; font-weight:700; text-decoration:none; box-shadow:0 8px 24px rgba(0,0,0,.25); z-index:50 }
+
+/* promos, sizes, feature, types, festive, strip, brands, reviews, faq, guides, pay */
+.d-promo { position:relative; overflow:hidden; border-radius:12px; min-height:380px; display:flex; align-items:flex-end; color:#fff; text-decoration:none } .d-promo img { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; object-position:50% 40% } .d-ov { position:absolute; inset:0; background:linear-gradient(180deg, rgba(0,0,0,0) 35%, rgba(0,0,0,.78) 100%) } .d-t { position:relative; padding:28px; display:flex; flex-direction:column; gap:8px } .d-t .d-badge { align-self:flex-start } .d-t h3 { font-size:30px; color:#fff } .d-t > span:last-child { color:#D9DCE3 }
+.d-size { align-items:center; text-align:center; padding:14px 12px 20px; gap:8px } .d-size img { width:100%; height:auto; border-radius:8px; display:block } .d-size strong { font-size:22px } .d-size.top { border:2px solid #111 }
+.d-feature { display:grid; grid-template-columns:1.25fr 1fr; border:1px solid #ECEEF1; border-radius:14px; overflow:hidden } .d-fimg { position:relative; min-height:460px; background:#0E0F12 } .d-fimg img { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; object-position:50% 46% } .d-ftext { padding:48px; display:flex; flex-direction:column; gap:16px; justify-content:center; background:#fff } .d-stats { display:grid; grid-template-columns:1fr 1fr; gap:12px 24px; margin-top:6px } .d-stats .d-h { font-size:26px }
+.d-tv { width:100%; aspect-ratio:16/9; border:3px solid #0E0F12; border-radius:3px; background:#0E0F12; overflow:hidden } .d-tv img { width:100%; height:100%; object-fit:cover; display:block } .d-type strong { font-size:15px }
+.d-fest { display:grid; grid-template-columns:1fr 1.1fr; background:#0E0F12; color:#fff; border-radius:14px; overflow:hidden; min-height:400px; text-decoration:none } .d-festtext { padding:48px; display:flex; flex-direction:column; gap:14px; justify-content:center } .d-festtext h2 { font-size:clamp(32px,3.4vw,48px); line-height:1.02; color:#fff } .d-festtext p { margin:0; color:#C9CDD6; font-size:17px; line-height:1.5; max-width:520px } .d-festimg { position:relative; min-height:300px } .d-festimg img { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; object-position:50% 46% } .d-festmark { position:absolute; top:18px; right:24px; font-family:var(--d-font); font-weight:700; font-size:20px; color:#fff; letter-spacing:-.02em }
+.d-strip { margin-top:64px; background:#0b0f1f; line-height:0 } .d-strip img { width:100%; height:auto; display:block; max-width:1920px; margin:0 auto }
+.d-brands { display:grid; grid-template-columns:repeat(auto-fill, minmax(200px, 1fr)); gap:12px } .d-brand { height:84px; display:flex; align-items:center; justify-content:center; border:1px solid #E6E8EC; border-radius:8px; font-family:var(--d-font); font-size:24px; font-weight:800; letter-spacing:.1em; text-decoration:none; color:#111 }
+.d-review { padding:24px } .d-review p { margin:0; font-size:15px; line-height:1.55 }
+.d-faq { display:grid; grid-template-columns:1fr 1fr; gap:16px 40px } .d-faq > div { border-bottom:1px solid #ECEEF1; padding:16px 0 } .d-faq strong { display:block; margin-bottom:6px }
+.d-guide { padding:0; overflow:hidden } .d-guide img { width:100%; height:180px; object-fit:cover; object-position:50% 40%; display:block } .d-guide div { padding:18px; display:flex; flex-direction:column; gap:6px }
+.d-why { border:1px solid #ECEEF1; border-radius:14px; padding:40px; display:flex; flex-direction:column; gap:14px } .d-why .d-tbl { border:0; border-radius:0 }
+.d-pay { margin-top:72px; background:#F7F7F8; border-top:1px solid #ECEEF1; border-bottom:1px solid #ECEEF1; padding:36px 0 } .d-pay .d-wrap { display:flex; flex-direction:column; gap:20px } .d-payhead { display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px } .d-secure { display:inline-flex; align-items:center; gap:8px; font-size:14px; font-weight:600 } .d-paybox { background:#fff; border:1px solid #ECEEF1; border-radius:10px; padding:18px 16px; display:flex; flex-direction:column; gap:6px } .d-paybox strong { font-size:15px } .d-paybox strong.gold { color:#8A6512 }
+
+/* footer, the design's way */
+#ftr { background:#0E0F12; color:#BFC5D2; position:relative; overflow:hidden; margin-top:0; padding:0 } #ftr .wrap { max-width:1320px; margin:0 auto; padding:0 32px }
+.f-top { display:block; background:#1A1C22; color:#fff; text-align:center; padding:14px; font-size:14px; font-weight:600; text-decoration:none; letter-spacing:.04em } .f-line { height:3px; background:linear-gradient(90deg,#08805F 0%,#B8923A 100%) }
+.f-cols { display:grid; grid-template-columns:1.6fr 1fr 1fr 1fr 1fr; gap:40px; padding:56px 0 40px } .f-cols > div { display:flex; flex-direction:column; gap:10px } .f-cols a { text-decoration:none; color:#BFC5D2; font-size:14px } .f-cols a:hover { color:#fff }
+.f-cols strong.f-head { color:#E8CF8C; font-size:13px; letter-spacing:.14em; text-transform:uppercase; margin-bottom:4px } .f-brand { font-family:var(--d-font); font-size:28px; font-weight:500; color:#fff } .f-brand b { font-weight:800; color:#08805F } .f-about { margin:0; font-size:14px; line-height:1.6; max-width:340px } .f-contact { display:flex; flex-direction:column; gap:6px; font-size:14px } .f-contact strong { color:#fff }
+.f-trust { display:grid; grid-template-columns:repeat(3,1fr); gap:16px; padding-bottom:24px } .f-trust > div { border:1px solid #2A2D35; border-radius:10px; padding:16px; display:flex; gap:12px; align-items:center } .f-trust strong { color:#fff; display:block; font-size:14px } .f-trust span { font-size:13px } .f-trust svg { flex:0 0 auto }
+.f-accept { border-top:1px solid #2A2D35; padding:18px 0 0; display:flex; flex-wrap:wrap; gap:8px; align-items:center; font-size:12px; color:#8A8F99 } .f-accept i { font-style:normal; padding:5px 10px; border:1px solid #2A2D35; border-radius:4px; color:#fff } .f-accept i.gold { color:#E8CF8C }
+.f-copy { padding:16px 0 22px; display:flex; justify-content:space-between; flex-wrap:wrap; gap:12px; font-size:12px; color:#8A8F99 }
+
+@media (max-width:900px) { .d-g4, .d-g3, .d-g6, .d-g7 { grid-template-columns:repeat(2,1fr) } .d-feature, .d-fest, .d-faq { grid-template-columns:1fr } .d-fimg, .d-festimg { min-height:260px } .d-ftext, .d-festtext { padding:28px } .f-cols { grid-template-columns:1fr 1fr; gap:28px } .f-trust { grid-template-columns:1fr } .d-why { padding:24px } }
+@media (max-width:760px) { .d-wrap { padding:0 16px } .d-sec { padding-top:48px } .d-hd { flex-direction:column; align-items:flex-start; gap:10px } .d-hd h2 { font-size:26px } .d-g4, .d-g3, .d-g6, .d-g7 { gap:10px } .d-card { padding:10px } .d-wish { top:44px; right:18px } .d-btns .d-btn { font-size:12px; padding:0 6px } .d-bank, .d-perk { padding:16px } .d-promo { min-height:220px } .d-t h3 { font-size:22px } .d-slide img { aspect-ratio:1 } .d-arrow { display:none } .d-stats .d-h { font-size:22px } .d-festtext h2 { font-size:30px } .f-cols { grid-template-columns:1fr; padding:36px 0 24px } .d-pay { margin-top:48px } .d-strip { margin-top:40px } .abar { font-size:12px; padding:8px 12px } #hdr .logo span { font-size:22px } }
+
+/* design pass 2: no gap under the header (a generic section margin reached the hero), the flat white ground of the design (the old glows are gone), the promos and size tiles cropped to the television */
+.hp > section { margin-top:0 } .hp > .d-strip { margin-top:64px } .hp > .d-pay { margin-top:72px }
+body::before, body::after { display:none }
+.d-promo img { transform:scale(1.45); transform-origin:50% 48% }
+.d-size img { aspect-ratio:16/10; object-fit:cover; object-position:50% 58% }
+@media (max-width:760px) { .hp > .d-strip { margin-top:40px } .hp > .d-pay { margin-top:48px } }
+.hp section[id], .hp [id] { scroll-margin-top:calc(var(--hh,150px) + 12px) } /* anchors land under the sticky header */
+/* the living-room cards in the promos and the feature block zoomed past their lettering; the size tiles cropped under their printed size */
+.d-promo img { transform:scale(1.6); transform-origin:50% 50% }
+.d-fimg img { transform:scale(1.3); transform-origin:50% 50% }
+.d-size img { object-position:50% 68% }

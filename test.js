@@ -203,7 +203,7 @@ server.listen(0, "127.0.0.1", async () => {
     // web standards: SEO tags and structured data on pages, sitemap and robots, gzip, 304 caching, security headers, styled 404
     const raw = (p, headers) => new Promise(ok => http.get(base + p, { headers }, r => { r.resume(); r.on("end", () => ok(r)); }));
     let html = await (await fetch(base + "/product.html?id=26")).text();
-    assert.ok(html.includes("<title>Elista 139 cm (55 inch) 4K Ultra HD Smart TV | Mytekkstore</title>") && html.includes('"@type":"Product"') && html.includes('property="og:image"'), "product page carries its SEO tags");
+    assert.ok(html.includes("<title>Elista 140 cm (55 inch) 4K Ultra HD Smart TV | Mytekkstore</title>") && html.includes('"@type":"Product"') && html.includes('property="og:image"'), "product page carries its SEO tags");
     assert.ok((await (await fetch(base + "/category.html?cat=Televisions")).text()).includes("<title>Televisions | Mytekkstore</title>"));
     html = await (await fetch(base + "/")).text();
     assert.ok(html.includes('name="description"') && html.includes('"@type":"WebSite"') && html.includes('"SearchAction"'), "home page carries the site and search structured data");
@@ -213,11 +213,11 @@ server.listen(0, "127.0.0.1", async () => {
     assert.ok(!map.includes("washing-machines") && !map.includes("/stores"), "hidden categories and the store locator are not in the sitemap");
     assert.equal((await fetch(base + "/washing-machines")).status, 404, "a hidden category has no page"); assert.equal((await fetch(base + "/stores")).status, 404, "the store locator is hidden");
     // clean addresses: the server serves the page, its own tags, and tells the app what to draw
-    html = await (await fetch(base + "/televisions/elista-139-cm-55-inch-4k-ultra-hd-smart-tv")).text();
-    assert.ok(html.includes("<title>Elista 139 cm (55 inch) 4K Ultra HD Smart TV | Mytekkstore</title>") && html.includes('data-id="26"') && html.includes('"@type":"Product"') && html.includes('rel="canonical" href="' + base + '/televisions/elista-139-cm-55-inch-4k-ultra-hd-smart-tv"'), "a clean product address");
+    html = await (await fetch(base + "/televisions/elista-140-cm-55-inch-4k-ultra-hd-smart-tv")).text();
+    assert.ok(html.includes("<title>Elista 140 cm (55 inch) 4K Ultra HD Smart TV | Mytekkstore</title>") && html.includes('data-id="26"') && html.includes('"@type":"Product"') && html.includes('rel="canonical" href="' + base + '/televisions/elista-140-cm-55-inch-4k-ultra-hd-smart-tv"'), "a clean product address");
     assert.ok((await (await fetch(base + "/televisions")).text()).includes('data-cat="Televisions"'), "a clean category address");
     assert.ok((await (await fetch(base + "/shipping")).text()).includes("<title>Shipping and delivery | Mytekkstore</title>"), "a clean info address with its own title");
-    assert.ok((await (await fetch(base + "/product.html?id=26")).text()).includes('rel="canonical" href="' + base + '/televisions/elista-139-cm-55-inch-4k-ultra-hd-smart-tv"'), "the old address points at the clean one");
+    assert.ok((await (await fetch(base + "/product.html?id=26")).text()).includes('rel="canonical" href="' + base + '/televisions/elista-140-cm-55-inch-4k-ultra-hd-smart-tv"'), "the old address points at the clean one");
     assert.ok((await (await fetch(base + "/account")).text()).includes('name="robots" content="noindex'), "private pages are not indexed");
     assert.ok((await (await fetch(base + "/robots.txt")).text()).includes("Allow: /api/products"), "search engines may fetch the product data");
     assert.ok((await (await fetch(base + "/category.html")).text()).includes("<title>All products | Mytekkstore</title>"), "the full list has its own title");

@@ -1,218 +1,277 @@
-// Home page (client decisions of 2026-10-12): four banners (factory prices, one per brand, one promotion), the numbers that matter
-// (discount, EMI, bank offers, genuine), Find your TV (by size and by operating system), Deals of the Day, the two brands with giant
-// imagery and their reasons, the operating systems side by side, customer reviews, bank offers, why us, and Good to know with
-// warranty and returns. Every figure and reason is read from the catalogue, so nothing here claims what the products do not carry.
+// Home page (27 Oct 2026): the owner's own design file, "MyTekkStore Homepage Design – Homepage · desktop", section by section, with the
+// pictures from the owner's banner pack (public/img/home) and every figure from the catalogue. The design's bracketed placeholders
+// ([PRICE], [XX]% OFF, [n], [City], [X] days) are filled from the catalogue or left out when the store has nothing honest to show.
 import { useEffect, useRef, useState } from "react";
-import { m, useReducedMotion } from "motion/react";
 import { useStore } from "./store.jsx";
-import { Card, Row, BankOffers, Ico, Icon, Qa, OsChart, BankStrip, BankBoxes } from "./components.jsx";
-import { DRAW_ICONS, HOME_BANNERS, FESTIVE, FAQ, catSizes, brandUrl, listUrl, off, starRow, productUrl, pic, picSet, osList, osUrl, brandPoints, cutout, life, emiPlans } from "./data.js";
-import { lines, TONES } from "./banner.jsx";
-import { resOf } from "./category.jsx"; // resolution of a TV from its specifications, for the screen-type cards
-import { qs, load, save } from "./api.js";
+import { BANK_OFFERS, off, emiPlans, etaText, productUrl, listUrl, catSizes, pic, picSet, avg } from "./data.js";
 
-// hero parts rise in one after another on a spring, and the headline staggers word by word (Motion variants)
-const RISE = { hide: { y: "115%", opacity: 0 }, show: { y: 0, opacity: 1, transition: { type: "spring", stiffness: 280, damping: 28 } } };
-const WORDS = { hide: {}, show: { transition: { staggerChildren: .06, delayChildren: .1 } } };
-const GROUP = { hide: {}, show: { transition: { staggerChildren: .12 } } };
+const HOME = "img/home/";
+const src = (name, w) => "/" + HOME + name + (w ? "-" + w : "") + ".webp";
+// the five hero banners the owner made (1920 x 600, with a 1080 x 1080 version for phones); the exchange banner waits for an exchange programme
+export const HERO_SLIDES = [
+  { file: "Hero1_Diwali_Big_Screen_Fest", alt: "Light up Diwali on a bigger screen: Elista and more top brands, factory-direct prices on every size, 24 to 85 inch. Smart TVs from ₹17,000. Shop festive deals.", href: "/offers" },
+  { file: "Hero2_Go_Big_65_to_85", alt: "Go big, 65 to 85 inch: cinema-size screens for your living room, from 165 to 215 cm. Big screens from ₹73,600. Shop 65 inch and above.", href: "/televisions?size=65" },
+  { file: "Hero3_Mini_LED_PRO", alt: "New, Mini-LED PRO: brighter, deeper, smoother. Mini-LED with QLED, over 500 nits, Dolby Vision and Dolby Atmos. Mini-LED PRO from ₹99,999. Explore Mini-LED.", href: "/televisions?type=Mini-LED+PRO" },
+  { file: "Hero4_QLED_Colour", alt: "QLED Smart TVs: colour that pops, prices that don't. QLED picture quality from 32 inch upwards, with all your apps built in. QLED from ₹26,990. Shop QLED TVs.", href: "/televisions?type=QLED" },
+];
+const HeroPicture = ({ s, eager }) => <picture>
+  <source media="(max-width:760px)" srcSet={`${src(s.file + "_mobile", 640)} 640w, ${src(s.file + "_mobile")} 1080w`} sizes="100vw" />
+  <img src={src(s.file, 1280)} srcSet={`${src(s.file, 768)} 768w, ${src(s.file, 1280)} 1280w, ${src(s.file)} 1920w`} sizes="100vw" alt={s.alt} width="1920" height="600" fetchPriority={eager ? "high" : undefined} loading={eager ? "eager" : "lazy"} decoding="async" />
+</picture>;
+
+// the design's icons, drawn once
+const I = {
+  cart: <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 4h2l2.4 12h11L21 7H6" /><circle cx="9" cy="20" r="1.5" /><circle cx="17" cy="20" r="1.5" /></svg>,
+  bolt: <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M13 2L4 14h7l-1 8 9-12h-7z" /></svg>,
+  heart: <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#111111" strokeWidth="2"><path d="M12 21s-7-4.5-9-9a5 5 0 0 1 9-3 5 5 0 0 1 9 3c-2 4.5-9 9-9 9z" /></svg>,
+  arrow: <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14M13 6l6 6-6 6" /></svg>,
+  truck: <svg aria-hidden="true" width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#111111" strokeWidth="1.6"><path d="M3 7h11v9H3zM14 10h4l3 3v3h-7z" /><circle cx="7" cy="18" r="1.5" /><circle cx="17" cy="18" r="1.5" /></svg>,
+  cod: <svg aria-hidden="true" width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#111111" strokeWidth="1.6"><path d="M12 3v18M5 8l7-5 7 5M4 21h16" /></svg>,
+  emi: <svg aria-hidden="true" width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#111111" strokeWidth="1.6"><path d="M4 4h16v12H4zM9 20h6" /><path d="M8 10l2 2 4-4" /></svg>,
+  shield: <svg aria-hidden="true" width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#111111" strokeWidth="1.6"><path d="M12 2l8 4v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6z" /><path d="M9 12l2 2 4-4" /></svg>,
+  lock: <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#111111" strokeWidth="2"><rect x="4" y="10" width="16" height="11" rx="2" /><path d="M8 10V7a4 4 0 0 1 8 0v3" /></svg>,
+};
+
+// catalogue readers: the inch and cm from the name, the resolution and panel type, the short title the design uses on its cards
+const inchOf = p => +((/\((\d+) inch\)/.exec(p.name || "") || [])[1] || 0);
+const cmOf = p => +((/(\d+) cm/.exec(p.name || "") || [])[1] || 0);
+const resOf = p => /4K/i.test(p.name) ? "4K Ultra HD" : /Full HD/i.test(p.name) ? "Full HD" : "HD Ready";
+const typeOf = p => /Mini-LED/i.test(p.name) ? "Mini-LED PRO" : /QLED/i.test(p.name) ? "QLED" : "LED";
+const title = p => `${p.brand} ${inchOf(p)}" (${cmOf(p)} cm) ${p.name.replace(/^\d+ cm \(\d+ inch\) /, "")}${p.os ? " · " + p.os : ""}`;
+const warranty = p => { const w = ((p.specs || []).find(([k]) => /warranty/i.test(k)) || [])[1] || ""; return /1 \+ 1|1\+1/.test(w) ? "1+1 yr warranty*" : w ? "1 yr warranty*" : "Brand warranty*"; };
+const emi9 = p => emiPlans(p.price)[2][1];
+
+// one product card, the design's layout: badges, wishlist, the owner's front card cropped to the set, stars, title, three points, price, EMI line, two buttons, compare
+function DCard({ p, tag, tagTone, money, compare }) {
+  const d = off(p), n = (p.reviews || []).length;
+  return <div className="d-card d-prod">
+    <div className="d-badges">{d > 0 && <span className="d-badge">{d}% off</span>}{tag && <span className={"d-badge " + (tagTone || "dark")}>{tag}</span>}</div>
+    <button type="button" className="d-wish" data-wish={p.id} aria-label="Add to wishlist">{I.heart}</button>
+    <a className="d-ph" href={productUrl(p)} aria-label={title(p)}><img src={pic(p.img, 480)} srcSet={picSet(p.img)} sizes="(max-width:760px) 46vw, 300px" alt="" loading="lazy" width="1500" height="1500" /></a>
+    {n > 0 ? <span className="d-stars">★★★★★ <span>{avg(p).toFixed(1)} ({n})</span></span> : <span className="d-stars muted">New in store</span>}
+    <a className="d-title" href={productUrl(p)}>{title(p)}</a>
+    <ul className="d-pts">{(p.features || []).slice(0, 3).map(f => <li key={f}>{f}</li>)}</ul>
+    <div className="d-pricerow"><span className="d-price">{money(p.price)}</span>{p.mrp > p.price && <span className="d-mrp">{money(p.mrp)}</span>}</div>
+    {p.price >= 15000 && <span className="d-save">{p.mrp > p.price ? "Save " + money(p.mrp - p.price) + " · " : ""}10% off with HDFC Bank</span>}
+    <span className="d-emi">No Cost EMI {money(emi9(p))}/mo · Delivery {etaText()}</span>
+    <span className="d-emi small">Free delivery · Cash on delivery · {warranty(p)}</span>
+    <div className="d-btns"><button type="button" className="d-btn" data-add={p.id}>{I.cart}Add to cart</button><button type="button" className="d-btn black" data-buy={p.id}>{I.bolt}Buy now</button></div>
+    {compare && <label className="d-cmp"><input type="checkbox" checked={compare[0].includes(p.id)} onChange={() => compare[1](p.id)} /> Add to compare</label>}
+  </div>;
+}
+
+const Head = ({ h, sub, link, href, children }) => <div className="d-hd"><div style={{ display: "flex", alignItems: "center", gap: 18, flexWrap: "wrap" }}><div><h2 className="d-h">{h}</h2>{sub && <p className="d-sub">{sub}</p>}</div>{children}</div>{link && <a className="d-link" href={href}>{link}</a>}</div>;
 
 export function Home() {
-  const { P, CATS, BRANDS, recent, byId, money, banners, me } = useStore();
-  const [cur, setCur] = useState(0);
-  const [seen, setSeen] = useState(() => new Set([0])); // a slide's photos mount the first time it shows, so the first paint carries only the first slide
-  useEffect(() => { setSeen(s => s.has(cur) ? s : new Set(s).add(cur)); }, [cur]);
-  const heroRef = useRef();
-  const maxOff = Math.max(0, ...P.map(off));
-  const biggest = b => [...P].filter(p => p.brand === b).sort((a, c) => c.price - a.price)[0]; // the brand's flagship: its most expensive model
-  // the banners: a brand banner shows the brand's flagship and its reasons; the promotion shows the biggest discount
-  // the banners the admin keeps in the slot "home", in order; the built-in four are the fallback until any are saved
+  const { P, money } = useStore();
   const tvs = P.filter(p => p.cat === "Televisions");
-  const minTv = tvs.length ? Math.min(...tvs.map(p => p.price)) : 0, minEmi = tvs.some(p => p.emi) ? Math.min(...tvs.filter(p => p.emi).map(p => emiPlans(p.price)[2][1])) : 0; // the deal box: every figure from the catalogue
-  const home = banners.filter(b => b.slot === "home");
-  const raw = home.length ? home.map(b => ({ kind: b.brand ? "brand" : b.preset === "promo" ? "promo" : "photo", preset: b.preset, eyebrow: b.kicker, h: lines(b.title), s: b.text, href: b.href, cta: b.cta, cta2: b.cta2, href2: b.href2, im: b.img, imMobile: b.imgMobile, brand: b.brand, tone: TONES[b.tone] || undefined, prod: b.productId ? byId(b.productId) : null })) : HOME_BANNERS;
-  const slides = [{ kind: "banner", h: ["Bring the big-screen experience home."], s: "Premium Elista TVs at factory-direct prices. Free delivery, cash on delivery, No Cost EMI.", href: "/televisions", cta: "Shop TVs", hi: ["big-screen"], href2: "/offers", cta2: "Festive offers", eyebrow: "MyTekkStore · Elista" }];
-  const inches = tvs.map(p => +((/\((\d+) inch\)/.exec(p.name || "") || [])[1] || 0)).filter(Boolean), facts = [minTv > 0 && "From " + money(minTv), inches.length > 0 && Math.min(...inches) + " to " + Math.max(...inches) + " inch", minEmi > 0 && "No Cost EMI from " + money(minEmi) + "/month"].filter(Boolean); // the hero's facts, from the catalogue // the owner's banner alone (26 Oct); the banners below stay in the admin for the day they return
-  const unusedSlides = raw.filter(s => s.kind !== "promo" && (s.kind !== "brand" || biggest(s.brand))).map(s => s.kind === "brand" ? { ...s, pts: brandPoints(P, s.brand), prod: s.prod || biggest(s.brand), href: s.href || brandUrl(s.brand), cta: s.cta || "Shop " + s.brand, eyebrow: s.eyebrow || s.brand }
-    : s.kind === "promo" ? { ...s, s: s.s || "Up to " + maxOff + "% off, bank offers, and No Cost EMI on the models that carry it." }
-    : s.kind === "photo" ? { ...s, kind: "deal", im: "", imMobile: "", vid: "", eyebrow: "Straight from the factory · Live now", h: ["Up to " + maxOff + "% off on Smart TVs."], hi: [maxOff + "%", "off"],
-      s: "Starting at " + money(minTv) + "." + (minEmi ? " No Cost EMI from " + money(minEmi) + "/month," : "") + " extra bank discounts and cash on delivery.", cta: "Shop all deals", href: listUrl({ cat: "Televisions", sort: "off" }), cta2: "Compare TVs", href2: "/compare", art: "/img/tv-ocean.webp", tone: "" } : s); // the lead slide is the design file's deal hero (owner note, 25 October): the biggest real discount, the lowest price and EMI, one television on a glow; no photograph, no clip
-  const show = n => setCur((n + slides.length) % slides.length);
-  const [auto, setAuto] = useState(true); // autoplay stops for good once the visitor takes control (arrow/dot)
-  useEffect(() => { if (!auto) return; const t = setInterval(() => { if (!heroRef.current || !heroRef.current.matches(":hover")) setCur(c => (c + 1) % slides.length); }, 6000); return () => clearInterval(t); }, [slides.length, auto]);
-  useEffect(() => { const t = setTimeout(() => setSeen(new Set(slides.map((_, i) => i))), 2500); return () => clearTimeout(t); }, [slides.length]); // the rest mount 2.5 s after load, before the first rotation, so no slide ever shows before its photo is there
-  const dealsAll = [...P].sort((a, b) => off(b) - off(a) || a.price - b.price); // the biggest discounts first, then the rest by price
-  // the deals row fills exactly one row of the grid (two on a phone): the column count is measured, so no half-empty second row
-  const dealsRef = useRef(), [dealCols, setDealCols] = useState(5);
-  useEffect(() => { const el = dealsRef.current; if (!el || typeof ResizeObserver === "undefined") return; const ro = new ResizeObserver(() => setDealCols(getComputedStyle(el).gridTemplateColumns.split(" ").length)); ro.observe(el); return () => ro.disconnect(); }, []);
-  const deals = dealsAll.slice(0, dealCols <= 2 ? dealCols * 2 : dealCols); // enough to fill a row on a wide screen (the grid takes as many columns as fit)
-  const quotes = P.flatMap(p => (p.reviews || []).map(r => ({ ...r, p }))).sort((a, b) => new Date(b.at) - new Date(a.at)).slice(0, 6); // newest reviews across the catalogue
-  const oss = osList(P);
-  const onHero = e => {
-    const nav = e.target.dataset.i || e.target.classList.contains("prev") || e.target.classList.contains("next");
-    if (nav) setAuto(false); // the visitor is driving now; stop the autoplay
-    if (e.target.dataset.i) show(+e.target.dataset.i);
-    else if (e.target.classList.contains("prev")) show(cur - 1);
-    else if (e.target.classList.contains("next")) show(cur + 1);
-  };
-  // the banner photo drifts a little toward the pointer
-  const onMove = e => { const h = heroRef.current, r = h.getBoundingClientRect(); h.style.setProperty("--px", ((e.clientX - r.left) / r.width - .5).toFixed(3)); h.style.setProperty("--py", ((e.clientY - r.top) / r.height - .5).toFixed(3)); };
-  const picOf = src => ({ src: pic(src, 960), srcSet: picSet(src) });
-  // premium discovery sections (MASTER PROMPT redesign): image-led cards for size, operating system and resolution, an editorial
-  // Latest Launches grid, and a product-care banner. Prototype imagery reuses the store's renders and lifestyle shots; copy is
-  // aspirational marketing only, no invented specs, prices or model names.
-  const spec = (p, k) => ((p.specs || []).find(([n]) => n.toLowerCase().includes(k)) || [])[1] || "";
-  const inchOf = p => +((/\((\d+)\s*inch\)/.exec(p.name) || [])[1] || 0);
-  const minP = ps => ps.length ? Math.min(...ps.map(p => p.price)) : 0;
-  const SHOTS = ["img/p1.jpg", "img/p3.jpg", "img/p0.jpg", "img/p2.jpg"], LIFE = [life("os1", "img/life-room.jpg"), life("os2", "img/hero0.jpg"), life("os3", "img/life-12.jpg"), life("os4", "img/life-13.jpg")]; // one photograph per operating system, none repeated
-  const sizeCards = [[32, "Compact spaces"], [43, "Everyday viewing"], [55, "Living-room favourite"], [65, "Cinematic experience"], [75, "Go bigger"]].map(([inch, desc], i) => ({ inch, desc, img: life("size" + inch, SHOTS[i % SHOTS.length]), from: minP(tvs.filter(p => inchOf(p) === inch)) }));
-  const osBenefit = { "Google TV": "Every app on one home screen, with Google Assistant and Chromecast.", "WebOS": "A quick card-style home screen with apps built in — no set-top box.", "Android TV": "Google Play apps and Chromecast, built in." };
-  const osCards = oss.map((o, i) => ({ os: o, text: osBenefit[o] || "Smart apps built in.", img: LIFE[i % LIFE.length], from: minP(tvs.filter(p => p.os === o)) }));
-  const resCards = [["4K Ultra HD", "Four times the detail of Full HD."], ["Full HD", "Crisp, clear everyday viewing."], ["HD Ready", "Great value for smaller rooms."]].map(([res, text], i) => { const ps = tvs.filter(p => resOf(p) === res).sort((a, b) => a.price - b.price); return { res, text, img: life(["res4k", "resfhd", "reshd"][i], ps[0] && (cutout(ps[0].img) || ps[0].img)), from: minP(ps) }; }).filter(c => c.from);
-  // display technology from the specifications (LED today; QLED/OLED appear when the catalogue has them), kept apart from resolution
-  const typeOf = p => spec(p, "display type").split(",")[0].trim();
-  const TECH_NOTE = { LED: "LED backlight on every model we stock", "Mini-LED PRO": "Brighter. Deeper. Smoother. More immersive.", QLED: "Quantum-dot colour", OLED: "Self-lit pixels, perfect blacks" }; // the Mini-LED line is the brochure's own
-  const techCards = [...new Set(tvs.map(typeOf).filter(Boolean))].sort().map(t => { const ps = tvs.filter(p => typeOf(p) === t).sort((a, b) => a.price - b.price); return { res: t, text: TECH_NOTE[t] || "Screen technology", img: life("tech" + t, ps[0] && (cutout(ps[0].img) || ps[0].img)), from: minP(ps), href: listUrl({ cat: "Televisions", type: t }) }; });
-  const detailCards = [...techCards, ...resCards.map(c => ({ ...c, href: listUrl({ cat: "Televisions", res: c.res }) }))];
-  // the two brand showcases (client brief, section 12): the brief's headlines, a bright room for Elista, a cinematic room for Telefunken
-  const BRAND_SHOW = { Elista: { title: "Brilliant Entertainment. Beautifully Yours.", text: "Discover the Elista television collection.", cta: "Explore Elista TVs", img: life("brandElista", "img/brand-elista.webp") }, Telefunken: { title: "Bring Every Moment to Life.", text: "Explore immersive entertainment with Telefunken.", cta: "Explore Telefunken TVs", img: life("brandTelefunken", "img/brand-telefunken.webp") } }; // brand rooms from the client's tv-store-design export, converted to WebP
-  const LAUNCHES = [
-    { kicker: "Elista", title: "Elista 4K Smart TV Collection", text: "Brilliant 4K entertainment, beautifully yours.", href: brandUrl("Elista"), img: life("launch1", "img/hero0.jpg"), dark: true },
-    { kicker: "Mini-LED PRO", title: "Brighter. Deeper. Smoother.", text: "Mini-LED PRO QLED with Dolby Vision and Atmos, on Google TV.", href: listUrl({ cat: "Televisions", type: "Mini-LED PRO" }), img: life("launch2", "img/life-cinema.jpg"), dark: true },
-    { kicker: "Apps built in", title: "Smart Entertainment", text: "Every app built in, no set-top box.", href: "/televisions#os", img: life("launch3", "img/p2.jpg") },
-    { kicker: "Big screen", title: "The Big-Screen Experience", text: "Made for movie nights.", href: listUrl({ cat: "Televisions", size: "65 inch TVs" }), img: life("launch4", "img/p3.jpg") },
-    { kicker: "New", title: "Next-Generation Smart TVs", text: "Discover the latest from Elista.", href: "/televisions", img: life("launch5", "img/p0.jpg") },
-    { kicker: "Xplore series", title: "Google TV, 32 to 85 inch", text: "Chromecast built in, Hey Google, Dolby Audio.", href: osUrl("Google TV"), img: life("launch6", "img/life-15.jpg"), dark: true },
-  ].map(l => ({ ...l, dark: l.dark || !cutout(l.img) })); // a room photo gets the darker shade; a render sits on its own dark stage
-  const brandBig = (b, i) => { const prod = biggest(b), pts = brandPoints(P, b), n = P.filter(p => p.brand === b).length, tone = (HOME_BANNERS.find(s => s.brand === b) || {}).tone, show = BRAND_SHOW[b] || { title: b + ".", text: "Discover the " + b + " television collection.", cta: "Explore " + b + " TVs", img: "" };
-        return prod ? <a className={"bbrand" + (i % 2 ? " flip" : "") + (show.img ? " photo" : "")} href={brandUrl(b)} key={b} style={tone && !show.img ? { background: tone } : undefined}>
-          {show.img && <img className="bphoto" src={pic(show.img, 960)} srcSet={picSet(show.img)} sizes="(max-width:1240px) 100vw, 1240px" alt="" loading="lazy" />}
-          {show.img && /show-(elista|telefunken)/.test(show.img) && <video className="bvid" muted loop playsInline preload="none" data-src={"/" + show.img.replace(".jpg", ".mp4")} aria-hidden="true"></video>}
-          <div className="btext"><span className="kicker">{b} · {n} model{n === 1 ? "" : "s"}</span><b>{show.title}</b><p>{show.text}</p><ul>{pts.map(t => <li key={t}>{t}</li>)}</ul><u>{show.cta} →</u></div>
-          {show.img ? null : cutout(prod.img) ? <img className="cut" src={cutout(prod.img)} alt={prod.brand + " " + prod.name} loading="lazy" /> : <img src={pic(prod.img)} srcSet={picSet(prod.img)} sizes="(max-width:860px) 100vw, 46vw" alt={prod.brand + " " + prod.name} width="800" height="800" loading="lazy" />}</a> : null; }; // one giant band per brand (the client wants big, colourful brand imagery, not small cards)
-  return <>
-    <div className={"hero" + (auto ? " auto" : "")} ref={heroRef} onClick={onHero} onPointerMove={onMove}>
-      {slides.map((sl, i) => <m.div className={"slide k-" + sl.kind + (i === cur ? " on" : "")} data-preset={sl.preset || "cinematic"} key={i} initial={i === 0 ? false : "hide"} animate={i === cur ? "show" : "hide"} variants={GROUP} style={sl.tone ? { background: sl.tone } : undefined}>
-        {(sl.brand || sl.kind === "promo") && <span className="ghostmark" aria-hidden="true">{sl.brand || "Offers"}</span>}
-        {sl.im && seen.has(i) && <div className="bg"><picture>{sl.imMobile && <source media="(max-width:760px)" srcSet={picSet(sl.imMobile) || pic(sl.imMobile, 960)} sizes="100vw" />}<img {...picOf(sl.im)} sizes="100vw" alt="" width="1344" height="752" fetchPriority={i ? "low" : "high"} loading={i ? "lazy" : "eager"} decoding="async" /></picture>{sl.vid && <video className="vid" muted loop playsInline preload="none" data-src={sl.vid} aria-hidden="true"></video>}</div>}
-        {sl.prod && !sl.im && seen.has(i) && <m.a className={"bigtv" + (cutout(sl.prod.img) ? " cut" : "")} variants={RISE} href={productUrl(sl.prod)}>{cutout(sl.prod.img)
-          ? <><span className="tvglow" aria-hidden="true"></span><img className="tvmain" src={cutout(sl.prod.img)} alt={sl.prod.brand + " " + sl.prod.name} loading={i ? "lazy" : "eager"} /><img className="tvrefl" src={cutout(sl.prod.img)} alt="" aria-hidden="true" loading="lazy" /></>
-          : <img src={pic(sl.prod.img)} srcSet={picSet(sl.prod.img)} sizes="(max-width:760px) 40vw, 30vw" alt={sl.prod.brand + " " + sl.prod.name} width="800" height="800" loading={i ? "lazy" : "eager"} />}</m.a>}
-        {sl.kind === "banner" && <a className="bannerlink" href={sl.href} aria-label="Shop TVs"><picture><source media="(max-width:760px)" srcSet="/img/hero-banner-960.webp" /><img src="/img/hero-banner.webp" srcSet="/img/hero-banner-480.webp 480w, /img/hero-banner-960.webp 960w, /img/hero-banner.webp 1672w" sizes="100vw" alt="Bring the big-screen experience home: premium Elista TVs at factory-direct prices" width="1672" height="941" fetchPriority="high" decoding="async" /></picture></a>}
-        {sl.art && <m.span className="bigtv cut art" variants={RISE} aria-hidden="true"><span className="tvglow"></span><img className="tvmain" src={sl.art} srcSet={sl.art.replace(".webp", "-480.webp") + " 480w, " + sl.art + " 865w"} sizes="(max-width:760px) 70vw, 40vw" alt="" width="865" height="572" fetchPriority={i ? "low" : "high"} loading={i ? "lazy" : "eager"} decoding="async" /></m.span>}
-        <div className="hpanel">
-          {sl.eyebrow && <m.span className="eyebrow" variants={RISE}>{sl.eyebrow}</m.span>}
-          <m.h1 variants={WORDS}>{sl.h.map((l, j) => <span className="ln" key={j}>{l.split(" ").map((w, k) => <m.span className={"w" + (sl.hi && sl.hi.includes(w) ? " hi" : "")} variants={RISE} key={k}>{w}&nbsp;</m.span>)}</span>)}</m.h1>
-          {sl.pts ? <m.ul className="pts" variants={RISE}>{sl.pts.map(t => <li key={t}>{t}</li>)}</m.ul> : <m.p variants={RISE}>{sl.s}</m.p>}
-          {(sl.kind === "photo" || sl.kind === "deal") && minTv > 0 && <m.div className="hfacts" variants={RISE}><span>From {money(minTv)}</span><span>Up to {maxOff}% off</span>{minEmi > 0 && <span>No Cost EMI from {money(minEmi)}/month</span>}</m.div>}
-          {sl.kind === "banner" && facts.length > 0 && <m.div className="hfacts" variants={RISE}>{facts.map(f => <span key={f}>{f}</span>)}</m.div>}
-          <m.div className="hcta" variants={RISE}><a className="btn" href={sl.href}>{sl.cta}</a><a className="btn ghost" href={sl.href2 || listUrl({ cat: "Televisions", sort: "off" })}>{sl.cta2 || "See deals"}</a></m.div>
-        </div>
-      </m.div>)}
-      {slides.length > 1 && <><button className="arrow prev" aria-label="Previous slide"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7" /></svg></button><button className="arrow next" aria-label="Next slide"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7" /></svg></button>
-      <div className="dots">{slides.map((_, i) => <button aria-label={"Slide " + (i + 1)} data-i={i} className={i === cur ? "on" : undefined} key={i}></button>)}</div></>}
-    </div>
-    {!me && <Welcome maxOff={maxOff} minTv={minTv} minEmi={minEmi} money={money} />}
-    <section className="trustrow" aria-label="Why shop with Mytekkstore"><div className="why">
-      <div><Ico shapes={DRAW_ICONS.truck} /><b>Fast delivery</b><p>Doorstep delivery across the country.</p></div>
-      <div><Ico shapes={DRAW_ICONS.shield} /><b>Genuine products</b><p>Brand warranty on everything we sell.</p></div>
-      <div><Ico shapes={DRAW_ICONS.cash} /><b>Cash on delivery</b><p>Pay when your order arrives.</p></div>
-      <div><Ico shapes={DRAW_ICONS.box} /><b>Order tracking</b><p>Follow every order from your account.</p></div>
-    </div></section>
-    <section><h2>{maxOff > 0 ? "Deals of the Day" : "Shop by price"} <a href="/products?sort=off">View all</a></h2><p className="lead">{maxOff > 0 ? "The biggest discounts right now." : "Lowest price first, every model at factory-direct prices."} Free delivery on every order, cash on delivery.</p><div className="grid" ref={dealsRef}>{deals.map((p, i) => <Card p={p} i={i} key={p.id} />)}</div></section>
-    <section className="disco"><h2>Shop by size</h2><p className="lead">Know the size you want? Start here. Every size we stock, with its starting price.</p>
-      <div className="dgrid five">{sizeCards.map(s => <a className={"dcard" + (cutout(s.img) ? "" : " photo")} href={listUrl({ cat: "Televisions", size: s.inch + " inch TVs" })} key={s.inch}><span className="dimg"><img src={pic(s.img, 480)} srcSet={picSet(s.img)} sizes="240px" alt="" loading="lazy" width="800" height="800" /></span><span className="dbody"><b>{s.inch}"</b><small>{s.desc}</small><em>{s.from ? "from " + money(s.from) : "Coming soon"}</em></span><i className="darr" aria-hidden="true">→</i></a>)}</div></section>
-    {BRANDS[0] && <section className="bigbrands solo">{brandBig(BRANDS[0], 0)}</section>}
-    <FestiveBanner tvs={tvs} maxOff={maxOff} minEmi={minEmi} money={money} /> {/* fourth on the page (owner note, 26 Oct): after the deals, the sizes and the brand, not a second banner under the hero */}
-    {osCards.length > 0 && <section className="disco"><h2>Shop by technology</h2><p className="lead">Pick the smart platform that fits you. The apps are built in.</p>
-      <div className="dgrid land">{osCards.map(c => <a className="dcard os" href={osUrl(c.os)} key={c.os}><span className="dimg"><img src={pic(c.img, 960)} srcSet={picSet(c.img)} sizes="(max-width:760px) 92vw, 46vw" alt="" loading="lazy" /></span><span className="dbody"><b>{c.os}</b><small>{c.text}</small><em>{c.from ? "from " + money(c.from) : ""}</em></span><i className="darr" aria-hidden="true">→</i></a>)}</div></section>}
-    <OsChart P={tvs} lead="Not sure which operating system to pick? Here is what each one gives you, side by side." />
-    <BankStrip wrap full />
-    {BRANDS[1] && <section className="bigbrands solo">{brandBig(BRANDS[1], 1)}</section>}
-    {detailCards.length > 0 && <section className="disco"><h2>Shop by picture quality</h2><p className="lead">4K, Full HD or HD Ready, and the screen technology behind it.</p>
-      <div className={"dgrid " + (detailCards.length > 3 ? "four" : "three")}>{detailCards.map(c => <a className={"dcard tall dark" + (/-cut\.webp$/.test(c.img) ? "" : " photo")} href={c.href} key={c.res}><span className="dimg"><img src={pic(c.img, 960)} srcSet={picSet(c.img)} sizes="(max-width:760px) 70vw, 30vw" alt="" loading="lazy" /></span><span className="lshade"></span><span className="dbody"><b>{c.res}</b><small>{c.text}</small><em>from {money(c.from)}</em></span></a>)}</div></section>}
-    <section className="launches"><h2>Latest Launches</h2><p className="lead">Discover what's new in home entertainment.</p>
-      <div className="launchgrid">{LAUNCHES.map((l, i) => <a className={"launch" + (i < 2 ? " big" : "") + (l.dark ? " dark" : "") + (cutout(l.img) ? " stage" : "")} href={l.href} key={l.title}>{cutout(l.img) ? <img src={cutout(l.img)} alt="" loading="lazy" /> : <img src={pic(l.img, 960)} srcSet={picSet(l.img)} sizes="(max-width:760px) 92vw, 46vw" alt="" loading="lazy" />}<span className="lshade"></span><span className="ltext"><span className="kicker">{l.kicker}</span><h3>{l.title}</h3><p>{l.text}</p><u>Explore now →</u></span></a>)}</div></section>
+  const minTv = tvs.length ? Math.min(...tvs.map(p => p.price)) : 0;
+  const emis = tvs.filter(p => p.emi).map(emi9), minEmi = emis.length ? Math.min(...emis) : 0;
+  const maxOff = Math.max(0, ...tvs.map(off));
+  const by = id => tvs.find(p => p.id === id);
+  const picks = ids => ids.map(by).filter(Boolean);
+  const from = list => list.length ? money(Math.min(...list.map(p => p.price))) : "";
+  const { all: sizes } = catSizes(P, "Televisions");
+  const bySize = n => tvs.filter(p => inchOf(p) === n);
+  const [cur, setCur] = useState(0), [cmp, setCmp] = useState([]), touch = useRef(0);
+  const toggleCmp = id => setCmp(c => c.includes(id) ? c.filter(x => x !== id) : c.length >= 4 ? c : [...c, id]);
+  const compare = [cmp, toggleCmp];
+  // the deals timer: the row refreshes at midnight, India time
+  const [left, setLeft] = useState(0);
+  useEffect(() => { const tick = () => { const ist = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Kolkata" })); setLeft(24 * 60 - ist.getHours() * 60 - ist.getMinutes()); }; tick(); const t = setInterval(tick, 30000); return () => clearInterval(t); }, []);
+  useEffect(() => { document.title = "Mytekkstore | Elista Smart TVs at factory-direct prices"; }, []);
+  const swipeStart = e => { touch.current = e.touches[0].clientX; };
+  const swipeEnd = e => { const dx = e.changedTouches[0].clientX - touch.current; if (Math.abs(dx) > 40) setCur(c => (c + (dx < 0 ? 1 : HERO_SLIDES.length - 1)) % HERO_SLIDES.length); };
 
+  // the design's picks, by catalogue id (26 the 55 inch webOS, 30 the 65 inch Xplore, 20 the 43 inch Coolita, 18 the 65 inch Mini-LED PRO ...)
+  const deals = [[26, "Bestseller", "dark"], [30, "Big screen", "gold"], [20, "Value pick", "green"], [18, "Premium", "dark"]].map(([id, tag, tone]) => ({ p: by(id), tag, tone })).filter(x => x.p);
+  const best = picks([3, 27, 11, 14]);
+  const under = [...tvs].sort((a, b) => a.price - b.price).slice(0, 8);
+  const big = [...tvs.filter(p => inchOf(p) >= 65).sort((a, b) => inchOf(a) - inchOf(b) || a.price - b.price), ...picks([19])].slice(0, 8);
+  const living = picks([29, 26, 28, 20]);
+  const cmpPicks = picks([26, 29, 19]);
+  const mini = by(19) || by(18);
+  const miniAll = tvs.filter(p => typeOf(p) === "Mini-LED PRO");
+  const reviews = tvs.flatMap(p => (p.reviews || []).map(r => ({ ...r, p }))).slice(-3).reverse();
+  const allReviews = tvs.flatMap(p => p.reviews || []);
+  const types = [
+    ["Google TV", "Tile_Type_Google_TV", tvs.filter(p => p.os === "Google TV" && typeOf(p) !== "Mini-LED PRO"), listUrl({ cat: "Televisions", os: "Google TV" }), "32\"–85\""],
+    ["webOS Hub", "Tile_Type_webOS_Hub", tvs.filter(p => p.os === "WebOS"), listUrl({ cat: "Televisions", os: "WebOS" }), "Magic Remote"],
+    ["Mini-LED PRO", "Tile_Type_Mini-LED_PRO", miniAll, listUrl({ cat: "Televisions", type: "Mini-LED PRO" }), "Dolby Vision"],
+    ["QLED", "Tile_Type_QLED", tvs.filter(p => typeOf(p) === "QLED"), listUrl({ cat: "Televisions", type: "QLED" }), ""],
+    ["Budget Smart", "Tile_Type_Budget_Smart", tvs.filter(p => /Android|Coolita/.test(p.os || "")), "#under-30000", "Android · Coolita"],
+    ["Non-Smart HD", "Tile_Type_Non-Smart_HD", tvs.filter(p => !p.os), listUrl({ cat: "Televisions", max: 16990 }), ""],
+  ];
+  const rooms = { 24: "Kitchen", 32: "Bedroom", 43: "Small room", 50: "Living room", 55: "Most popular", 65: "Large room", 75: "Home theatre", 85: "Home theatre" };
+  const guide = [["24\"", "60 cm", "about 55 cm", "1.0 to 1.5 m", "Kitchen, study, shop counter", [24]], ["32\"", "80 cm", "about 73 cm", "1.2 to 2.0 m", "Bedroom, hostel, small flat", [32]], ["43\"", "109 cm", "about 97 cm", "1.6 to 2.5 m", "Small living room, 1 BHK", [43]],
+    ["50\" / 55\"", "126 / 140 cm", "about 112 to 124 cm", "2.0 to 3.0 m", "Living room, 2 BHK", [50, 55]], ["65\"", "165 cm", "about 145 cm", "2.5 to 3.5 m", "Large living room, villa", [65]], ["75\" / 85\"", "190 / 215 cm", "about 167 to 190 cm", "3.0 to 4.5 m", "Home theatre, hall", [75, 85]]];
+  const bankTone = i => i < 2 ? "green" : "gold";
 
-    {CATS.length > 1 && <nav className="catrail" aria-label="Shop by category">{CATS.map(c => { const n = P.filter(p => p.cat === c).length; return <a className="crail" href={listUrl({ cat: c })} key={c}><b>{c}</b><small>{n} model{n === 1 ? "" : "s"}</small></a>; })}</nav>}
+  return <div className="hp">
+    {/* the hero: the owner's banners, one at a time, dots below, a swipe on a phone; nothing moves on its own */}
+    <section className="d-hero" aria-roledescription="carousel" aria-label="Offers" onTouchStart={swipeStart} onTouchEnd={swipeEnd}>
+      {HERO_SLIDES.map((s, i) => <a className={"d-slide" + (i === cur ? " on" : "")} href={s.href} key={s.file} aria-hidden={i !== cur} tabIndex={i === cur ? 0 : -1}><HeroPicture s={s} eager={i === 0} /></a>)}
+      <div className="d-dots" role="tablist">{HERO_SLIDES.map((s, i) => <button type="button" role="tab" aria-selected={i === cur} aria-label={"Slide " + (i + 1)} className={i === cur ? "on" : undefined} onClick={() => setCur(i)} key={s.file}></button>)}</div>
+      <button type="button" className="d-arrow prev" aria-label="Previous offer" onClick={() => setCur(c => (c + HERO_SLIDES.length - 1) % HERO_SLIDES.length)}>‹</button>
+      <button type="button" className="d-arrow next" aria-label="Next offer" onClick={() => setCur(c => (c + 1) % HERO_SLIDES.length)}>›</button>
+    </section>
 
+    <section className="d-wrap" style={{ paddingTop: 48 }}>
+      <Head h="Bank & payment offers" sub="Stack a bank offer with No Cost EMI. Applied automatically at checkout." link="All offers & T&C" href="/offers" />
+      <div className="d-g4">{BANK_OFFERS.map(([bank, big, terms, , chip, badge, foot], i) => <div className={"d-card d-bank " + bankTone(i)} key={bank}>
+        <div className="d-bankhead"><span className={"d-chip" + (i === 2 ? " dark" : "")}>{bank}</span><span className={"d-badge" + (i === 2 ? " gold" : i === 3 ? " dark" : "")}>{badge}</span></div>
+        <div className="d-h" style={{ fontSize: i === 2 ? 28 : 30, whiteSpace: "nowrap" }}>{i === 2 && minEmi ? money(minEmi) + "/mo" : big}</div>
+        <span style={{ fontSize: 14 }}>{terms}</span>
+        <span className="d-emi">{chip}</span>
+        <span className="d-emi green">{foot}</span>
+      </div>)}</div>
+      <div className="d-how"><span><strong>How to avail:</strong> add a TV to cart → choose your card at checkout → discount shows before you pay.</span><span>One bank offer per order. Bank offers can be combined with No Cost EMI.</span></div>
+    </section>
 
-
-
-
-
-    {quotes.length >= 3 && <section><h2>What customers say</h2><p className="lead">The newest reviews from across the catalogue.</p><div className="quotes">{quotes.map((r, i) => <a className="quote" href={productUrl(r.p)} key={i}>
-      <div className="stars"><span>{starRow(r.rating)}</span></div><p>“{r.text}”</p><b>{r.name}</b><small>{r.p.brand} {r.p.name}</small></a>)}</div></section>}
-    <Qa id="faq" title="Frequently asked questions" lead="The questions buyers ask most, answered in short." list={FAQ.slice(0, 6)} more={["/buying-guide", "More about choosing a TV"]} />
-    <Row title="Recently viewed" href="" list={recent.map(byId).filter(Boolean)} />
-  </>;
-}
-
-
-// The festive discount banner under the hero (Reliance Digital and Amazon open their festival sales this way): festive colours,
-// lights drawn in CSS and still, the biggest real discount in gold, the biggest-saving TV's own render. The lights and the TV
-// shift a little as the visitor scrolls (--p from 0 to 1 across the viewport), never on their own, and not under reduced motion.
-export function FestiveBanner({ tvs, maxOff, minEmi, money, href = "/offers", cta = "Shop festive offers →" }) { // also the opener of the offers page itself, where it points at the deals list
-  const ref = useRef();
-  const still = useReducedMotion();
-  const top = [...tvs].sort((a, b) => off(b) - off(a))[0];
-  useEffect(() => {
-    if (still) return;
-    const el = ref.current; if (!el) return;
-    let raf = 0;
-    const tick = () => { raf = 0; const r = el.getBoundingClientRect(), vh = innerHeight; el.style.setProperty("--p", Math.min(1, Math.max(0, (vh - r.top) / (vh + r.height))).toFixed(3)); };
-    const onScroll = () => { if (!raf) raf = requestAnimationFrame(tick); };
-    tick(); addEventListener("scroll", onScroll, { passive: true }); addEventListener("resize", onScroll);
-    return () => { removeEventListener("scroll", onScroll); removeEventListener("resize", onScroll); if (raf) cancelAnimationFrame(raf); };
-  }, [still]);
-  if (!tvs.length || !top) return null; // without a discount in the catalogue the banner leads with No Cost EMI (27 Oct: the demo discounts went, the prices are the MRPs printed on the owner's cards until the admin sets selling prices)
-  return <section className="festive bleed" ref={ref} aria-label={FESTIVE.title}>
-    <a className="festin" href={href}>
-      <span className="fsparkle" aria-hidden="true"></span>
-      <span className="flights" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></span>
-      <span className="ftext">
-        <span className="flock"><i></i>{FESTIVE.title}<i></i></span>
-        <span className="fcamp">Make your Diwali smarter &amp; brighter</span>
-        {maxOff > 0 ? <b><small>Up to</small><strong>{maxOff}% off</strong><span>on Smart TVs</span></b> : <b><small>Diwali offer</small><strong>No Cost EMI</strong><span>{minEmi ? "from " + money(minEmi) + "/month on every Smart TV" : "on every Smart TV"}</span></b>}
-        <span className="fbenefits"><span>Free delivery across India</span><span>Cash on delivery</span>{maxOff > 0 && minEmi ? <span>No Cost EMI from {money(minEmi)}/month</span> : <span>Brand warranty, registered for you</span>}</span>
-        <span className="btn">{cta}</span>
-      </span>
-      <span className="fstage" aria-hidden="true"><span className="fglow"></span><img className="froom" src="/img/elista/webOS-Smart-TV-65in_2-960.webp" srcSet="/img/elista/webOS-Smart-TV-65in_2-960.webp 960w, /img/elista/webOS-Smart-TV-65in_2.webp 1500w" sizes="(max-width:760px) 100vw, 42vw" alt="" loading="lazy" width="860" height="430" /></span>
-      <span className="fbanks"><BankBoxes /><small>{maxOff > 0 ? "*T&C apply · Savings are MRP against our price" : "*T&C apply · Prices inclusive of all taxes"}</small></span>
-    </a>
-  </section>;
-}
-
-
-// The welcome dialog (owner request, 26 Oct): the festive figures, real and from the catalogue, with the sign-up invitation under
-// them. The browser's own <dialog> gives the focus trap, Esc and the backdrop; it opens once per visitor after a short pause, not
-// for a signed-in visitor, not under automation unless the address carries ?welcome=1, and not again once closed.
-function Welcome({ maxOff, minTv, minEmi, money }) {
-  const ref = useRef();
-  useEffect(() => {
-    const forced = qs.get("welcome") === "1";
-    if (maxOff <= 0 || (!forced && (load("welcome", 0) || navigator.webdriver))) return;
-    const t = setTimeout(() => { const d = ref.current; if (d && !d.open) { try { d.showModal(); } catch { /* an older browser without <dialog>: nothing opens */ } } }, forced ? 300 : 5000);
-    return () => clearTimeout(t);
-  }, [maxOff]);
-  const close = () => { save("welcome", Date.now()); if (ref.current && ref.current.open) ref.current.close(); };
-  return <dialog className="welcome" ref={ref} aria-labelledby="welcome-title" onClose={close} onClick={e => { if (e.target === ref.current) close(); }}>
-    <div className="wcard">
-      <div className="wstage" aria-hidden="true"><img className="wimg" src="/img/tv-festival.webp" alt="" width="863" height="588" loading="lazy" /></div>
-      <button type="button" className="wclose" onClick={close} aria-label="Close">×</button>
-      <div className="wbody">
-        <span className="wkick">Festive Offers · Live now</span>
-        <h2 id="welcome-title">Up to <b>{maxOff}% off</b> on Smart TVs</h2>
-        <p>From {money(minTv)}{minEmi ? ", No Cost EMI from " + money(minEmi) + "/month" : ""}, extra bank discounts and cash on delivery.</p>
-        <div className="wsign">
-          <b>Sign up in a minute</b>
-          <span>Faster checkout, order tracking and the festive and bank offers first.</span>
-          <div className="wbtns"><a className="btn" href="/account?next=/televisions%3Fsort%3Doff">Sign up</a><a className="btn ghost" href="/televisions?sort=off" onClick={close}>Shop deals</a></div>
-        </div>
-        <button type="button" className="wlater" onClick={close}>Maybe later</button>
+    <section className="d-wrap d-sec" style={{ paddingTop: 44 }}>
+      <Head h="With every order" sub="What you get when you buy direct from MyTekkStore." />
+      <div className="d-g4">
+        <div className="d-card d-perk">{I.truck}<strong>Free delivery</strong><span className="d-emi">On every TV, across India. Delivered in 3 to 5 days.</span></div>
+        <div className="d-card d-perk">{I.cod}<strong>Cash on delivery</strong><span className="d-emi">Pay at your door, or pay online with UPI, card or net banking.</span></div>
+        <div className="d-card d-perk">{I.emi}<strong>No Cost EMI</strong><span className="d-emi">{minEmi ? "From " + money(minEmi) + "/month" : "Monthly instalments"} on HDFC, ICICI, SBI, Axis and Kotak cards.</span></div>
+        <div className="d-card d-perk">{I.shield}<strong>Genuine, brand warranty</strong><span className="d-emi">1 year or 1+1 year Elista warranty on every TV*.</span></div>
       </div>
-    </div>
-  </dialog>;
+    </section>
+
+    <section className="d-wrap d-sec" id="deals">
+      <Head h="Deals of the Day" link="All deals" href={listUrl({ cat: "Televisions", sort: "off" })}><span className="d-count">Refreshes in <b>{String(Math.floor(left / 60)).padStart(2, "0")}</b>h <b>{String(left % 60).padStart(2, "0")}</b>m</span></Head>
+      <div className="d-g4 wide">{deals.map(({ p, tag, tone }) => <DCard p={p} tag={tag} tagTone={tone} money={money} compare={compare} key={p.id} />)}</div>
+    </section>
+
+    <section className="d-wrap d-sec"><FestiveBanner tvs={tvs} maxOff={maxOff} minEmi={minEmi} money={money} /></section>
+
+    <section className="d-wrap d-sec">
+      <Head h="Bestsellers this week" sub="What customers are buying most." link="View all" href="/televisions" />
+      <div className="d-g4">{best.map((p, i) => <DCard p={p} tag={i === 0 ? "No.1 seller" : undefined} money={money} compare={compare} key={p.id} />)}</div>
+    </section>
+
+    <section className="d-wrap d-sec">
+      <div className="d-g3">
+        <a className="d-promo" href="#big-screens"><img src={pic("img/elista/webOS-Smart-TV-85in_2.webp", 960)} srcSet={picSet("img/elista/webOS-Smart-TV-85in_2.webp")} sizes="(max-width:900px) 50vw, 30vw" alt="" loading="lazy" width="1500" height="1500" /><span className="d-ov"></span><div className="d-t">{maxOff > 0 && <span className="d-badge">Up to {maxOff}% off</span>}<h3 className="d-h">65" &amp; above</h3><span>Cinema-size screens from {from(tvs.filter(p => inchOf(p) >= 65))}</span></div></a>
+        <a className="d-promo" href={listUrl({ cat: "Televisions", type: "Mini-LED PRO" })}><img src={pic("img/elista/Mini-LED-PRO-65in_2.webp", 960)} srcSet={picSet("img/elista/Mini-LED-PRO-65in_2.webp")} sizes="(max-width:900px) 50vw, 30vw" alt="" loading="lazy" width="1500" height="1500" /><span className="d-ov"></span><div className="d-t"><span className="d-badge dark">New</span><h3 className="d-h">Mini-LED PRO</h3><span>Dolby Vision · Atmos · from {from(miniAll)}</span></div></a>
+        <a className="d-promo" href="#under-30000"><img src={pic("img/elista/Coolita-OS-HD-Smart-TV-32in_2.webp", 960)} srcSet={picSet("img/elista/Coolita-OS-HD-Smart-TV-32in_2.webp")} sizes="(max-width:900px) 50vw, 30vw" alt="" loading="lazy" width="1500" height="1500" /><span className="d-ov"></span><div className="d-t"><span className="d-badge green">Budget</span><h3 className="d-h">Under ₹30,000</h3><span>Smart TVs for bedroom and kitchen</span></div></a>
+      </div>
+    </section>
+
+    <section className="d-wrap d-sec" id="under-30000">
+      <Head h="Under ₹30,000" sub="Smart TVs for bedrooms, kitchens and first homes." link="View all" href={listUrl({ cat: "Televisions", max: 30000 })} />
+      <div className="d-g4">{under.map(p => <DCard p={p} money={money} compare={compare} key={p.id} />)}</div>
+    </section>
+
+    <section className="d-wrap d-sec" id="sizes">
+      <Head h="Shop by size" sub={"Sit 1.5× the screen width away for the best picture. Example: a 55\" TV suits a sofa about 2 metres from the wall."} link="Size guide" href="#size-guide" />
+      <div className="d-g7">{sizes.filter(s => s.n >= 32).sort((a, b) => a.n - b.n).map(s => <a className={"d-card d-size" + (s.n === 55 ? " top" : "")} href={listUrl({ cat: "Televisions", size: s.n })} key={s.n}>
+        <img src={src("Tile_Size_" + s.n + "in", 360)} srcSet={`${src("Tile_Size_" + s.n + "in", 360)} 360w, ${src("Tile_Size_" + s.n + "in")} 600w`} sizes="(max-width:900px) 46vw, 180px" alt="" loading="lazy" width="600" height="600" />
+        <strong className="d-h">{s.n}"</strong><span className={"d-emi" + (s.n === 55 ? " gold" : "")}>{rooms[s.n] || "Living room"} · from {from(bySize(s.n))}</span></a>)}</div>
+    </section>
+
+    <section className="d-wrap d-sec" id="size-guide">
+      <Head h="TV size guide" sub="Measure from your sofa to the TV wall, then pick the row that matches." link="Full guide" href="/buying-guide" />
+      <div className="d-tbl"><table><thead><tr><th>Screen size</th><th>Width of TV</th><th>Best viewing distance</th><th>Typical room</th><th>Starts at (MRP)</th></tr></thead>
+        <tbody>{guide.map(([size, cm, width, dist, room, ns]) => <tr key={size}><td><strong>{size}</strong> ({cm})</td><td>{width}</td><td>{dist}</td><td>{room}</td><td>{from(tvs.filter(p => ns.includes(inchOf(p))))}</td></tr>)}</tbody></table></div>
+      <p className="d-emi" style={{ marginTop: 10 }}>Widths are approximate and vary by model. Distances follow common guidance for 4K and HD screens.</p>
+    </section>
+
+    <section className="d-wrap d-sec" id="big-screens">
+      <Head h={"Big screens: 65\" to 85\""} sub="Cinema at home. Free delivery and cash on delivery on every TV." link="View all" href={listUrl({ cat: "Televisions", size: 65 })} />
+      <div className="d-g4">{big.map(p => <DCard p={p} tag={p.id === 18 ? "Flagship" : undefined} money={money} compare={compare} key={p.id} />)}</div>
+    </section>
+
+    {mini && <section className="d-wrap d-sec">
+      <div className="d-feature">
+        <div className="d-fimg"><img src={pic(mini.images && mini.images[0] || mini.img, 960)} srcSet={picSet(mini.images && mini.images[0] || mini.img)} sizes="(max-width:900px) 100vw, 56vw" alt="Elista Mini-LED PRO in a living room" loading="lazy" /></div>
+        <div className="d-ftext">
+          <span className="d-kick">Flagship · Mini-LED PRO</span>
+          <h3 className="d-h" style={{ fontSize: 36, lineHeight: 1.08 }}>Brighter. Deeper. Smoother. Our most premium picture.</h3>
+          <p className="d-sub">Mini-LED backlight with QLED colour, over 500 nits, Dolby Vision, HDR10, HLG and Dolby Atmos sound. Google TV 5.0 built in.</p>
+          <div className="d-stats"><div><div className="d-h">&gt;500</div><span className="d-emi">nits brightness</span></div><div><div className="d-h">Dolby</div><span className="d-emi">Vision · Atmos</span></div><div><div className="d-h">{miniAll.map(inchOf).sort((a, b) => a - b).map(n => n + "\"").join(" · ")}</div><span className="d-emi">{miniAll.length === 1 ? "one size" : "two sizes"}</span></div><div><div className="d-h">1+1 yr</div><span className="d-emi">warranty*</span></div></div>
+          <div className="d-pricerow" style={{ marginTop: 8 }}><span className="d-price" style={{ fontSize: 30 }}>{money(mini.price)}</span>{mini.mrp > mini.price && <span className="d-mrp">{money(mini.mrp)}</span>}<span className="d-save">No Cost EMI {money(emi9(mini))}/mo</span></div>
+          <div className="d-btns start"><a className="d-btn" href={listUrl({ cat: "Televisions", type: "Mini-LED PRO" })}>Shop Mini-LED PRO</a><a className="d-btn ghost" href={productUrl(mini) + "#t-specs"}>View full specs</a></div>
+        </div>
+      </div>
+    </section>}
+
+    {cmpPicks.length === 3 && <section className="d-wrap d-sec">
+      <Head h="Compare top picks" sub="The three TVs most customers choose between." link="Compare all" href={"/compare?ids=" + cmpPicks.map(p => p.id).join(",")} />
+      <div className="d-tbl"><table><thead><tr><th style={{ width: "22%" }}>Model</th>{cmpPicks.map(p => <th key={p.id}><a href={productUrl(p)}>{title(p)}</a></th>)}</tr></thead><tbody>
+        <tr><td className="muted">Price</td>{cmpPicks.map(p => <td key={p.id}><span className="d-price" style={{ fontSize: 20 }}>{money(p.price)}</span>{p.mrp > p.price && <span className="d-mrp"> {money(p.mrp)}</span>}</td>)}</tr>
+        {[["Picture", /resolution|display|picture/i], ["Sound", /sound|speaker|audio/i], ["Smart", /smart|operating|platform/i], ["Memory", /ram|memory|storage/i], ["Warranty", /warranty/i]].map(([row, re]) => <tr key={row}><td className="muted">{row}</td>{cmpPicks.map(p => { const vals = (p.specs || []).filter(([k]) => re.test(k)).map(([, v]) => v); return <td key={p.id}>{[...new Set(vals)].slice(0, 2).join(", ") || "Not stated"}</td>; })}</tr>)}
+        <tr><td></td>{cmpPicks.map(p => <td key={p.id}><button type="button" className="d-btn" style={{ height: 46, padding: "0 20px", fontSize: 14 }} data-add={p.id}>{I.cart}Add to cart</button></td>)}</tr>
+      </tbody></table></div>
+    </section>}
+
+    <section className="d-wrap d-sec">
+      <Head h={"Living-room favourites: 50\" and 55\""} sub="The sizes most Indian living rooms are built for." link="View all" href={listUrl({ cat: "Televisions", size: 55 })} />
+      <div className="d-g4">{living.map(p => <DCard p={p} money={money} compare={compare} key={p.id} />)}</div>
+    </section>
+
+    <section className="d-wrap d-sec">
+      <Head h="Shop by type" link="All TVs" href="/televisions" />
+      <div className="d-g6">{types.filter(([, , list]) => list.length).map(([name, tile, list, href, note]) => <a className="d-card d-type" href={href} key={name}>
+        <div className="d-tv"><img src={src(tile, 360)} srcSet={`${src(tile, 360)} 360w, ${src(tile)} 600w`} sizes="(max-width:900px) 46vw, 200px" alt="" loading="lazy" width="600" height="600" /></div>
+        <strong>{name}</strong><span className="d-emi">{note ? note + " · " : ""}from {from(list)}</span>{Math.max(...list.map(off)) > 0 && <span className="d-save">Up to {Math.max(...list.map(off))}% off</span>}
+      </a>)}</div>
+    </section>
+
+    <section className="d-wrap d-sec">
+      <div className="d-why"><span className="d-kick">Why buy direct</span><h3 className="d-h" style={{ fontSize: 30 }}>MyTekkStore vs marketplaces</h3>
+        <div className="d-tbl"><table><thead><tr><th></th><th>MyTekkStore</th><th>Marketplace</th></tr></thead><tbody>
+          {[["Price", "Factory-direct", "Seller margin added"], ["Delivery", "Free on every TV", "Varies by seller"], ["Cash on delivery", "Yes", "Not always"], ["No Cost EMI", minEmi ? "From " + money(minEmi) + "/month" : "On every TV", "Selected items only"], ["Product", "Genuine, brand warranty", "Depends on seller"], ["Support", "Direct, from the store", "Call centre"]].map(([a, b, c]) => <tr key={a}><td>{a}</td><td><strong>{b}</strong></td><td>{c}</td></tr>)}
+        </tbody></table></div></div>
+    </section>
+
+    {/* the owner's trust strip (Strip_Trust.jpg) where the design keeps its figures band */}
+    <section className="d-strip"><img src={src("Strip_Trust", 960)} srcSet={`${src("Strip_Trust", 960)} 960w, ${src("Strip_Trust")} 1920w`} sizes="100vw" alt="Premium TVs · Multiple Brands · Factory-Direct Prices · No-Cost EMI Options" loading="lazy" width="1920" height="250" /></section>
+
+    <section className="d-wrap d-sec">
+      <Head h="Brands we stock" link="All brands" href="/products" />
+      <div className="d-brands">{[...new Set(tvs.map(p => p.brand))].map(b => <a className="d-brand" href={"/products?brand=" + encodeURIComponent(b)} key={b}>{b.toUpperCase()}</a>)}</div>
+    </section>
+
+    {allReviews.length >= 3 && <section className="d-wrap d-sec">
+      <div className="d-hd"><h2 className="d-h">Customers say</h2><span className="d-stars big">★★★★★ <span>{(allReviews.reduce((s, r) => s + r.rating, 0) / allReviews.length).toFixed(1)} from {allReviews.length} reviews</span></span></div>
+      <div className="d-g3">{reviews.map((r, i) => <div className="d-card d-review" key={i}><span className="d-stars">{"★".repeat(r.rating)}</span><p>{r.text}</p><span className="d-emi">{r.name} · Bought {inchOf(r.p)}" {r.p.os || "TV"} · Verified purchase</span></div>)}</div>
+    </section>}
+
+    <section className="d-wrap d-sec" id="faq">
+      <Head h="Questions people ask before buying" link="Help centre" href="/contact" />
+      <div className="d-faq">
+        {[["Is the price lower than Amazon or Croma?", "Our prices are factory-direct for Elista, with no seller margin added."], ["How fast is delivery?", "Free delivery across India, usually within 3 to 5 days. You get tracking by email and from your account."],
+          ["Can I pay cash on delivery?", "Yes. Cash on delivery is available on every TV. You can also pay online by UPI, card or net banking."], ["Which cards get No Cost EMI?", "HDFC, ICICI, SBI, Axis and Kotak credit cards, for 3 to 12 months. The interest is borne by us."],
+          ["What about warranty and service?", "Every TV carries Elista's 1 or 1+1 year warranty. Register it with the brand after delivery; Elista's service network handles repairs."], ["Is the TV genuine?", "Yes. Every TV is a new, sealed Elista unit with the brand warranty card, sourced directly from the manufacturer."]].map(([q, a]) => <div key={q}><strong>{q}</strong><span className="d-sub">{a}</span></div>)}
+      </div>
+    </section>
+
+    <section className="d-wrap d-sec">
+      <Head h="Buying guides" link="All guides" href="/buying-guide" />
+      <div className="d-g3">
+        <a className="d-card d-guide" href="#size-guide"><img src={src("Tile_Size_55in", 360)} alt="" loading="lazy" /><div><strong>Which TV size is right for your room?</strong><span className="d-emi">A 2-minute guide with distances for every size.</span></div></a>
+        <a className="d-card d-guide" href="/buying-guide"><img src={src("Tile_Type_QLED", 360)} alt="" loading="lazy" /><div><strong>QLED vs Mini-LED vs 4K LED</strong><span className="d-emi">What the names mean and which is worth paying for.</span></div></a>
+        <a className="d-card d-guide" href="/buying-guide"><img src={src("Tile_Type_Google_TV", 360)} alt="" loading="lazy" /><div><strong>Google TV or webOS Hub?</strong><span className="d-emi">Apps, remotes and voice, compared side by side.</span></div></a>
+      </div>
+    </section>
+
+    <section className="d-pay"><div className="d-wrap">
+      <div className="d-payhead"><h2 className="d-h" style={{ fontSize: 24 }}>Pay the way you like</h2><span className="d-secure">{I.lock}Secure checkout · GST invoice on every order</span></div>
+      <div className="d-g6">{[["UPI", "GPay, PhonePe, Paytm, any UPI app"], ["Cards", "Visa, Mastercard, RuPay, Amex"], ["No-cost EMI", "3 to 12 months on HDFC, ICICI, SBI, Axis, Kotak", true], ["Net banking", "All major Indian banks"], ["Cash on delivery", "Available on all TVs · pay at your door"], ["Free delivery", "On every TV, anywhere we deliver", true]].map(([t, d, gold]) => <div className="d-paybox" key={t}><strong className={gold ? "gold" : undefined}>{t}</strong><span className="d-emi">{d}</span></div>)}</div>
+    </div></section>
+
+    {cmp.length >= 2 && <a className="d-cmpbar" href={"/compare?ids=" + cmp.join(",")}>Compare {cmp.length} TVs →</a>}
+  </div>;
 }
 
-
+// The festive banner, the design's way: a dark card, the kicker in gold, the figures from the catalogue, the owner's festive-lights
+// living-room card as the picture. Also the opener of the offers page.
+export function FestiveBanner({ tvs, maxOff, minEmi, money, href = "/offers", cta = "Shop festive deals" }) {
+  if (!tvs || !tvs.length) return null;
+  const lead = `Festive prices on QLED, 4K and Google TVs. Bank offers${minEmi ? ", No Cost EMI from " + money(minEmi) + "/month" : ""}, free delivery and cash on delivery on every TV.`;
+  return <a className="d-fest" href={href} aria-label="Festive deals">
+    <div className="d-festtext"><span className="d-kick gold">Festive deals</span><h2 className="d-h">Celebrate on a bigger screen.</h2><p>{lead}</p><div className="d-btns start"><span className="d-btn gold">{cta}</span><span className="d-btn ghost white">View all offers</span></div></div>
+    <div className="d-festimg"><img src="/img/elista/webOS-Smart-TV-65in_2-960.webp" srcSet="/img/elista/webOS-Smart-TV-65in_2-960.webp 960w, /img/elista/webOS-Smart-TV-65in_2.webp 1500w" sizes="(max-width:760px) 100vw, 55vw" alt="" loading="lazy" width="1500" height="1500" /><span className="d-festmark">mytekkstore</span></div>
+  </a>;
+}
