@@ -2384,4 +2384,4 @@ main > section, main > .fest, main > .cols, .bigbrands.solo, .bankad.bleed, main
 .slide.k-banner .hpanel p { margin:0; font-size:clamp(15px,1.15vw,19px); line-height:1.5; color:#ffffffd9; max-width:46ch }
 .slide.k-banner .hcta { display:flex; gap:12px; flex-wrap:wrap }
 @media (max-width:760px) { .slide.k-banner img { transform:none } .slide.k-banner .bannerlink::after { display:none } .slide.k-banner .hpanel { inset:auto 0 0 0; width:auto; justify-content:flex-end; padding:20px 16px 22px; background:linear-gradient(0deg,#0b0e14f2 0%,#0b0e14b0 60%,transparent 100%); gap:10px } .slide.k-banner .hpanel h1 { font-size:clamp(28px,8vw,36px); max-width:none } }
-.slide.k-banner .hpanel h1 .hi { background:linear-gradient(90deg,#7dd3fc,#a78bfa) } /* lighter than the banner's own blue-violet so it reads over the photo on a phone */
+.slide.k-banner .hpanel h1 .hi { background-image:linear-gradient(90deg,#7dd3fc,#a78bfa) } /* background-image, not the shorthand: the shorthand reset background-clip and painted a solid block over the word (live, 27 Oct morning) */ /* lighter than the banner's own blue-violet so it reads over the photo on a phone */
