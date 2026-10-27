@@ -758,6 +758,16 @@ on("PUT", "admin/products/(\\d+)", ({ params, body }) => {
   Object.assign(p, productFrom(body), { updated: new Date().toISOString() }); write("products");
   return { product: p };
 }, "admin");
+on("POST", "admin/reset-customers", ({ user }) => { // before launch: the test accounts and orders go, the catalogue, banners and the admin stay
+  for (const o of db.orders) if (o.status !== "Cancelled" && o.status !== "Expired") for (const it of o.items) { const p = db.products.find(p => p.id === it.id); if (p) p.stock += it.qty; }
+  const gone = db.users.filter(u => !u.admin).map(u => u.id);
+  db.users = db.users.filter(u => u.admin); db.orders = []; db.outbox = [];
+  for (const [t, s] of sessions) if (gone.includes(s.userId)) sessions.delete(t);
+  if (DB_URL) for (const id of gone) pending.push(sql("DELETE FROM sessions WHERE user_id = $1", [id])); // the users and orders rows go with the next flush (it deletes what the snapshot no longer holds)
+  for (const p of db.products) p.reviews = (p.reviews || []).filter(r => !gone.includes(r.userId));
+  write("users"); write("orders"); write("outbox"); write("products");
+  return { ok: true, users: gone.length };
+}, "admin");
 on("DELETE", "admin/products/(\\d+)", ({ params }) => {
   const i = db.products.findIndex(p => p.id === +params[0]);
   if (i < 0) throw new HttpError(404, "Product not found.");

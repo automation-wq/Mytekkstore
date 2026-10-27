@@ -84,6 +84,8 @@ export function Admin() {
       <div><b>{orders.length}</b>Orders</div><div><b>{money(live.reduce((t, o) => t + o.total, 0))}</b>Sales</div>
       <div><b>{products.length}</b>Products</div><div><b>{products.filter(p => p.stock <= 5).length}</b>Low or out of stock</div>
     </div>
+    <section className="adanger"><h2>Before launch</h2><p className="muted">Test accounts and test orders can be cleared in one go: every customer account, every order and the message outbox go; the catalogue, banners, campaigns and this admin account stay. Stock taken by open test orders comes back.</p>
+      <button type="button" className="btn ghost" id="resetCustomers" onClick={async () => { if (sure !== "reset") { setSure("reset"); setTimeout(() => setSure(x => x === "reset" ? null : x), 4000); return; } try { const r = await api("admin/reset-customers", "POST", {}); toast(r.users + " customer account" + (r.users === 1 ? "" : "s") + " and all orders cleared"); } catch (ex) { toast(ex.message); } load(); }}>{sure === "reset" ? "Sure? This cannot be undone" : "Clear all customer accounts and orders"}</button></section>
     <section><h2>Orders</h2>{orders.length ? <div className="scroll"><table className="tbl"><tbody>
       <tr><th>Order</th><th>Date</th><th>Customer</th><th>Items</th><th>Total</th><th>Status</th></tr>
       {orders.map(o => <tr key={o.id}><td><a className="alink" href={"/order?id=" + o.id}>{o.id}</a></td><td>{new Date(o.at).toLocaleString()}</td>

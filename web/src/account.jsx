@@ -103,7 +103,7 @@ function SignUp({ CFG, money, linkUser }) {
             {CFG.google && !linking && <><div className="su-gbtn" id="gbtn"></div><div className="su-or">or with mobile number</div></>}
             {signup && <div className="su-row">
               <label className={shake === "name" ? "su-shake" : ""} style={{ flex: 1 }}>Full name<input type="text" name="name" value={name} onChange={e => setName(e.target.value)} placeholder="As on your ID" maxLength="80" autoComplete="name" /></label>
-              <label style={{ flex: 1 }}>Email (optional)<input type="email" name="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="For invoices" maxLength="120" autoComplete="email" /></label>
+              <label style={{ flex: 1 }}>Email<input type="email" name="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="For invoices and order updates" maxLength="120" autoComplete="email" /></label>
             </div>}
             <label>Mobile number<div className={"su-row" + (shake === "phone" ? " su-shake" : "")}>
               <input className="su-cc" type="text" value="+91" readOnly aria-label="Country code" />

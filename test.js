@@ -304,6 +304,13 @@ server.listen(0, "127.0.0.1", async () => {
     assert.equal((await call("/api/pay/webhook", "POST", { event: "order.paid" })).status, 503, "the webhook refuses until a secret is set");
     assert.equal((await call("/api/orders", "POST", { ...addr, country: "AE", items: [{ id: 1, qty: 1 }] }, buyer)).status, 422, "only India can be ordered to until a destination is approved");
     assert.equal((await call("/api/orders", "POST", { ...addr, country: "IN", items: [{ id: 1, qty: 1 }] }, buyer)).status, 200, "India orders as before");
+    // the admin clears the test accounts and orders before launch; the catalogue and the admin stay
+    assert.equal((await call("/api/admin/reset-customers", "POST", {}, buyer)).status, 403, "customers cannot clear the store");
+    { const nBefore = (await call("/api/products")).data.products.length; const rr = await call("/api/admin/reset-customers", "POST", {}, admin); assert.equal(rr.status, 200); assert.ok(rr.data.users >= 3, "the test accounts were counted: " + rr.data.users);
+      assert.equal((await call("/api/me", "GET", null, buyer)).data.user, null, "a cleared account is signed out");
+      assert.equal((await call("/api/admin/orders", "GET", null, admin)).data.orders.length, 0, "no orders left");
+      assert.equal((await call("/api/me", "GET", null, admin)).data.user.admin, true, "the admin stays");
+      assert.equal((await call("/api/products")).data.products.length, nBefore, "the catalogue stays"); }
     r = await call("/api/config"); assert.equal(r.data.pay, "demo"); assert.ok(r.data.fx && r.data.fx.rates && r.data.fx.rates.USD > 0 && r.data.destinations.IN.ship === true && r.data.destinations.AE.ship === false, "config carries the pay provider, display rates and destinations");
     console.log("ALL TESTS PASSED");
   } catch (e) { console.error("TEST FAILED:", e.message, e.stack.split("\n")[2]); process.exitCode = 1; }
