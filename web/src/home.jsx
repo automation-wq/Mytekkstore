@@ -107,8 +107,6 @@ export function Home() {
   ];
   const OUTLINE = { 24: "54%", 32: "60%", 43: "66%", 50: "72%", 55: "78%", 65: "84%", 75: "92%", 85: "96%" }; // the design's size cards: an outline that grows with the screen
   const rooms = { 24: "Kitchen", 32: "Bedroom", 43: "Small room", 50: "Living room", 55: "Most popular", 65: "Large room", 75: "Home theatre", 85: "Home theatre" };
-  const guide = [["24\"", "60 cm", "about 55 cm", "1.0 to 1.5 m", "Kitchen, study, shop counter", [24]], ["32\"", "80 cm", "about 73 cm", "1.2 to 2.0 m", "Bedroom, hostel, small flat", [32]], ["43\"", "109 cm", "about 97 cm", "1.6 to 2.5 m", "Small living room, 1 BHK", [43]],
-    ["50\" / 55\"", "126 / 140 cm", "about 112 to 124 cm", "2.0 to 3.0 m", "Living room, 2 BHK", [50, 55]], ["65\"", "165 cm", "about 145 cm", "2.5 to 3.5 m", "Large living room, villa", [65]], ["75\" / 85\"", "190 / 215 cm", "about 167 to 190 cm", "3.0 to 4.5 m", "Home theatre, hall", [75, 85]]];
   const bankTone = i => i < 2 ? "green" : "gold";
 
   const minOf = l => l.length ? Math.min(...l.map(p => p.price)) : 0;
@@ -168,17 +166,10 @@ export function Home() {
     </section>
 
     <section className="d-wrap d-sec" id="sizes">
-      <Head h="Shop by size" sub={"Sit 1.5× the screen width away for the best picture. Example: a 55\" TV suits a sofa about 2 metres from the wall."} link="Size guide" href="#size-guide" />
+      <Head h="Shop by size" sub={"Sit 1.5× the screen width away for the best picture. Example: a 55\" TV suits a sofa about 2 metres from the wall."} link="Size guide" href="/buying-guide" />
       <div className="d-g7">{sizes.filter(s => s.n >= 32).sort((a, b) => a.n - b.n).map(s => <a className={"d-card d-size" + (s.n === 55 ? " top" : "")} href={listUrl({ cat: "Televisions", size: s.n })} key={s.n}>
         <span className="d-outline" style={{ width: OUTLINE[s.n] || "70%" }} aria-hidden="true"></span>
         <strong className="d-h">{s.n}"</strong><span className={"d-emi" + (s.n === 55 ? " gold" : "")}>{rooms[s.n] || "Living room"} · from {from(bySize(s.n))}</span></a>)}</div>
-    </section>
-
-    <section className="d-wrap d-sec" id="size-guide">
-      <Head h="TV size guide" sub="Measure from your sofa to the TV wall, then pick the row that matches." link="Full guide" href="/buying-guide" />
-      <div className="d-tbl"><table><thead><tr><th>Screen size</th><th>Width of TV</th><th>Best viewing distance</th><th>Typical room</th><th>Starts at (MRP)</th></tr></thead>
-        <tbody>{guide.map(([size, cm, width, dist, room, ns]) => <tr key={size}><td><strong>{size}</strong> ({cm})</td><td>{width}</td><td>{dist}</td><td>{room}</td><td>{from(tvs.filter(p => ns.includes(inchOf(p))))}</td></tr>)}</tbody></table></div>
-      <p className="d-emi" style={{ marginTop: 10 }}>Widths are approximate and vary by model. Distances follow common guidance for 4K and HD screens.</p>
     </section>
 
     <section className="d-wrap d-sec" id="big-screens">
@@ -247,7 +238,7 @@ export function Home() {
     <section className="d-wrap d-sec">
       <Head h="Buying guides" link="All guides" href="/buying-guide" />
       <div className="d-g3">
-        <a className="d-card d-guide" href="#size-guide"><img src={pic("img/elista/webOS-Smart-TV-55in_2.webp", 480)} alt="" loading="lazy" /><div><strong>Which TV size is right for your room?</strong><span className="d-emi">A 2-minute guide with distances for every size.</span></div></a>
+        <a className="d-card d-guide" href="/buying-guide"><img src={pic("img/elista/webOS-Smart-TV-55in_2.webp", 480)} alt="" loading="lazy" /><div><strong>Which TV size is right for your room?</strong><span className="d-emi">A 2-minute guide with distances for every size.</span></div></a>
         <a className="d-card d-guide" href="/buying-guide"><img src={pic("img/elista/Cloud-TV-QLED-43in_2.webp", 480)} alt="" loading="lazy" /><div><strong>QLED vs Mini-LED vs 4K LED</strong><span className="d-emi">What the names mean and which is worth paying for.</span></div></a>
         <a className="d-card d-guide" href="/buying-guide"><img src={pic("img/elista/Google-TV-Xplore-55in_2.webp", 480)} alt="" loading="lazy" /><div><strong>Google TV or webOS Hub?</strong><span className="d-emi">Apps, remotes and voice, compared side by side.</span></div></a>
       </div>
