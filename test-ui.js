@@ -375,23 +375,30 @@ async function run() {
 
     step = "sign in with a mobile number and a code";
     await b.goto(base + "/account.html");
-    assert.deepEqual(await b.ev(`[...document.querySelectorAll(".acard .tabbar button")].map(x => x.textContent)`), ["Password", "One-time code (demo)"]); // no SMS or email service here: the password route first, the demo route named as such
+    assert.ok(await b.ev(`!!document.querySelector("#su") && !!document.querySelector("#sendOtp")`), "the sign-up card of the owner's prototype: name, email, mobile number and Send OTP");
     assert.equal(await b.ev(`document.querySelectorAll("#gbtn").length`), 0, "no Google button until a client id is set");
-    const otpText = sel => b.ev(`document.querySelector(${JSON.stringify(sel)}).textContent`);
-    await b.ev(`(() => { const f = document.querySelector("#otp"); f.to.value = "98765 43210"; f.requestSubmit(); })()`);
-    for (let i = 0; i < 40 && !/\d{6}/.test(await otpText("#otpnote")); i++) await sleep(100);
-    const code = /(\d{6})/.exec(await otpText("#otpnote"));
-    assert.ok(code, "on localhost the code is shown on the page");
-    assert.equal(await b.ev(`document.querySelector("#codeRow").hidden`), false, "the code field appears");
-    await b.ev(`(() => { const f = document.querySelector("#otp"); f.code.value = ${JSON.stringify(String((+code[1] + 1) % 1e6).padStart(6, "0"))}; f.requestSubmit(); })()`);
-    for (let i = 0; i < 40 && !(await otpText("#otp .err")); i++) await sleep(100);
-    assert.match(await otpText("#otp .err"), /Wrong code/);
-    await b.ev(`(() => { const f = document.querySelector("#otp"); f.code.value = ${JSON.stringify(code[1])}; f.requestSubmit(); })()`);
-    for (let i = 0; i < 40 && (await b.ev(`document.querySelector("#nameRow").hidden`)); i++) await sleep(100);
-    assert.equal(await b.ev(`document.querySelector("#nameRow").hidden`), false, "a new number is asked for a name");
-    await b.afterLoad(async () => b.ev(`(() => { const f = document.querySelector("#otp"); f.name.value = "Priya"; f.requestSubmit(); })()`));
-    assert.equal(await b.ev(`document.querySelector("main h1").textContent`), "Hello, Priya");
-    assert.ok(await b.ev(`document.body.innerText.includes("Mobile verified")`), "the profile shows the number as verified");
+    const otpText = sel => b.ev(`(document.querySelector(${JSON.stringify(sel)}) || {}).textContent || ""`);
+    const typeIn = (sel, v) => b.ev(`(() => { const i = document.querySelector(${JSON.stringify(sel)}); const s = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value").set; s.call(i, ${JSON.stringify(v)}); i.dispatchEvent(new Event("input", { bubbles: true })); })()`);
+    await typeIn("#su input[name=name]", "Priya"); await typeIn("#su input[name=phone]", "9876543210");
+    await b.ev(`document.querySelector("#sendOtp").click()`);
+    for (let i = 0; i < 40 && !/\d{6}/.test(await otpText("#otphint")); i++) await sleep(100);
+    const code = /(\d{6})/.exec(await otpText("#otphint"));
+    assert.ok(code, "demo mode shows the code on the page (no SMS service in the suite)");
+    const typeCode = async c => { for (let i = 0; i < 6; i++) await typeIn("#otp input:nth-child(" + (i + 1) + ")", c[i]); };
+    await typeCode(String((+code[1] + 1) % 1e6).padStart(6, "0"));
+    for (let i = 0; i < 40 && !(await otpText("#su .su-err")); i++) await sleep(100);
+    assert.match(await otpText("#su .su-err"), /Wrong code/);
+    await typeCode(code[1]);
+    for (let i = 0; i < 40 && !(await b.ev(`!!document.querySelector("#verified")`)); i++) await sleep(100);
+    assert.ok(await b.ev(`!!document.querySelector("#verified")`), "the right code verifies the number and creates the account");
+    await b.ev(`document.querySelector("#send").click()`); await sleep(300); // Create account -> the pincode step
+    await typeIn("#su-pin input[name=pin]", "110001");
+    for (let i = 0; i < 40 && !(await b.ev(`!!document.querySelector("#pinok")`)); i++) await sleep(100);
+    await b.ev(`document.querySelector("#su-pin button[type=submit]").click()`);
+    for (let i = 0; i < 40 && !(await b.ev(`!!document.querySelector("#goAccount")`)); i++) await sleep(100);
+    assert.ok(/MYTEKK500/.test(await otpText("#done")), "the welcome coupon on the done screen");
+    await b.afterLoad(async () => b.ev(`document.querySelector("#goAccount").click()`));
+    assert.ok(await b.ev(`!!document.querySelector(".acc-side") && /Priya/.test(document.querySelector(".acc-who").textContent)`), "the account dashboard greets the new customer");
     await b.afterLoad(async () => b.ev(`document.querySelector("#logout").click()`));
     assert.equal(await b.ev(`document.querySelector(".hlink span").textContent`), "Sign in", "signed out again");
 

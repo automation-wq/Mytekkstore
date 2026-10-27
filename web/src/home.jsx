@@ -95,13 +95,14 @@ export function Home() {
   const reviews = tvs.flatMap(p => (p.reviews || []).map(r => ({ ...r, p }))).slice(-3).reverse();
   const allReviews = tvs.flatMap(p => p.reviews || []);
   const types = [
-    ["Google TV", "Tile_Type_Google_TV", tvs.filter(p => p.os === "Google TV" && typeOf(p) !== "Mini-LED PRO"), listUrl({ cat: "Televisions", os: "Google TV" }), "32\"–85\""],
-    ["webOS Hub", "Tile_Type_webOS_Hub", tvs.filter(p => p.os === "WebOS"), listUrl({ cat: "Televisions", os: "WebOS" }), "Magic Remote"],
-    ["Mini-LED PRO", "Tile_Type_Mini-LED_PRO", miniAll, listUrl({ cat: "Televisions", type: "Mini-LED PRO" }), "Dolby Vision"],
-    ["QLED", "Tile_Type_QLED", tvs.filter(p => typeOf(p) === "QLED"), listUrl({ cat: "Televisions", type: "QLED" }), ""],
-    ["Budget Smart", "Tile_Type_Budget_Smart", tvs.filter(p => /Android|Coolita/.test(p.os || "")), "#under-30000", "Android · Coolita"],
-    ["Non-Smart HD", "Tile_Type_Non-Smart_HD", tvs.filter(p => !p.os), listUrl({ cat: "Televisions", max: 16990 }), ""],
+    ["Google TV", "Google-TV-Xplore-55in", tvs.filter(p => p.os === "Google TV" && typeOf(p) !== "Mini-LED PRO"), listUrl({ cat: "Televisions", os: "Google TV" }), "32\"–85\""],
+    ["webOS Hub", "webOS-Smart-TV-55in", tvs.filter(p => p.os === "WebOS"), listUrl({ cat: "Televisions", os: "WebOS" }), "Magic Remote"],
+    ["Mini-LED PRO", "Mini-LED-PRO-65in", miniAll, listUrl({ cat: "Televisions", type: "Mini-LED PRO" }), "Dolby Vision"],
+    ["QLED", "Cloud-TV-QLED-43in", tvs.filter(p => typeOf(p) === "QLED"), listUrl({ cat: "Televisions", type: "QLED" }), ""],
+    ["Budget Smart", "Coolita-OS-FHD-Smart-TV-43in", tvs.filter(p => /Android|Coolita/.test(p.os || "")), "#under-30000", "Android · Coolita"],
+    ["Non-Smart HD", "Non-Smart-HD-TV-32in", tvs.filter(p => !p.os), listUrl({ cat: "Televisions", max: 16990 }), ""],
   ];
+  const OUTLINE = { 24: "54%", 32: "60%", 43: "66%", 50: "72%", 55: "78%", 65: "84%", 75: "92%", 85: "96%" }; // the design's size cards: an outline that grows with the screen
   const rooms = { 24: "Kitchen", 32: "Bedroom", 43: "Small room", 50: "Living room", 55: "Most popular", 65: "Large room", 75: "Home theatre", 85: "Home theatre" };
   const guide = [["24\"", "60 cm", "about 55 cm", "1.0 to 1.5 m", "Kitchen, study, shop counter", [24]], ["32\"", "80 cm", "about 73 cm", "1.2 to 2.0 m", "Bedroom, hostel, small flat", [32]], ["43\"", "109 cm", "about 97 cm", "1.6 to 2.5 m", "Small living room, 1 BHK", [43]],
     ["50\" / 55\"", "126 / 140 cm", "about 112 to 124 cm", "2.0 to 3.0 m", "Living room, 2 BHK", [50, 55]], ["65\"", "165 cm", "about 145 cm", "2.5 to 3.5 m", "Large living room, villa", [65]], ["75\" / 85\"", "190 / 215 cm", "about 167 to 190 cm", "3.0 to 4.5 m", "Home theatre, hall", [75, 85]]];
@@ -166,7 +167,7 @@ export function Home() {
     <section className="d-wrap d-sec" id="sizes">
       <Head h="Shop by size" sub={"Sit 1.5× the screen width away for the best picture. Example: a 55\" TV suits a sofa about 2 metres from the wall."} link="Size guide" href="#size-guide" />
       <div className="d-g7">{sizes.filter(s => s.n >= 32).sort((a, b) => a.n - b.n).map(s => <a className={"d-card d-size" + (s.n === 55 ? " top" : "")} href={listUrl({ cat: "Televisions", size: s.n })} key={s.n}>
-        <img src={src("Tile_Size_" + s.n + "in", 360)} srcSet={`${src("Tile_Size_" + s.n + "in", 360)} 360w, ${src("Tile_Size_" + s.n + "in")} 600w`} sizes="(max-width:900px) 46vw, 180px" alt="" loading="lazy" width="600" height="600" />
+        <span className="d-outline" style={{ width: OUTLINE[s.n] || "70%" }} aria-hidden="true"></span>
         <strong className="d-h">{s.n}"</strong><span className={"d-emi" + (s.n === 55 ? " gold" : "")}>{rooms[s.n] || "Living room"} · from {from(bySize(s.n))}</span></a>)}</div>
     </section>
 
@@ -184,7 +185,7 @@ export function Home() {
 
     {mini && <section className="d-wrap d-sec">
       <div className="d-feature">
-        <div className="d-fimg"><img src={pic(mini.images && mini.images[0] || mini.img, 960)} srcSet={picSet(mini.images && mini.images[0] || mini.img)} sizes="(max-width:900px) 100vw, 56vw" alt="Elista Mini-LED PRO in a living room" loading="lazy" /></div>
+        <div className="d-fimg"><img src={src("Hero3_Mini_LED_PRO", 1280)} srcSet={`${src("Hero3_Mini_LED_PRO", 1280)} 1280w, ${src("Hero3_Mini_LED_PRO")} 1920w`} sizes="100vw" alt="Elista Mini-LED PRO in a living room" loading="lazy" width="1920" height="600" /></div>
         <div className="d-ftext">
           <span className="d-kick">Flagship · Mini-LED PRO</span>
           <h3 className="d-h" style={{ fontSize: 36, lineHeight: 1.08 }}>Brighter. Deeper. Smoother. Our most premium picture.</h3>
@@ -213,7 +214,7 @@ export function Home() {
     <section className="d-wrap d-sec">
       <Head h="Shop by type" link="All TVs" href="/televisions" />
       <div className="d-g6">{types.filter(([, , list]) => list.length).map(([name, tile, list, href, note]) => <a className="d-card d-type" href={href} key={name}>
-        <div className="d-tv"><img src={src(tile, 360)} srcSet={`${src(tile, 360)} 360w, ${src(tile)} 600w`} sizes="(max-width:900px) 46vw, 200px" alt="" loading="lazy" width="600" height="600" /></div>
+        <div className="d-tv"><img src={pic("img/elista/" + tile + "_2.webp", 480)} srcSet={picSet("img/elista/" + tile + "_2.webp")} sizes="(max-width:900px) 46vw, 260px" alt="" loading="lazy" width="1500" height="1500" /></div>
         <strong>{name}</strong><span className="d-emi">{note ? note + " · " : ""}from {from(list)}</span>{Math.max(...list.map(off)) > 0 && <span className="d-save">Up to {Math.max(...list.map(off))}% off</span>}
       </a>)}</div>
     </section>
@@ -250,9 +251,9 @@ export function Home() {
     <section className="d-wrap d-sec">
       <Head h="Buying guides" link="All guides" href="/buying-guide" />
       <div className="d-g3">
-        <a className="d-card d-guide" href="#size-guide"><img src={src("Tile_Size_55in", 360)} alt="" loading="lazy" /><div><strong>Which TV size is right for your room?</strong><span className="d-emi">A 2-minute guide with distances for every size.</span></div></a>
-        <a className="d-card d-guide" href="/buying-guide"><img src={src("Tile_Type_QLED", 360)} alt="" loading="lazy" /><div><strong>QLED vs Mini-LED vs 4K LED</strong><span className="d-emi">What the names mean and which is worth paying for.</span></div></a>
-        <a className="d-card d-guide" href="/buying-guide"><img src={src("Tile_Type_Google_TV", 360)} alt="" loading="lazy" /><div><strong>Google TV or webOS Hub?</strong><span className="d-emi">Apps, remotes and voice, compared side by side.</span></div></a>
+        <a className="d-card d-guide" href="#size-guide"><img src={pic("img/elista/webOS-Smart-TV-55in_2.webp", 480)} alt="" loading="lazy" /><div><strong>Which TV size is right for your room?</strong><span className="d-emi">A 2-minute guide with distances for every size.</span></div></a>
+        <a className="d-card d-guide" href="/buying-guide"><img src={pic("img/elista/Cloud-TV-QLED-43in_2.webp", 480)} alt="" loading="lazy" /><div><strong>QLED vs Mini-LED vs 4K LED</strong><span className="d-emi">What the names mean and which is worth paying for.</span></div></a>
+        <a className="d-card d-guide" href="/buying-guide"><img src={pic("img/elista/Google-TV-Xplore-55in_2.webp", 480)} alt="" loading="lazy" /><div><strong>Google TV or webOS Hub?</strong><span className="d-emi">Apps, remotes and voice, compared side by side.</span></div></a>
       </div>
     </section>
 

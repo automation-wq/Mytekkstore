@@ -2538,3 +2538,114 @@ body::before, body::after { display:none }
 .d-promo img { transform:scale(1.6); transform-origin:50% 50% }
 .d-fimg img { transform:scale(1.3); transform-origin:50% 50% }
 .d-size img { object-position:50% 68% }
+
+/* home pass 3 */
+.d-fimg img { transform:none; object-position:86% 50% } /* the television side of the owner's Mini-LED banner */
+.d-outline { display:block; aspect-ratio:16/9; border:2.5px solid #111; border-radius:2px; margin:6px auto 4px } .d-size.top .d-outline { border-color:#B8923A }
+.d-size { padding:22px 12px }
+.d-tv img { transform:scale(1.3); transform-origin:50% 50% } /* the living-room cards past their lettering */
+.d-guide img { object-position:50% 50%; transform:scale(1.25); transform-origin:50% 50% }
+@media (max-width:760px) { .d-fimg img { object-position:80% 50% } }
+
+/* ===== 27 Oct 2026: the owner's sign-up prototype and account designs ===== */
+body.su-page #hdr, body.su-page #ftr, body.su-page .mnav, body.su-page .chatfab { display:none }
+body.su-page main.wrap { padding:0; max-width:none; min-height:100vh }
+.su { position:relative; min-height:100vh; background:#0e0f12; color:#111; font-family:Inter,"Inter Fallback",system-ui,sans-serif; overflow:hidden }
+.su-bg { position:absolute; inset:0 } .su-bg img { width:100%; height:100%; object-fit:cover; filter:brightness(.62); display:block }
+.su-shade { position:absolute; inset:0; background:linear-gradient(90deg,rgba(14,15,18,.86) 0%,rgba(14,15,18,.55) 45%,rgba(14,15,18,.15) 100%) }
+.su-wrap { position:relative; min-height:100vh; display:grid; grid-template-columns:1.1fr 1fr; max-width:1320px; margin:0 auto; padding:40px 32px; gap:24px }
+.su-left { color:#fff; display:flex; flex-direction:column; justify-content:center; gap:22px; padding-right:48px }
+.su-logo { font-family:"Inter Tight",Inter,sans-serif; font-size:28px; font-weight:500; color:#fff; text-decoration:none } .su-logo b { font-weight:800; color:#5fd3a8 }
+.su-eyebrow { font-size:12px; letter-spacing:.24em; font-weight:700; color:#e8cf8c; text-transform:uppercase }
+.su-left h1 { font-family:"Inter Tight",Inter,sans-serif; font-size:clamp(34px,4.4vw,58px); line-height:1.05; margin:0; letter-spacing:-.02em; color:#fff }
+.su-ben { list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:12px; font-size:16px; color:#e6e8ec } .su-ben li { display:flex; gap:12px; align-items:flex-start } .su-ben svg { flex:none; margin-top:3px }
+.su-stat { font-size:13px; color:#bfc5d2; display:flex; gap:10px; align-items:center } .su-stat b { color:#e8cf8c; letter-spacing:.1em }
+.su-foot { margin:0; font-size:13px; color:#8a8f99 }
+.su-right { display:flex; align-items:center; justify-content:center }
+.su-card { width:100%; max-width:460px; background:#fff; border-radius:22px; padding:34px; box-shadow:0 30px 80px rgba(0,0,0,.45); position:relative; overflow:hidden }
+.su-card::before { content:""; position:absolute; left:0; top:0; right:0; height:4px; background:linear-gradient(90deg,#08805f,#e8cf8c) }
+.su-steps { display:flex; gap:6px; margin-bottom:22px } .su-steps span { flex:1; height:4px; border-radius:2px; background:#d9dce3; transition:background .4s } .su-steps span.on { background:#08805f }
+.su-step { display:flex; flex-direction:column; gap:14px }
+.su-card h2 { font-family:"Inter Tight",Inter,sans-serif; font-size:26px; margin:0; letter-spacing:-.01em; color:#111 }
+.su-sub { margin:0; font-size:14px; color:#5f6775; line-height:1.5 } .su-sub b { color:#111 }
+.su-link { background:none; border:0; padding:0; color:#08805f; font-weight:600; font-size:inherit; cursor:pointer; font-family:inherit; text-decoration:underline; text-underline-offset:2px } .su-link:hover { color:#06704f }
+.su-card label { display:flex; flex-direction:column; gap:6px; font-size:13px; font-weight:600; color:#111 }
+.su-row { display:flex; gap:8px }
+.su-card input[type=text], .su-card input[type=tel], .su-card input[type=email], .su-card input[type=password] { height:48px; border:1.5px solid #d9dce3; border-radius:10px; padding:0 14px; font-size:16px; background:#fff; color:#111; width:100%; transition:border-color .2s, box-shadow .2s; font-family:inherit; margin:0 }
+.su-card input:focus { outline:none; border-color:#08805f; box-shadow:0 0 0 4px rgba(8,128,95,.15) } .su-card input[readonly] { background:#f7f7f8 }
+.su-cc { width:76px !important; flex:none; text-align:center }
+.su-btn { height:50px; border:0; border-radius:10px; background:#08805f; color:#fff; font-weight:600; font-size:15px; cursor:pointer; display:inline-flex; align-items:center; justify-content:center; gap:8px; width:100%; transition:transform .12s, box-shadow .12s, background .2s; font-family:inherit; text-decoration:none }
+.su-btn:hover { background:#06704f; transform:translateY(-1px); box-shadow:0 8px 20px rgba(8,128,95,.3); color:#fff } .su-btn:active { transform:translateY(0) }
+.su-btn.ghost { background:#fff; color:#111; border:1.5px solid #d9dce3 } .su-btn.ghost:hover { background:#e8f5f0; box-shadow:none; color:#111 }
+.su-btn.su-otpbtn { width:auto; height:48px; padding:0 14px; font-size:14px; background:#e8f5f0; color:#08805f; border:1.5px solid #08805f; box-shadow:none; white-space:nowrap } .su-btn.su-otpbtn:hover { background:#08805f; color:#fff; transform:none; box-shadow:none }
+.su-btn[disabled] { background:#c9cfd9; color:#fff; box-shadow:none; cursor:not-allowed; transform:none }
+.su-or { display:flex; align-items:center; gap:10px; font-size:12px; color:#5f6775 } .su-or::before, .su-or::after { content:""; flex:1; height:1px; background:#d9dce3 }
+.su-gbtn { min-height:44px; display:flex; justify-content:center }
+.su-ok { background:#e8f5f0; color:#0b4a37; border-radius:8px; padding:8px 12px; font-size:13px; font-weight:500; display:flex; align-items:center; gap:8px } .su-ok.bad { background:#fdecec; color:#8a1f1f }
+.su-otpwrap { display:flex; flex-direction:column; gap:10px }
+.su-otp { display:flex; gap:8px } .su-otp input { text-align:center; font-size:24px; font-weight:700; padding:0 !important; height:56px !important } .su-otp input.filled { border-color:#08805f; background:#e8f5f0 }
+.su-shake { animation:su-shake .4s } @keyframes su-shake { 20% { transform:translateX(-6px) } 40% { transform:translateX(6px) } 60% { transform:translateX(-4px) } 80% { transform:translateX(4px) } }
+.su-chk { display:flex !important; flex-direction:row !important; gap:10px; align-items:flex-start; font-size:13px; color:#5f6775; font-weight:400 !important } .su-chk input { accent-color:#08805f; margin-top:2px; width:16px; height:16px; flex:none }
+.su-tiny { font-size:12px; color:#5f6775; margin:0 } .su-tiny a { color:#111; text-decoration:underline }
+.su-err { margin:0; color:#b42318; font-size:13px; font-weight:600 }
+.su-trust { display:flex; flex-wrap:wrap; gap:4px 10px; font-size:12px; color:#5f6775; padding-top:6px; border-top:1px solid #eceef1 }
+.su-pw { display:flex; flex-direction:column; gap:12px; padding:14px; border:1px solid #eceef1; border-radius:12px; background:#f7f7f8 } .su-pw .err:empty { display:none } .su-pw .err { margin:0; color:#b42318; font-size:13px }
+.su-success { text-align:center; display:flex; flex-direction:column; align-items:center; gap:12px }
+.su-ring { width:96px; height:96px; border-radius:50%; background:#e8f5f0; display:flex; align-items:center; justify-content:center }
+.su-coupon { border:1.5px dashed #08805f; border-radius:10px; padding:12px 20px; font-family:"Inter Tight",Inter,sans-serif; font-weight:800; font-size:22px; letter-spacing:.12em; color:#08805f; background:#e8f5f0 }
+@media (max-width:900px) { .su-wrap { grid-template-columns:1fr; padding:24px 16px; gap:24px; min-height:0 } .su-left { padding-right:0; gap:14px } .su-ben { display:none } .su-left h1 { font-size:30px } .su-card { padding:24px } .su-foot { display:none } }
+
+/* the account dashboard */
+body[data-page="account"] main.wrap { max-width:1320px; margin:0 auto; padding:28px 32px 48px }
+.acc { display:grid; grid-template-columns:260px minmax(0,1fr); gap:28px; align-items:start; font-family:Inter,"Inter Fallback",system-ui,sans-serif; color:#111 }
+.acc-side { background:#fff; border:1px solid #eceef1; border-radius:14px; padding:18px 12px; position:sticky; top:calc(var(--hh,150px) + 16px) }
+.acc-who { display:flex; gap:12px; align-items:center; padding:6px 8px 16px; border-bottom:1px solid #eceef1; margin-bottom:10px } .acc-who b { display:block; font-size:16px } .acc-who span { font-size:13px; color:#5f6775 } .acc-who div { min-width:0; overflow-wrap:anywhere }
+.acc-avatar { width:46px; height:46px; border-radius:50%; background:#08805f; color:#fff; display:grid; place-items:center; font-weight:800; font-size:18px; flex:none }
+.acc-nav { display:flex; flex-direction:column; gap:2px } .acc-nav a, .acc-nav button { display:flex; align-items:center; gap:12px; padding:11px 12px; border-radius:8px; text-decoration:none; font-size:14px; font-weight:500; color:#111; background:none; border:0; cursor:pointer; font-family:inherit; text-align:left; width:100% } .acc-nav a:hover, .acc-nav button:hover { background:#f7f7f8; color:#111 } .acc-nav a.on { background:#e8f5f0; color:#08805f; font-weight:700 } .acc-nav .ic { width:18px; height:18px; flex:none }
+.acc-main { display:flex; flex-direction:column; gap:18px; min-width:0 }
+.acc-head { display:flex; justify-content:space-between; align-items:flex-start; gap:16px; flex-wrap:wrap } .acc-h { font-family:"Inter Tight",Inter,sans-serif; font-size:34px; font-weight:800; letter-spacing:-.02em; margin:0; color:#111 } .acc-sub { margin:4px 0 0; font-size:15px; color:#5f6775 }
+.acc-h2 { font-family:"Inter Tight",Inter,sans-serif; font-size:24px; font-weight:800; letter-spacing:-.02em; margin:0 }
+.acc-pill { display:inline-flex; align-items:center; gap:8px; background:#e8f5f0; color:#08805f; font-weight:600; font-size:13px; padding:8px 14px; border-radius:999px; text-decoration:none } .acc-pill .ic { width:16px; height:16px }
+.acc-pill2 { display:inline-flex; padding:4px 10px; border-radius:999px; background:#f3f4f6; font-size:12px; font-weight:600; width:max-content }
+.acc-btn { display:inline-flex; align-items:center; justify-content:center; gap:8px; height:46px; padding:0 22px; background:#08805f; color:#fff; font-weight:600; font-size:14px; text-decoration:none; border:0; border-radius:8px; cursor:pointer; font-family:inherit; white-space:nowrap } .acc-btn:hover { background:#06704f; color:#fff }
+.acc-btn.ghost { background:#fff; color:#111; border:1.5px solid #d9dce3 } .acc-btn.ghost:hover { background:#f7f7f8; color:#111 } .acc-btn[disabled] { opacity:.5; cursor:not-allowed }
+.acc-card { background:#fff; border:1px solid #eceef1; border-radius:12px; padding:20px; display:flex; flex-direction:column; gap:10px; color:#111; text-decoration:none; min-width:0 } .acc-card.inner { background:#f7f7f8 } .acc-card > b { font-size:16px }
+.acc-muted { color:#5f6775; font-size:14px; line-height:1.5 } .acc-muted.small { font-size:12px }
+.acc-link { color:#08805f; font-weight:600; font-size:14px; text-decoration:none } .acc-linkbtn { background:none; border:0; padding:0; color:#111; font-weight:600; font-size:13px; cursor:pointer; font-family:inherit }
+.acc-actions { display:flex; gap:10px; flex-wrap:wrap; align-items:center } .acc-actions.start { margin-top:4px }
+.acc-grid4 { display:grid; grid-template-columns:repeat(4,1fr); gap:16px } .acc-grid2 { display:grid; grid-template-columns:1fr 1fr; gap:16px } .acc-grid2.tight { gap:12px }
+.acc-tile { gap:8px } .acc-tile:hover { border-color:#d9dce3 } .acc-ico { width:48px; height:48px; border-radius:12px; background:#e8f5f0; color:#08805f; display:grid; place-items:center; margin-bottom:6px } .acc-ico .ic { width:22px; height:22px }
+.acc-latest { flex-direction:row; align-items:center; gap:18px; padding:16px 20px } .acc-latest-text { display:flex; flex-direction:column; gap:6px; flex:1; min-width:0 } .acc-latest-text b { font-size:18px } .acc-latest .acc-actions { flex:none }
+.acc-photo { width:150px; aspect-ratio:1; background:#f3f4f6; border-radius:10px; overflow:hidden; display:grid; place-items:center; color:#8a8f99; font-size:13px; flex:none } .acc-photo img { width:100%; height:100%; object-fit:cover; transform:scale(1.35); transform-origin:50% 46% }
+.acc-status { display:inline-flex; width:max-content; padding:6px 12px; border-radius:999px; font-size:13px; font-weight:600 } .acc-status.amber { background:#fdf6e7; color:#8a6512 } .acc-status.green { background:#e8f5f0; color:#08805f } .acc-status.red { background:#fdecec; color:#8a1f1f }
+.acc-empty { align-items:flex-start } .acc-empty .acc-btn { margin-top:6px }
+.acc-addr { margin:0; color:#5f6775; font-size:14px; line-height:1.6 }
+.acc-filters { display:flex; justify-content:space-between; gap:14px; flex-wrap:wrap; align-items:center }
+.acc-chips { display:flex; gap:8px; flex-wrap:wrap } .acc-chips button { height:40px; padding:0 16px; border-radius:999px; border:1px solid transparent; background:#f3f4f6; font-weight:600; font-size:14px; cursor:pointer; font-family:inherit; color:#111 } .acc-chips button.on { background:#111; color:#fff }
+.acc-in { height:46px; border:1px solid #d9dce3; border-radius:8px; padding:0 14px; font-size:15px; background:#fff; width:100%; box-sizing:border-box; font-family:inherit; color:#111; margin:0 } .acc-in:focus { outline:none; border-color:#08805f; box-shadow:0 0 0 3px rgba(8,128,95,.15) } .acc-filters .acc-in { width:min(100%,380px) }
+.acc-order-head { display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap; font-size:14px; color:#5f6775 } .acc-order-head b { color:#111 }
+.acc-order-body { display:flex; gap:18px; align-items:center } .acc-order-text { display:flex; flex-direction:column; gap:6px; flex:1; min-width:0 } .acc-order-text b { font-size:17px }
+.acc-track { list-style:none; margin:8px 0 0; padding:0; display:grid; grid-template-columns:repeat(4,1fr); gap:0 } .acc-track li { position:relative; text-align:center; font-size:13px; font-weight:600; color:#8a8f99; padding-top:22px } .acc-track li i { position:absolute; top:0; left:50%; width:14px; height:14px; border-radius:50%; background:#d9dce3; transform:translateX(-50%) } .acc-track li::before { content:""; position:absolute; top:6px; left:-50%; right:50%; height:2px; background:#d9dce3 } .acc-track li:first-child::before { display:none } .acc-track li.done { color:#111 } .acc-track li.done i, .acc-track li.done::before { background:#08805f }
+.acc-warr { flex-direction:row; justify-content:space-between; align-items:center; background:#f0faf6; border-color:#cfe9df } .acc-warr b { display:block; font-size:16px; margin-bottom:4px }
+.acc-form { gap:14px } .acc-f { display:flex; flex-direction:column; gap:6px; font-size:13px; font-weight:600; color:#111 } .acc-form .err:empty { display:none } .acc-form .err { margin:0; color:#b42318; font-size:13px }
+.acc-addrcard.dflt { border:1.5px solid #08805f } .acc-addr-head { display:flex; justify-content:space-between; align-items:center } .acc-tag { display:inline-flex; padding:4px 12px; border-radius:999px; background:#e8f5f0; color:#08805f; font-size:12px; font-weight:700; width:max-content } .acc-default { color:#08805f; font-weight:700; font-size:13px }
+.acc-addnew { align-items:center; justify-content:center; border:2px dashed #d9dce3; background:#fafafa; cursor:pointer; font-family:inherit; min-height:200px; text-align:center } .acc-addnew b { font-size:18px; color:#5f6775 } .acc-plus { font-size:32px; color:#08805f; line-height:1 }
+.acc-check { flex-direction:row; align-items:center; gap:14px } .acc-check > .ic { width:22px; height:22px; color:#08805f; flex:none } .acc-check > div { flex:1 } .acc-check b { display:block; font-size:16px }
+.acc-flow { max-width:720px } .acc-step { gap:14px } .acc-row { display:flex; gap:10px } .acc-ok { background:#e8f5f0; color:#0b4a37; border-radius:8px; padding:10px 12px; font-size:14px } .acc-err { margin:0; color:#b42318; font-size:13px; font-weight:600 }
+.acc-chk { display:flex; gap:10px; align-items:flex-start; font-size:14px; color:#111; font-weight:500 } .acc-chk input { accent-color:#08805f; width:16px; height:16px; margin-top:3px; flex:none }
+.acc-map { height:160px; border-radius:10px; background:#eceef1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px; color:#5f6775; font-size:13px } .acc-map .ic { width:28px; height:28px; color:#08805f }
+.acc-big { font-family:"Inter Tight",Inter,sans-serif; font-size:26px; font-weight:800 }
+.acc-coupon { border:1.5px dashed #08805f; background:#f0faf6 } .acc-coupon.off { border-style:solid; border-color:#eceef1; background:#fff; opacity:.75 } .acc-code { font-family:"Inter Tight",Inter,sans-serif; font-weight:800; font-size:22px; letter-spacing:.12em; color:#08805f }
+.acc-stars { color:#b8923a; letter-spacing:.1em }
+.acc-wish { margin-top:0 }
+@media (max-width:900px) { .acc { grid-template-columns:1fr } .acc-side { position:static; padding:12px } .acc-nav { flex-direction:row; overflow-x:auto; gap:6px; padding-bottom:4px } .acc-nav a, .acc-nav button { white-space:nowrap; width:auto; padding:9px 12px; font-size:13px } .acc-grid4, .acc-grid2 { grid-template-columns:1fr } .acc-latest, .acc-order-body { flex-direction:column; align-items:flex-start } .acc-photo { width:120px } .acc-track li { font-size:11px } .acc-warr { flex-direction:column; align-items:flex-start } body[data-page="account"] main.wrap { padding:16px 16px 40px } .acc-h { font-size:28px } }
+
+/* checkout: saved address cards and the coupon line */
+.ck-addrs { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin:6px 0 10px } .ck-addr { display:flex; gap:10px; align-items:flex-start; padding:12px 14px; border:1.5px solid var(--line); border-radius:12px; cursor:pointer; font-size:14px } .ck-addr:has(input:checked) { border-color:#08805f; background:#f0faf6 } .ck-addr input { margin-top:3px; accent-color:#08805f } .ck-addr b { display:block } .ck-addr span { color:var(--muted); font-size:13px; line-height:1.5 } .ck-addr i { font-style:normal; font-size:12px; color:#08805f; font-weight:700 }
+.ck-coupon { display:flex; gap:8px; margin:8px 0 } .ck-coupon input { flex:1; text-transform:uppercase } .ck-coupon .btn { padding:0 16px }
+.tot .off { color:#08805f; font-weight:700 }
+@media (max-width:760px) { .ck-addrs { grid-template-columns:1fr } }
+/* account pass 2: the sign-up page edge to edge (the account rule above it had won), the avatar letter white, the order photos cropped past the card lettering */
+body.su-page[data-page="account"] main.wrap { padding:0; max-width:none }
+.acc-who .acc-avatar { color:#fff; font-size:18px }
+.acc-photo img { transform:scale(1.6) }

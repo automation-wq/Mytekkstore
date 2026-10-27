@@ -185,7 +185,25 @@ function startSession(req, res, user) {
   res.setHeader("Set-Cookie", `sid=${token}; HttpOnly; SameSite=Lax; Path=/; Max-Age=${WEEK / 1000}${secure}`);
 }
 const fails = new Map(); // "ip email" -> { n, until } : slows down password guessing
-const publicUser = u => u && { hasPassword: !!u.hash, name: u.name, email: u.email, phone: u.phone, phoneVerified: !!u.phoneVerified, address: u.address, pin: u.pin, admin: u.admin };
+const publicUser = u => u && { hasPassword: !!u.hash, name: u.name, email: u.email, phone: u.phone, phoneVerified: !!u.phoneVerified, address: u.address, pin: u.pin, admin: u.admin, addresses: u.addresses || [], coupons: u.coupons || [], whatsapp: !!u.whatsapp, emailOffers: u.emailOffers !== false, since: u.since || "" };
+// the welcome coupon of the owner's sign-up design: ₹500 on the first order of ₹15,000 or more, 30 days, once
+const welcomeCoupon = () => ({ code: "MYTEKK500", value: 500, minOrder: 15000, expires: new Date(Date.now() + 30 * 86400000).toISOString(), used: false, issued: new Date().toISOString() });
+// a coupon the customer typed at checkout: its discount, or a plain reason it does not apply
+const couponFor = (user, code, total) => {
+  if (!code) return { discount: 0, code: "" };
+  const c = (user.coupons || []).find(c => c.code === String(code).trim().toUpperCase());
+  if (!c) bad("That coupon code is not in your account.");
+  if (c.used) bad("This coupon has already been used.");
+  if (new Date(c.expires) < new Date()) bad("This coupon has expired.");
+  if (total < c.minOrder) bad(`This coupon needs an order of at least ₹${c.minOrder.toLocaleString("en-IN")}.`);
+  return { discount: Math.min(c.value, total), code: c.code };
+};
+const useCoupon = (user, code) => { const c = user && (user.coupons || []).find(c => c.code === code); if (c && !c.used) { c.used = true; c.usedAt = new Date().toISOString(); write("users"); } };
+// saved addresses: up to 8, one default; the default also fills the old address and pin fields the checkout and the header read
+const addrFrom = b => ({ label: ["Home", "Work", "Other"].includes(b.label) ? b.label : "Home", name: str(b.name, "Name", 80), line1: str(b.line1, "Flat / house no., building", 160), line2: b.line2 ? str(b.line2, "Area, street", 160) : "", landmark: b.landmark ? str(b.landmark, "Landmark", 120) : "", city: str(b.city, "City", 80), state: str(b.state, "State", 80), pin: str(b.pin, "Pincode", 6, /^\d{6}$/), phone: e164(str(b.phone, "Phone", 15, /^[0-9+ ]{7,15}$/)) });
+const addrText = a => [a.line1, a.line2, a.landmark, a.city + ", " + a.state].filter(Boolean).join(", ");
+const setDefaultAddress = (user, id) => { (user.addresses || []).forEach(a => a.isDefault = a.id === id); const d = (user.addresses || []).find(a => a.isDefault); if (d) { user.address = addrText(d); user.pin = d.pin; if (!user.phone) user.phone = d.phone; } };
+const addrOut = user => ({ addresses: user.addresses || [], user: publicUser(user) });
 
 // ===== validation =====
 class HttpError extends Error { constructor(code, msg) { super(msg); this.code = code; } }
@@ -300,14 +318,41 @@ on("POST", "me/password", ({ body, user }) => {
   return { ok: true };
 }, "user");
 on("PATCH", "me", ({ body, user }) => {
-  const name = str(body.name, "Name", 80);
-  const phone = body.phone ? str(body.phone, "Phone", 15, /^[0-9+ ]{7,15}$/) : "", address = body.address ? str(body.address, "Address", 400) : "";
-  const pin = body.pin ? str(body.pin, "Pincode", 10, /^[0-9A-Za-z ]{4,10}$/) : "";
-  const np = phone ? e164(phone) : user.phone;
-  if (np !== user.phone) { user.phone = np; user.phoneVerified = false; }
-  Object.assign(user, { name, address, pin }); write("users");
+  const patch = {};
+  if (body.name !== undefined) patch.name = str(body.name, "Name", 80);
+  if (body.phone !== undefined) { const np = body.phone ? e164(str(body.phone, "Phone", 15, /^[0-9+ ]{7,15}$/)) : ""; if (np !== user.phone) { patch.phone = np; patch.phoneVerified = false; } }
+  if (body.address !== undefined) patch.address = body.address ? str(body.address, "Address", 400) : "";
+  if (body.pin !== undefined) patch.pin = body.pin ? str(body.pin, "Pincode", 10, /^[0-9A-Za-z ]{4,10}$/) : "";
+  if (body.email !== undefined && body.email !== user.email) { const em = body.email ? str(body.email, "Email", 120, /^[^\s@]+@[^\s@]+\.[^\s@]+$/).toLowerCase() : ""; if (em && db.users.some(x => x.email === em && x.id !== user.id)) throw new HttpError(409, "An account with this email already exists."); patch.email = em; if (em) patch.emailVerified = false; }
+  if (body.whatsapp !== undefined) patch.whatsapp = !!body.whatsapp;
+  if (body.emailOffers !== undefined) patch.emailOffers = !!body.emailOffers;
+  Object.assign(user, patch); write("users");
   return { user: publicUser(user) };
 }, "user");
+on("GET", "me/addresses", ({ user }) => addrOut(user), "user");
+on("POST", "me/addresses", ({ body, user }) => {
+  user.addresses = user.addresses || [];
+  if (user.addresses.length >= 8) bad("You can keep up to 8 addresses. Delete one to add another.");
+  const a = { id: crypto.randomBytes(4).toString("hex"), ...addrFrom(body), isDefault: false };
+  user.addresses.push(a);
+  if (body.isDefault || user.addresses.length === 1) setDefaultAddress(user, a.id);
+  write("users"); return addrOut(user);
+}, "user");
+on("POST", "me/addresses/([a-f0-9]{8})", ({ params, body, user }) => {
+  const a = (user.addresses || []).find(x => x.id === params[0]); if (!a) throw new HttpError(404, "Address not found.");
+  Object.assign(a, addrFrom(body));
+  if (body.isDefault || a.isDefault) setDefaultAddress(user, a.id);
+  write("users"); return addrOut(user);
+}, "user");
+on("POST", "me/addresses/([a-f0-9]{8})/default", ({ params, user }) => { if (!(user.addresses || []).some(x => x.id === params[0])) throw new HttpError(404, "Address not found."); setDefaultAddress(user, params[0]); write("users"); return addrOut(user); }, "user");
+on("POST", "me/addresses/([a-f0-9]{8})/delete", ({ params, user }) => {
+  const i = (user.addresses || []).findIndex(x => x.id === params[0]); if (i < 0) throw new HttpError(404, "Address not found.");
+  const [gone] = user.addresses.splice(i, 1);
+  if (gone.isDefault) { if (user.addresses[0]) setDefaultAddress(user, user.addresses[0].id); else { user.address = ""; user.pin = ""; } }
+  write("users"); return addrOut(user);
+}, "user");
+// the customer's own reviews, across the catalogue (the public product strips who wrote what)
+on("GET", "me/reviews", ({ user }) => ({ reviews: db.products.flatMap(p => (p.reviews || []).filter(r => r.userId === user.id).map(({ userId, ...r }) => ({ ...r, productId: p.id, product: p.name, brand: p.brand, img: p.img }))) }), "user");
 
 on("POST", "register", ({ body, req, res }) => {
   const name = str(body.name, "Name", 80), email = str(body.email, "Email", 120, /^[^\s@]+@[^\s@]+\.[^\s@]+$/).toLowerCase();
@@ -377,13 +422,18 @@ on("POST", "otp/verify", ({ body, req, res }) => {
     u = owners.find(u => u.phoneVerified) || (owners.length === 1 ? owners[0] : null);
     if (u && !u.phoneVerified) { u.phoneVerified = true; write("users"); }
   }
+  let created = false;
   if (!u) {
     if (typeof body.name !== "string" || !body.name.trim()) return { newUser: true }; // the page asks for a name, then verifies again
-    u = kind === "email" ? makeUser(str(body.name, "Name", 80), to, "", false, { emailVerified: true }) : makeUser(str(body.name, "Name", 80), "", "", false, { phone: to, phoneVerified: true });
+    const email = kind === "email" ? to : isEmail(body.email) ? String(body.email).trim().toLowerCase() : "";
+    if (email && kind !== "email" && db.users.some(x => x.email === email)) throw new HttpError(409, "An account with this email already exists. Sign in with that email, or leave the email empty.");
+    const pin = /^\d{6}$/.test(String(body.pin || "")) ? String(body.pin) : "";
+    u = makeUser(str(body.name, "Name", 80), email, "", false, { ...(kind === "email" ? { emailVerified: true } : { phone: to, phoneVerified: true }), pin, whatsapp: !!body.whatsapp, since: new Date().toISOString(), coupons: [welcomeCoupon()] }); // the sign-up design: ₹500 off the first order
+    created = true;
   }
   o.exp = 0; // the code is used up; the send count for this number is kept for the rate limit
   startSession(req, res, u);
-  return { user: publicUser(u) };
+  return { user: publicUser(u), created };
 });
 // ===== sign in with Google =====
 // The page gets an ID token from Google's sign-in button and posts it here. Google confirms the token and tells us the account.
@@ -463,6 +513,7 @@ function buildLines(items) {
 }
 const stamp = status => ({ at: new Date().toISOString(), status });
 function confirmPaid(o, paymentId, via) { // idempotent: the checkout callback and the webhook can both arrive
+  if (o.coupon && o.status !== "Placed") useCoupon(db.users.find(u => u.id === o.userId), o.coupon); // the welcome coupon is spent once the money is in
   if (o.status === "Placed") return;
   for (const it of o.items) { const p = db.products.find(p => p.id === it.id); if (p) { if (p.stock < it.qty) o.stockIssue = true; p.stock = Math.max(0, p.stock - it.qty); } } // stock is taken on confirmation
   o.status = "Placed"; o.pay = "Paid online (Razorpay)"; o.payment.paymentId = paymentId; o.payment.history.push({ ...stamp("Paid"), via });
@@ -503,11 +554,11 @@ on("POST", "pay/order", async ({ body, user }) => {
   const dest = destinationOf(body);
   if (!dest.methods.includes("online")) bad("Online payment is not available for this destination.");
   const name = str(body.name, "Name", 80), phone = str(body.phone, "Phone", 15, /^[0-9+ ]{7,15}$/), address = str(body.address, "Address", 400), pin = str(body.pin, "Pincode", 10, /^[0-9A-Za-z ]{4,10}$/);
-  const lines = buildLines(body.items), total = lines.reduce((t, l) => t + l.p.price * l.qty, 0);
+  const lines = buildLines(body.items), subtotal = lines.reduce((t, l) => t + l.p.price * l.qty, 0), cp = couponFor(user, body.coupon, subtotal), total = subtotal - cp.discount;
   const id = "MT" + crypto.randomBytes(5).toString("hex").toUpperCase();
   const rz = await razorpayCreateOrder(total * 100, id);
   const order = { id, at: new Date().toISOString(), status: "Pending payment", name, phone, address, pin, email: user.email || "", country: "IN", pay: "Online (Razorpay)", userId: user.id,
-    items: lines.map(({ p, qty }) => ({ id: p.id, brand: p.brand, name: p.name, img: p.img, price: p.price, qty })), total,
+    items: lines.map(({ p, qty }) => ({ id: p.id, brand: p.brand, name: p.name, img: p.img, price: p.price, qty })), subtotal, discount: cp.discount, coupon: cp.code, total,
     payment: { provider: "razorpay", providerOrderId: rz.id, paymentId: "", attempts: [], events: [], history: [stamp("Pending payment")] } };
   db.orders.push(order); write("orders");
   return { id, provider: "razorpay", keyId: RZP.id, providerOrderId: rz.id, amount: total * 100, currency: "INR", email: user.email || "" };
@@ -576,14 +627,16 @@ on("POST", "orders", ({ body, user }) => { // sign-in required
   const dest = destinationOf(body); // India only until a destination is approved
   if (!dest.methods.includes(body.pay === "online" ? "online" : "cod")) bad("That payment method is not available for this destination.");
   const lines = buildLines(body.items); // prices and stock from the server's own product list, never from the browser
+  const subtotal = lines.reduce((t, l) => t + l.p.price * l.qty, 0), cp = couponFor(user, body.coupon, subtotal);
   lines.forEach(l => l.p.stock -= l.qty);
+  useCoupon(user, cp.code);
   const order = {
     id: "MT" + crypto.randomBytes(5).toString("hex").toUpperCase(), at: new Date().toISOString(), status: "Placed",
     name, phone, address, pin, email: user.email || "", country: "IN", // the email is for order messages when there is no SMS provider
     // "online" is a demo payment: no gateway is called. Connect a real gateway here and verify its payment signature before saving.
     pay: body.pay === "online" ? "Paid online (demo payment)" : "Cash on delivery", userId: user ? user.id : null,
     items: lines.map(({ p, qty }) => ({ id: p.id, brand: p.brand, name: p.name, img: p.img, price: p.price, qty })),
-    total: lines.reduce((t, l) => t + l.p.price * l.qty, 0),
+    subtotal, discount: cp.discount, coupon: cp.code, total: subtotal - cp.discount,
   };
   db.orders.push(order); write("orders"); write("products");
   notify(order, `Your Mytekkstore order ${order.id} is placed. Total ₹${order.total}. ${order.pay}.`);

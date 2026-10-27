@@ -58,6 +58,12 @@ export function Checkout() {
   const { CFG: payCfg } = useStore(); // pay: "razorpay" once the server has gateway keys, "demo" otherwise
   useEffect(() => { if (payCfg && payCfg.pay === "razorpay" && !document.querySelector('script[src^="https://checkout.razorpay.com/"]')) { const sc = document.createElement("script"); sc.src = "https://checkout.razorpay.com/v1/checkout.js"; sc.async = true; document.head.appendChild(sc); } }, [payCfg && payCfg.pay]);
   const [place, setPlace] = useState("");
+  const saved = (me && me.addresses) || [], dfltAddr = saved.find(a => a.isDefault) || saved[0];
+  const [addrId, setAddrId] = useState(dfltAddr ? dfltAddr.id : "new"); // a saved address card, or "new" for the form
+  const wallet = ((me && me.coupons) || []).find(c => !c.used && new Date(c.expires) > new Date());
+  const [coupon, setCoupon] = useState(""), [couponMsg, setCouponMsg] = useState("");
+  const discount = (() => { const c = ((me && me.coupons) || []).find(c => c.code === coupon.trim().toUpperCase()); return c && !c.used && new Date(c.expires) > new Date() && cartTotal() >= c.minOrder ? Math.min(c.value, cartTotal()) : 0; })();
+  const applyCoupon = code => { const v = (code || "").trim().toUpperCase(); setCoupon(v); const c = ((me && me.coupons) || []).find(c => c.code === v); setCouponMsg(!v ? "" : !c ? "That code is not in your account." : c.used ? "This coupon has already been used." : new Date(c.expires) < new Date() ? "This coupon has expired." : cartTotal() < c.minOrder ? `Needs an order of at least ${money(c.minOrder)}.` : `${money(c.value)} off applied.`); };
   useEffect(() => { document.title = "Checkout | Mytekkstore"; }, []);
   useEffect(() => { if (cartCount()) track("begin_checkout", { value: cartTotal(), signedIn: !!me }); if (cartCount() && !me) location.replace("/account?next=/checkout"); }, []); // customers must sign in before checkout
   // the delivery place under the pincode, from India Post (the field still accepts any pincode)
@@ -70,17 +76,20 @@ export function Checkout() {
   };
   const placeOrder = async f => {
     const items = Object.entries(cart).map(([id, qty]) => ({ id: +id, qty }));
+    const picked = f.addrId && f.addrId !== "new" ? saved.find(a => a.id === f.addrId) : null;
+    if (picked) Object.assign(f, { name: picked.name, phone: picked.phone, address: [picked.line1, picked.line2, picked.landmark, picked.city + ", " + picked.state].filter(Boolean).join(", "), pin: picked.pin });
+    f.coupon = discount ? coupon : "";
     const online = f.pay !== "cod";
     let id;
     if (online && payCfg && payCfg.pay === "razorpay" && window.Razorpay) { // the gateway's own checkout; the server verifies the signature before the order counts
-      const o = await api("pay/order", "POST", { name: f.name, phone: f.phone, address: f.address, pin: f.pin, items });
+      const o = await api("pay/order", "POST", { name: f.name, phone: f.phone, address: f.address, pin: f.pin, items, coupon: f.coupon });
       await new Promise((res, rej) => { const rz = new window.Razorpay({ key: o.keyId, order_id: o.providerOrderId, amount: o.amount, currency: o.currency, name: "Mytekkstore", description: "Order " + o.id, prefill: { name: f.name, contact: f.phone, email: o.email || "" }, theme: { color: "#3b45c9" },
         modal: { ondismiss: () => rej(new Error("The payment was not completed. Nothing was charged; you can try again.")) },
         handler: async r => { try { await api("pay/verify", "POST", { id: o.id, razorpay_order_id: r.razorpay_order_id, razorpay_payment_id: r.razorpay_payment_id, razorpay_signature: r.razorpay_signature }); res(); } catch (e) { rej(e); } } }); rz.open(); });
       id = o.id;
     } else {
       if (online) await demoPay(f.pay, money(cartTotal()));
-      ({ id } = await api("orders", "POST", { name: f.name, phone: f.phone, address: f.address, pin: f.pin, pay: online ? "online" : "cod", items }));
+      ({ id } = await api("orders", "POST", { name: f.name, phone: f.phone, address: f.address, pin: f.pin, pay: online ? "online" : "cod", items, coupon: f.coupon }));
     }
     track("purchase", { transaction_id: id, value: cartTotal(), items });
     clearCart();
@@ -92,10 +101,15 @@ export function Checkout() {
     <div className="cols">
       <Form className="form panel" onSubmit={submit} after={busy => <button className="btn" disabled={busy}>Place order</button>}>
         <h3>1. Delivery details</h3>
+        {saved.length > 0 && <div className="ck-addrs" role="radiogroup" aria-label="Saved addresses">{saved.map(a => <label className="ck-addr" key={a.id}><input type="radio" name="addrId" value={a.id} checked={addrId === a.id} onChange={() => setAddrId(a.id)} /><span><b>{a.name} · {a.label} {a.isDefault && <i>Default</i>}</b>{[a.line1, a.line2, a.landmark].filter(Boolean).join(", ")}<br />{a.city}, {a.state} {a.pin} · {a.phone}</span></label>)}<label className="ck-addr"><input type="radio" name="addrId" value="new" checked={addrId === "new"} onChange={() => setAddrId("new")} /><span><b>Deliver somewhere else</b>Type a new address below.</span></label></div>}
+        {(addrId === "new" || !saved.length) && <>
         <label>Full name<input name="name" required maxLength="80" autoComplete="name" defaultValue={me.name || ""} /></label>
         <label>Phone<input name="phone" type="tel" required pattern="[0-9+ ]{7,15}" autoComplete="tel" defaultValue={me.phone || ""} /></label>
-        <label>Address<textarea name="address" rows="3" required maxLength="400" autoComplete="street-address" defaultValue={me.address || ""}></textarea></label>
-        <label>Pincode<input name="pin" required pattern="[0-9A-Za-z ]{4,10}" autoComplete="postal-code" defaultValue={me.pin || ""} onChange={e => placeOf(e.target.value.trim())} /><span id="pinplace" className="small" role="status">{place}</span></label>
+        <label>Address<textarea name="address" rows="3" required maxLength="400" autoComplete="street-address" defaultValue={saved.length ? "" : me.address || ""}></textarea></label>
+        <label>Pincode<input name="pin" required pattern="[0-9A-Za-z ]{4,10}" autoComplete="postal-code" defaultValue={saved.length ? "" : me.pin || ""} onChange={e => placeOf(e.target.value.trim())} /><span id="pinplace" className="small" role="status">{place}</span></label></>}
+        <h3>Coupon</h3>
+        <div className="ck-coupon"><input type="text" name="couponText" aria-label="Coupon code" placeholder={wallet ? wallet.code + " is in your wallet" : "Coupon code"} value={coupon} onChange={e => setCoupon(e.target.value.toUpperCase())} maxLength="20" /><button type="button" className="btn ghost" onClick={() => applyCoupon(coupon || (wallet ? wallet.code : ""))}>Apply</button></div>
+        {couponMsg && <p className="small" role="status" style={{ color: discount ? "#08805f" : "var(--muted)" }}>{couponMsg}</p>}
         <h3>2. Payment</h3>
         <div className="paygrid" role="radiogroup" aria-label="Payment method">
           {[["cod", "Cash on delivery", "Pay when the order arrives", "cash"], ["UPI", "UPI", "Google Pay, PhonePe, Paytm, any UPI app", "bolt"], ["Card", "Credit or debit card", Object.keys(cart).some(id => (byId(id) || {}).emi) ? "No Cost EMI on participating cards" : "Visa, Mastercard, RuPay", "cart"], ["Net banking", "Net banking", "All major banks", "shield"]]
@@ -106,8 +120,9 @@ export function Checkout() {
       </Form>
       <aside className="panel sum"><h3>Order summary</h3><div id="sum">
         <div className="lines">{Object.keys(cart).map(id => <Line p={byId(id)} key={id} />)}</div>
+        {discount > 0 && <div className="tot"><span>Coupon {coupon}</span><span className="off">−{money(discount)}</span></div>}
         <div className="tot"><span>Delivery</span><span className="free">Free</span></div>
-        <div className="tot grand"><span>Total</span><b>{money(cartTotal())}</b></div><p className="muted small">Usually delivered by {etaText()}.</p></div><div className="perks"><span><Icon k="truck" /> Free delivery</span><span><Icon k="cash" /> Cash on delivery</span><span><Icon k="undo" /> Easy returns</span><span><Icon k="shield" /> Brand warranty</span></div><p className="muted small">Questions? <a className="alink" href="/shipping">Delivery</a> · <a className="alink" href="/returns">Returns</a> · <a className="alink" href="/contact">Contact us</a></p></aside>
+        <div className="tot grand"><span>Total</span><b>{money(cartTotal() - discount)}</b></div><p className="muted small">Usually delivered by {etaText()}.</p></div><div className="perks"><span><Icon k="truck" /> Free delivery</span><span><Icon k="cash" /> Cash on delivery</span><span><Icon k="undo" /> Easy returns</span><span><Icon k="shield" /> Brand warranty</span></div><p className="muted small">Questions? <a className="alink" href="/shipping">Delivery</a> · <a className="alink" href="/returns">Returns</a> · <a className="alink" href="/contact">Contact us</a></p></aside>
     </div>
   </>;
 }
@@ -135,7 +150,7 @@ export function Order() {
       {step >= 0 && step < 3 && <p className="muted small">Expected delivery by {etaText(o.at)}</p>}
     </div>
     <div className="cols">
-      <div className="panel"><h3>Items</h3><div className="lines"><OrderItems o={o} /></div><div className="tot grand"><span>Total</span><b>{money(o.total)}</b></div></div>
+      <div className="panel"><h3>Items</h3><div className="lines"><OrderItems o={o} /></div>{o.discount > 0 && <div className="tot"><span>Coupon {o.coupon}</span><span className="off">−{money(o.discount)}</span></div>}<div className="tot grand"><span>Total</span><b>{money(o.total)}</b></div></div>
       <aside className="panel sum"><h3>Delivery</h3><p>{o.name}<br />{o.address}<br />{o.pin}<br />{o.phone}</p><h3>Payment</h3><p>{o.pay}</p>
         <a className="btn" href="/">Continue shopping</a><div className="perks"><span><Icon k="truck" /> Free delivery</span><span><Icon k="cash" /> Cash on delivery</span><span><Icon k="undo" /> Easy returns</span><span><Icon k="shield" /> Brand warranty</span></div></aside>
     </div>

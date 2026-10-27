@@ -306,7 +306,7 @@ export function Header() {
 const built = () => { const b = document.documentElement.dataset.built; return b ? new Date(b).toLocaleString("en-IN", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit", timeZone: "Asia/Kolkata" }) + " IST" : ""; };
 export function Footer() {
   return <footer id="ftr">
-    <a className="f-top" href="#">Back to top ↑</a><div className="f-line"></div>
+    <div className="f-line"></div>
     <div className="wrap">
       <div className="f-cols">
         <div><span className="f-brand">mytekk<b>store</b></span><p className="f-about">Premium Elista TVs at factory-direct prices. Genuine products with brand warranty, free delivery, cash on delivery and No Cost EMI, across India.</p>
