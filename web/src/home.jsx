@@ -30,7 +30,7 @@ export function Home() {
   const minTv = tvs.length ? Math.min(...tvs.map(p => p.price)) : 0, minEmi = tvs.some(p => p.emi) ? Math.min(...tvs.filter(p => p.emi).map(p => emiPlans(p.price)[2][1])) : 0; // the deal box: every figure from the catalogue
   const home = banners.filter(b => b.slot === "home");
   const raw = home.length ? home.map(b => ({ kind: b.brand ? "brand" : b.preset === "promo" ? "promo" : "photo", preset: b.preset, eyebrow: b.kicker, h: lines(b.title), s: b.text, href: b.href, cta: b.cta, cta2: b.cta2, href2: b.href2, im: b.img, imMobile: b.imgMobile, brand: b.brand, tone: TONES[b.tone] || undefined, prod: b.productId ? byId(b.productId) : null })) : HOME_BANNERS;
-  const slides = [{ kind: "banner", h: ["Bring the big-screen experience home."], s: "Premium Elista TVs at factory-direct prices. Free delivery, cash on delivery, No Cost EMI.", href: "/televisions", cta: "Shop TVs" }]; // the owner's banner alone (26 Oct); the banners below stay in the admin for the day they return
+  const slides = [{ kind: "banner", h: ["Bring the big-screen experience home."], s: "Premium Elista TVs at factory-direct prices. Free delivery, cash on delivery, No Cost EMI.", href: "/televisions", cta: "Shop TVs", hi: ["big-screen"], href2: "/offers", cta2: "Festive offers" }]; // the owner's banner alone (26 Oct); the banners below stay in the admin for the day they return
   const unusedSlides = raw.filter(s => s.kind !== "promo" && (s.kind !== "brand" || biggest(s.brand))).map(s => s.kind === "brand" ? { ...s, pts: brandPoints(P, s.brand), prod: s.prod || biggest(s.brand), href: s.href || brandUrl(s.brand), cta: s.cta || "Shop " + s.brand, eyebrow: s.eyebrow || s.brand }
     : s.kind === "promo" ? { ...s, s: s.s || "Up to " + maxOff + "% off, bank offers, and No Cost EMI on the models that carry it." }
     : s.kind === "photo" ? { ...s, kind: "deal", im: "", imMobile: "", vid: "", eyebrow: "Straight from the factory · Live now", h: ["Up to " + maxOff + "% off on Smart TVs."], hi: [maxOff + "%", "off"],
@@ -116,7 +116,7 @@ export function Home() {
       <div><Ico shapes={DRAW_ICONS.cash} /><b>Cash on delivery</b><p>Pay when your order arrives.</p></div>
       <div><Ico shapes={DRAW_ICONS.box} /><b>Order tracking</b><p>Follow every order from your account.</p></div>
     </div></section>
-    <section><h2>Deals of the Day <a href="/products?sort=off">View all</a></h2><p className="lead">The biggest discounts right now. Free delivery on every order, cash on delivery.</p><div className="grid" ref={dealsRef}>{deals.map((p, i) => <Card p={p} i={i} key={p.id} />)}</div></section>
+    <section><h2>{maxOff > 0 ? "Deals of the Day" : "Shop by price"} <a href="/products?sort=off">View all</a></h2><p className="lead">{maxOff > 0 ? "The biggest discounts right now." : "Lowest price first, every model at factory-direct prices."} Free delivery on every order, cash on delivery.</p><div className="grid" ref={dealsRef}>{deals.map((p, i) => <Card p={p} i={i} key={p.id} />)}</div></section>
     <section className="disco"><h2>Shop by size</h2><p className="lead">Know the size you want? Start here. Every size we stock, with its starting price.</p>
       <div className="dgrid five">{sizeCards.map(s => <a className={"dcard" + (cutout(s.img) ? "" : " photo")} href={listUrl({ cat: "Televisions", size: s.inch + " inch TVs" })} key={s.inch}><span className="dimg"><img src={pic(s.img, 480)} srcSet={picSet(s.img)} sizes="240px" alt="" loading="lazy" width="800" height="800" /></span><span className="dbody"><b>{s.inch}"</b><small>{s.desc}</small><em>{s.from ? "from " + money(s.from) : "Coming soon"}</em></span><i className="darr" aria-hidden="true">→</i></a>)}</div></section>
     {BRANDS[0] && <section className="bigbrands solo">{brandBig(BRANDS[0], 0)}</section>}
@@ -163,7 +163,7 @@ export function FestiveBanner({ tvs, maxOff, minEmi, money, href = "/offers", ct
     tick(); addEventListener("scroll", onScroll, { passive: true }); addEventListener("resize", onScroll);
     return () => { removeEventListener("scroll", onScroll); removeEventListener("resize", onScroll); if (raf) cancelAnimationFrame(raf); };
   }, [still]);
-  if (!tvs.length || !top || maxOff <= 0) return null;
+  if (!tvs.length || !top) return null; // without a discount in the catalogue the banner leads with No Cost EMI (27 Oct: the demo discounts went, the prices are the MRPs printed on the owner's cards until the admin sets selling prices)
   return <section className="festive bleed" ref={ref} aria-label={FESTIVE.title}>
     <a className="festin" href={href}>
       <span className="fsparkle" aria-hidden="true"></span>
@@ -171,12 +171,12 @@ export function FestiveBanner({ tvs, maxOff, minEmi, money, href = "/offers", ct
       <span className="ftext">
         <span className="flock"><i></i>{FESTIVE.title}<i></i></span>
         <span className="fcamp">Make your Diwali smarter &amp; brighter</span>
-        <b><small>Up to</small><strong>{maxOff}% off</strong><span>on Smart TVs</span></b>
-        <span className="fbenefits"><span>Free delivery across India</span><span>Cash on delivery</span>{minEmi && <span>No Cost EMI from {money(minEmi)}/month</span>}</span>
+        {maxOff > 0 ? <b><small>Up to</small><strong>{maxOff}% off</strong><span>on Smart TVs</span></b> : <b><small>Diwali offer</small><strong>No Cost EMI</strong><span>{minEmi ? "from " + money(minEmi) + "/month on every Smart TV" : "on every Smart TV"}</span></b>}
+        <span className="fbenefits"><span>Free delivery across India</span><span>Cash on delivery</span>{maxOff > 0 && minEmi ? <span>No Cost EMI from {money(minEmi)}/month</span> : <span>Brand warranty, registered for you</span>}</span>
         <span className="btn">{cta}</span>
       </span>
       <span className="fstage" aria-hidden="true"><span className="fglow"></span><img className="froom" src="/img/fest-room.webp" alt="" loading="lazy" width="860" height="430" /></span>
-      <span className="fbanks"><BankBoxes /><small>*T&amp;C apply · Savings are MRP against our price</small></span>
+      <span className="fbanks"><BankBoxes /><small>{maxOff > 0 ? "*T&C apply · Savings are MRP against our price" : "*T&C apply · Prices inclusive of all taxes"}</small></span>
     </a>
   </section>;
 }

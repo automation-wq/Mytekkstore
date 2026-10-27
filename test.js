@@ -24,7 +24,7 @@ server.listen(0, "127.0.0.1", async () => {
     assert.equal(r.status, 200);
     const orderId = r.data.id;
     r = await call("/api/orders/" + orderId, "GET", null, buyer);
-    assert.equal(r.data.order.total, 69990 * 2 + 28990);
+    assert.equal(r.data.order.total, 69990 * 2 + 48990); // both models sit at their MRP (27 Oct: the demo discounts went)
     assert.equal(r.data.order.userId, undefined);
     assert.equal(r.data.order.pay, "Paid online (demo payment)");
     r = await call("/api/products");

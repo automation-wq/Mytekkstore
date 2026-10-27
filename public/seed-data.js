@@ -7,7 +7,7 @@ const SEED = [
   "brand": "Elista",
   "cat": "Televisions",
   "name": "80 cm (32 inch) HD Ready Smart LED TV",
-  "price": 9490,
+  "price": 29999,
   "mrp": 29999,
   "stock": 25,
   "emi": true,
@@ -83,12 +83,20 @@ const SEED = [
   ],
   "images": [
    "img/elista/webOS-Smart-TV-32in_2.webp",
-   "img/br/webos-hub-tv.webp"
+   "img/elista/webOS-Smart-TV-32in_3.webp",
+   "img/elista/webOS-Smart-TV-32in_4.webp",
+   "img/elista/webOS-Smart-TV-32in_5.webp"
   ],
   "aplus": [
-   "img/elista/webOS-Smart-TV-32in_3.webp",
-   "img/elista/webOS-Smart-TV-32in_5.webp",
-   "img/elista/webOS-Smart-TV-32in_4.webp"
+   "img/aplus/webOS-Smart-TV-32in_1.webp",
+   "img/aplus/webOS-Smart-TV-32in_2.webp",
+   "img/aplus/webOS-Smart-TV-32in_3.webp",
+   "img/aplus/webOS-Smart-TV-32in_4.webp",
+   "img/aplus/webOS-Smart-TV-32in_5.webp",
+   "img/aplus/webOS-Smart-TV-32in_6.webp",
+   "img/aplus/webOS-Smart-TV-32in_7.webp",
+   "img/aplus/webOS-Smart-TV-32in_8.webp",
+   "img/aplus/webOS-Smart-TV-32in_9.webp"
   ]
  },
  {
@@ -96,7 +104,7 @@ const SEED = [
   "brand": "Elista",
   "cat": "Televisions",
   "name": "108 cm (43 inch) 4K Ultra HD Smart TV",
-  "price": 28990,
+  "price": 48990,
   "mrp": 48990,
   "stock": 25,
   "emi": true,
@@ -171,14 +179,21 @@ const SEED = [
   ],
   "images": [
    "img/elista/webOS-Smart-TV-43in_2.webp",
-   "img/br/webos-hub-tv.webp",
-   "img/br/magic-remote.webp",
-   "img/br/magic-remote-guide.webp"
+   "img/elista/webOS-Smart-TV-43in_3.webp",
+   "img/elista/webOS-Smart-TV-43in_4.webp",
+   "img/elista/webOS-Smart-TV-43in_5.webp"
   ],
   "aplus": [
-   "img/elista/webOS-Smart-TV-43in_3.webp",
-   "img/elista/webOS-Smart-TV-43in_5.webp",
-   "img/elista/webOS-Smart-TV-43in_4.webp"
+   "img/aplus/webOS-Smart-TV-43in_1.webp",
+   "img/aplus/webOS-Smart-TV-43in_2.webp",
+   "img/aplus/webOS-Smart-TV-43in_3.webp",
+   "img/aplus/webOS-Smart-TV-43in_4.webp",
+   "img/aplus/webOS-Smart-TV-43in_5.webp",
+   "img/aplus/webOS-Smart-TV-43in_6.webp",
+   "img/aplus/webOS-Smart-TV-43in_7.webp",
+   "img/aplus/webOS-Smart-TV-43in_8.webp",
+   "img/aplus/webOS-Smart-TV-43in_9.webp",
+   "img/aplus/webOS-Smart-TV-43in_10.webp"
   ]
  },
  {
@@ -395,7 +410,7 @@ const SEED = [
   "brand": "Elista",
   "cat": "Televisions",
   "name": "126 cm (50 inch) 4K Ultra HD Smart TV",
-  "price": 31990,
+  "price": 59990,
   "mrp": 59990,
   "stock": 18,
   "emi": true,
@@ -457,9 +472,9 @@ const SEED = [
   ],
   "images": [
    "img/elista/webOS-Smart-TV-50in_2.webp",
-   "img/br/webos-hub-tv.webp",
-   "img/br/magic-remote.webp",
-   "img/br/magic-remote-guide.webp"
+   "img/elista/webOS-Smart-TV-50in_3.webp",
+   "img/elista/webOS-Smart-TV-50in_4.webp",
+   "img/elista/webOS-Smart-TV-50in_5.webp"
   ],
   "reviews": [],
   "desc": "Elista 126 cm (50 inch) 4K Ultra HD Smart TV. webOS Hub with ThinQ AI and the Magic Remote, Dolby Audio, 3 HDMI and 2 USB, Bluetooth 5.0 and dual-band Wi-Fi. Free delivery, cash on delivery, and the Elista warranty.",
@@ -474,9 +489,16 @@ const SEED = [
    "1 + 1 year warranty"
   ],
   "aplus": [
-   "img/elista/webOS-Smart-TV-50in_3.webp",
-   "img/elista/webOS-Smart-TV-50in_5.webp",
-   "img/elista/webOS-Smart-TV-50in_4.webp"
+   "img/aplus/webOS-Smart-TV-50in_1.webp",
+   "img/aplus/webOS-Smart-TV-50in_2.webp",
+   "img/aplus/webOS-Smart-TV-50in_3.webp",
+   "img/aplus/webOS-Smart-TV-50in_4.webp",
+   "img/aplus/webOS-Smart-TV-50in_5.webp",
+   "img/aplus/webOS-Smart-TV-50in_6.webp",
+   "img/aplus/webOS-Smart-TV-50in_7.webp",
+   "img/aplus/webOS-Smart-TV-50in_8.webp",
+   "img/aplus/webOS-Smart-TV-50in_9.webp",
+   "img/aplus/webOS-Smart-TV-50in_10.webp"
   ]
  },
  {
@@ -484,7 +506,7 @@ const SEED = [
   "brand": "Elista",
   "cat": "Televisions",
   "name": "80 cm (32 inch) HD Ready Google TV",
-  "price": 11490,
+  "price": 17000,
   "mrp": 17000,
   "stock": 25,
   "emi": true,
@@ -538,7 +560,9 @@ const SEED = [
   ],
   "images": [
    "img/elista/Google-TV-Xplore-32in_2.webp",
-   "img/br/xplore-features.webp"
+   "img/elista/Google-TV-Xplore-32in_3.webp",
+   "img/elista/Google-TV-Xplore-32in_4.webp",
+   "img/elista/Google-TV-Xplore-32in_5.webp"
   ],
   "reviews": [],
   "desc": "Elista 80 cm (32 inch) HD Ready Google TV (Xplore series). Google TV with Chromecast built-in and Hey Google, Dolby Audio with an in-built 48 W soundbar, 3 HDMI, dual-band Wi-Fi. Free delivery, cash on delivery, and the Elista warranty.",
@@ -553,9 +577,15 @@ const SEED = [
    "1 + 1 year warranty"
   ],
   "aplus": [
-   "img/elista/Google-TV-Xplore-32in_3.webp",
-   "img/elista/Google-TV-Xplore-32in_5.webp",
-   "img/elista/Google-TV-Xplore-32in_4.webp"
+   "img/aplus/Google-TV-Xplore-32in_1.webp",
+   "img/aplus/Google-TV-Xplore-32in_2.webp",
+   "img/aplus/Google-TV-Xplore-32in_3.webp",
+   "img/aplus/Google-TV-Xplore-32in_4.webp",
+   "img/aplus/Google-TV-Xplore-32in_5.webp",
+   "img/aplus/Google-TV-Xplore-32in_6.webp",
+   "img/aplus/Google-TV-Xplore-32in_7.webp",
+   "img/aplus/Google-TV-Xplore-32in_8.webp",
+   "img/aplus/Google-TV-Xplore-32in_9.webp"
   ]
  },
  {
@@ -637,14 +667,21 @@ const SEED = [
   ],
   "images": [
    "img/elista/webOS-Smart-TV-85in_2.webp",
-   "img/br/webos-hub-tv.webp",
-   "img/br/magic-remote.webp",
-   "img/br/magic-remote-guide.webp"
+   "img/elista/webOS-Smart-TV-85in_3.webp",
+   "img/elista/webOS-Smart-TV-85in_4.webp",
+   "img/elista/webOS-Smart-TV-85in_5.webp"
   ],
   "aplus": [
-   "img/elista/webOS-Smart-TV-85in_3.webp",
-   "img/elista/webOS-Smart-TV-85in_5.webp",
-   "img/elista/webOS-Smart-TV-85in_4.webp"
+   "img/aplus/webOS-Smart-TV-85in_1.webp",
+   "img/aplus/webOS-Smart-TV-85in_2.webp",
+   "img/aplus/webOS-Smart-TV-85in_3.webp",
+   "img/aplus/webOS-Smart-TV-85in_4.webp",
+   "img/aplus/webOS-Smart-TV-85in_5.webp",
+   "img/aplus/webOS-Smart-TV-85in_6.webp",
+   "img/aplus/webOS-Smart-TV-85in_7.webp",
+   "img/aplus/webOS-Smart-TV-85in_8.webp",
+   "img/aplus/webOS-Smart-TV-85in_9.webp",
+   "img/aplus/webOS-Smart-TV-85in_10.webp"
   ]
  },
  {
@@ -726,14 +763,21 @@ const SEED = [
   ],
   "images": [
    "img/elista/webOS-Smart-TV-75in_2.webp",
-   "img/br/webos-hub-tv.webp",
-   "img/br/magic-remote.webp",
-   "img/br/magic-remote-guide.webp"
+   "img/elista/webOS-Smart-TV-75in_3.webp",
+   "img/elista/webOS-Smart-TV-75in_4.webp",
+   "img/elista/webOS-Smart-TV-75in_5.webp"
   ],
   "aplus": [
-   "img/elista/webOS-Smart-TV-75in_3.webp",
-   "img/elista/webOS-Smart-TV-75in_5.webp",
-   "img/elista/webOS-Smart-TV-75in_4.webp"
+   "img/aplus/webOS-Smart-TV-75in_1.webp",
+   "img/aplus/webOS-Smart-TV-75in_2.webp",
+   "img/aplus/webOS-Smart-TV-75in_3.webp",
+   "img/aplus/webOS-Smart-TV-75in_4.webp",
+   "img/aplus/webOS-Smart-TV-75in_5.webp",
+   "img/aplus/webOS-Smart-TV-75in_6.webp",
+   "img/aplus/webOS-Smart-TV-75in_7.webp",
+   "img/aplus/webOS-Smart-TV-75in_8.webp",
+   "img/aplus/webOS-Smart-TV-75in_9.webp",
+   "img/aplus/webOS-Smart-TV-75in_10.webp"
   ]
  },
  {
@@ -814,14 +858,21 @@ const SEED = [
   ],
   "images": [
    "img/elista/webOS-Smart-TV-65in_2.webp",
-   "img/br/webos-hub-tv.webp",
-   "img/br/magic-remote.webp",
-   "img/br/magic-remote-guide.webp"
+   "img/elista/webOS-Smart-TV-65in_3.webp",
+   "img/elista/webOS-Smart-TV-65in_4.webp",
+   "img/elista/webOS-Smart-TV-65in_5.webp"
   ],
   "aplus": [
-   "img/elista/webOS-Smart-TV-65in_3.webp",
-   "img/elista/webOS-Smart-TV-65in_5.webp",
-   "img/elista/webOS-Smart-TV-65in_4.webp"
+   "img/aplus/webOS-Smart-TV-65in_1.webp",
+   "img/aplus/webOS-Smart-TV-65in_2.webp",
+   "img/aplus/webOS-Smart-TV-65in_3.webp",
+   "img/aplus/webOS-Smart-TV-65in_4.webp",
+   "img/aplus/webOS-Smart-TV-65in_5.webp",
+   "img/aplus/webOS-Smart-TV-65in_6.webp",
+   "img/aplus/webOS-Smart-TV-65in_7.webp",
+   "img/aplus/webOS-Smart-TV-65in_8.webp",
+   "img/aplus/webOS-Smart-TV-65in_9.webp",
+   "img/aplus/webOS-Smart-TV-65in_10.webp"
   ]
  },
  {
@@ -903,14 +954,21 @@ const SEED = [
   ],
   "images": [
    "img/elista/webOS-Smart-TV-55in_2.webp",
-   "img/br/webos-hub-tv.webp",
-   "img/br/magic-remote.webp",
-   "img/br/magic-remote-guide.webp"
+   "img/elista/webOS-Smart-TV-55in_3.webp",
+   "img/elista/webOS-Smart-TV-55in_4.webp",
+   "img/elista/webOS-Smart-TV-55in_5.webp"
   ],
   "aplus": [
-   "img/elista/webOS-Smart-TV-55in_3.webp",
-   "img/elista/webOS-Smart-TV-55in_5.webp",
-   "img/elista/webOS-Smart-TV-55in_4.webp"
+   "img/aplus/webOS-Smart-TV-55in_1.webp",
+   "img/aplus/webOS-Smart-TV-55in_2.webp",
+   "img/aplus/webOS-Smart-TV-55in_3.webp",
+   "img/aplus/webOS-Smart-TV-55in_4.webp",
+   "img/aplus/webOS-Smart-TV-55in_5.webp",
+   "img/aplus/webOS-Smart-TV-55in_6.webp",
+   "img/aplus/webOS-Smart-TV-55in_7.webp",
+   "img/aplus/webOS-Smart-TV-55in_8.webp",
+   "img/aplus/webOS-Smart-TV-55in_9.webp",
+   "img/aplus/webOS-Smart-TV-55in_10.webp"
   ]
  },
  {
@@ -980,12 +1038,21 @@ const SEED = [
    "1 + 1 year warranty"
   ],
   "images": [
-   "img/elista/Mini-LED-PRO-65in_2.webp"
+   "img/elista/Mini-LED-PRO-65in_2.webp",
+   "img/elista/Mini-LED-PRO-65in_3.webp",
+   "img/elista/Mini-LED-PRO-65in_4.webp",
+   "img/elista/Mini-LED-PRO-65in_5.webp"
   ],
   "aplus": [
-   "img/elista/Mini-LED-PRO-65in_3.webp",
-   "img/elista/Mini-LED-PRO-65in_5.webp",
-   "img/elista/Mini-LED-PRO-65in_4.webp"
+   "img/aplus/Mini-LED-PRO-65in_1.webp",
+   "img/aplus/Mini-LED-PRO-65in_2.webp",
+   "img/aplus/Mini-LED-PRO-65in_3.webp",
+   "img/aplus/Mini-LED-PRO-65in_4.webp",
+   "img/aplus/Mini-LED-PRO-65in_5.webp",
+   "img/aplus/Mini-LED-PRO-65in_6.webp",
+   "img/aplus/Mini-LED-PRO-65in_7.webp",
+   "img/aplus/Mini-LED-PRO-65in_8.webp",
+   "img/aplus/Mini-LED-PRO-65in_9.webp"
   ]
  },
  {
@@ -1055,12 +1122,21 @@ const SEED = [
    "1 + 1 year warranty"
   ],
   "images": [
-   "img/elista/Mini-LED-PRO-55in_2.webp"
+   "img/elista/Mini-LED-PRO-55in_2.webp",
+   "img/elista/Mini-LED-PRO-55in_3.webp",
+   "img/elista/Mini-LED-PRO-55in_4.webp",
+   "img/elista/Mini-LED-PRO-55in_5.webp"
   ],
   "aplus": [
-   "img/elista/Mini-LED-PRO-55in_3.webp",
-   "img/elista/Mini-LED-PRO-55in_5.webp",
-   "img/elista/Mini-LED-PRO-55in_4.webp"
+   "img/aplus/Mini-LED-PRO-55in_1.webp",
+   "img/aplus/Mini-LED-PRO-55in_2.webp",
+   "img/aplus/Mini-LED-PRO-55in_3.webp",
+   "img/aplus/Mini-LED-PRO-55in_4.webp",
+   "img/aplus/Mini-LED-PRO-55in_5.webp",
+   "img/aplus/Mini-LED-PRO-55in_6.webp",
+   "img/aplus/Mini-LED-PRO-55in_7.webp",
+   "img/aplus/Mini-LED-PRO-55in_8.webp",
+   "img/aplus/Mini-LED-PRO-55in_9.webp"
   ]
  },
  {
@@ -1133,12 +1209,20 @@ const SEED = [
   ],
   "images": [
    "img/elista/Coolita-OS-FHD-Smart-TV-43in_2.webp",
-   "img/br/coolita-features.webp"
+   "img/elista/Coolita-OS-FHD-Smart-TV-43in_3.webp",
+   "img/elista/Coolita-OS-FHD-Smart-TV-43in_4.webp",
+   "img/elista/Coolita-OS-FHD-Smart-TV-43in_5.webp"
   ],
   "aplus": [
-   "img/elista/Coolita-OS-FHD-Smart-TV-43in_3.webp",
-   "img/elista/Coolita-OS-FHD-Smart-TV-43in_5.webp",
-   "img/elista/Coolita-OS-FHD-Smart-TV-43in_4.webp"
+   "img/aplus/Coolita-OS-FHD-Smart-TV-43in_1.webp",
+   "img/aplus/Coolita-OS-FHD-Smart-TV-43in_2.webp",
+   "img/aplus/Coolita-OS-FHD-Smart-TV-43in_3.webp",
+   "img/aplus/Coolita-OS-FHD-Smart-TV-43in_4.webp",
+   "img/aplus/Coolita-OS-FHD-Smart-TV-43in_5.webp",
+   "img/aplus/Coolita-OS-FHD-Smart-TV-43in_6.webp",
+   "img/aplus/Coolita-OS-FHD-Smart-TV-43in_7.webp",
+   "img/aplus/Coolita-OS-FHD-Smart-TV-43in_8.webp",
+   "img/aplus/Coolita-OS-FHD-Smart-TV-43in_9.webp"
   ]
  },
  {
@@ -1211,12 +1295,20 @@ const SEED = [
   ],
   "images": [
    "img/elista/Coolita-OS-HD-Smart-TV-32in_2.webp",
-   "img/br/coolita-features.webp"
+   "img/elista/Coolita-OS-HD-Smart-TV-32in_3.webp",
+   "img/elista/Coolita-OS-HD-Smart-TV-32in_4.webp",
+   "img/elista/Coolita-OS-HD-Smart-TV-32in_5.webp"
   ],
   "aplus": [
-   "img/elista/Coolita-OS-HD-Smart-TV-32in_3.webp",
-   "img/elista/Coolita-OS-HD-Smart-TV-32in_5.webp",
-   "img/elista/Coolita-OS-HD-Smart-TV-32in_4.webp"
+   "img/aplus/Coolita-OS-HD-Smart-TV-32in_1.webp",
+   "img/aplus/Coolita-OS-HD-Smart-TV-32in_2.webp",
+   "img/aplus/Coolita-OS-HD-Smart-TV-32in_3.webp",
+   "img/aplus/Coolita-OS-HD-Smart-TV-32in_4.webp",
+   "img/aplus/Coolita-OS-HD-Smart-TV-32in_5.webp",
+   "img/aplus/Coolita-OS-HD-Smart-TV-32in_6.webp",
+   "img/aplus/Coolita-OS-HD-Smart-TV-32in_7.webp",
+   "img/aplus/Coolita-OS-HD-Smart-TV-32in_8.webp",
+   "img/aplus/Coolita-OS-HD-Smart-TV-32in_9.webp"
   ]
  },
  {
@@ -1289,12 +1381,20 @@ const SEED = [
   ],
   "images": [
    "img/elista/Cloud-TV-Android14-FHD-43in_2.webp",
-   "img/br/cloudtv-features.webp"
+   "img/elista/Cloud-TV-Android14-FHD-43in_3.webp",
+   "img/elista/Cloud-TV-Android14-FHD-43in_4.webp",
+   "img/elista/Cloud-TV-Android14-FHD-43in_5.webp"
   ],
   "aplus": [
-   "img/elista/Cloud-TV-Android14-FHD-43in_3.webp",
-   "img/elista/Cloud-TV-Android14-FHD-43in_5.webp",
-   "img/elista/Cloud-TV-Android14-FHD-43in_4.webp"
+   "img/aplus/Cloud-TV-Android14-FHD-43in_1.webp",
+   "img/aplus/Cloud-TV-Android14-FHD-43in_2.webp",
+   "img/aplus/Cloud-TV-Android14-FHD-43in_3.webp",
+   "img/aplus/Cloud-TV-Android14-FHD-43in_4.webp",
+   "img/aplus/Cloud-TV-Android14-FHD-43in_5.webp",
+   "img/aplus/Cloud-TV-Android14-FHD-43in_6.webp",
+   "img/aplus/Cloud-TV-Android14-FHD-43in_7.webp",
+   "img/aplus/Cloud-TV-Android14-FHD-43in_8.webp",
+   "img/aplus/Cloud-TV-Android14-FHD-43in_9.webp"
   ]
  },
  {
@@ -1367,12 +1467,20 @@ const SEED = [
   ],
   "images": [
    "img/elista/Cloud-TV-Android14-HD-32in_2.webp",
-   "img/br/cloudtv-features.webp"
+   "img/elista/Cloud-TV-Android14-HD-32in_3.webp",
+   "img/elista/Cloud-TV-Android14-HD-32in_4.webp",
+   "img/elista/Cloud-TV-Android14-HD-32in_5.webp"
   ],
   "aplus": [
-   "img/elista/Cloud-TV-Android14-HD-32in_3.webp",
-   "img/elista/Cloud-TV-Android14-HD-32in_5.webp",
-   "img/elista/Cloud-TV-Android14-HD-32in_4.webp"
+   "img/aplus/Cloud-TV-Android14-HD-32in_1.webp",
+   "img/aplus/Cloud-TV-Android14-HD-32in_2.webp",
+   "img/aplus/Cloud-TV-Android14-HD-32in_3.webp",
+   "img/aplus/Cloud-TV-Android14-HD-32in_4.webp",
+   "img/aplus/Cloud-TV-Android14-HD-32in_5.webp",
+   "img/aplus/Cloud-TV-Android14-HD-32in_6.webp",
+   "img/aplus/Cloud-TV-Android14-HD-32in_7.webp",
+   "img/aplus/Cloud-TV-Android14-HD-32in_8.webp",
+   "img/aplus/Cloud-TV-Android14-HD-32in_9.webp"
   ]
  },
  {
@@ -1429,12 +1537,19 @@ const SEED = [
   ],
   "images": [
    "img/elista/Non-Smart-HD-TV-32in_2.webp",
-   "img/br/nonsmart-features.webp"
+   "img/elista/Non-Smart-HD-TV-32in_3.webp",
+   "img/elista/Non-Smart-HD-TV-32in_4.webp",
+   "img/elista/Non-Smart-HD-TV-32in_5.webp"
   ],
   "aplus": [
-   "img/elista/Non-Smart-HD-TV-32in_3.webp",
-   "img/elista/Non-Smart-HD-TV-32in_5.webp",
-   "img/elista/Non-Smart-HD-TV-32in_4.webp"
+   "img/aplus/Non-Smart-HD-TV-32in_1.webp",
+   "img/aplus/Non-Smart-HD-TV-32in_2.webp",
+   "img/aplus/Non-Smart-HD-TV-32in_3.webp",
+   "img/aplus/Non-Smart-HD-TV-32in_4.webp",
+   "img/aplus/Non-Smart-HD-TV-32in_5.webp",
+   "img/aplus/Non-Smart-HD-TV-32in_6.webp",
+   "img/aplus/Non-Smart-HD-TV-32in_7.webp",
+   "img/aplus/Non-Smart-HD-TV-32in_8.webp"
   ]
  },
  {
@@ -1491,12 +1606,19 @@ const SEED = [
   ],
   "images": [
    "img/elista/Non-Smart-HD-TV-24in_2.webp",
-   "img/br/nonsmart-features.webp"
+   "img/elista/Non-Smart-HD-TV-24in_3.webp",
+   "img/elista/Non-Smart-HD-TV-24in_4.webp",
+   "img/elista/Non-Smart-HD-TV-24in_5.webp"
   ],
   "aplus": [
-   "img/elista/Non-Smart-HD-TV-24in_3.webp",
-   "img/elista/Non-Smart-HD-TV-24in_5.webp",
-   "img/elista/Non-Smart-HD-TV-24in_4.webp"
+   "img/aplus/Non-Smart-HD-TV-24in_1.webp",
+   "img/aplus/Non-Smart-HD-TV-24in_2.webp",
+   "img/aplus/Non-Smart-HD-TV-24in_3.webp",
+   "img/aplus/Non-Smart-HD-TV-24in_4.webp",
+   "img/aplus/Non-Smart-HD-TV-24in_5.webp",
+   "img/aplus/Non-Smart-HD-TV-24in_6.webp",
+   "img/aplus/Non-Smart-HD-TV-24in_7.webp",
+   "img/aplus/Non-Smart-HD-TV-24in_8.webp"
   ]
  },
  {
@@ -1566,12 +1688,20 @@ const SEED = [
   ],
   "images": [
    "img/elista/Google-TV-Xplore-43in_2.webp",
-   "img/br/xplore-features.webp"
+   "img/elista/Google-TV-Xplore-43in_3.webp",
+   "img/elista/Google-TV-Xplore-43in_4.webp",
+   "img/elista/Google-TV-Xplore-43in_5.webp"
   ],
   "aplus": [
-   "img/elista/Google-TV-Xplore-43in_3.webp",
-   "img/elista/Google-TV-Xplore-43in_5.webp",
-   "img/elista/Google-TV-Xplore-43in_4.webp"
+   "img/aplus/Google-TV-Xplore-43in_1.webp",
+   "img/aplus/Google-TV-Xplore-43in_2.webp",
+   "img/aplus/Google-TV-Xplore-43in_3.webp",
+   "img/aplus/Google-TV-Xplore-43in_4.webp",
+   "img/aplus/Google-TV-Xplore-43in_5.webp",
+   "img/aplus/Google-TV-Xplore-43in_6.webp",
+   "img/aplus/Google-TV-Xplore-43in_7.webp",
+   "img/aplus/Google-TV-Xplore-43in_8.webp",
+   "img/aplus/Google-TV-Xplore-43in_9.webp"
   ]
  },
  {
@@ -1645,12 +1775,20 @@ const SEED = [
   ],
   "images": [
    "img/elista/Google-TV-Xplore-50in_2.webp",
-   "img/br/xplore-features.webp"
+   "img/elista/Google-TV-Xplore-50in_3.webp",
+   "img/elista/Google-TV-Xplore-50in_4.webp",
+   "img/elista/Google-TV-Xplore-50in_5.webp"
   ],
   "aplus": [
-   "img/elista/Google-TV-Xplore-50in_3.webp",
-   "img/elista/Google-TV-Xplore-50in_5.webp",
-   "img/elista/Google-TV-Xplore-50in_4.webp"
+   "img/aplus/Google-TV-Xplore-50in_1.webp",
+   "img/aplus/Google-TV-Xplore-50in_2.webp",
+   "img/aplus/Google-TV-Xplore-50in_3.webp",
+   "img/aplus/Google-TV-Xplore-50in_4.webp",
+   "img/aplus/Google-TV-Xplore-50in_5.webp",
+   "img/aplus/Google-TV-Xplore-50in_6.webp",
+   "img/aplus/Google-TV-Xplore-50in_7.webp",
+   "img/aplus/Google-TV-Xplore-50in_8.webp",
+   "img/aplus/Google-TV-Xplore-50in_9.webp"
   ]
  },
  {
@@ -1724,12 +1862,20 @@ const SEED = [
   ],
   "images": [
    "img/elista/Google-TV-Xplore-55in_2.webp",
-   "img/br/xplore-features.webp"
+   "img/elista/Google-TV-Xplore-55in_3.webp",
+   "img/elista/Google-TV-Xplore-55in_4.webp",
+   "img/elista/Google-TV-Xplore-55in_5.webp"
   ],
   "aplus": [
-   "img/elista/Google-TV-Xplore-55in_3.webp",
-   "img/elista/Google-TV-Xplore-55in_5.webp",
-   "img/elista/Google-TV-Xplore-55in_4.webp"
+   "img/aplus/Google-TV-Xplore-55in_1.webp",
+   "img/aplus/Google-TV-Xplore-55in_2.webp",
+   "img/aplus/Google-TV-Xplore-55in_3.webp",
+   "img/aplus/Google-TV-Xplore-55in_4.webp",
+   "img/aplus/Google-TV-Xplore-55in_5.webp",
+   "img/aplus/Google-TV-Xplore-55in_6.webp",
+   "img/aplus/Google-TV-Xplore-55in_7.webp",
+   "img/aplus/Google-TV-Xplore-55in_8.webp",
+   "img/aplus/Google-TV-Xplore-55in_9.webp"
   ]
  },
  {
@@ -1803,12 +1949,20 @@ const SEED = [
   ],
   "images": [
    "img/elista/Google-TV-Xplore-65in_2.webp",
-   "img/br/xplore-features.webp"
+   "img/elista/Google-TV-Xplore-65in_3.webp",
+   "img/elista/Google-TV-Xplore-65in_4.webp",
+   "img/elista/Google-TV-Xplore-65in_5.webp"
   ],
   "aplus": [
-   "img/elista/Google-TV-Xplore-65in_3.webp",
-   "img/elista/Google-TV-Xplore-65in_5.webp",
-   "img/elista/Google-TV-Xplore-65in_4.webp"
+   "img/aplus/Google-TV-Xplore-65in_1.webp",
+   "img/aplus/Google-TV-Xplore-65in_2.webp",
+   "img/aplus/Google-TV-Xplore-65in_3.webp",
+   "img/aplus/Google-TV-Xplore-65in_4.webp",
+   "img/aplus/Google-TV-Xplore-65in_5.webp",
+   "img/aplus/Google-TV-Xplore-65in_6.webp",
+   "img/aplus/Google-TV-Xplore-65in_7.webp",
+   "img/aplus/Google-TV-Xplore-65in_8.webp",
+   "img/aplus/Google-TV-Xplore-65in_9.webp"
   ]
  },
  {
@@ -1882,12 +2036,20 @@ const SEED = [
   ],
   "images": [
    "img/elista/Google-TV-Xplore-75in_2.webp",
-   "img/br/xplore-features.webp"
+   "img/elista/Google-TV-Xplore-75in_3.webp",
+   "img/elista/Google-TV-Xplore-75in_4.webp",
+   "img/elista/Google-TV-Xplore-75in_5.webp"
   ],
   "aplus": [
-   "img/elista/Google-TV-Xplore-75in_3.webp",
-   "img/elista/Google-TV-Xplore-75in_5.webp",
-   "img/elista/Google-TV-Xplore-75in_4.webp"
+   "img/aplus/Google-TV-Xplore-75in_1.webp",
+   "img/aplus/Google-TV-Xplore-75in_2.webp",
+   "img/aplus/Google-TV-Xplore-75in_3.webp",
+   "img/aplus/Google-TV-Xplore-75in_4.webp",
+   "img/aplus/Google-TV-Xplore-75in_5.webp",
+   "img/aplus/Google-TV-Xplore-75in_6.webp",
+   "img/aplus/Google-TV-Xplore-75in_7.webp",
+   "img/aplus/Google-TV-Xplore-75in_8.webp",
+   "img/aplus/Google-TV-Xplore-75in_9.webp"
   ]
  },
  {
@@ -1961,12 +2123,20 @@ const SEED = [
   ],
   "images": [
    "img/elista/Google-TV-Xplore-85in_2.webp",
-   "img/br/xplore-features.webp"
+   "img/elista/Google-TV-Xplore-85in_3.webp",
+   "img/elista/Google-TV-Xplore-85in_4.webp",
+   "img/elista/Google-TV-Xplore-85in_5.webp"
   ],
   "aplus": [
-   "img/elista/Google-TV-Xplore-85in_3.webp",
-   "img/elista/Google-TV-Xplore-85in_5.webp",
-   "img/elista/Google-TV-Xplore-85in_4.webp"
+   "img/aplus/Google-TV-Xplore-85in_1.webp",
+   "img/aplus/Google-TV-Xplore-85in_2.webp",
+   "img/aplus/Google-TV-Xplore-85in_3.webp",
+   "img/aplus/Google-TV-Xplore-85in_4.webp",
+   "img/aplus/Google-TV-Xplore-85in_5.webp",
+   "img/aplus/Google-TV-Xplore-85in_6.webp",
+   "img/aplus/Google-TV-Xplore-85in_7.webp",
+   "img/aplus/Google-TV-Xplore-85in_8.webp",
+   "img/aplus/Google-TV-Xplore-85in_9.webp"
   ]
  },
  {
@@ -2012,12 +2182,20 @@ const SEED = [
    "1 year warranty"
   ],
   "images": [
-   "img/elista/Cloud-TV-QLED-32in_2.webp"
+   "img/elista/Cloud-TV-QLED-32in_2.webp",
+   "img/elista/Cloud-TV-QLED-32in_3.webp",
+   "img/elista/Cloud-TV-QLED-32in_4.webp",
+   "img/elista/Cloud-TV-QLED-32in_5.webp"
   ],
   "aplus": [
-   "img/elista/Cloud-TV-QLED-32in_3.webp",
-   "img/elista/Cloud-TV-QLED-32in_5.webp",
-   "img/elista/Cloud-TV-QLED-32in_4.webp"
+   "img/aplus/Cloud-TV-QLED-32in_1.webp",
+   "img/aplus/Cloud-TV-QLED-32in_2.webp",
+   "img/aplus/Cloud-TV-QLED-32in_3.webp",
+   "img/aplus/Cloud-TV-QLED-32in_4.webp",
+   "img/aplus/Cloud-TV-QLED-32in_5.webp",
+   "img/aplus/Cloud-TV-QLED-32in_6.webp",
+   "img/aplus/Cloud-TV-QLED-32in_7.webp",
+   "img/aplus/Cloud-TV-QLED-32in_8.webp"
   ]
  },
  {
@@ -2063,12 +2241,20 @@ const SEED = [
    "1 year warranty"
   ],
   "images": [
-   "img/elista/Cloud-TV-QLED-43in_2.webp"
+   "img/elista/Cloud-TV-QLED-43in_2.webp",
+   "img/elista/Cloud-TV-QLED-43in_3.webp",
+   "img/elista/Cloud-TV-QLED-43in_4.webp",
+   "img/elista/Cloud-TV-QLED-43in_5.webp"
   ],
   "aplus": [
-   "img/elista/Cloud-TV-QLED-43in_3.webp",
-   "img/elista/Cloud-TV-QLED-43in_5.webp",
-   "img/elista/Cloud-TV-QLED-43in_4.webp"
+   "img/aplus/Cloud-TV-QLED-43in_1.webp",
+   "img/aplus/Cloud-TV-QLED-43in_2.webp",
+   "img/aplus/Cloud-TV-QLED-43in_3.webp",
+   "img/aplus/Cloud-TV-QLED-43in_4.webp",
+   "img/aplus/Cloud-TV-QLED-43in_5.webp",
+   "img/aplus/Cloud-TV-QLED-43in_6.webp",
+   "img/aplus/Cloud-TV-QLED-43in_7.webp",
+   "img/aplus/Cloud-TV-QLED-43in_8.webp"
   ]
  }
 ];

@@ -77,7 +77,7 @@ export function Product() {
   const feats = (p.specs || []).slice(0, 6); // feature strip under the photo, from the product's own specifications
   const images = galleryOf(p); // the admin's photos, or the six-picture gallery built from the render (data.js galleryOf)
   const BR_LABELS = [[/-room\./, "In the living room"], [/magic-remote-guide/, "Magic Remote guide"], [/magic-remote/, "Magic Remote"], [/-tv\./, "Product picture"]]; // the brochure pictures by name
-  const labelOf = src => /^img\/br\//.test(src) ? (BR_LABELS.find(([re]) => re.test(src)) || [0, "From the brochure"])[1] : /^img\/p\d/.test(src) || /_1\.webp$/.test(src) ? "Front view" : /_2\.webp$/.test(src) ? "In the living room" : GALLERY_LABELS[images.indexOf(src)] || "Photo";
+  const labelOf = src => /^img\/br\//.test(src) ? (BR_LABELS.find(([re]) => re.test(src)) || [0, "From the brochure"])[1] : /^img\/p\d/.test(src) || /_1\.webp$/.test(src) ? "Front view" : /_2\.webp$/.test(src) ? "In the living room" : /_3\.webp$/.test(src) ? "Key features" : /_4\.webp$/.test(src) ? "Specifications" : /_5\.webp$/.test(src) ? "Entertainment" : GALLERY_LABELS[images.indexOf(src)] || "Photo";
   const step = d => { const i = images.indexOf(img); setSpinView(false); setImg(images[(i + d + images.length) % images.length]); };
   const swipeStart = e => { touch.current = e.touches[0].clientX; };
   const swipeEnd = e => { const x = touch.current; touch.current = null; if (x === null) return; const dx = e.changedTouches[0].clientX - x; if (Math.abs(dx) > 40) step(dx < 0 ? 1 : -1); };
@@ -153,11 +153,13 @@ export function Product() {
         <div className="sharerow"><span>Share:</span><a href={`https://wa.me/?text=${shareText}%20${share}`} target="_blank" rel="noopener">WhatsApp</a><a href={`https://www.facebook.com/sharer/sharer.php?u=${share}`} target="_blank" rel="noopener">Facebook</a><a href={`https://twitter.com/intent/tweet?url=${share}&text=${shareText}`} target="_blank" rel="noopener">X</a><button className="link" id="share" type="button" onClick={shareLink}>Copy link</button></div>
       </div>
     </div>
-    {story.length > 0 && <section className="aplus" id="aplus">
+    {(p.aplus || []).length > 0 ? <section className="aplus strips" id="aplus"> {/* the owner's A+ strips (27 Oct), stacked the way Amazon and Croma stack A+ banners; the drawn story below stays for a product without them */}
+      {me && me.admin && <p className="adminlink"><a href={"/admin?edit=" + p.id}>Edit this product in the admin (photos, A+ creatives, specifications) →</a></p>}
+      <div className="astrips">{p.aplus.map((src, i) => <img src={pic(src)} srcSet={picSet(src)} sizes="(max-width:1500px) 100vw, 1464px" alt={p.brand + " " + p.name + ": product story " + (i + 1) + " of " + p.aplus.length} loading="lazy" width="1464" height="600" key={src} />)}</div>
+    </section> : story.length > 0 && <section className="aplus" id="aplus">
       {me && me.admin && <p className="adminlink"><a href={"/admin?edit=" + p.id}>Edit this product in the admin (photos, A+ creatives, specifications) →</a></p>}
       <div className="ahero"><img src={pic(aheroImg, 960)} srcSet={picSet(aheroImg)} sizes="(max-width:1240px) 100vw, 1240px" alt="" loading="lazy" /><div className="atext"><span className="kicker">{p.brand}{spec(p, "screen size") ? " · " + spec(p, "screen size") : ""}</span><h2>{aheroTitle}</h2><p>{aheroLead}</p>
         <div className="astats">{callouts(p).map(([big, small]) => <div key={big + small}><b>{big}</b><small>{small}</small></div>)}</div></div></div>
-      {(p.aplus || []).length > 0 && <div className="acreatives">{p.aplus.map(src => <img src={pic(src)} alt="" loading="lazy" key={src} />)}</div>}
       <div className="showcase">{cutout(p.img) ? <img className="cut" src={cutout(p.img)} alt="" loading="lazy" /> : <img className="tilep" src={pic(p.img)} srcSet={picSet(p.img)} sizes="(max-width:860px) 80vw, 40vw" alt="" loading="lazy" width="800" height="800" />}
         <div><span className="kicker">{story[0].kicker}</span><h2>{story[0].title}.</h2><p>{story[0].text}</p>{p.features && p.features.length > 0 && <ul className="afeat" aria-label="Highlights from the brand's brochure">{p.features.map(f => <li key={f}>{f}</li>)}</ul>}</div></div>
       {story.slice(1).map((b, i) => <div className={"ablock" + (i % 2 ? " flip" : "") + (i === 1 ? " dark" : "")} key={i}>{b.img && (cutout(b.img) ? <img className="cut" src={cutout(b.img)} alt="" loading="lazy" /> : <img src={pic(b.img, 960)} srcSet={picSet(b.img)} sizes="(max-width:860px) 100vw, 50vw" alt="" loading="lazy" />)}<div>{b.kicker && <span className="kicker">{b.kicker}</span>}<h3>{b.title}</h3><p>{b.text}</p>{b.kicker === "Smart" && x.apps.length > 0 && <div className="aapps">{x.apps.map(a => <span key={a}>{a}</span>)}</div>}</div></div>)}

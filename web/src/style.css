@@ -2367,3 +2367,21 @@ main > section, main > .fest, main > .cols, .bigbrands.solo, .bankad.bleed, main
 .card .cbody .img, .cimg, .thumb, .line .img, .quick .img { overflow:hidden }
 .card .img img[src*="/img/elista/"], .cimg img[src*="/img/elista/"], .line .img img[src*="/img/elista/"], .thumb img[src*="/img/elista/"], .quick .img img[src*="/img/elista/"] { object-fit:cover; transform:scale(1.38); transform-origin:50% 46% }
 .card:hover .img img[src*="/img/elista/"] { transform:scale(1.38) }
+
+/* 27 Oct: the owner's A+ strips (1464 x 600, eight to ten per model) stacked at their own width, as Amazon and Croma stack A+ banners; never enlarged past 1464 */
+.astrips { display:grid; max-width:1464px; margin:28px auto 0; background:#0b0e14; border-radius:18px; overflow:hidden }
+.astrips img { width:100%; height:auto; display:block }
+@media (max-width:760px) { .astrips { border-radius:12px; margin-top:18px } }
+/* the three feature cards (key features, specifications, entertainment) show whole in the thumbnails; only the two television cards crop to the set */
+.thumb img[src*="_3-"], .thumb img[src*="_4-"], .thumb img[src*="_5-"] { transform:none }
+/* 27 Oct: the hero's words are live type (Manrope) over the owner's picture; the picture's own lettering sits under an opaque left panel, the television side stays */
+.slide.k-banner img { transform:scale(1.12); transform-origin:100% 50% }
+.slide.k-banner .bannerlink::after { content:""; position:absolute; inset:0; background:linear-gradient(90deg,#0b0e14 0%,#0b0e14 38%,#0b0e1400 50%) }
+.slide.k-banner .hpanel { display:flex; flex-direction:column; justify-content:center; align-items:flex-start; gap:clamp(14px,1.6vw,24px); position:absolute; inset:0 auto 0 0; width:min(50%,760px); padding:0 24px 0 var(--gut); background:none; pointer-events:none }
+.slide.k-banner .hpanel::before { display:none } .slide.k-banner .hpanel > * { pointer-events:auto }
+.slide.k-banner .hpanel h1 { margin:0; font-size:clamp(32px,3.4vw,60px); letter-spacing:-2px; line-height:1.04; max-width:20ch }
+.slide.k-banner .hpanel h1 .hi { background:linear-gradient(90deg,#38bdf8,#7c3aed); -webkit-background-clip:text; background-clip:text; color:transparent }
+.slide.k-banner .hpanel p { margin:0; font-size:clamp(15px,1.15vw,19px); line-height:1.5; color:#ffffffd9; max-width:46ch }
+.slide.k-banner .hcta { display:flex; gap:12px; flex-wrap:wrap }
+@media (max-width:760px) { .slide.k-banner img { transform:none } .slide.k-banner .bannerlink::after { display:none } .slide.k-banner .hpanel { inset:auto 0 0 0; width:auto; justify-content:flex-end; padding:20px 16px 22px; background:linear-gradient(0deg,#0b0e14f2 0%,#0b0e14b0 60%,transparent 100%); gap:10px } .slide.k-banner .hpanel h1 { font-size:clamp(28px,8vw,36px); max-width:none } }
+.slide.k-banner .hpanel h1 .hi { background:linear-gradient(90deg,#7dd3fc,#a78bfa) } /* lighter than the banner's own blue-violet so it reads over the photo on a phone */
