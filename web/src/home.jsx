@@ -30,7 +30,8 @@ export function Home() {
   const minTv = tvs.length ? Math.min(...tvs.map(p => p.price)) : 0, minEmi = tvs.some(p => p.emi) ? Math.min(...tvs.filter(p => p.emi).map(p => emiPlans(p.price)[2][1])) : 0; // the deal box: every figure from the catalogue
   const home = banners.filter(b => b.slot === "home");
   const raw = home.length ? home.map(b => ({ kind: b.brand ? "brand" : b.preset === "promo" ? "promo" : "photo", preset: b.preset, eyebrow: b.kicker, h: lines(b.title), s: b.text, href: b.href, cta: b.cta, cta2: b.cta2, href2: b.href2, im: b.img, imMobile: b.imgMobile, brand: b.brand, tone: TONES[b.tone] || undefined, prod: b.productId ? byId(b.productId) : null })) : HOME_BANNERS;
-  const slides = [{ kind: "banner", h: ["Bring the big-screen experience home."], s: "Premium Elista TVs at factory-direct prices. Free delivery, cash on delivery, No Cost EMI.", href: "/televisions", cta: "Shop TVs", hi: ["big-screen"], href2: "/offers", cta2: "Festive offers" }]; // the owner's banner alone (26 Oct); the banners below stay in the admin for the day they return
+  const slides = [{ kind: "banner", h: ["Bring the big-screen experience home."], s: "Premium Elista TVs at factory-direct prices. Free delivery, cash on delivery, No Cost EMI.", href: "/televisions", cta: "Shop TVs", hi: ["big-screen"], href2: "/offers", cta2: "Festive offers", eyebrow: "MyTekkStore · Elista" }];
+  const inches = tvs.map(p => +((/\((\d+) inch\)/.exec(p.name || "") || [])[1] || 0)).filter(Boolean), facts = [minTv > 0 && "From " + money(minTv), inches.length > 0 && Math.min(...inches) + " to " + Math.max(...inches) + " inch", minEmi > 0 && "No Cost EMI from " + money(minEmi) + "/month"].filter(Boolean); // the hero's facts, from the catalogue // the owner's banner alone (26 Oct); the banners below stay in the admin for the day they return
   const unusedSlides = raw.filter(s => s.kind !== "promo" && (s.kind !== "brand" || biggest(s.brand))).map(s => s.kind === "brand" ? { ...s, pts: brandPoints(P, s.brand), prod: s.prod || biggest(s.brand), href: s.href || brandUrl(s.brand), cta: s.cta || "Shop " + s.brand, eyebrow: s.eyebrow || s.brand }
     : s.kind === "promo" ? { ...s, s: s.s || "Up to " + maxOff + "% off, bank offers, and No Cost EMI on the models that carry it." }
     : s.kind === "photo" ? { ...s, kind: "deal", im: "", imMobile: "", vid: "", eyebrow: "Straight from the factory · Live now", h: ["Up to " + maxOff + "% off on Smart TVs."], hi: [maxOff + "%", "off"],
@@ -103,6 +104,7 @@ export function Home() {
           <m.h1 variants={WORDS}>{sl.h.map((l, j) => <span className="ln" key={j}>{l.split(" ").map((w, k) => <m.span className={"w" + (sl.hi && sl.hi.includes(w) ? " hi" : "")} variants={RISE} key={k}>{w}&nbsp;</m.span>)}</span>)}</m.h1>
           {sl.pts ? <m.ul className="pts" variants={RISE}>{sl.pts.map(t => <li key={t}>{t}</li>)}</m.ul> : <m.p variants={RISE}>{sl.s}</m.p>}
           {(sl.kind === "photo" || sl.kind === "deal") && minTv > 0 && <m.div className="hfacts" variants={RISE}><span>From {money(minTv)}</span><span>Up to {maxOff}% off</span>{minEmi > 0 && <span>No Cost EMI from {money(minEmi)}/month</span>}</m.div>}
+          {sl.kind === "banner" && facts.length > 0 && <m.div className="hfacts" variants={RISE}>{facts.map(f => <span key={f}>{f}</span>)}</m.div>}
           <m.div className="hcta" variants={RISE}><a className="btn" href={sl.href}>{sl.cta}</a><a className="btn ghost" href={sl.href2 || listUrl({ cat: "Televisions", sort: "off" })}>{sl.cta2 || "See deals"}</a></m.div>
         </div>
       </m.div>)}
@@ -175,7 +177,7 @@ export function FestiveBanner({ tvs, maxOff, minEmi, money, href = "/offers", ct
         <span className="fbenefits"><span>Free delivery across India</span><span>Cash on delivery</span>{maxOff > 0 && minEmi ? <span>No Cost EMI from {money(minEmi)}/month</span> : <span>Brand warranty, registered for you</span>}</span>
         <span className="btn">{cta}</span>
       </span>
-      <span className="fstage" aria-hidden="true"><span className="fglow"></span><img className="froom" src="/img/fest-room.webp" alt="" loading="lazy" width="860" height="430" /></span>
+      <span className="fstage" aria-hidden="true"><span className="fglow"></span><img className="froom" src="/img/elista/webOS-Smart-TV-65in_2-960.webp" srcSet="/img/elista/webOS-Smart-TV-65in_2-960.webp 960w, /img/elista/webOS-Smart-TV-65in_2.webp 1500w" sizes="(max-width:760px) 100vw, 42vw" alt="" loading="lazy" width="860" height="430" /></span>
       <span className="fbanks"><BankBoxes /><small>{maxOff > 0 ? "*T&C apply · Savings are MRP against our price" : "*T&C apply · Prices inclusive of all taxes"}</small></span>
     </a>
   </section>;

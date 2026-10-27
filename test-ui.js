@@ -262,7 +262,7 @@ async function run() {
     await b.goto(base + "/compare?ids=26,11");
     assert.equal(await b.ev(`document.querySelectorAll(".cmp .ctable thead th").length - 1`), 2, "the compare page shows the two models");
     await b.goto(base + "/televisions/elista-108-cm-43-inch-4k-ultra-hd-smart-tv"); await sleep(400);
-    assert.equal(await b.ev(`document.querySelector("main .banner.phero").dataset.preset`), "cinematic", "the product's own banner, before the buy box");
+    assert.equal(await b.ev(`!!document.querySelector("main .banner.phero")`), false, "no banner above the product: the page opens on the gallery and the buy box (27 Oct), the owner's A+ strip 1 is the product's banner; the admin can still add one");
     assert.equal(await b.ev(`document.querySelectorAll("main h1").length`), 1, "one h1 on the product page");
     await b.click(...await b.center(".chatfab")); await sleep(500);
     assert.ok(await b.ev(`document.activeElement === document.querySelector(".chat input")`), "the help panel opens with the question box focused");

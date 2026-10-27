@@ -15,7 +15,6 @@ import { chrome, reveal, lazyClips, fitStrips, fly } from "./motion.js";
 // The web fonts (Inter, Manrope, Space Grotesk) are asked for only once the page is drawn, so neither the first paint nor the
 // biggest paint waits for Google Fonts (a font link in the shell, even as media=print, cost 2 s of LCP in Lighthouse). Until they
 // arrive the page uses the width-matched fallbacks in style.css, so the swap does not reflow the text (display=swap).
-const FONT_CSS = "https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Manrope:wght@600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap";
 const PAGES = { home: Home, category: Category, product: Product, offers: Offers, cart: Cart, checkout: Checkout, order: Order, account: Account, page: InfoPage, admin: Admin, notfound: NotFound, campaign: Campaign, compare: ComparePage };
 const $ = (s, el = document) => el.querySelector(s);
 
@@ -58,7 +57,6 @@ export default function App() {
   useEffect(() => {
     if (!s.loaded && !s.error) return;
     document.body.classList.add("loaded");
-    if (!document.querySelector('link[href^="https://fonts.googleapis.com"]')) document.head.append(Object.assign(document.createElement("link"), { rel: "stylesheet", href: FONT_CSS }));
     reveal(); lazyClips(); fitStrips();
     const anchor = /^#[\w-]+$/.test(location.hash) && document.getElementById(location.hash.slice(1));
     if (anchor) anchor.scrollIntoView();

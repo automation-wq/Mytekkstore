@@ -5,6 +5,10 @@
 @font-face { font-family:"Inter Fallback"; src:local("Arial"), local("Roboto"), local("Helvetica Neue"); size-adjust:107%; ascent-override:90%; descent-override:22%; line-gap-override:0% }
 @font-face { font-family:"Manrope Fallback"; src:local("Arial"), local("Roboto"), local("Helvetica Neue"); size-adjust:104%; ascent-override:96%; descent-override:26%; line-gap-override:0% }
 @font-face { font-family:"Space Grotesk Fallback"; src:local("Arial"), local("Roboto"), local("Helvetica Neue"); size-adjust:106%; ascent-override:94%; descent-override:26%; line-gap-override:0% }
+/* the faces themselves, self-hosted (27 Oct): Google's variable latin files in public/fonts; the live site had only preconnects, so every page rendered in Arial */
+@font-face { font-family:"Inter"; font-style:normal; font-weight:400 700; font-display:swap; src:url(/fonts/inter.woff2) format("woff2"); unicode-range:U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD }
+@font-face { font-family:"Manrope"; font-style:normal; font-weight:600 800; font-display:swap; src:url(/fonts/manrope.woff2) format("woff2"); unicode-range:U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD }
+@font-face { font-family:"Space Grotesk"; font-style:normal; font-weight:500 700; font-display:swap; src:url(/fonts/spacegrotesk.woff2) format("woff2"); unicode-range:U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD }
 :root { --bg:#f4f5f7; --head:#ffffff; --card:#ffffff; --line:#e2e5ea; --text:#15181e; --soft:#3f4652; --muted:#6b7280; --accent:#08805f; --on:#ffffff; }
 * { box-sizing:border-box; margin:0 }
 body { background:var(--bg); color:var(--text); font:15px/1.5 Inter, "Inter Fallback", system-ui, "Segoe UI", sans-serif; min-height:100vh; display:flex; flex-direction:column }
@@ -2385,3 +2389,50 @@ main > section, main > .fest, main > .cols, .bigbrands.solo, .bankad.bleed, main
 .slide.k-banner .hcta { display:flex; gap:12px; flex-wrap:wrap }
 @media (max-width:760px) { .slide.k-banner img { transform:none } .slide.k-banner .bannerlink::after { display:none } .slide.k-banner .hpanel { inset:auto 0 0 0; width:auto; justify-content:flex-end; padding:20px 16px 22px; background:linear-gradient(0deg,#0b0e14f2 0%,#0b0e14b0 60%,transparent 100%); gap:10px } .slide.k-banner .hpanel h1 { font-size:clamp(28px,8vw,36px); max-width:none } }
 .slide.k-banner .hpanel h1 .hi { background-image:linear-gradient(90deg,#7dd3fc,#a78bfa) } /* background-image, not the shorthand: the shorthand reset background-clip and painted a solid block over the word (live, 27 Oct morning) */ /* lighter than the banner's own blue-violet so it reads over the photo on a phone */
+
+/* 27 Oct, second pass. The hero: the owner's picture at its own size (no scale), an eyebrow and the catalogue's facts in the panel, a little shorter */
+.hero { height:clamp(480px,46vw,840px) }
+.slide.k-banner img { transform:none }
+.slide.k-banner .bannerlink::after { background:linear-gradient(90deg,#0b0e14 0%,#0b0e14 42%,#0b0e1400 53%) }
+.slide.k-banner .hpanel { width:min(52%,820px); gap:clamp(12px,1.4vw,20px) }
+.slide.k-banner .hpanel .eyebrow { margin:0; background:none; border-color:#ffffff38; color:#ffffffd9; font-weight:700 }
+.slide.k-banner .hpanel h1 { font-size:clamp(36px,3.7vw,66px); letter-spacing:-2.2px; max-width:19ch }
+.slide.k-banner .hfacts { margin:2px 0 0 } .slide.k-banner .hfacts span:nth-child(2) { background:#ffffff14; color:#fff; border-color:#ffffff2e }
+@media (max-width:760px) { .slide.k-banner .hpanel .eyebrow, .slide.k-banner .hfacts { display:none } }
+/* the product page the Amazon way: a thumbnail column at the left of the big picture, the picture capped like Amazon's, a caption under it */
+.gcap { display:none }
+@media (min-width:861px) {
+  .gallery { display:grid; grid-template-columns:64px minmax(0,1fr); gap:14px; align-items:start }
+  .gallery > * { grid-column:2 } .gallery > .thumbs { grid-column:1; grid-row:1; flex-direction:column; margin:0; overflow:visible; gap:10px }
+  .gallery > .gdots { display:none }
+  .thumb { flex:0 0 auto; width:64px; height:64px }
+  .pdp { grid-template-columns:minmax(0,820px) minmax(0,1fr) }
+  .gcap { display:block; margin:8px 0 0; padding:0; text-align:center; font-size:13px; color:var(--muted); background:none; border:0; cursor:pointer; width:100% } .gcap:hover { color:var(--ink); text-decoration:underline }
+}
+/* a banner that features a product shows the owner's living-room card as a photo, cropped to the television */
+.banner .bprod.room { width:min(100%,640px) } .banner .bprod.room img { aspect-ratio:1.9; object-fit:cover; object-position:50% 46%; border-radius:18px; background:none; filter:drop-shadow(0 30px 50px #000a) }
+/* the festive stage: the owner's living-room card cropped to the television (sharp at 1500 px), not the brochure's 860 px cover */
+.fstage .froom { aspect-ratio:2/1; object-fit:cover; object-position:50% 46% }
+.festive .ftext strong { font-family:"Space Grotesk","Space Grotesk Fallback",Manrope,"Manrope Fallback",Inter,"Inter Fallback",system-ui,sans-serif }
+/* the sign-in aside: the owner's living-room photo fills it behind the words */
+.aside.cine.mono { position:relative; overflow:hidden; isolation:isolate }
+.auth.mono .amark { position:absolute; inset:0; margin:0; width:auto; aspect-ratio:auto; display:block; z-index:0 }
+.auth.mono .amark img { width:100%; height:100%; object-fit:cover; object-position:50% 40%; filter:none; display:block }
+.auth.mono .amark::after { content:""; position:absolute; inset:0; background:linear-gradient(180deg,#0b0e1420 0%,#0b0e1490 48%,#0b0e14f2 100%) }
+.auth.mono .aglow2 { display:none }
+.aside.cine.mono .atext { position:relative; z-index:1 }
+@media (max-width:860px) { .aside.cine.mono { min-height:280px; display:grid; align-content:end } }
+
+/* the sign-in photo zoomed past the card's own lettering (title at the top, MRP at the foot of the owner's living-room card) */
+.auth.mono .amark img { transform:scale(1.5); transform-origin:50% 50%; object-position:50% 50% }
+@media (max-width:860px) { .auth.mono .amark img { transform:scale(1.45) } }
+/* phones: the hero words over a deeper scrim and three lines, not four, so they do not fight the picture */
+@media (max-width:760px) { .slide.k-banner .hpanel { background:linear-gradient(0deg,#0b0e14f7 0%,#0b0e14e0 50%,#0b0e1499 78%,transparent 100%); padding-top:48px } .slide.k-banner .hpanel h1 { font-size:clamp(26px,7.2vw,32px); letter-spacing:-1.2px } .slide.k-banner .hpanel p { font-size:14.5px } }
+
+/* last looks (27 Oct): the sign-in photo a touch closer so no lettering reaches the edge; the phone hero headline on three lines; a product banner picture that fills its column */
+.auth.mono .amark img { transform:scale(1.62); transform-origin:50% 52% }
+@media (max-width:760px) { .slide.k-banner .hpanel h1 { max-width:none } }
+.banner .bprod.room img { width:100% }
+
+/* phones: the hero panel spans the full width again (the laptop width rule above had narrowed it to half the screen) */
+@media (max-width:760px) { .slide.k-banner .hpanel { width:auto; inset:auto 0 0 0 } }

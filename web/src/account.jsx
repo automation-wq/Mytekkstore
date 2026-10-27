@@ -62,7 +62,7 @@ function SignIn({ CFG }) {
   const tabs = [...(real ? [["t-phone", "Mobile number or email"]] : []), ["t-email", "Password"], ...(demoOnly ? [["t-phone", "One-time code (demo)"]] : [])];
   return <div className="auth mono">
     <m.aside className="aside cine mono" initial="hide" animate="show" variants={GROUP}>
-      <m.div className="amark" variants={UP} aria-hidden="true"><img src="/img/tv-ocean.webp" srcSet="/img/tv-ocean-480.webp 480w, /img/tv-ocean.webp 865w" sizes="(max-width:860px) 70vw, 36vw" alt="" width="865" height="572" decoding="async" /><span className="aglow2"></span></m.div>
+      <m.div className="amark" variants={UP} aria-hidden="true"><img src="/img/elista/Mini-LED-PRO-65in_2-960.webp" srcSet="/img/elista/Mini-LED-PRO-65in_2-960.webp 960w, /img/elista/Mini-LED-PRO-65in_2.webp 1500w" sizes="(max-width:860px) 100vw, 44vw" alt="" width="1500" height="1500" decoding="async" /><span className="aglow2"></span></m.div>
       <div className="atext"><m.p className="kicker" variants={UP}>Mytekkstore</m.p>
         <m.h2 variants={WORDS}>{"Welcome to Mytekkstore.".split(" ").map((w, k) => <span className="ln" key={k}><m.span className="w" variants={RISE}>{w}&nbsp;</m.span></span>)}</m.h2>
         <m.p className="asub" variants={UP}>Elista Smart TVs at factory prices, delivered free with cash on delivery and the brand's own warranty.</m.p>

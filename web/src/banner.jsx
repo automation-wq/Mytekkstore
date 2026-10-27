@@ -37,14 +37,15 @@ export function Banner({ b, product, eager, heading = "h2", className = "", chil
   const prodY = useTransform(scrollYProgress, [0, 1], preset === "scroll" ? [70, -70] : drift ? [18, -18] : [0, 0]);
   const prodScale = useTransform(scrollYProgress, [0, .5, 1], preset === "scroll" ? [.84, 1.05, .98] : [1, 1, 1]);
   const cut = product && cutout(product.img);
+  const room = product && (product.images || []).find(i => /^img\/elista\/[\w-]+_2\.webp$/.test(i)); // the owner's living-room card as the banner's picture, not the white front card on a dark stage
   const labels = preset === "feature" && product ? callouts(product) : [];
   const alt = product ? product.brand + " " + product.name : "";
   return <m.section ref={ref} className={`banner p-${preset} t-${b.tone || "photo"} a-${b.align || "left"}${product ? " has-prod" : ""}${className ? " " + className : ""}`} style={TONES[b.tone] ? { background: TONES[b.tone] } : undefined} data-preset={preset}
     initial={still ? "show" : "hide"} whileInView="show" viewport={{ once: true, amount: .2 }} variants={v.group}>
     <div className="binner">
       {b.img && <m.div className="bg" variants={v.bg} style={{ y: bgY }}><picture>{b.imgMobile && <source media="(max-width:760px)" srcSet={pic(b.imgMobile, 960)} />}<img src={pic(b.img, 960)} srcSet={picSet(b.img)} sizes="100vw" alt="" style={{ objectPosition: FOCUS[b.focus] || FOCUS.center }} loading={eager ? "eager" : "lazy"} fetchPriority={eager ? "high" : undefined} decoding="async" /></picture></m.div>}
-      {product && <m.a className={"bprod" + (cut ? " cut" : "")} href={productUrl(product)} variants={v.product} style={{ y: prodY, scale: prodScale }}>
-        {cut ? <img src={cut} alt={alt} loading={eager ? "eager" : "lazy"} /> : <img src={pic(product.img)} srcSet={picSet(product.img)} sizes="(max-width:760px) 70vw, 40vw" alt={alt} width="800" height="800" loading={eager ? "eager" : "lazy"} />}
+      {product && <m.a className={"bprod" + (cut ? " cut" : "") + (room ? " room" : "")} href={productUrl(product)} variants={v.product} style={{ y: prodY, scale: prodScale }}>
+        {cut ? <img src={cut} alt={alt} loading={eager ? "eager" : "lazy"} /> : <img src={pic(room || product.img, 960)} srcSet={picSet(room || product.img)} sizes="(max-width:760px) 70vw, 40vw" alt={alt} width="800" height="800" loading={eager ? "eager" : "lazy"} />}
         {labels.length > 0 && <span className="blabels">{labels.map(([big, small], i) => <m.span className={"blabel l" + i} variants={v.label} key={big + small}><b>{big}</b><small>{small}</small></m.span>)}</span>}</m.a>}
       <div className="btext">
         {b.badge && <m.span className="bbadge" variants={v.item}>{b.badge}</m.span>}

@@ -16,8 +16,9 @@ const shell = (page, title) => `<!doctype html>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>${title}</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preload" href="/fonts/inter.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/fonts/spacegrotesk.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/fonts/manrope.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="icon" href="/favicon.svg">
 <link rel="manifest" href="/manifest.webmanifest">
 <meta name="theme-color" content="#08805f">${page === "home" ? '\n<link rel="preload" as="image" href="/img/hero-banner.webp" imagesrcset="/img/hero-banner-480.webp 480w, /img/hero-banner-960.webp 960w, /img/hero-banner.webp 1672w" imagesizes="100vw" fetchpriority="high">' : ""}
