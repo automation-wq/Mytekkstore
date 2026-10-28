@@ -182,8 +182,11 @@ server.listen(0, "127.0.0.1", async () => {
     assert.equal((await call("/api/admin/upload", "POST", { data: "data:image/jpeg;base64," + Buffer.from("not a jpeg at all, just text").toString("base64") }, admin)).status, 400);
     const jpeg = Buffer.concat([Buffer.from([0xff, 0xd8, 0xff, 0xe0]), Buffer.alloc(200)]);
     r = await call("/api/admin/upload", "POST", { data: "data:image/jpeg;base64," + jpeg.toString("base64") }, admin);
-    assert.match(r.data.img, /^img\/u-[0-9a-f]{12}\.jpg$/);
-    fs.unlinkSync(path.join(__dirname, "public", r.data.img));
+    if (process.env.DATABASE_URL) { // with a database (test-db.js) the photo is a row, served at /files/<id>.jpg, because a host like Vercel cannot write to the app folder
+      assert.match(r.data.img, /^files\/[0-9a-f]{16}\.jpg$/);
+      const got = await fetch(base + "/" + r.data.img); assert.equal(got.status, 200, "the uploaded photo is served from the database");
+      assert.equal(got.headers.get("content-type"), "image/jpeg"); assert.ok(Buffer.from(await got.arrayBuffer()).equals(jpeg), "byte for byte");
+    } else { assert.match(r.data.img, /^img\/u-[0-9a-f]{12}\.jpg$/); fs.unlinkSync(path.join(__dirname, "public", r.data.img)); }
     assert.equal((await call("/api/admin/orders/" + orderId, "PATCH", { status: "Nope" }, admin)).status, 400);
     assert.equal((await call("/api/admin/orders/" + orderId, "PATCH", { status: "Cancelled" }, admin)).status, 200);
     r = await call("/api/products");

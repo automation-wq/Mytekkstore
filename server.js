@@ -80,6 +80,7 @@ async function initStore() {
   await sql("CREATE TABLE IF NOT EXISTS docs (col text NOT NULL, id text NOT NULL, v jsonb NOT NULL, at bigint NOT NULL, PRIMARY KEY (col, id))");
   await sql("CREATE TABLE IF NOT EXISTS sessions (token text PRIMARY KEY, user_id text NOT NULL, exp bigint NOT NULL)");
   await sql("CREATE TABLE IF NOT EXISTS stock (id text PRIMARY KEY, n integer NOT NULL)"); // see moveStock
+  await sql("CREATE TABLE IF NOT EXISTS files (id text PRIMARY KEY, type text NOT NULL, data text NOT NULL, at bigint NOT NULL)"); // uploaded photos (see admin/upload)
   for (const n of Object.keys(db)) {
     if (ROWS.has(n)) {
       const rows = await sql("SELECT v, at FROM docs WHERE col = $1 ORDER BY at, id", [n]);
@@ -237,17 +238,17 @@ function productFrom(b) {
   const p = {
     brand: str(b.brand, "Brand", 60), cat: str(b.cat, "Category", 60), name: str(b.name, "Name", 160),
     price: int(b.price, "Price", 1, 1e8), mrp: int(b.mrp, "MRP", 1, 1e8), stock: int(b.stock, "Stock", 0, 1e6),
-    img: str(b.img, "Image", 300, /^(img\/[\w.-]+(?:\/[\w.-]+)?|https:\/\/[^\s"'<>]+)$/),
+    img: str(b.img, "Image", 300, /^(img\/[\w.-]+(?:\/[\w.-]+)?|files\/[a-f0-9]{16}\.jpg|https:\/\/[^\s"'<>]+)$/),
     desc: typeof b.desc === "string" && b.desc.trim() ? str(b.desc, "Description", 2000) : "",
     emi: !!b.emi, // shows the "No Cost EMI" tag
     os: typeof b.os === "string" && b.os.trim() ? str(b.os, "Operating system", 40) : "", // Google TV, WebOS, Android TV: Shop by OS and the comparison chart
     // A+ content blocks on the product page: [{ title, text, img }], up to 8
-    story: Array.isArray(b.story) ? b.story.slice(0, 8).map(x => ({ title: str(x && x.title, "A+ title", 80), text: str(x && x.text, "A+ text", 600), img: x && typeof x.img === "string" && x.img.trim() ? str(x.img, "A+ photo", 300, /^(img\/[\w.-]+(?:\/[\w.-]+)?|https:\/\/[^\s"'<>]+)$/) : "" })) : [],
+    story: Array.isArray(b.story) ? b.story.slice(0, 8).map(x => ({ title: str(x && x.title, "A+ title", 80), text: str(x && x.text, "A+ text", 600), img: x && typeof x.img === "string" && x.img.trim() ? str(x.img, "A+ photo", 300, /^(img\/[\w.-]+(?:\/[\w.-]+)?|files\/[a-f0-9]{16}\.jpg|https:\/\/[^\s"'<>]+)$/) : "" })) : [],
     // extra photos for the product page gallery (thumbnails), up to 8 links
-    images: Array.isArray(b.images) ? b.images.slice(0, 8).map(s => str(s, "Photo link", 300, /^(img\/[\w.-]+(?:\/[\w.-]+)?|https:\/\/[^\s"'<>]+)$/)) : [],
-    aplus: Array.isArray(b.aplus) ? b.aplus.slice(0, 12).map(s => str(s, "A+ image link", 300, /^(img\/[\w.-]+(?:\/[\w.-]+)?|https:\/\/[^\s"'<>]+)$/)) : [], // full-width creatives, stacked down the product page
+    images: Array.isArray(b.images) ? b.images.slice(0, 8).map(s => str(s, "Photo link", 300, /^(img\/[\w.-]+(?:\/[\w.-]+)?|files\/[a-f0-9]{16}\.jpg|https:\/\/[^\s"'<>]+)$/)) : [],
+    aplus: Array.isArray(b.aplus) ? b.aplus.slice(0, 12).map(s => str(s, "A+ image link", 300, /^(img\/[\w.-]+(?:\/[\w.-]+)?|files\/[a-f0-9]{16}\.jpg|https:\/\/[^\s"'<>]+)$/)) : [], // full-width creatives, stacked down the product page
     // 360-degree spin: frames shot around the product (8 to 48), drag to rotate on the product page; empty = the normal photo
-    spin: Array.isArray(b.spin) ? b.spin.slice(0, 48).map(s => str(s, "Spin frame", 300, /^(img\/[\w.-]+(?:\/[\w.-]+)?|https:\/\/[^\s"'<>]+)$/)) : [],
+    spin: Array.isArray(b.spin) ? b.spin.slice(0, 48).map(s => str(s, "Spin frame", 300, /^(img\/[\w.-]+(?:\/[\w.-]+)?|files\/[a-f0-9]{16}\.jpg|https:\/\/[^\s"'<>]+)$/)) : [],
     specs: [],
   };
   if (p.mrp < p.price) bad("MRP cannot be lower than the price.");
@@ -672,7 +673,7 @@ async function askModel(system, history, message) {
   throw new HttpError(503, "The assistant is not available right now.");
 }
 
-on("GET", "config", async ({ req }) => ({ country: String(req.headers["x-vercel-ip-country"] || "").toUpperCase().slice(0, 2), /* the hosting's own geolocation header; empty on a local machine */ google: GOOGLE, sms: otpSmsReady, mail: mailReady, demoCodes: OTP_DEMO, recaptcha: RECAPTCHA.site, geo: !!MAPS_KEY, clarity: !!CLARITY, chat: !!(GEMINI_KEY || CHAT_KEY), pay: PAY_PROVIDER, payDemo: PAY_PROVIDER === "demo" && isLocal(req) /* the test payment window, on the developer's machine only */, payKey: RZP.id, fx: await fxNow(), destinations: Object.fromEntries(Object.entries(DESTINATIONS).map(([k, d]) => [k, { name: d.name, display: d.display, ship: d.ship, methods: d.methods }])) }));
+on("GET", "config", async ({ req }) => ({ country: String(req.headers["x-vercel-ip-country"] || "").toUpperCase().slice(0, 2), /* the hosting's own geolocation header; empty on a local machine */ google: GOOGLE, sms: otpSmsReady, mail: mailReady, demoCodes: OTP_DEMO, recaptcha: RECAPTCHA.site, geo: !!MAPS_KEY, clarity: !!CLARITY, chat: !!(GEMINI_KEY || CHAT_KEY), db: !!DB_URL, pay: PAY_PROVIDER, payDemo: PAY_PROVIDER === "demo" && isLocal(req) /* the test payment window, on the developer's machine only */, payKey: RZP.id, fx: await fxNow(), destinations: Object.fromEntries(Object.entries(DESTINATIONS).map(([k, d]) => [k, { name: d.name, display: d.display, ship: d.ship, methods: d.methods }])) }));
 // Contact form (page.html?p=contact): the message is recorded in the admin outbox ("Customer messages"), so the store sees it
 // even before an email provider is connected. ponytail: no rate limit beyond the body size; add one if the form gets abused.
 on("POST", "contact", ({ body }) => {
@@ -761,6 +762,7 @@ on("PATCH", "admin/orders/(MT[0-9A-F]{10})", async ({ params, body }) => {
   const o = db.orders.find(o => o.id === params[0]);
   if (!o) throw new HttpError(404, "Order not found.");
   if (!STATUSES.includes(body.status)) bad("Unknown status.");
+  if (o.returnRequest && body.returnStatus && ["Approved", "Picked up", "Refunded", "Declined"].includes(body.returnStatus) && o.returnRequest.status !== body.returnStatus) { o.returnRequest.status = body.returnStatus; o.returnRequest.updated = new Date().toISOString(); write("orders"); notify(o, `Your return for order ${o.id} is now: ${body.returnStatus}.`); } // the return moves on its own, without an order status change
   if (o.status === body.status) return { order: o };
   // cancelling returns the items to stock; reopening a cancelled order takes them again, and must not oversell
   const delta = (o.status === "Cancelled" ? 1 : 0) - (body.status === "Cancelled" ? 1 : 0);
@@ -768,7 +770,6 @@ on("PATCH", "admin/orders/(MT[0-9A-F]{10})", async ({ params, body }) => {
   if (delta === -1) await giveBack(o.items);
   o.status = body.status;
   if (o.status === "Delivered" && !o.deliveredAt) o.deliveredAt = new Date().toISOString(); // the return window and the warranty start here
-  if (o.returnRequest && body.returnStatus && ["Approved", "Picked up", "Refunded", "Declined"].includes(body.returnStatus)) o.returnRequest.status = body.returnStatus;
   write("orders");
   notify(o, `Your Mytekkstore order ${o.id} is now: ${o.status}.`);
   return { order: o };
@@ -803,9 +804,14 @@ on("POST", "orders/(MT[0-9A-F]{10})/return", ({ params, body, user }) => {
 }, "user");
 on("GET", "admin/outbox", () => ({ messages: [...db.outbox].reverse() }), "admin");
 // Product photo upload. The admin page resizes the photo to a small JPEG before sending it.
-on("POST", "admin/upload", ({ body }) => {
+on("POST", "admin/upload", async ({ body }) => {
   const buf = Buffer.from(typeof body.data === "string" ? body.data.replace(/^data:image\/jpeg;base64,/, "") : "", "base64");
-  if (buf.length < 100 || buf.length > 500000 || buf[0] !== 0xff || buf[1] !== 0xd8 || buf[2] !== 0xff) bad("Please choose a photo.");
+  if (buf.length < 100 || buf.length > 1400000 || buf[0] !== 0xff || buf[1] !== 0xd8 || buf[2] !== 0xff) bad("Please choose a photo.");
+  if (DB_URL) { // on a host like Vercel the app's own folder is read-only, so the photo lives in the database and /files/<id>.jpg serves it (cached by the CDN for good)
+    const id = crypto.randomBytes(8).toString("hex");
+    await sql("INSERT INTO files (id, type, data, at) VALUES ($1, $2, $3, $4)", [id, "image/jpeg", buf.toString("base64"), String(Date.now())]);
+    return { img: "files/" + id + ".jpg" };
+  }
   const name = "u-" + crypto.randomBytes(6).toString("hex") + ".jpg";
   fs.writeFileSync(path.join(PUBLIC, "img", name), buf);
   return { img: "img/" + name };
@@ -938,7 +944,7 @@ async function handleApi(req, res, pathname) {
       if (!/^application\/json/.test(req.headers["content-type"] || "")) throw new HttpError(415, "Invalid request.");
       const origin = req.headers.origin;
       if (origin && (!URL.canParse(origin) || new URL(origin).host !== req.headers.host)) throw new HttpError(403, "Invalid request.");
-      body = await readBody(req, pathname === "/api/admin/upload" ? 700000 : 100000);
+      body = await readBody(req, pathname === "/api/admin/upload" ? 1900000 : 100000);
       if (!body || typeof body !== "object" || Array.isArray(body)) bad("Invalid request.");
     }
     for (const r of routes) {
@@ -1196,6 +1202,10 @@ const server = http.createServer(async (req, res) => {
       ...brands.map(b => ["/products?brand=" + encodeURIComponent(b), newest(live().filter(p => p.brand === b))]), ...live().map(p => [productPath(p), p.updated || BUILT]), ...INFO_PAGES.filter(p => !HIDDEN_PAGES.includes(p)).map(p => ["/" + p, BUILT]), ...db.campaigns.filter(c => c.live).map(c => ["/campaigns/" + c.slug, c.updated || BUILT])];
     res.writeHead(200, { "Content-Type": "application/xml; charset=utf-8" });
     return res.end('<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n' + urls.map(([u, d]) => "<url><loc>" + escHtml(base + u) + "</loc><lastmod>" + d.slice(0, 10) + "</lastmod></url>").join("\n") + "\n</urlset>\n");
+  }
+  const fileId = /^\/files\/([a-f0-9]{16})\.jpg$/.exec(pathname); // a photo uploaded in the admin (see admin/upload)
+  if (fileId && DB_URL) {
+    try { await ready(); const row = (await sql("SELECT type, data FROM files WHERE id = $1", [fileId[1]]))[0]; if (row) { res.writeHead(200, { "Content-Type": row.type, "Cache-Control": "public, max-age=31536000, immutable" }); return res.end(Buffer.from(row.data, "base64")); } } catch (e) { console.error("files:", e.message); }
   }
   serveStatic(req, res, url, resolveClean(pathname));
 });
