@@ -106,20 +106,21 @@ async function sync() { // what other instances saved since this one last looked
     snap[col].set(id, json);
   }
 }
-async function flush() { // this instance's writes, before it answers
+async function flush() { // this instance's writes, before it answers; a write the database refuses stays dirty and goes again with the next flush
   if (!DB_URL) return;
-  const jobs = pending.splice(0);
-  for (const n of [...dirty]) {
-    dirty.delete(n);
+  const jobs = pending.splice(0), names = [...dirty], done = []; // done: [collection, id, json or null], marked saved only once the database has them
+  dirty.clear();
+  for (const n of names) {
     const now = Date.now();
     if (ROWS.has(n)) {
       const seen = new Set(), vals = [], params = [];
-      for (const o of db[n]) { const id = String(o.id), json = JSON.stringify(o); seen.add(id); if (snap[n].get(id) === json) continue; snap[n].set(id, json); params.push(n, id, json, String(now)); const k = params.length; vals.push(`(${k - 3}, ${k - 2}, ${k - 1}::jsonb, ${k})`); }
+      for (const o of db[n]) { const id = String(o.id), json = JSON.stringify(o); seen.add(id); if (snap[n].get(id) === json) continue; done.push([n, id, json]); params.push(n, id, json, String(now)); const k = params.length; vals.push(`($${k - 3}, $${k - 2}, $${k - 1}::jsonb, $${k})`); }
       if (vals.length) jobs.push(sql("INSERT INTO docs (col, id, v, at) VALUES " + vals.join(", ") + " ON CONFLICT (col, id) DO UPDATE SET v = EXCLUDED.v, at = EXCLUDED.at", params));
-      for (const id of [...snap[n].keys()].filter(id => !seen.has(id))) { snap[n].delete(id); jobs.push(sql("DELETE FROM docs WHERE col = $1 AND id = $2", [n, id])); }
+      for (const id of [...snap[n].keys()].filter(id => !seen.has(id))) { done.push([n, id, null]); jobs.push(sql("DELETE FROM docs WHERE col = $1 AND id = $2", [n, id])); }
     } else { kvAt[n] = now; jobs.push(sql("INSERT INTO kv (k, v, at) VALUES ($1, $2::jsonb, $3) ON CONFLICT (k) DO UPDATE SET v = EXCLUDED.v, at = EXCLUDED.at", [n, JSON.stringify(db[n]), String(now)])); }
   }
-  await Promise.all(jobs);
+  try { await Promise.all(jobs); } catch (e) { names.forEach(n => dirty.add(n)); throw e; } // every write is an upsert or a delete, so sending it again is safe
+  for (const [n, id, json] of done) json === null ? snap[n].delete(id) : snap[n].set(id, json);
 }
 const seedProducts = () => JSON.parse(fs.readFileSync(path.join(PUBLIC, "seed-data.js"), "utf8").replace(/^[^[]*/, "").replace(/;\s*$/, ""));
 const db = {
@@ -145,7 +146,10 @@ if (db.products.some(p => p.os === undefined)) {
 const SEED_CONTENT = require("./seed-content.js");
 db.banners = read("banners", null) || SEED_CONTENT.banners;
 db.campaigns = read("campaigns", null) || SEED_CONTENT.campaigns;
-const ready = DB_URL ? initStore() : Promise.resolve(); // pages and API calls wait for it; a failure answers 503 rather than serving /tmp
+// pages and API calls wait for the database to load; a failure answers 503 rather than serving /tmp, and the next request tries again
+let loading = null;
+const ready = () => loading || (loading = initStore().catch(e => { loading = null; throw e; }));
+if (DB_URL) ready().catch(e => console.error("database:", e.message));
 
 // ===== passwords and sessions =====
 const hashPw = (pw, salt) => crypto.scryptSync(pw, salt, 64).toString("hex");
@@ -1149,7 +1153,7 @@ const server = http.createServer(async (req, res) => {
   if (req.headers["x-forwarded-proto"] === "https") res.setHeader("Strict-Transport-Security", "max-age=31536000");
   const pathname = url.pathname;
   if (DB_URL && (pathname.startsWith("/api/") || pathname.endsWith(".html") || !/\.[a-z0-9]+$/i.test(pathname))) { // pages and API calls, not photos or scripts
-    try { await ready; await sync(); } catch (e) { console.error("database:", e.message); res.writeHead(503, { "Content-Type": "text/plain; charset=utf-8", "Cache-Control": "no-store" }); return res.end("The store's database is unavailable. Please try again in a minute."); }
+    try { await ready(); await sync(); } catch (e) { console.error("database:", e.message); res.writeHead(503, { "Content-Type": "text/plain; charset=utf-8", "Cache-Control": "no-store" }); return res.end("The store's database is unavailable. Please try again in a minute."); }
   }
   if (pathname.startsWith("/api/")) return handleApi(req, res, pathname);
   if (req.method !== "GET" && req.method !== "HEAD") { res.writeHead(405); return res.end(); } // HEAD works like GET for health checks (Node sends no body)

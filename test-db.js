@@ -25,6 +25,8 @@ let queries = 0;
 const neon = http.createServer((req, res) => {
   let body = ""; req.on("data", c => body += c); req.on("end", () => {
     const { query, params = [] } = JSON.parse(body); queries++;
+    const used = new Set(query.match(/\$\d+/g) || []).size; // like Postgres: the values sent must match the $n placeholders in the text
+    if (used !== params.length) { res.writeHead(400); return res.end(`bind message supplies ${params.length} parameters, but prepared statement requires ${used}`); }
     const hit = statements.find(([re]) => re.test(query.trim()));
     if (!hit || req.headers["neon-connection-string"] !== process.env.TEST_DB_URL) { res.writeHead(400); return res.end("unknown statement: " + query.slice(0, 80)); }
     res.writeHead(200, { "Content-Type": "application/json" }); res.end(JSON.stringify({ rows: hit[1](params) }));
