@@ -35,6 +35,7 @@ export function Product() {
   const p = byId(qs.get("id"));
   const hero = p ? banners.find(b => b.slot === "product:" + p.id) : null; // the product's own animated banner, when the admin made one
   const [tab, setTab] = useState("t-desc");
+  const [writing, setWriting] = useState(false), [stars, setStars] = useState(5), [hoverStar, setHoverStar] = useState(0); // the review form (above the early return)
   const [img, setImg] = useState(p ? p.img : "");
   const [spinView, setSpinView] = useState(() => !!(p && p.spin && p.spin.length >= 8)); // the 360° viewer shows first when a product has frames
   const [pinMsg, setPinMsg] = useState("");
@@ -107,12 +108,12 @@ export function Product() {
   const onTab = e => { const b = e.target.closest("[data-tab]"); if (b) setTab(b.dataset.tab); };
   const shareLink = async () => { try { if (navigator.share) await navigator.share({ title: document.title, url: location.href }); else { await navigator.clipboard.writeText(location.href); toast("Link copied"); } } catch {} };
   const zoomMove = e => { const r = zoomRef.current.getBoundingClientRect(); $("img", zoomRef.current).style.transformOrigin = ((e.clientX - r.left) / r.width * 100) + "% " + ((e.clientY - r.top) / r.height * 100) + "%"; };
-  const review = async f => { const { product } = await api(`products/${p.id}/reviews`, "POST", { rating: +f.rating, text: f.text }); updateProduct(product); setTab("t-rev"); toast("Thank you for your review"); };
+  const review = async f => { const { product } = await api(`products/${p.id}/reviews`, "POST", { rating: stars, title: f.title, text: f.text }); updateProduct(product); setTab("t-rev"); setWriting(false); toast("Thank you for your review"); };
   const askQ = async f => { const { product } = await api(`products/${p.id}/questions`, "POST", { text: f.text }); updateProduct(product); toast("Question posted"); };
   const answerQ = qid => async f => { const { product } = await api(`products/${p.id}/questions/${qid}/answers`, "POST", { text: f.text }); updateProduct(product); toast("Answer posted"); };
 
   return <div onClick={onTab}>
-    <div className="crumbs"><a href="/">Home</a> › <a href={catUrl(p.cat)}>{p.cat}</a> › {p.name}</div>
+    <div className="crumbs"><a href="/">Home</a> › <a href={catUrl(p.cat)}>{p.cat}</a> › {p.brand} {p.name}</div>
     {hero && <Banner b={hero} product={p} eager className="phero" />}
     <nav className={"subnav" + (subOn ? " on" : "")} aria-label="Product sections"><div><b>{p.brand} {p.name}</b>
       <div className="stabs">{[["#overview", "Overview", "overview", "t-specs0"], ["#tabs", "Specs", "tabs", "t-specs"], ["#compare", "Compare", "compare"], ["#tabs", "Reviews", "tabs2", "t-rev"]].map(([h, t, key, dt], i) =>
@@ -177,15 +178,33 @@ export function Product() {
       <div className="tabbar">{[["t-desc", "Description"], ["t-specs", "Specifications"], ["t-del", "Delivery and returns"], ["t-rev", "Reviews (" + (p.reviews || []).length + ")"]].map(([id, label]) => <button className={tab === id ? "on" : undefined} data-tab={id} key={id}>{label}{tab === id && <m.i className="ink" layoutId="tab-ink" transition={INK} />}</button>)}</div>
       <div className="tabpane" id="t-desc" hidden={tab !== "t-desc"}><p>{p.desc || p.brand + " " + p.name}</p><ul>{DEFAULT_FEATURES.map(f => <li key={f}>{f}</li>)}</ul></div>
       <div className="tabpane" id="t-specs" hidden={tab !== "t-specs"}><div className="specgrid">{groups.filter(([, rows]) => rows.length).map(([g, rows]) => <section className="specgroup" key={g}><h3>{g}</h3><dl>{rows.map(([k, v], i) => <div key={i}><dt>{k}</dt><dd>{v}</dd></div>)}</dl></section>)}</div></div>
-      <div className="tabpane" id="t-rev" hidden={tab !== "t-rev"}>
-        {(p.reviews || []).length ? <><div className="rsum"><b>{avg(p).toFixed(1)}</b><div><span className="stars"><span>{starRow(Math.round(avg(p)))}</span></span><br /><small className="muted">{p.reviews.length} review{p.reviews.length > 1 ? "s" : ""}</small></div>
-          <div className="rbars">{[5, 4, 3, 2, 1].map(n => { const c = p.reviews.filter(r => r.rating === n).length; return <div key={n}><span>{n}★</span><i><b style={{ width: Math.round(c / p.reviews.length * 100) + "%" }}></b></i><small>{c}</small></div>; })}</div></div>
-          {[...p.reviews].reverse().map((r, i) => <div className="rev" key={i}><div className="stars"><span>{starRow(r.rating)}</span></div><b>{r.name}</b> <small className="muted">· {new Date(r.at).toLocaleDateString()}</small><p>{r.text}</p></div>)}</>
-          : <p>No reviews yet. Be the first to review this product.</p>}
-        {me ? <Form className="form rform" id="rform" onSubmit={review} after={busy => <button className="btn" disabled={busy}>Submit review</button>}><h3>Write a review</h3>
-          <label>Rating<select name="rating" defaultValue="5">{[5, 4, 3, 2, 1].map(n => <option value={n} key={n}>{starRow(n)} {n}</option>)}</select></label>
-          <label>Your review<textarea name="text" rows="3" required maxLength="500" placeholder="What did you like or dislike?"></textarea></label></Form>
-          : <p style={{ marginTop: 16 }}><a className="alink" href={"/account?next=" + encodeURIComponent(productUrl(p))}>Sign in</a> to write a review.</p>}
+      {/* reviews the way Amazon and Flipkart lay them out: the summary with its bars and the call to review on the left, the reviews on the right */}
+      <div className="tabpane" id="t-rev" hidden={tab !== "t-rev"}>{(() => {
+        const list = [...(p.reviews || [])].reverse(), n = list.length, mean = n ? avg(p) : 0, mine = me && list.find(r => r.name === me.name);
+        const Stars5 = ({ v, cls = "" }) => <span className={"rv-stars " + cls} role="img" aria-label={v.toFixed(1) + " out of 5 stars"}>{[0, 1, 2, 3, 4].map(i => <i key={i} style={{ "--f": Math.round(Math.max(0, Math.min(1, v - i)) * 100) + "%" }}>★</i>)}</span>; // each star filled on its own, so 4.0 shows exactly four
+        const words = ["", "Poor", "Fair", "Good", "Very good", "Excellent"], shown = hoverStar || stars;
+        return <div className="rv">
+          <aside className="rv-sum"><h3>Customer reviews</h3>
+            {n ? <><div className="rv-avg"><b>{mean.toFixed(1)}</b><div><Stars5 v={mean} /><small>Based on {n} rating{n === 1 ? "" : "s"}</small></div></div>
+              <div className="rv-bars">{[5, 4, 3, 2, 1].map(k => { const c = list.filter(r => r.rating === k).length, pct = Math.round(c / n * 100); return <div key={k}><span>{k} star</span><i><b style={{ width: pct + "%" }}></b></i><small>{pct}%</small></div>; })}</div></>
+              : <p className="rv-none">No ratings yet</p>}
+            <div className="rv-cta"><b>Review this TV</b><p>Tell other buyers about the picture, the sound and the smart features.</p>
+              {me ? <button type="button" className="rv-btn" onClick={() => setWriting(w => !w)} aria-expanded={writing}>{mine ? "Edit your review" : "Write a review"}</button> : <a className="rv-btn" href={"/account?next=" + encodeURIComponent(productUrl(p) + "#t-rev")}>Sign in to write a review</a>}</div></aside>
+          <div className="rv-list">
+            {writing && me && <Form className="rv-form" id="rform" onSubmit={review} after={busy => <div className="rv-acts"><button className="rv-btn solid" disabled={busy}>{busy ? "Posting…" : "Post review"}</button><button type="button" className="rv-btn" onClick={() => setWriting(false)}>Cancel</button></div>}>
+              <h3>{mine ? "Edit your review" : "Write a review"}</h3>
+              <div className="rv-pick" role="radiogroup" aria-label="Your rating" onMouseLeave={() => setHoverStar(0)}>{[1, 2, 3, 4, 5].map(k => <button type="button" role="radio" aria-checked={stars === k} aria-label={k + " star" + (k > 1 ? "s" : "") + ", " + words[k]} className={k <= shown ? "on" : ""} onMouseEnter={() => setHoverStar(k)} onClick={() => setStars(k)} key={k}>★</button>)}<span>{words[shown]}</span></div>
+              <label className="rv-f">Headline <small>(optional)</small><input name="title" maxLength="80" placeholder="Sum it up in a few words" defaultValue={mine ? mine.title || "" : ""} /></label>
+              <label className="rv-f">Your review<textarea name="text" rows="4" required maxLength="500" placeholder="How are the picture, the sound and the smart features? Anything you did not like?" defaultValue={mine ? mine.text : ""}></textarea></label>
+            </Form>}
+            {n ? list.map((r, i) => <article className="rv-item" key={i}>
+              <div className="rv-who"><span className="rv-av" aria-hidden="true">{(r.name || "?").trim().charAt(0).toUpperCase()}</span><b>{r.name}</b>{r.verified && <em>✓ Verified purchase</em>}</div>
+              <div className="rv-head"><Stars5 v={r.rating} cls="sm" />{r.title && <b>{r.title}</b>}</div>
+              <small className="rv-date">Reviewed on {new Date(r.at).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" })}</small>
+              <p>{r.text}</p></article>)
+              : !writing && <div className="rv-empty"><span aria-hidden="true">★</span><b>No reviews yet</b><p>Be the first to share how this TV looks and sounds in your home.</p></div>}
+          </div>
+        </div>; })()}
       </div>
       <div className="tabpane" id="t-del" hidden={tab !== "t-del"}><ul><li>Free delivery on this product, usually by {etaText()} when you order today.</li><li>Check delivery to your area with the pincode box above.</li><li>Pay by cash on delivery.</li><li>See <a className="alink" href="/shipping">Shipping</a> and <a className="alink" href="/returns">Returns</a> for the full policy.</li></ul></div>
     </section>

@@ -287,7 +287,7 @@ async function run() {
     await b.ev(`(() => { const f = document.querySelector("#pincheck"); f.pin.value = "12"; f.requestSubmit(); })()`);
     assert.match(await b.ev(`document.querySelector("#pinmsg").textContent`), /6-digit/);
     assert.ok(await b.ev(`!!document.querySelector("#share")`), "share button present");
-    assert.equal(await b.ev(`document.querySelectorAll(".rbars div").length`), 5, "rating bars on a reviewed product");
+    assert.equal(await b.ev(`document.querySelectorAll(".rv-bars > div").length`), 5, "rating bars on a reviewed product");
     const cmp = await b.ev(`({ cols: document.querySelectorAll(".ctable thead th").length - 1, diff: document.querySelectorAll(".ctable tr.diff").length, me: document.querySelector(".ctable thead th.me .stock").textContent, buys: document.querySelectorAll(".ctable .buy").length })`);
     assert.equal(cmp.cols, 4, "this TV compared with three others"); assert.ok(cmp.diff > 0, "differing rows are marked");
     assert.equal(cmp.me, "This product"); assert.equal(cmp.buys, 4, "a buy control in every column (a button, or the stepper once it is in the cart)");

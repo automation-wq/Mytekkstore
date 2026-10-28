@@ -3141,3 +3141,43 @@ body:has(.deliver[open]) .chatfab, body:has(.deliver[open]) .totop { display:non
 @media (max-width:600px) { .d-card .d-cl { font-size:12px } }
 .d-card, .d-g4 > *, .d-g3 > *, .d-g6 > * { min-width:0 } /* a grid column may shrink below its longest one-line text (the card lines end in an ellipsis instead) */
 @media (max-width:600px) { .d-card .d-cl { white-space:normal; overflow:visible } } /* on a phone the EMI and delivery lines wrap rather than cut a price */
+
+/* Header back to white (owner's choice, 28 Oct): the same compact one-row layout and location window as the dark version, on a white ground */
+#hdr { background:#fff; color:#111; box-shadow:0 1px 0 #ECEEF1 }
+#hdr .logo span { color:#111 } #hdr .logo b { color:#08805F }
+#hdr .sbox input { background-color:#F3F4F6; color:#111 } #hdr .sbox input:focus { background-color:#fff; box-shadow:0 0 0 2px #111 }
+#hdr .deliver summary { color:#111 } #hdr .deliver summary:hover, #hdr .deliver[open] summary { border-color:#D9DCE3 } #hdr .deliver summary .ic { color:#08805F } #hdr .deliver summary small { color:#6B7280 } #hdr .deliver summary b { color:#111 }
+#hdr .cty { background:#fff; border-color:#E6E8EC; color:#111 } #hdr .cty .ic { color:#08805F } #hdr .cty select { color:#111; background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23111' stroke-width='2.5'><path d='M6 9l6 6 6-6'/></svg>") }
+#hdr .hlink { color:#111 } #hdr .hlink:hover { color:#08805F } #hdr .hlink[aria-label="Wishlist"], #hdr .hlink[aria-label="Cart"] { background:#fff; border-color:#E6E8EC } #hdr .count { background:#08805F; color:#fff }
+#hdr .gnav { background:#fff; border-top:1px solid #F0F1F3 } #hdr .l0link { color:#111 } #hdr .l0.cur .l0link, #hdr .l0link:hover, #hdr .l0.open .l0link { color:#08805F } #hdr .l0link::after { background:#08805F }
+#hdr .l0link[href="/offers"] { color:#8A6512 } #hdr .gbar .soon span { color:#9CA3AF }
+body[data-page="checkout"] #hdr .wrap::after { color:#08805F; background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2308805F' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><rect x='4' y='11' width='16' height='10' rx='2'/><path d='M8 11V7a4 4 0 0 1 8 0v4'/></svg>") }
+
+/* Reviews (28 Oct), after Amazon and Flipkart: a summary card with the bars and the call to review, the reviews as cards */
+.rv { display:grid; grid-template-columns:320px minmax(0,1fr); gap:28px; align-items:start; padding-top:8px }
+.rv-sum { position:sticky; top:calc(var(--hh,120px) + 16px); display:flex; flex-direction:column; gap:14px; padding:22px; border:1px solid #E6E8EC; border-radius:14px; background:#fff }
+.rv-sum h3, .rv-form h3 { margin:0; font-family:var(--d-font); font-size:18px; font-weight:800 }
+.rv-avg { display:flex; align-items:center; gap:14px } .rv-avg > b { font-family:var(--d-font); font-size:44px; font-weight:800; line-height:1 } .rv-avg div { display:flex; flex-direction:column; gap:4px } .rv-avg small, .rv-none { font-size:13px; color:#5F6775; margin:0 }
+.rv-stars { display:inline-block; font-size:20px; letter-spacing:2px; line-height:1; background:linear-gradient(90deg,#E8A317 var(--v),#D9DCE3 var(--v)); -webkit-background-clip:text; background-clip:text; color:transparent } .rv-stars.sm { font-size:15px; letter-spacing:1px }
+.rv-bars { display:flex; flex-direction:column; gap:7px } .rv-bars > div { display:grid; grid-template-columns:48px minmax(0,1fr) 38px; gap:10px; align-items:center; font-size:13px; color:#3F4551 }
+.rv-bars i { height:8px; border-radius:4px; background:#F0F1F3; overflow:hidden } .rv-bars b { display:block; height:100%; border-radius:4px; background:#E8A317 } .rv-bars small { text-align:right; color:#8A909C }
+.rv-cta { display:flex; flex-direction:column; gap:6px; padding-top:14px; border-top:1px solid #F0F1F3 } .rv-cta b { font-size:15px } .rv-cta p { margin:0 0 6px; font-size:13px; color:#5F6775 }
+.rv-btn { display:inline-flex; align-items:center; justify-content:center; height:44px; padding:0 18px; border:1.5px solid #111; border-radius:10px; background:#fff; color:#111; font:inherit; font-size:14px; font-weight:700; text-decoration:none; cursor:pointer } .rv-btn:hover { background:#111; color:#fff } .rv-btn.solid { background:#08805F; border-color:#08805F; color:#fff } .rv-btn.solid:hover { background:#066B4F } .rv-btn:disabled { opacity:.6 }
+.rv-list { display:flex; flex-direction:column; gap:14px; min-width:0 }
+.rv-form { display:flex; flex-direction:column; gap:14px; padding:22px; border:1.5px solid #111; border-radius:14px; background:#FAFAF7 } .rv-form > .err:empty { display:none }
+.rv-pick { display:flex; align-items:center; gap:4px } .rv-pick button { width:40px; height:40px; padding:0; border:0; background:none; font-size:32px; line-height:1; color:#D9DCE3; cursor:pointer; transition:transform .1s, color .1s } .rv-pick button.on { color:#E8A317 } .rv-pick button:hover { transform:scale(1.12) } .rv-pick span { margin-left:10px; font-weight:700; color:#3F4551 }
+.rv-f { display:flex; flex-direction:column; gap:6px; font-size:13px; font-weight:600 } .rv-f small { font-weight:500; color:#8A909C } .rv-f input, .rv-f textarea { padding:11px 12px; border:1.5px solid #D9DCE3; border-radius:10px; font:inherit; font-size:15px; background:#fff } .rv-f input:focus, .rv-f textarea:focus { outline:none; border-color:#111 }
+.rv-acts { display:flex; gap:10px }
+.rv-item { display:flex; flex-direction:column; gap:6px; padding:18px 20px; border:1px solid #ECEEF1; border-radius:14px; background:#fff }
+.rv-who { display:flex; align-items:center; gap:10px; flex-wrap:wrap } .rv-av { width:34px; height:34px; display:grid; place-items:center; border-radius:50%; background:#111; color:#E8CF8C; font-weight:800 } .rv-who b { font-size:14px } .rv-who em { font-style:normal; font-size:12px; font-weight:700; color:#08805F; background:#E8F5F0; padding:2px 8px; border-radius:999px }
+.rv-head { display:flex; align-items:center; gap:10px; flex-wrap:wrap } .rv-head b { font-size:15px } .rv-date { font-size:12.5px; color:#8A909C } .rv-item p { margin:4px 0 0; font-size:14.5px; line-height:1.6; color:#24272E }
+.rv-empty { display:flex; flex-direction:column; align-items:center; gap:6px; padding:40px 20px; text-align:center; border:1px dashed #D9DCE3; border-radius:14px; background:#FAFAFB } .rv-empty span { font-size:36px; color:#E8A317 } .rv-empty b { font-size:16px } .rv-empty p { margin:0; color:#5F6775; font-size:14px; max-width:40ch }
+@media (max-width:900px) { .rv { grid-template-columns:minmax(0,1fr) } .rv-sum { position:static } }
+/* bank offers, second pass: the real EMI plans as chips, each bank row a link */
+.d-tenure { display:flex; flex-wrap:wrap; gap:8px; margin-top:4px } .d-tenure span { display:flex; flex-direction:column; padding:8px 12px; border:1px solid #E8DCC0; border-radius:10px; background:#fff; font-size:12px; color:#5F6775 } .d-tenure b { font-size:15px; color:#111 }
+.d-tnote { font-size:12px; color:#8A909C }
+.d-brows li { padding:0 } .d-brows li > a { display:grid; grid-template-columns:56px minmax(0,1fr) auto; gap:16px; align-items:center; padding:18px 8px; margin:0 -8px; border-radius:12px; color:inherit; text-decoration:none; transition:background .15s } .d-brows li > a:hover { background:#FAFAF7 }
+.d-bmeta i { margin-left:10px; font-style:normal; font-size:20px; color:#C9A85A }
+@media (max-width:600px) { .d-brows li > a { grid-template-columns:44px minmax(0,1fr); gap:12px; padding:14px 6px } .d-bmeta i { display:none } }
+.d-brows li { display:block } /* the row's layout now lives on its link */
+.rv-stars { background:none; -webkit-background-clip:border-box; background-clip:border-box; color:inherit } .rv-stars i { font-style:normal; background:linear-gradient(90deg,#E8A317 var(--f),#D9DCE3 var(--f)); -webkit-background-clip:text; background-clip:text; color:transparent }

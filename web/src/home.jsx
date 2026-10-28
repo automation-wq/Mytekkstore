@@ -152,9 +152,11 @@ export function Home() {
     <section className="d-wrap d-sec" id="bank-offers">
       <Head h="Bank & payment offers" sub="Save more when you pay by card." link="All offers & T&C" href="/offers" />
       {/* one panel instead of four boxes (28 Oct, after Croma's EMI store and Amazon's offer list): No Cost EMI as the feature, the bank offers as rows */}
-      {(() => { const emi = BANK_OFFERS.find(b => /EMI/.test(b[0])), banks = BANK_OFFERS.filter(b => b !== emi); return <div className="d-offers">
-        {emi && <div className="d-emi"><span className="d-eye">No Cost EMI</span><b>{minEmi ? <>{money(minEmi)}<small>/month</small></> : emi[1]}</b><p>{emi[2]} {emi[4] === "Interest borne by us" ? "The interest is on us." : emi[4]}</p><a className="d-emibtn" href="/offers">Shop No Cost EMI TVs</a></div>}
-        <ul className="d-brows">{banks.map(([bank, big, terms, , chip]) => <li key={bank}><span className="d-mono" aria-hidden="true">{bank.split(" ")[0]}</span><span className="d-bt"><b>{big} with {bank}</b><small>{terms}</small></span><span className="d-bmeta">{String(chip || "").split(" · ")[0]}</span></li>)}</ul>
+      {(() => { const emi = BANK_OFFERS.find(b => /EMI/.test(b[0])), banks = BANK_OFFERS.filter(b => b !== emi), cheap = tvs.filter(x => x.emi).sort((a, b) => a.price - b.price)[0]; return <div className="d-offers">
+        {emi && <div className="d-emi"><span className="d-eye">No Cost EMI</span><b>{minEmi ? <>{money(minEmi)}<small>/month</small></> : emi[1]}</b><p>{emi[2]} {emi[4] === "Interest borne by us" ? "The interest is on us." : emi[4]}</p>
+          {cheap && <><div className="d-tenure" aria-label="No Cost EMI plans">{emiPlans(cheap.price).map(([m, v]) => <span key={m}><b>{money(v)}</b>× {m} months</span>)}</div><small className="d-tnote">On the {cheap.brand} {cheap.name} at {money(cheap.price)}</small></>}
+          <a className="d-emibtn" href="/offers">Shop No Cost EMI TVs</a></div>}
+        <ul className="d-brows">{banks.map(([bank, big, terms, , chip]) => <li key={bank}><a href="/offers"><span className="d-mono" aria-hidden="true">{bank.split(" ")[0]}</span><span className="d-bt"><b>{big} with {bank}</b><small>{terms}</small></span><span className="d-bmeta">{String(chip || "").split(" · ")[0]}<i aria-hidden="true">›</i></span></a></li>)}</ul>
       </div>; })()}
       <p className="d-bnote">Applied automatically when you pay with an eligible card at checkout. One bank offer per order, and it can be combined with No Cost EMI. Offers are run by the banks and follow their terms.</p>
     </section>

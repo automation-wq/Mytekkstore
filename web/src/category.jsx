@@ -76,6 +76,7 @@ export function Category() {
       : f.min && f.max ? short + " from " + money(f.min) + " to " + money(f.max)
       : f.min && !f.max ? short + " above " + money(f.min)
       : f.size ? sizeTitle(f.size) + " " + short
+      : f.os ? (/ TV$/.test(f.os) ? f.os + "s" : f.os + " " + short) // "Google TVs", "Android TVs", "WebOS TVs"
       : f.res ? f.res + " " + short
       : f.type ? f.type + " " + short : "");
   useEffect(() => { document.title = (coll || title) + " | Mytekkstore"; }, [coll]);
@@ -99,8 +100,8 @@ export function Category() {
     ...(f.instock ? [["In stock", () => set({ instock: false })]] : []), ...(f.emi ? [["No Cost EMI", () => set({ emi: false })]] : []), ...(f.rating ? [[f.rating + "★ and above", () => set({ rating: 0 })]] : [])];
   const n = list.length, nText = n + " product" + (n === 1 ? "" : "s");
   return <>
-    <div className="crumbs"><a href="/">Home</a> › {title}</div>
-    {wishOnly ? <h1>My wishlist</h1> : S && KV_IMG[cat] ? <div className="kv"><div className="kvimg"><KvImg src={cat === "Televisions" ? life("category", "img/kv-tv.jpg") : `img/${KV_IMG[cat]}.jpg`} sizes="(max-width:1240px) 100vw, 1240px" eager /></div><div><span className="eyebrow">{cat}</span><h1 className="explore">A World of Entertainment Awaits.</h1><p>Discover televisions designed for every room and every moment.</p></div></div>
+    <div className="crumbs"><a href="/">Home</a> › {coll && cat ? <><a href={catUrl(cat)}>{cat}</a> › {coll}</> : title}</div>
+    {wishOnly ? <h1>My wishlist</h1> : S && KV_IMG[cat] ? <div className="kv"><div className="kvimg"><KvImg src={cat === "Televisions" ? life("category", "img/kv-tv.jpg") : `img/${KV_IMG[cat]}.jpg`} sizes="(max-width:1240px) 100vw, 1240px" eager /></div><div><span className="eyebrow">{cat}</span><h1 className="explore">{coll || "A World of Entertainment Awaits."}</h1><p>{coll ? n + " model" + (n === 1 ? "" : "s") + " · free delivery and cash on delivery on every TV." : "Discover televisions designed for every room and every moment."}</p></div></div>
       : !cat && f.brand.length === 1 && !q ? <BrandStrip brand={f.brand[0]} P={P} />
       : <h1 className="explore">{S ? "Explore " + S.short : title}</h1>}
     {!wishOnly && S && cat && catAll.length > 0 && <Discover list={catAll} sizes={sizeList} sizeOf={sizeOf} f={f} set={set} url={url} money={money} />}

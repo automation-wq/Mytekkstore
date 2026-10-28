@@ -265,7 +265,7 @@ function ProductEditor({ d, id, money, go, reload, toast, CATS, BRANDS }) {
 }
 
 // where a banner shows, picked from lists: the home slider, one product's page, one campaign page, one category's page
-const slotKind = s => s === "home" ? ["home", ""] : (/^(product|campaign|category):(.+)$/.exec(s) || [0, "home", ""]).slice(1);
+const slotKind = s => s === "home" ? ["home", ""] : (/^(product|campaign|category):(.*)$/.exec(s) || [0, "home", ""]).slice(1); // "product:" (no product chosen yet) stays a product slot, so its list appears
 function Banners({ d, toast, reload, creative }) {
   const [bf, setBf] = useState(null), [busy, setBusy] = useState(false), [up, setUp] = useState(""), [sure, ask] = useSure();
   const set = (k, v) => setBf(x => ({ ...x, [k]: v }));

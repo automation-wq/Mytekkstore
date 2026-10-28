@@ -397,7 +397,8 @@ on("GET", "products", ({ req, user }) => ({ products: (user && user.admin && /[?
 on("POST", "products/(\\d+)/reviews", ({ params, body, user }) => {
   const p = db.products.find(p => p.id === +params[0]);
   if (!p) throw new HttpError(404, "Product not found.");
-  const r = { name: user.name, userId: user.id, rating: int(body.rating, "Rating", 1, 5), text: str(body.text, "Review", 500), at: new Date().toISOString() };
+  const r = { name: user.name, userId: user.id, rating: int(body.rating, "Rating", 1, 5), title: opt(body.title, "Headline", 80), text: str(body.text, "Review", 500), at: new Date().toISOString(),
+    verified: db.orders.some(o => o.userId === user.id && o.status === "Delivered" && o.items.some(i => i.id === p.id)) }; // "Verified purchase": this customer's order of this TV was delivered
   p.reviews = (p.reviews || []).filter(x => x.userId !== user.id);
   p.reviews.push(r);
   write("products");

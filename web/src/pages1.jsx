@@ -23,6 +23,7 @@ export function Offers() {
   const maxOff = c => Math.max(0, ...P.filter(p => !c || p.cat === c).map(off)); // real figures from the catalogue
   const cells = [left / 86400, left / 3600 % 24, left / 60 % 60, left % 60].map(v => String(Math.floor(v)).padStart(2, "0"));
   return <>
+    <div className="crumbs"><a href="/">Home</a> › Offers</div>
     <h1 className="srh">{FESTIVE.title}</h1>
     <FestiveBanner tvs={tvs} maxOff={maxOff()} minEmi={minEmi} money={money} href={listUrl({ cat: "Televisions", sort: "off" })} cta="See every TV deal →" />
     {FESTIVE.ends && <div className="fest"><div className="cdown" aria-label="Time left">{["Days", "Hours", "Minutes", "Seconds"].map((l, i) => <div key={l}><b>{cells[i]}</b><span>{l}</span></div>)}</div></div>}
