@@ -908,9 +908,12 @@ const SECURITY = {
 };
 const escHtml = s => String(s).replace(/[&<>"']/g, c => "&#" + c.charCodeAt(0) + ";");
 const siteUrl = req => (req.headers["x-forwarded-proto"] || "http") + "://" + (req.headers.host || "localhost:" + PORT);
-const INFO_PAGES = ["about", "contact", "stores", "shipping", "returns", "terms", "privacy", "buying-guide"];
+const INFO_PAGES = ["about", "contact", "stores", "shipping", "returns", "terms", "privacy", "buying-guide", "shipping-policy", "refund-policy", "warranty"];
 // title and description of each info page (the page itself is drawn by web/src/info.jsx)
 const INFO_TITLES = {
+  "shipping-policy": ["Shipping policy", "Where MyTekkStore delivers, how long it takes, what it costs and what happens at your door: free delivery across India, usually in 3 to 5 days, cash on delivery."],
+  "refund-policy": ["Cancellation, returns and refund policy", "How to cancel a MyTekkStore order, return a product within the return window and get your money back."],
+  warranty: ["Warranty", "The manufacturer's warranty on every TV MyTekkStore sells: 1 year or 1 + 1 years by model, how to register and how to claim."],
   about: ["About Mytekkstore", "Mytekkstore sells genuine Elista electronics at factory prices, delivered free with cash on delivery and the brand's warranty."],
   contact: ["Contact us", "Write to Mytekkstore about orders, delivery, returns and service. We reply by email."],
   stores: ["Store locator", "Find a Mytekkstore store, or check delivery to your pincode: free delivery across India, usually in 3 to 5 days."],

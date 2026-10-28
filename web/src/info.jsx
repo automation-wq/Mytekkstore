@@ -8,6 +8,7 @@ import { api, qs } from "./api.js";
 import { Row, Form, Icon, KvImg, Qa } from "./components.jsx";
 import { KV_IMG, CAT_SIZE, BANK_OFFERS, FAQ, CONTACT, STORES, POLICY, SHOW_STORES, WARRANTY_QA, BRAND_BLURB, catSizes, catUrl, brandUrl, listUrl, off, etaText } from "./data.js";
 import { countUp } from "./motion.js";
+import { LegalPage, LEGAL_PAGES } from "./legal.jsx";
 
 const PAGES = {
   about: ["About Mytekkstore", "Mytekkstore", "Good electronics, made simple.", "Elista Smart TVs at factory prices, delivered free with cash on delivery and the brand's own warranty.", "Televisions"],
@@ -55,7 +56,9 @@ function Cats() {
 
 export function InfoPage() {
   const { P, CATS, BRANDS, money, CFG } = useStore();
-  const p = qs.get("p"), page = Object.hasOwn(PAGES, p) && (p !== "stores" || SHOW_STORES) ? PAGES[p] : null; // the store locator is hidden (client decision 2026-10-12)
+  const p = qs.get("p");
+  if (LEGAL_PAGES.includes(p)) return <LegalPage p={p} />;
+  const page = Object.hasOwn(PAGES, p) && (p !== "stores" || SHOW_STORES) ? PAGES[p] : null; // the store locator is hidden (client decision 2026-10-12)
   const numRef = useRef();
   useEffect(() => { document.title = (page ? page[0] : "Page not found") + " | Mytekkstore"; }, []);
   useEffect(() => { if (numRef.current) countUp(numRef.current); }, [P]);
@@ -66,7 +69,7 @@ export function InfoPage() {
   const brandBlurb = BRAND_BLURB;
   const crumbs = <div className="crumbs"><a href="/">Home</a> › {title}</div>;
   const hero = <Hero eyebrow={eyebrow} title={head} sub={sub} cat={cat} />;
-  const cta = <section><a className="cban" href="/offers"><KvImg className="cph" src={`img/${KV_IMG[cat]}.jpg`} sizes="(max-width:1240px) 100vw, 1240px" /><div><span className="kicker">Festive offers</span><h2>Up to {maxOff}% off</h2><p>Bank offers and No Cost EMI on the models that carry it · free delivery · cash on delivery</p><u>See the deals →</u></div></a></section>;
+  const cta = <section><a className="cban" href="/offers"><KvImg className="cph" src={`img/${KV_IMG[cat]}.jpg`} sizes="(max-width:1240px) 100vw, 1240px" /><div><span className="kicker">Festive offers</span><h2>{maxOff > 0 ? "Up to " + maxOff + "% off" : "No Cost EMI on every smart TV"}</h2><p>Bank offers · free delivery · cash on delivery on every TV</p><u>See the offers →</u></div></a></section>;
 
   const one = CATS.length === 1 ? CATS[0] : "", sizes = one ? catSizes(P, one).all : [];
   if (p === "about") return <>{crumbs}{hero}
@@ -156,30 +159,6 @@ export function InfoPage() {
     <Faq list={FAQ.filter(([q]) => /size|LED|Google TV|choose|difference/i.test(q))} lead="More questions before you buy." />
     {cta}</>;
 
-  if (p === "terms") return <>{crumbs}{hero}
-    <section><h2>Terms of use</h2><p className="lead">By placing an order on Mytekkstore you agree to these terms.</p><Policy sections={[
-      ["Orders and prices", "Prices are shown in Indian rupees and include all taxes. Prices and stock are checked again when you place the order, never taken from the page alone. An order is confirmed when we accept it, and we may decline an order we cannot fulfil, with a full refund of anything paid."],
-      ["Payment", "Pay by cash on delivery or by the online methods shown at checkout. No card details are stored by Mytekkstore."],
-      ["Delivery", "Delivery is free. The estimate shown is usual, not guaranteed. See the Shipping and delivery page."],
-      ["Cancellation", "You can cancel an order before it is shipped from your account or by contacting us. After shipping, the returns policy applies."],
-      ["Returns and warranty", `Returns are accepted within ${POLICY.returnDays} days of delivery under the returns policy. Every product carries the manufacturer's warranty, serviced by the brand's network.`],
-      ["Your account", "Keep your sign-in details to yourself. You are responsible for orders placed from your account."],
-      ["Content", "Product names, photos and descriptions are provided for your information. Obvious errors in price or description may be corrected, and an affected order cancelled with a full refund."],
-      ["Law", "These terms are governed by the laws of India."],
-    ]} /></section>
-    {cta}</>;
-
-  if (p === "privacy") return <>{crumbs}{hero}
-    <section><h2>Privacy policy</h2><p className="lead">The whole story of what this site keeps about you.</p><Policy sections={[
-      ["What we collect", "Your name, email address or mobile number, delivery address and pincode, your orders, and the reviews you write. Your cart, wishlist, pincode and country choice are kept in your own browser, not on our servers, until you order."],
-      ["Why we collect it", "To deliver your orders, to send order updates and sign-in codes by SMS or email, and to show you your order history."],
-      ["Payments", "No card details are stored by Mytekkstore. Online payments are handled by the payment provider shown at checkout."],
-      ["Cookies", "One cookie keeps you signed in. There are no advertising cookies." + (CFG.clarity ? " Microsoft Clarity records how pages are used (clicks, scrolling, time on page) to improve the site; anything you type is masked. See Microsoft's privacy statement for how Microsoft handles that data." : " There are no tracking cookies.")],
-      ["Who sees it", "Delivery partners see your name, address and phone number to deliver the order. Our messaging providers see your number or email to send codes and updates. Your data is never sold."],
-      ["Security", "Passwords are stored hashed, never in plain text. The site is served over https."],
-      ["Your choices", "Sign out from your account at any time. To correct or delete your account data, write to us through the contact page."],
-    ]} /></section>
-    {cta}</>;
   return null;
 }
 

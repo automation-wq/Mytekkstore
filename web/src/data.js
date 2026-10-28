@@ -11,6 +11,9 @@ export const CONTACT = { phone: "", email: "", hours: "", address: "" };
 export const STORES = [];
 // Policy figures used on the Shipping, Returns and Terms pages. DRAFT: the client confirms these before launch (README, "Before launch").
 export const POLICY = { returnDays: 7, refundDays: 7 };
+// the business's legal details for the legal pages (Consumer Protection (E-Commerce) Rules, 2020 ask for the seller's legal name, address and a grievance officer).
+// Fill these in before launch; empty fields are simply left out of the pages.
+export const LEGAL = { entity: "", address: "", gstin: "", city: "", grievance: { name: "", email: "", phone: "" }, updated: "28 October 2026" };
 
 // ===== client decisions of 2026-10-12 (meeting notes) =====
 // The store sells televisions only for now: washing machines and air conditioners are hidden by HIDDEN_CATS in server.js.
