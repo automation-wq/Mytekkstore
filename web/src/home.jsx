@@ -106,7 +106,8 @@ export function Home() {
     ["Non-Smart HD", "Non-Smart-HD-TV-32in", tvs.filter(p => !p.os), listUrl({ cat: "Televisions", max: 16990 }), ""],
   ];
   const OUTLINE = { 24: "54%", 32: "60%", 43: "66%", 50: "72%", 55: "78%", 65: "84%", 75: "92%", 85: "96%" }; // the design's size cards: an outline that grows with the screen
-  const rooms = { 24: "Kitchen", 32: "Bedroom", 43: "Small room", 50: "Living room", 55: "Most popular", 65: "Large room", 75: "Home theatre", 85: "Home theatre" };
+  const DIST = { 24: "1–1.5 m away", 32: "1.2–2 m away", 43: "1.6–2.5 m away", 50: "2–2.8 m away", 55: "2–3 m away", 65: "2.5–3.5 m away", 75: "3–4 m away", 85: "3.2–4.5 m away" }; // common guidance for 4K and HD screens
+  const rooms = { 24: "Kitchen", 32: "Bedroom", 43: "Small room", 50: "Living room", 55: "Living room, 2 BHK", 65: "Large room", 75: "Home theatre", 85: "Home theatre" };
   const bankTone = i => i < 2 ? "green" : "gold";
 
   const minOf = l => l.length ? Math.min(...l.map(p => p.price)) : 0;
@@ -165,9 +166,11 @@ export function Home() {
 
     <section className="d-wrap d-sec" id="sizes">
       <Head h="Shop by size" sub={"Sit 1.5× the screen width away for the best picture. Example: a 55\" TV suits a sofa about 2 metres from the wall."} link="Size guide" href="/buying-guide" />
-      <div className="d-g7">{sizes.filter(s => s.n >= 32).sort((a, b) => a.n - b.n).map(s => <a className={"d-card d-size" + (s.n === 55 ? " top" : "")} href={listUrl({ cat: "Televisions", size: s.n })} key={s.n}>
-        <span className="d-outline" style={{ width: OUTLINE[s.n] || "70%" }} aria-hidden="true"></span>
-        <strong className="d-h">{s.n}"</strong><span className={"d-emi" + (s.n === 55 ? " gold" : "")}>{rooms[s.n] || "Living room"} · from {from(bySize(s.n))}</span></a>)}</div>
+      <div className="d-lineup">{sizes.filter(sz => sz.n >= 32).sort((x, y) => x.n - y.n).map((sz, i) => { const list = bySize(sz.n), want = [/QLED/, /Google/, /Coolita|Android/, /WebOS/, /Mini-LED/, /Google/, /WebOS/][i % 7], shot = ((list.find(p => (p.images || [])[0] && want.test(p.name + " " + (p.os || ""))) || list.find(p => (p.images || [])[0])) || {}).images, cm = cmOf(list[0] || {}); return <a className={"d-sz" + (sz.n === 55 ? " top" : "")} href={listUrl({ cat: "Televisions", size: sz.n })} key={sz.n}>
+        {sz.n === 55 && <span className="d-sztag">Most popular</span>}
+        <span className="d-szstage" aria-hidden="true"><span className="d-szscreen" style={{ width: Math.round(42 + (sz.n - 32) / (85 - 32) * 56) + "%" }}>{shot && <img src={pic(shot[0], 480)} alt="" loading="lazy" width="480" height="480" />}</span><span className="d-szstand"></span></span>
+        <span className="d-szinfo"><strong>{sz.n}"</strong><small>{cm ? cm + " cm · " : ""}{DIST[sz.n] || ""}</small><span className="d-szroom">{rooms[sz.n] || "Living room"}</span><span className="d-szfrom">from <b>{from(list)}</b></span></span>
+      </a>; })}</div>
     </section>
 
     <section className="d-wrap d-sec" id="big-screens">

@@ -2744,3 +2744,16 @@ body.su-page main.wrap { min-height:0 } .su, .su-wrap { min-height:calc(100vh - 
 @media (max-width:1100px) { .d-perks { grid-template-columns:repeat(2,1fr) } .d-perk2:nth-child(3)::before { display:none } .d-perk2:nth-child(n+3) { border-top:1px solid #ECEEF1 } .d-banks { grid-template-columns:repeat(2,1fr) } }
 @media (max-width:600px) { .d-perks { grid-template-columns:1fr } .d-perk2::before { display:none } .d-perk2 + .d-perk2 { border-top:1px solid #ECEEF1 } .d-perk2 { padding:18px } .d-banks { grid-template-columns:1fr 1fr; gap:10px } .d-bbig { font-size:24px } .d-bstrip { padding:10px 12px } .d-bbody { padding:12px } .d-bname { font-size:13px } }
 .d-banks > * { min-width:0 } @media (max-width:600px) { .d-banks { grid-template-columns:minmax(0,1fr) } .d-bbig { font-size:28px } }
+
+/* Shop by size as a TV lineup (28 Oct): screens drawn to relative size on one floor line, each showing that size's own picture */
+.d-lineup { display:grid; grid-template-columns:repeat(7, minmax(0,1fr)); gap:12px; align-items:stretch }
+.d-sz { position:relative; display:flex; flex-direction:column; border-radius:14px; border:1px solid #ECEEF1; background:linear-gradient(180deg,#F7F8FA 0%,#FFFFFF 62%); color:#111; text-decoration:none; overflow:hidden; transition:transform .15s, box-shadow .15s, border-color .15s }
+.d-sz:hover { transform:translateY(-3px); box-shadow:0 14px 30px rgba(17,17,17,.1); border-color:#D9DCE3; color:#111 }
+.d-sz.top { border:2px solid #111 } .d-sztag { position:absolute; top:10px; left:50%; transform:translateX(-50%); background:#111; color:#E8CF8C; font-size:10.5px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; padding:4px 9px; border-radius:4px; white-space:nowrap; z-index:1 }
+.d-szstage { height:132px; display:flex; flex-direction:column; justify-content:flex-end; align-items:center; padding:30px 10px 0; border-bottom:2px solid #E6E8EC }
+.d-szscreen { display:block; aspect-ratio:16/9; background:#0E0F12; border:3px solid #0E0F12; border-radius:3px; overflow:hidden; box-shadow:0 8px 18px rgba(0,0,0,.25) } .d-szscreen img { width:100%; height:100%; object-fit:cover; display:block; transform:scale(1.75); transform-origin:50% 44% }
+.d-szstand { display:block; width:30%; height:5px; background:#3A3D45; border-radius:0 0 3px 3px }
+.d-szinfo { display:flex; flex-direction:column; align-items:center; text-align:center; gap:3px; padding:12px 8px 16px } .d-szinfo strong { font-family:var(--d-font); font-size:26px; font-weight:800; letter-spacing:-.02em; line-height:1 } .d-szinfo small { font-size:12px; color:#3F4551; line-height:1.35 }
+.d-szroom { font-size:13px; font-weight:600; color:#24272E; margin-top:4px } .d-szfrom { font-size:13px; color:#3F4551 } .d-szfrom b { color:#111; font-weight:800 } .d-sz.top .d-szroom { color:#8A6512 }
+@media (max-width:1100px) { .d-lineup { grid-template-columns:repeat(4, minmax(0,1fr)) } }
+@media (max-width:600px) { .d-lineup { grid-template-columns:repeat(2, minmax(0,1fr)); gap:10px } .d-szstage { height:110px } }

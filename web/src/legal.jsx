@@ -90,7 +90,7 @@ export function LegalPage({ p }) {
   const tvs = (P || []).filter(x => x.cat === "Televisions").map(x => [x, ((x.specs || []).find(([k]) => /warranty/i.test(k)) || [])[1] || ""]).sort((a, b) => a[0].price - b[0].price);
   return <div className="legal">
     <div className="crumbs"><a href="/">Home</a> › {doc.title}</div>
-    <header className="lg-head"><span className="lg-eyebrow">{p === "warranty" ? "Help" : "Legal"}</span><h1>{doc.title}</h1><p>{doc.lead}</p><small>Last updated {LEGAL.updated}</small></header>
+    <div className="lg-head"><span className="lg-eyebrow">{p === "warranty" ? "Help" : "Legal"}</span><h1>{doc.title}</h1><p>{doc.lead}</p><small>Last updated {LEGAL.updated}</small></div>
     <nav className="lg-tabs" aria-label="Policies">{ORDER.map(([k, t]) => <a href={"/" + k} className={k === p ? "on" : undefined} aria-current={k === p ? "page" : undefined} key={k}>{t}</a>)}</nav>
     <div className="lg-cols">
       <aside className="lg-toc"><b>On this page</b><ol>{sections.map(([id, h]) => <li key={id}><a href={"#" + id}>{h}</a></li>)}</ol></aside>
