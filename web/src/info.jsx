@@ -105,33 +105,65 @@ export function InfoPage() {
     <section><h2>How we work</h2><Promises /></section>
     {cta}</>;
 
-  if (p === "shipping") return <>{crumbs}{hero}
-    <section><h2>How delivery works</h2><p className="lead">Order today and it usually arrives by {etaText()}.</p><Promises /></section>
-    <section><h2>Check your pincode</h2><p className="lead">The delivery estimate for your area, before you order.</p><PinCheck /></section>
-    <section><h2>The details</h2><Policy sections={[
-      ["Where we deliver", "Across India. Enter your pincode on any product page, at checkout, or above, to check your area and see the estimate."],
-      ["How long it takes", "Usually 3 to 5 days from the day you order. Large items such as televisions and washing machines travel with care, so the estimate is a range, not a promise to the hour."],
-      ["What it costs", "Nothing. Delivery is free on every order, whatever the size."],
-      ["Paying on delivery", "Choose cash on delivery at checkout and pay when the order reaches you."],
-      ["Tracking", "Sign in and open your account. Every order shows its status from Placed to Confirmed, Shipped and Delivered."],
-      ["If something is wrong", `Check the product when it arrives. If it is damaged or not what you ordered, tell us within ${POLICY.returnDays} days and we arrange a pickup.`],
-    ]} /></section>
-    <Faq list={FAQ.filter(([q]) => /deliver|pay|track|return/i.test(q))} />
-    {cta}</>;
+  // Delivery and Returns as help pages in the pattern of Amazon's help centre (28 Oct): a plain heading with the next action, the key
+  // facts, the real steps on this site, then the details. Every rule here is the one in the Shipping and the Refund policies.
+  const Facts = ({ list }) => <div className="hc-facts">{list.map(([ic, t, s]) => <div key={t}><span className="hc-ic"><Icon k={ic} /></span><b>{t}</b><small>{s}</small></div>)}</div>;
+  const Steps = ({ list }) => <ol className="hc-steps">{list.map(([t, s, link], i) => <li key={t}><span className="hc-n">{i + 1}</span><div><b>{t}</b><p>{s}</p>{link && <a className="alink" href={link[1]}>{link[0]} →</a>}</div></li>)}</ol>;
+  const Ask = ({ list }) => <div className="hc-faq">{list.map(([q, x]) => <details key={q}><summary>{q}</summary><p>{x}</p></details>)}</div>;
+  const Help = () => <div className="hc-help"><span className="hc-ic"><Icon k="user" /></span><div><b>Still need help?</b><p>Write to us with your order number and we reply by email.</p></div><a className="d-btn" href="/contact">Contact us</a></div>;
+  const rd = POLICY.returnDays, fd = POLICY.refundDays;
 
-  if (p === "returns") return <>{crumbs}{hero}
-    <section><h2>Three steps</h2><p className="lead">How a return works, start to finish.</p>
-      <div className="why steps3">{[["Tell us", `Within ${POLICY.returnDays} days of delivery, from your account or through the contact page, with your order number.`], ["We pick it up", "Keep the product unused, with its accessories and original packaging. We arrange the pickup; you pay nothing for it."], ["You get your money back", `Once the product is checked, the refund goes back the way you paid, usually within ${POLICY.refundDays} working days. Cash on delivery orders are refunded to your bank account.`]]
-        .map(([t, s], i) => <div key={t}><span className="pnum">{String(i + 1).padStart(2, "0")}</span><b>{t}</b><p>{s}</p></div>)}</div></section>
-    <section><h2>The details</h2><Policy sections={[
-      ["What can be returned", "Any product that is unused, undamaged and complete, in its original packaging, reported within the return window."],
-      ["What cannot", "Products that have been installed, used or damaged after delivery, and products missing accessories or packaging."],
-      ["Replacements", "If the product arrived damaged or faulty, we replace it with the same model when it is in stock, or refund you in full."],
-      ["Warranty after the return window", "Every product carries the brand's warranty. After the return window, service and repairs go through the brand's service network, and we help you reach it."],
+  if (p === "shipping") return <>{crumbs}<div className="hc">
+    <div className="hc-head"><span className="hc-eye">Help · Delivery</span><h1>Delivery and tracking</h1><p>Free delivery across India, usually in 3 to 5 days, with cash on delivery if you prefer. Order today and it usually arrives by {etaText()}.</p>
+      <div className="hc-cta"><a className="d-btn" href="/account?s=orders">Track my order</a><a className="hc-ghost" href="/shipping-policy">Read the shipping policy</a></div></div>
+    <Facts list={[["truck", "Free delivery", "On every TV, whatever the size"], ["box", "3 to 5 days", "From the order being confirmed"], ["cash", "Cash on delivery", "No extra charge"], ["check", "SMS and email updates", "At every step, with a link to the order"]]} />
+    <section className="hc-sec"><h2>Check your pincode</h2><p className="hc-lead">The delivery estimate for your area, before you order.</p><PinCheck /></section>
+    <section className="hc-sec"><h2>From order to your door</h2><Steps list={[
+      ["Placed", "You get an SMS, and an email when you gave one, with a link to your order."],
+      ["Confirmed", "We check the order and call you if anything needs confirming."],
+      ["Shipped", "Your TV leaves with the delivery partner, and your GST tax invoice is issued. The same link now opens it."],
+      ["Delivered", "The delivery partner calls the mobile number on the order. Check the outer box before you accept it."],
     ]} /></section>
-    <Qa title="Warranty" lead="How to claim it, and what to expect." list={WARRANTY_QA} />
-    <Faq list={FAQ.filter(([q]) => /genuine|track/i.test(q))} />
-    {cta}</>;
+    <section className="hc-sec hc-two">
+      <div className="hc-card"><h3>At your door</h3><ul><li>Someone over 18 must receive the TV.</li><li>If the outer box is visibly damaged, you may refuse the delivery; we arrange a replacement or a refund.</li><li>For cash on delivery, pay the exact amount shown on the order page.</li></ul></div>
+      <div className="hc-card"><h3>If something goes wrong</h3><ul><li>If the delivery partner cannot reach you after repeated attempts, the order is cancelled and anything paid online is refunded in full.</li><li>Damage found on unboxing: tell us within {rd} days of delivery, with photos. <a className="alink" href="/returns">How returns work</a></li><li>Remote areas may take longer than the estimate.</li></ul></div></section>
+    <section className="hc-sec"><h2>Common questions</h2><Ask list={[
+      ["Is delivery really free?", "Yes. Delivery is free on every order, and there is no extra charge for cash on delivery."],
+      ["Do you deliver outside India?", "Not yet. We deliver across India."],
+      ["How do I track my order?", "Open My orders in your account, or the link in your SMS or email. Each order shows Placed, Confirmed, Shipped and Delivered."],
+      ["Where is my invoice?", "Your GST tax invoice is issued when the TV ships. Open the order from My orders or the link in your messages, and print it or save it as a PDF."],
+    ]} /></section>
+    <Help /></div></>;
+
+  if (p === "returns") return <>{crumbs}<div className="hc">
+    <div className="hc-head"><span className="hc-eye">Help · Returns</span><h1>Returns and refunds</h1><p>Damaged, faulty, incomplete or not what you ordered? Tell us within {rd} days of delivery. The pickup is free, and the refund goes back the way you paid.</p>
+      <div className="hc-cta"><a className="d-btn" href="/account?s=orders">Start a return</a><a className="hc-ghost" href="/refund-policy">Read the full policy</a></div></div>
+    <Facts list={[["undo", rd + "-day returns", "From the day of delivery"], ["truck", "Free pickup", "From your address"], ["cash", "Refund in " + fd + " working days", "After the TV is checked"], ["box", "Free cancellation", "Any time before it ships"]]} />
+    <section className="hc-sec"><h2>How to return a TV</h2><Steps list={[
+      ["Open My orders", "Sign in and go to My orders. Every order is listed with its status.", ["Go to My orders", "/account?s=orders"]],
+      ["Request a return", "Open the delivered order, choose Request a return and pick the reason: damaged, faulty, incomplete or not what you ordered. Keep photos of any damage."],
+      ["We arrange a free pickup", "We call you on the order's mobile number to fix the pickup. Pack the TV with its remote, manuals, warranty card and original box."],
+      ["Replacement or refund", "Once the TV is checked we send the same model if it is in stock, or refund you in full."],
+    ]} /></section>
+    <section className="hc-sec"><h2>When your refund arrives</h2><p className="hc-lead">Within {fd} working days of the returned TV being checked. Your bank may take a few more days to show it.</p>
+      <div className="hc-table" role="table" aria-label="Refunds by payment method">{[["UPI", "To the same UPI account"], ["Credit or debit card", "To the same card"], ["Net banking", "To the same bank account"], ["No Cost EMI", "To your card; the bank closes the EMI plan on its own terms"], ["Cash on delivery", "To a bank account you give us"]].map(([m, w]) => <div role="row" key={m}><b role="cell">{m}</b><span role="cell">{w}</span></div>)}</div>
+      <p className="hc-note">The refund is the amount you paid; a coupon discount is not paid out in cash.</p></section>
+    <section className="hc-sec hc-two">
+      <div className="hc-card ok"><h3><Icon k="check" />Can be returned</h3><ul><li>Damaged on arrival</li><li>Faulty or not working</li><li>Incomplete: a missing remote, stand or cable</li><li>Not what you ordered: the wrong model or size</li></ul><small>Reported within {rd} days of delivery, unused apart from a check that it works, with all accessories, manuals, the warranty card and the original box.</small></div>
+      <div className="hc-card no"><h3><Icon k="undo" />Cannot be returned</h3><ul><li>Damage from mishandling, installation or use after delivery</li><li>Missing accessories, manuals, warranty card or box</li><li>Requests after the {rd}-day window (the brand's warranty still covers faults)</li></ul><small>Changed your mind? Cancel free of charge any time before the TV ships.</small></div></section>
+    <section className="hc-sec"><h2>Cancelling an order</h2><div className="hc-three">
+      <div><b>Before it ships</b><p>Open the order in My orders and choose Cancel order. Anything paid is refunded in full.</p></div>
+      <div><b>After it ships</b><p>Refuse it at the door, or request a return within {rd} days of delivery.</p></div>
+      <div><b>If we cannot fulfil it</b><p>We cancel the order and refund anything paid in full.</p></div></div></section>
+    <section className="hc-sec hc-after"><div><h2>After the {rd} days</h2><p>Faults are covered by the manufacturer's warranty, 1 year or 1 + 1 years depending on the model, serviced through the brand's network. We help you reach it.</p></div><a className="hc-ghost" href="/warranty">Warranty by model</a></section>
+    <section className="hc-sec"><h2>Common questions</h2><Ask list={[
+      ["Is the pickup free?", "Yes. We arrange it and you pay nothing for it."],
+      ["Do I need the original box?", "Yes. The TV goes back with its remote, manuals, warranty card and original packaging."],
+      ["Can I return a TV I no longer want?", `Returns are for a TV that is damaged, faulty, incomplete or not what you ordered, reported within ${rd} days of delivery. You can cancel any order free of charge before it ships.`],
+      ["How is a cash on delivery order refunded?", `To a bank account you give us, within ${fd} working days of the TV being checked.`],
+      ["The box looked damaged at delivery. What do I do?", "You may refuse the delivery, and we arrange a replacement or a refund. If you accepted it and find damage on unboxing, request a return with photos."],
+    ]} /></section>
+    <Help /></div></>;
 
   if (p === "buying-guide") return <>{crumbs}{hero}
     <section><h2>Start with the size</h2><p className="lead">The right screen size depends on how far you sit from it — here is a rough guide.</p>

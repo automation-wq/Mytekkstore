@@ -3181,3 +3181,35 @@ body[data-page="checkout"] #hdr .wrap::after { color:#08805F; background-image:u
 @media (max-width:600px) { .d-brows li > a { grid-template-columns:44px minmax(0,1fr); gap:12px; padding:14px 6px } .d-bmeta i { display:none } }
 .d-brows li { display:block } /* the row's layout now lives on its link */
 .rv-stars { background:none; -webkit-background-clip:border-box; background-clip:border-box; color:inherit } .rv-stars i { font-style:normal; background:linear-gradient(90deg,#E8A317 var(--f),#D9DCE3 var(--f)); -webkit-background-clip:text; background-clip:text; color:transparent }
+
+/* Help pages (Delivery, Returns), 28 Oct: a plain heading with the next action, the key facts, the real steps, then the details */
+.hc { max-width:1100px; margin:0 auto; padding:8px 0 64px; display:flex; flex-direction:column; gap:40px; color:#111 }
+.hc-head { display:flex; flex-direction:column; align-items:flex-start; gap:12px; padding:28px 0 4px }
+.hc-eye { font-size:12px; font-weight:700; letter-spacing:.12em; text-transform:uppercase; color:#8A6512 }
+.hc-head h1 { margin:0; font-family:var(--d-font); font-size:44px; font-weight:800; letter-spacing:-.03em; line-height:1.05 } .hc-head p { margin:0; max-width:62ch; font-size:17px; line-height:1.6; color:#3F4551 }
+.hc-cta { display:flex; flex-wrap:wrap; gap:10px; margin-top:6px } .hc-cta .d-btn { height:48px }
+.hc-ghost { display:inline-flex; align-items:center; height:48px; padding:0 20px; border:1.5px solid #111; border-radius:10px; color:#111; font-weight:700; text-decoration:none; white-space:nowrap } .hc-ghost:hover { background:#111; color:#fff }
+.hc-facts { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:12px }
+.hc-facts > div { display:flex; flex-direction:column; gap:4px; padding:18px; border:1px solid #ECEEF1; border-radius:14px; background:#fff } .hc-facts b { font-size:16px; margin-top:6px } .hc-facts small { font-size:13px; color:#5F6775 }
+.hc-ic { width:42px; height:42px; display:grid; place-items:center; border-radius:50%; background:#F7F1E1; color:#8A6512; flex:none } .hc-ic .ic { width:21px; height:21px }
+.hc-sec { display:flex; flex-direction:column; gap:14px } .hc-sec > h2 { margin:0; font-family:var(--d-font); font-size:28px; font-weight:800; letter-spacing:-.02em } .hc-lead { margin:-6px 0 0; color:#5F6775; font-size:15px }
+.hc-steps { list-style:none; margin:0; padding:0; display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:12px; counter-reset:none }
+.hc-steps li { display:flex; flex-direction:column; gap:10px; padding:20px; border:1px solid #ECEEF1; border-radius:14px; background:#fff; position:relative }
+.hc-n { width:34px; height:34px; display:grid; place-items:center; border-radius:50%; background:#111; color:#E8CF8C; font-weight:800 } .hc-steps b { font-size:16px } .hc-steps p { margin:4px 0 0; font-size:14px; line-height:1.55; color:#3F4551 } .hc-steps .alink { display:inline-block; margin-top:8px; font-size:14px }
+.hc-table { display:flex; flex-direction:column; border:1px solid #ECEEF1; border-radius:14px; overflow:hidden; background:#fff }
+.hc-table > div { display:grid; grid-template-columns:220px minmax(0,1fr); gap:16px; padding:14px 18px; font-size:15px } .hc-table > div + div { border-top:1px solid #F0F1F3 } .hc-table b { font-weight:700 } .hc-table span { color:#3F4551 }
+.hc-note { margin:0; font-size:13px; color:#8A909C }
+.hc-two { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px }
+.hc-card { display:flex; flex-direction:column; gap:10px; padding:22px; border:1px solid #ECEEF1; border-radius:14px; background:#fff }
+.hc-card h3 { display:flex; align-items:center; gap:8px; margin:0; font-size:18px } .hc-card h3 .ic { width:20px; height:20px } .hc-card.ok h3 .ic { color:#08805F } .hc-card.no h3 .ic { color:#B42318 }
+.hc-card ul { margin:0; padding-left:18px; display:flex; flex-direction:column; gap:6px; font-size:15px; line-height:1.5; color:#24272E } .hc-card small { font-size:13px; line-height:1.5; color:#5F6775 }
+.hc-card.ok { border-top:3px solid #08805F } .hc-card.no { border-top:3px solid #B42318 }
+.hc-three { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px } .hc-three > div { padding:20px; border:1px solid #ECEEF1; border-radius:14px; background:#fff } .hc-three b { font-size:16px } .hc-three p { margin:6px 0 0; font-size:14px; line-height:1.55; color:#3F4551 }
+.hc-after { flex-direction:row; align-items:center; justify-content:space-between; gap:20px; padding:24px; border-radius:16px; background:#FBF6E9 } .hc-after h2 { margin:0 0 6px; font-family:var(--d-font); font-size:22px; font-weight:800 } .hc-after p { margin:0; max-width:62ch; color:#3F4551; line-height:1.55 }
+.hc-faq { display:flex; flex-direction:column; border:1px solid #ECEEF1; border-radius:14px; background:#fff; overflow:hidden }
+.hc-faq details + details { border-top:1px solid #F0F1F3 } .hc-faq summary { list-style:none; display:flex; justify-content:space-between; gap:12px; padding:16px 20px; font-weight:700; font-size:15px; cursor:pointer } .hc-faq summary::-webkit-details-marker { display:none }
+.hc-faq summary::after { content:"+"; font-size:20px; line-height:1; color:#8A909C } .hc-faq details[open] summary::after { content:"−" } .hc-faq details p { margin:0; padding:0 20px 18px; font-size:15px; line-height:1.6; color:#3F4551; max-width:75ch }
+.hc-help { display:flex; align-items:center; gap:16px; padding:20px 22px; border:1px solid #ECEEF1; border-radius:16px; background:#fff } .hc-help > div { flex:1 } .hc-help b { font-size:16px } .hc-help p { margin:2px 0 0; color:#5F6775; font-size:14px }
+.hc .pincheck, .hc form.pincheck { max-width:520px }
+@media (max-width:900px) { .hc-facts, .hc-steps { grid-template-columns:repeat(2,minmax(0,1fr)) } .hc-two, .hc-three { grid-template-columns:minmax(0,1fr) } .hc-after { flex-direction:column; align-items:flex-start } }
+@media (max-width:600px) { .hc { gap:30px } .hc-head h1 { font-size:32px } .hc-head p { font-size:15.5px } .hc-facts > div { padding:14px } .hc-steps { grid-template-columns:minmax(0,1fr) } .hc-table > div { grid-template-columns:minmax(0,1fr); gap:2px } .hc-help { flex-wrap:wrap } .hc-help .d-btn { width:100% } .hc-cta { width:100% } .hc-cta > * { flex:1 1 100%; justify-content:center } }
