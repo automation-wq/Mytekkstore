@@ -67,7 +67,7 @@ function write(n) {
 // serverless instance freezes the moment it answers. DATABASE_URL absent: the JSON files above, exactly as before.
 // ponytail: sync re-reads every changed row on every request; fine for thousands of orders, move to per-request queries beyond that.
 const DB_URL = process.env.DATABASE_URL || "";
-const ROWS = new Set(["users", "orders"]); // the collections kept one row per record
+const ROWS = new Set(["users", "orders", "otps", "outbox"]); // the collections kept one row per record: two copies writing different records never overwrite each other
 const SQL_ENDPOINT = (() => { if (!DB_URL) return ""; const u = new URL(DB_URL); return (/^(127\.0\.0\.1|localhost)$/.test(u.hostname) ? "http" : "https") + "://" + u.host + "/sql"; })();
 async function sql(query, params = []) {
   const r = await fetch(SQL_ENDPOINT, { method: "POST", headers: { "Content-Type": "application/json", "Neon-Connection-String": DB_URL, "Neon-Raw-Text-Output": "true", "Neon-Array-Mode": "false" }, body: JSON.stringify({ query, params }), signal: AbortSignal.timeout(8000) });
@@ -79,6 +79,7 @@ async function initStore() {
   await sql("CREATE TABLE IF NOT EXISTS kv (k text PRIMARY KEY, v jsonb NOT NULL, at bigint NOT NULL)");
   await sql("CREATE TABLE IF NOT EXISTS docs (col text NOT NULL, id text NOT NULL, v jsonb NOT NULL, at bigint NOT NULL, PRIMARY KEY (col, id))");
   await sql("CREATE TABLE IF NOT EXISTS sessions (token text PRIMARY KEY, user_id text NOT NULL, exp bigint NOT NULL)");
+  await sql("CREATE TABLE IF NOT EXISTS stock (id text PRIMARY KEY, n integer NOT NULL)"); // see moveStock
   for (const n of Object.keys(db)) {
     if (ROWS.has(n)) {
       const rows = await sql("SELECT v, at FROM docs WHERE col = $1 ORDER BY at, id", [n]);
@@ -90,11 +91,14 @@ async function initStore() {
       if (row) { db[n] = JSON.parse(row.v); kvAt[n] = +row.at; } else dirty.add(n); // the seed goes in once
     }
   }
+  if (db.products.length) await sql("INSERT INTO stock (id, n) VALUES " + db.products.map((_, i) => `($${2 * i + 1}, $${2 * i + 2})`).join(", ") + " ON CONFLICT (id) DO NOTHING", db.products.flatMap(p => [String(p.id), p.stock || 0])); // the first run takes the catalogue's counts
+  overlayStock(await sql("SELECT id, n FROM stock"));
   await flush();
   console.log("store: database");
 }
+const overlayStock = rows => { for (const r of rows) { const p = db.products.find(p => String(p.id) === r.id); if (p) p.stock = +r.n; } };
 async function sync() { // what other instances saved since this one last looked
-  const [kvs, changed] = await Promise.all([sql("SELECT k, at FROM kv"), sql("SELECT col, id, v, at FROM docs WHERE at > $1 ORDER BY at", [String(Math.max(0, docsAt - 5000))])]); // 5 s of clock skew between instances is re-read harmlessly
+  const [kvs, changed, stock] = await Promise.all([sql("SELECT k, at FROM kv"), sql("SELECT col, id, v, at FROM docs WHERE at > $1 ORDER BY at", [String(Math.max(0, docsAt - 5000))]), sql("SELECT id, n FROM stock")]); // 5 s of clock skew between instances is re-read harmlessly
   for (const r of kvs) if (kvAt[r.k] !== undefined && +r.at !== kvAt[r.k] && !dirty.has(r.k)) { const row = (await sql("SELECT v, at FROM kv WHERE k = $1", [r.k]))[0]; if (row) { db[r.k] = JSON.parse(row.v); kvAt[r.k] = +row.at; } }
   for (const r of changed) {
     const col = r.col; if (!ROWS.has(col) || !db[col]) continue;
@@ -105,6 +109,7 @@ async function sync() { // what other instances saved since this one last looked
     if (i >= 0) db[col][i] = o; else db[col].push(o);
     snap[col].set(id, json);
   }
+  overlayStock(stock); // after any catalogue reload above, whose own stock numbers may be old
 }
 async function flush() { // this instance's writes, before it answers; a write the database refuses stays dirty and goes again with the next flush
   if (!DB_URL) return;
@@ -125,9 +130,10 @@ async function flush() { // this instance's writes, before it answers; a write t
 const seedProducts = () => JSON.parse(fs.readFileSync(path.join(PUBLIC, "seed-data.js"), "utf8").replace(/^[^[]*/, "").replace(/;\s*$/, ""));
 const db = {
   products: read("products", null) || seedProducts(),
-  outbox: read("outbox", []),
+  outbox: read("outbox", []).map((m, i) => m.id ? m : { id: "old" + String(i).padStart(4, "0"), ...m }), // messages saved before they had ids
   users: read("users", []),
   orders: read("orders", []),
+  otps: read("otps", []), // sign-in codes: salted hashes only, 5 minutes each
 };
 if (!fs.existsSync(file("products"))) write("products");
 // ponytail: one-off migration. Products saved before the No Cost EMI flag existed take the seed's value for the same id.
@@ -287,7 +293,7 @@ async function sendMail(to, subject, text) {
   if (!r.ok) throw new Error(`Brevo ${r.status}: ${(await r.text()).slice(0, 200)}`);
 }
 function record(to, text, sent) {
-  const m = { at: new Date().toISOString(), to, text, sent };
+  const m = { id: Date.now().toString(36) + crypto.randomBytes(3).toString("hex"), at: new Date().toISOString(), to, text, sent }; // one row each with a database
   db.outbox.push(m);
   if (db.outbox.length > 500) db.outbox.shift();
   write("outbox");
@@ -414,15 +420,16 @@ on("POST", "logout", ({ req, res }) => {
 // ===== sign in with a one-time code, by mobile number (SMS through Twilio) or by email (Brevo) =====
 // The server makes a 6-digit code, keeps only its hash for 5 minutes and sends it. Without a provider the code is returned to the
 // page on localhost (or anywhere with OTP_DEMO=1) so the flow can be tried; otherwise the route says codes are not set up.
-const otps = new Map(); // destination -> { hash, salt, exp, tries, sentAt }
+// one row per destination in db.otps { id: destination, hash, salt, exp, tries, sentAt, lock }: with a database every server copy sees
+// the same code and the same wrong-code count, because the copy that checks a code is often not the copy that sent it
+const otpOf = to => db.otps.find(o => o.id === to);
 const isLocal = req => !req.headers["x-forwarded-for"] && /^(::1|127\.0\.0\.1|::ffff:127\.0\.0\.1)$/.test(req.socket.remoteAddress || ""); // the developer's own machine only, never a request that came through a proxy
 const phoneOf = v => { const p = str(v, "Mobile number", 20).replace(/[\s-]/g, ""); if (!/^\+?\d{10,15}$/.test(p)) bad("Please enter a valid mobile number or email address."); return e164(p); };
 const isEmail = v => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(v || "").trim());
 // the page sends { to }; older callers send { phone } or { email }
 const destOf = body => { const v = body.to !== undefined ? body.to : body.email !== undefined ? body.email : body.phone; return isEmail(v) ? { kind: "email", to: str(v, "Email", 120).toLowerCase() } : { kind: "sms", to: phoneOf(v) }; };
-const otpLocks = new Map(); // destination -> until: fifteen minutes after five wrong codes
 const otpIp = new Map(); // address -> [sentAt]: ten codes per address per hour (the local machine is exempt so the suites can run)
-const lockedUntil = to => { const u = otpLocks.get(to); if (u && u > Date.now()) return u; otpLocks.delete(to); return 0; };
+const lockedUntil = to => { const o = otpOf(to); return o && o.lock > Date.now() ? o.lock : 0; }; // fifteen minutes after five wrong codes
 const lockText = until => { const m = Math.max(1, Math.ceil((until - Date.now()) / 60000)); return `Too many wrong attempts. Please try again in ${m} minute${m === 1 ? "" : "s"}.`; };
 async function checkRecaptcha(token, req) { // reCAPTCHA v3, only once the keys exist
   if (!RECAPTCHA.secret) return;
@@ -436,12 +443,12 @@ on("POST", "otp/send", async ({ body, req }) => {
   if (!ready && !isLocal(req) && !OTP_DEMO) throw new HttpError(503, (kind === "sms" ? "SMS codes are not set up yet." : "Email codes are not set up yet.") + (kind === "sms" && mailReady ? " Use your email address instead, or" : " Please") + " sign in with your password.");
   await checkRecaptcha(body.recaptchaToken, req);
   const until = lockedUntil(to); if (until) throw new HttpError(423, lockText(until));
-  for (const [k, v] of otps) if (v.sentAt[v.sentAt.length - 1] < now - 15 * 60 * 1000) otps.delete(k); // forget destinations with no code in the last 15 minutes
-  const sentAt = ((otps.get(to) || {}).sentAt || []).filter(t => t > now - 15 * 60 * 1000);
+  db.otps = db.otps.filter(o => o.sentAt[o.sentAt.length - 1] >= now - 15 * 60 * 1000 || (o.lock || 0) > now); // forget destinations with no code in the last 15 minutes and no lock
+  const sentAt = ((otpOf(to) || {}).sentAt || []).filter(t => t > now - 15 * 60 * 1000);
   if (sentAt.length >= 3) throw new HttpError(429, "Too many codes requested. Please try again in 15 minutes.");
   if (!isLocal(req)) { const ip = ipOf(req), hits = (otpIp.get(ip) || []).filter(t => t > now - 3600000); if (hits.length >= 10) throw new HttpError(429, "Too many codes requested from this connection. Please try again in an hour."); otpIp.set(ip, [...hits, now]); if (otpIp.size > 5000) otpIp.clear(); }
   const code = String(crypto.randomInt(0, 1e6)).padStart(6, "0"), salt = crypto.randomBytes(8).toString("hex");
-  otps.set(to, { hash: hashPw(code, salt), salt, exp: now + 5 * 60 * 1000, tries: 0, sentAt: [...sentAt, now] }); // a new code replaces the old one
+  db.otps = [...db.otps.filter(o => o.id !== to), { id: to, hash: hashPw(code, salt), salt, exp: now + 5 * 60 * 1000, tries: 0, sentAt: [...sentAt, now] }]; write("otps"); // a new code replaces the old one
   const text = `${code} is your Mytekkstore sign-in code. It is valid for 5 minutes. Do not share it.`;
   const known = db.users.some(u => kind === "email" ? u.email === to : u.phone === to && u.phoneVerified); // the page only uses this for a hint
   if (ready) { const via = kind === "sms" ? await sendOtpSms(to, code, text) : (await sendMail(to, "Your Mytekkstore sign-in code", text), "email"); record(to, text, "sent by " + via); return { sent: true, via: kind, resendAfter: 30, newUser: !known }; }
@@ -449,13 +456,13 @@ on("POST", "otp/send", async ({ body, req }) => {
   return { sent: true, via: "demo", demoCode: code, resendAfter: 30, newUser: !known }; // only on localhost or with OTP_DEMO=1 (see the 503 above)
 });
 on("POST", "otp/verify", async ({ body, req, res, user: signedIn }) => {
-  const { kind, to } = destOf(body), code = String(body.code || "").trim(), o = otps.get(to);
+  const { kind, to } = destOf(body), code = String(body.code || "").trim(), o = otpOf(to);
   const until = lockedUntil(to); if (until) throw new HttpError(423, lockText(until));
   if (!o || o.exp < Date.now()) throw new HttpError(400, "That code has expired. Please request a new one.");
   const a = Buffer.from(hashPw(code, o.salt), "hex"), b = Buffer.from(o.hash, "hex");
   if (!/^\d{6}$/.test(code) || !crypto.timingSafeEqual(a, b)) {
-    o.tries++;
-    if (o.tries >= 5) { o.exp = 0; otpLocks.set(to, Date.now() + 15 * 60 * 1000); throw new HttpError(423, "Too many wrong attempts. Please try again in 15 minutes."); }
+    o.tries++; write("otps"); // the error reply still saves the count (the route's catch flushes)
+    if (o.tries >= 5) { o.exp = 0; o.lock = Date.now() + 15 * 60 * 1000; throw new HttpError(423, "Too many wrong attempts. Please try again in 15 minutes."); }
     throw new HttpError(401, `Wrong code. Please check the message and try again (${5 - o.tries} ${5 - o.tries === 1 ? "try" : "tries"} left).`);
   }
   let u;
@@ -464,7 +471,7 @@ on("POST", "otp/verify", async ({ body, req, res, user: signedIn }) => {
   // a signed-in account without a verified number (Google, or an email sign-up) claims the number it just verified
   if (kind === "sms" && signedIn && !signedIn.phoneVerified) {
     if (u && u.id !== signedIn.id && u.phoneVerified) throw new HttpError(409, "This number is already on another account. Sign out and sign in with the number, or use a different number.");
-    signedIn.phone = to; signedIn.phoneVerified = true; write("users"); o.exp = 0;
+    signedIn.phone = to; signedIn.phoneVerified = true; write("users"); o.exp = 0; write("otps");
     return { user: publicUser(signedIn), linked: true };
   }
   if (u && kind === "email" && !u.emailVerified) { u.emailVerified = true; write("users"); }
@@ -478,7 +485,7 @@ on("POST", "otp/verify", async ({ body, req, res, user: signedIn }) => {
     u = makeUser(str(body.name, "Name", 80), email, "", false, { ...(kind === "email" ? { emailVerified: true } : { phone: to, phoneVerified: true }), pin, since: new Date().toISOString(), coupons: [welcomeCoupon()] }); // the sign-up design: ₹500 off the first order
     created = true;
   }
-  o.exp = 0; // the code is used up; the send count for this number is kept for the rate limit
+  o.exp = 0; write("otps"); // the code is used up; the send count for this number is kept for the rate limit
   startSession(req, res, u);
   if (created) await welcome(u);
   return { user: publicUser(u), created };
@@ -559,13 +566,34 @@ function buildLines(items) {
   if (new Set(lines.map(l => l.p.id)).size !== lines.length) bad("Duplicate items in cart.");
   return lines;
 }
+// With a database, stock lives in its own table and "take 2 if 2 are left" is one statement, so two server copies selling the same TV
+// at the same moment can never both pass the last unit (the products document's stock is a copy, refreshed by every sync).
+// delta < 0 takes, > 0 returns; strict refuses rather than going below zero. Returns false when refused.
+async function moveStock(p, delta, strict = true) {
+  if (!DB_URL) { if (strict && p.stock + delta < 0) return false; p.stock = Math.max(0, p.stock + delta); write("products"); return true; }
+  const rows = await sql(strict ? "UPDATE stock SET n = n + $2 WHERE id = $1 AND n + $2 >= 0 RETURNING n" : "UPDATE stock SET n = GREATEST(n + $2, 0) WHERE id = $1 RETURNING n", [String(p.id), delta]);
+  if (rows.length) { p.stock = +rows[0].n; return true; }
+  const now = (await sql("SELECT n FROM stock WHERE id = $1", [String(p.id)]))[0]; if (now) p.stock = +now.n; // refused: the page's message shows what is really left
+  return false;
+}
+const setStock = p => DB_URL ? sql("INSERT INTO stock (id, n) VALUES ($1, $2) ON CONFLICT (id) DO UPDATE SET n = EXCLUDED.n", [String(p.id), p.stock]) : null; // the admin's own count
+async function takeLines(lines, why = "") { // all or nothing: a refused line gives back the ones already taken
+  const taken = [];
+  for (const l of lines) {
+    if (await moveStock(l.p, -l.qty)) { taken.push(l); continue; }
+    for (const t of taken) await moveStock(t.p, t.qty, false);
+    throw new HttpError(409, (l.p.stock ? `Only ${l.p.stock} left of ${l.p.brand} ${l.p.name}` : `${l.p.brand} ${l.p.name} is out of stock`) + (why || "."));
+  }
+}
+const giveBack = async items => { for (const it of items) { const p = db.products.find(p => p.id === it.id); if (p) await moveStock(p, it.qty, false); } };
 const stamp = status => ({ at: new Date().toISOString(), status });
-function confirmPaid(o, paymentId, via) { // idempotent: the checkout callback and the webhook can both arrive
+async function confirmPaid(o, paymentId, via) { // idempotent: the checkout callback and the webhook can both arrive
   if (o.coupon && o.status !== "Placed") useCoupon(db.users.find(u => u.id === o.userId), o.coupon); // the welcome coupon is spent once the money is in
   if (o.status === "Placed") return;
-  for (const it of o.items) { const p = db.products.find(p => p.id === it.id); if (p) { if (p.stock < it.qty) o.stockIssue = true; p.stock = Math.max(0, p.stock - it.qty); } } // stock is taken on confirmation
-  o.status = "Placed"; o.pay = "Paid online (Razorpay)"; o.payment.paymentId = paymentId; o.payment.history.push({ ...stamp("Paid"), via });
-  write("orders"); write("products");
+  o.status = "Placed"; o.pay = "Paid online (Razorpay)"; o.payment.paymentId = paymentId; o.payment.history.push({ ...stamp("Paid"), via }); // before any wait, so a second arrival on this copy returns above
+  // ponytail: the callback and the webhook landing on two different copies within the same moment could each take the stock; order-row locking if that is ever seen
+  for (const it of o.items) { const p = db.products.find(p => p.id === it.id); if (p && !(await moveStock(p, -it.qty))) { o.stockIssue = true; await moveStock(p, -it.qty, false); } } // stock is taken on confirmation; paid beyond the last unit, the order is flagged
+  write("orders");
   notify(o, `Your Mytekkstore order ${o.id} is placed. Total ₹${o.total}. ${o.pay}.`);
 }
 function failPayment(o, paymentId, reason) { o.payment.attempts.push({ ...stamp("Failed"), paymentId, reason: String(reason || "").slice(0, 200) }); o.payment.history.push(stamp("Payment failed")); write("orders"); }
@@ -589,7 +617,7 @@ async function razorpayWebhook(req, res) {
   const o = providerOrderId && db.orders.find(o => o.payment && o.payment.providerOrderId === providerOrderId);
   if (o) {
     o.payment.events.push({ ...stamp(ev.event), id: eventId });
-    if (ev.event === "payment.captured" || ev.event === "order.paid") confirmPaid(o, pay ? pay.id : "", "webhook");
+    if (ev.event === "payment.captured" || ev.event === "order.paid") await confirmPaid(o, pay ? pay.id : "", "webhook");
     else if (ev.event === "payment.failed") failPayment(o, pay ? pay.id : "", pay && pay.error_description);
     else write("orders");
   }
@@ -613,14 +641,14 @@ on("POST", "pay/order", async ({ body, user }) => {
   return { id, provider: "razorpay", keyId: RZP.id, providerOrderId: rz.id, amount: total * 100, currency: "INR", email: user.email || "" };
 }, "user");
 // the checkout's callback: verified against the order id we stored, never the one the browser sends
-on("POST", "pay/verify", ({ body, user }) => {
+on("POST", "pay/verify", async ({ body, user }) => {
   expirePending();
   const o = db.orders.find(o => o.id === body.id && o.userId === user.id && o.payment);
   if (!o) throw new HttpError(404, "Order not found.");
   if (o.status === "Placed") return { id: o.id, status: o.status };
   if (o.status === "Expired") throw new HttpError(410, "This payment window has expired. Please place the order again.");
   if (body.razorpay_order_id !== o.payment.providerOrderId || !verifyCheckoutSignature(o.payment.providerOrderId, String(body.razorpay_payment_id || ""), body.razorpay_signature, RZP.secret)) throw new HttpError(400, "Payment could not be verified.");
-  confirmPaid(o, String(body.razorpay_payment_id), "checkout");
+  await confirmPaid(o, String(body.razorpay_payment_id), "checkout");
   return { id: o.id, status: o.status };
 }, "user");
 
@@ -691,7 +719,7 @@ on("POST", "geo/reverse", async ({ body, req }) => {
 // the checkout asks before the order whether a coupon applies to the cart (the same rule the order route enforces)
 on("POST", "coupons/validate", ({ body, user }) => { const lines = buildLines(body.items), subtotal = lines.reduce((t, l) => t + l.p.price * l.qty, 0), cp = couponFor(user, body.code, subtotal); return { ok: true, discount: cp.discount, code: cp.code }; }, "user");
 
-on("POST", "orders", ({ body, user }) => { // sign-in required, with a verified mobile number (delivery and cash on delivery need it; the owner's spec)
+on("POST", "orders", async ({ body, user }) => { // sign-in required, with a verified mobile number (delivery and cash on delivery need it; the owner's spec)
   if (!user.phoneVerified) throw new HttpError(403, "Please verify your mobile number before placing an order.");
   const name = str(body.name, "Name", 80), phone = str(body.phone, "Phone", 15, /^[0-9+ ]{7,15}$/);
   const address = str(body.address, "Address", 400), pin = str(body.pin, "Pincode", 10, /^[0-9A-Za-z ]{4,10}$/);
@@ -699,7 +727,7 @@ on("POST", "orders", ({ body, user }) => { // sign-in required, with a verified 
   if (!dest.methods.includes(body.pay === "online" ? "online" : "cod")) bad("That payment method is not available for this destination.");
   const lines = buildLines(body.items); // prices and stock from the server's own product list, never from the browser
   const subtotal = lines.reduce((t, l) => t + l.p.price * l.qty, 0), cp = couponFor(user, body.coupon, subtotal);
-  lines.forEach(l => l.p.stock -= l.qty);
+  await takeLines(lines); // the last check that can refuse; nothing below throws
   useCoupon(user, cp.code);
   const order = {
     id: "MT" + crypto.randomBytes(5).toString("hex").toUpperCase(), at: new Date().toISOString(), status: "Placed",
@@ -709,7 +737,7 @@ on("POST", "orders", ({ body, user }) => { // sign-in required, with a verified 
     items: lines.map(({ p, qty }) => ({ id: p.id, brand: p.brand, name: p.name, img: p.img, price: p.price, qty })),
     subtotal, discount: cp.discount, coupon: cp.code, total: subtotal - cp.discount,
   };
-  db.orders.push(order); write("orders"); write("products");
+  db.orders.push(order); write("orders");
   notify(order, `Your Mytekkstore order ${order.id} is placed. Total ₹${order.total}. ${order.pay}.`);
   if (user) { // the address is remembered for next time; the order's contact number stays on the order and never replaces the account's verified number
     if (!user.phone) user.phone = e164(phone);
@@ -727,32 +755,32 @@ on("GET", "orders/(MT[0-9A-F]{10})", ({ params, user }) => {
 }, "user");
 
 on("GET", "admin/orders", () => ({ orders: [...db.orders].reverse() }), "admin");
-on("PATCH", "admin/orders/(MT[0-9A-F]{10})", ({ params, body }) => {
+on("PATCH", "admin/orders/(MT[0-9A-F]{10})", async ({ params, body }) => {
   const o = db.orders.find(o => o.id === params[0]);
   if (!o) throw new HttpError(404, "Order not found.");
   if (!STATUSES.includes(body.status)) bad("Unknown status.");
   if (o.status === body.status) return { order: o };
   // cancelling returns the items to stock; reopening a cancelled order takes them again, and must not oversell
   const delta = (o.status === "Cancelled" ? 1 : 0) - (body.status === "Cancelled" ? 1 : 0);
-  const lines = o.items.map(it => ({ it, p: db.products.find(p => p.id === it.id) }));
-  if (delta === 1) lines.forEach(({ it, p }) => { if (p && p.stock < it.qty) throw new HttpError(409, `Only ${p.stock} left of ${p.brand} ${p.name}, so this order cannot be reopened.`); });
-  if (delta) lines.forEach(({ it, p }) => { if (p) p.stock -= delta * it.qty; });
+  if (delta === 1) await takeLines(o.items.map(it => ({ p: db.products.find(p => p.id === it.id), qty: it.qty })).filter(l => l.p), ", so this order cannot be reopened.");
+  if (delta === -1) await giveBack(o.items);
   o.status = body.status;
   if (o.status === "Delivered" && !o.deliveredAt) o.deliveredAt = new Date().toISOString(); // the return window and the warranty start here
   if (o.returnRequest && body.returnStatus && ["Approved", "Picked up", "Refunded", "Declined"].includes(body.returnStatus)) o.returnRequest.status = body.returnStatus;
-  write("orders"); write("products");
+  write("orders");
   notify(o, `Your Mytekkstore order ${o.id} is now: ${o.status}.`);
   return { order: o };
 }, "admin");
 // the customer cancels an order that has not shipped: the stock comes back, a welcome coupon used on it is returned to the wallet
-on("POST", "orders/(MT[0-9A-F]{10})/cancel", ({ params, body, user }) => {
+on("POST", "orders/(MT[0-9A-F]{10})/cancel", async ({ params, body, user }) => {
   const o = db.orders.find(o => o.id === params[0] && o.userId === user.id);
   if (!o) throw new HttpError(404, "Order not found.");
   if (!["Placed", "Confirmed"].includes(o.status)) throw new HttpError(409, o.status === "Cancelled" ? "This order is already cancelled." : "This order has already shipped. You can refuse it at the door or ask for a return after delivery.");
-  o.items.forEach(it => { const p = db.products.find(p => p.id === it.id); if (p) p.stock += it.qty; });
-  o.status = "Cancelled"; o.cancelledAt = new Date().toISOString(); o.cancelReason = body.reason ? str(body.reason, "Reason", 200) : "";
+  const reason = body.reason ? str(body.reason, "Reason", 200) : ""; // checked before the stock moves
+  o.status = "Cancelled"; o.cancelledAt = new Date().toISOString(); o.cancelReason = reason; // before the wait, so a double tap cannot return the stock twice
+  await giveBack(o.items);
   if (o.coupon) { const c = (user.coupons || []).find(c => c.code === o.coupon); if (c) { c.used = false; delete c.usedAt; write("users"); } }
-  write("orders"); write("products");
+  write("orders");
   notify(o, `Your Mytekkstore order ${o.id} is cancelled.${/online/i.test(o.pay) && !/cash/i.test(o.pay) ? " The refund goes back to your payment method within " + 7 + " working days." : ""}`);
   return { order: publicOrder(o) };
 }, "user");
@@ -780,20 +808,20 @@ on("POST", "admin/upload", ({ body }) => {
   fs.writeFileSync(path.join(PUBLIC, "img", name), buf);
   return { img: "img/" + name };
 }, "admin");
-on("POST", "admin/products", ({ body }) => {
+on("POST", "admin/products", async ({ body }) => {
   // an id is never reused, even after a delete: old orders still point at it
   const p = { id: Math.max(0, ...db.products.map(p => p.id), ...db.orders.flatMap(o => o.items.map(i => i.id))) + 1, ...productFrom(body), reviews: [], updated: new Date().toISOString() };
-  db.products.push(p); write("products");
+  db.products.push(p); write("products"); await setStock(p);
   return { product: p };
 }, "admin");
-on("PUT", "admin/products/(\\d+)", ({ params, body }) => {
+on("PUT", "admin/products/(\\d+)", async ({ params, body }) => {
   const p = db.products.find(p => p.id === +params[0]);
   if (!p) throw new HttpError(404, "Product not found.");
-  Object.assign(p, productFrom(body), { updated: new Date().toISOString() }); write("products");
+  Object.assign(p, productFrom(body), { updated: new Date().toISOString() }); write("products"); await setStock(p);
   return { product: p };
 }, "admin");
-on("POST", "admin/reset-customers", ({ user }) => { // before launch: the test accounts and orders go, the catalogue, banners and the admin stay
-  for (const o of db.orders) if (o.status !== "Cancelled" && o.status !== "Expired") for (const it of o.items) { const p = db.products.find(p => p.id === it.id); if (p) p.stock += it.qty; }
+on("POST", "admin/reset-customers", async ({ user }) => { // before launch: the test accounts and orders go, the catalogue, banners and the admin stay
+  for (const o of db.orders) if (o.status !== "Cancelled" && o.status !== "Expired" && o.status !== "Pending payment") await giveBack(o.items); // a pending payment never took stock
   const gone = db.users.filter(u => !u.admin).map(u => u.id);
   db.users = db.users.filter(u => u.admin); db.orders = []; db.outbox = [];
   for (const [t, s] of sessions) if (gone.includes(s.userId)) sessions.delete(t);
