@@ -319,6 +319,17 @@ server.listen(0, "127.0.0.1", async () => {
       assert.equal((await call("/api/me", "GET", null, admin)).data.user.admin, true, "the admin stays");
       assert.equal((await call("/api/products")).data.products.length, nBefore, "the catalogue stays"); }
     r = await call("/api/config"); assert.equal(r.data.pay, "demo"); assert.ok(r.data.fx && r.data.fx.rates && r.data.fx.rates.USD > 0 && r.data.destinations.IN.ship === true && r.data.destinations.AE.ship === false, "config carries the pay provider, display rates and destinations");
+    // security: the browser may share its position with this site only; password guessing is limited per visitor and per account
+    assert.match((await fetch(base + "/")).headers.get("permissions-policy"), /geolocation=\(self\)/, "Use my current location is allowed for this site, camera and microphone are not");
+    { assert.equal((await call("/api/register", "POST", { name: "Lock Test", email: "lock@example.com", password: "right-password-1" })).status, 200);
+      process.env.VERCEL = "1"; // on Vercel the visitor is Vercel's own x-real-ip header
+      const as = ip => ({ "Content-Type": "application/json", "x-real-ip": ip }), login = (pw, ip) => call("/api/login", "POST", { email: "lock@example.com", password: pw }, null, as(ip)).then(x => x.status);
+      for (let i = 0; i < 5; i++) assert.equal(await login("wrong", "198.51.100.1"), 401);
+      assert.equal(await login("wrong", "198.51.100.1"), 429, "five wrong passwords from one visitor block that visitor");
+      assert.equal(await login("right-password-1", "198.51.100.2"), 200, "and only that visitor");
+      for (let i = 0; i < 20; i++) await login("wrong", "198.51.100." + (10 + i));
+      assert.equal(await login("right-password-1", "198.51.100.99"), 429, "twenty wrong passwords spread over twenty addresses lock the account itself");
+      delete process.env.VERCEL; }
     console.log("ALL TESTS PASSED");
   } catch (e) { console.error("TEST FAILED:", e.message, e.stack.split("\n")[2]); process.exitCode = 1; }
   server.close(); server.closeAllConnections();

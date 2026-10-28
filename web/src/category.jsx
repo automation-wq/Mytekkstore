@@ -95,7 +95,7 @@ export function Category() {
   if (!cat && !f.brand.length) CATS.forEach(c => tiles.push([c, P.filter(p => p.cat === c).length + " products", catUrl(c), catImg(c), false])); // category tiles only when no category is chosen
   const band = BANDS.find(([a, b]) => a === f.min && b === f.max);
   const chips = [...f.brand.map(b => [b, () => set({ brand: f.brand.filter(x => x !== b) })]), ...(f.size ? [[sizeTitle(f.size).replace(/-inch/, " inch"), () => set({ size: "" })]] : []), ...(f.os ? [[f.os, () => set({ os: "" })]] : []), ...(f.res ? [[f.res, () => set({ res: "" })]] : []), ...(f.type ? [[f.type, () => set({ type: "" })]] : []),
-    ...((f.min || f.max) ? [[band ? band[2] : money(f.min) + " to " + money(f.max), () => set({ min: 0, max: 0 })]] : []), ...(f.off ? [[f.off + "% off or more", () => set({ off: 0 })]] : []),
+    ...((f.min || f.max) ? [[band ? band[2] : !f.min ? "Under " + money(f.max) : !f.max ? "Above " + money(f.min) : money(f.min) + " to " + money(f.max), () => set({ min: 0, max: 0 })]] : []), ...(f.off ? [[f.off + "% off or more", () => set({ off: 0 })]] : []),
     ...(f.instock ? [["In stock", () => set({ instock: false })]] : []), ...(f.emi ? [["No Cost EMI", () => set({ emi: false })]] : []), ...(f.rating ? [[f.rating + "★ and above", () => set({ rating: 0 })]] : [])];
   const n = list.length, nText = n + " product" + (n === 1 ? "" : "s");
   return <>

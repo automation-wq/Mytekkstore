@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { m, AnimatePresence } from "motion/react";
 import { useStore } from "./store.jsx";
 import { api, qs, demoPay, track } from "./api.js";
-import { Card, Row, Strip, Box, Line, OrderItems, BankOffers, Form, Ico, Icon, Photo } from "./components.jsx";
+import { Card, Row, Strip, Box, Line, OrderItems, BankOffers, Form, Ico, Icon, Photo, locateMe } from "./components.jsx";
 import { LEGAL, DRAW_ICONS, STEPS, FESTIVE, KV_IMG, POLICY, catUrl, brandUrl, listUrl, off, etaText, pic, emiPlans } from "./data.js";
 import { reveal } from "./motion.js";
 import { FestiveBanner } from "./home.jsx"; // the brochure festive banner opens the offers page too
@@ -57,7 +57,7 @@ export function Checkout() {
   const { me, cart, byId, money, cartCount, cartTotal, clearCart } = useStore();
   const { CFG: payCfg } = useStore(); // pay: "razorpay" once the server has gateway keys; payDemo: the test window, on a local copy only
   useEffect(() => { if (payCfg && payCfg.pay === "razorpay" && !document.querySelector('script[src^="https://checkout.razorpay.com/"]')) { const sc = document.createElement("script"); sc.src = "https://checkout.razorpay.com/v1/checkout.js"; sc.async = true; document.head.appendChild(sc); } }, [payCfg && payCfg.pay]);
-  const [where, setWhere] = useState({ city: "", state: "" }), [pinMsg, setPinMsg] = useState("");
+  const [where, setWhere] = useState({ city: "", state: "" }), [pinMsg, setPinMsg] = useState(""), [locating, setLocating] = useState(false), [osm, setOsm] = useState(false);
   const [err, setErr] = useState("");
   const placeRef = useRef(); // above the early returns (React error 300 once the cart empties after an order)
   const saved = (me && me.addresses) || [], dfltAddr = saved.find(a => a.isDefault) || saved[0];
@@ -119,6 +119,11 @@ export function Checkout() {
           {saved.length > 0 && <div className="co-addrs ck-addrs" role="radiogroup" aria-label="Saved addresses">{saved.map(a => <label className={"co-addr" + (addrId === a.id ? " on" : "")} key={a.id}><input type="radio" name="addrId" value={a.id} checked={addrId === a.id} onChange={() => setAddrId(a.id)} /><span><b>{a.name} <em>{a.label}</em>{a.isDefault && <em className="dflt">Default</em>}</b>{[a.line1, a.line2, a.landmark].filter(Boolean).join(", ")}<br />{a.city}, {a.state} {a.pin}<br /><small>{a.phone}</small></span></label>)}
             <label className={"co-addr new" + (addrId === "new" ? " on" : "")}><input type="radio" name="addrId" value="new" checked={addrId === "new"} onChange={() => setAddrId("new")} /><span><b>+ Add a new address</b>Deliver somewhere else</span></label></div>}
           {(addrId === "new" || !saved.length) && <div className="co-grid">
+            <div className="co-wide co-locrow"><button type="button" className="co-locate" disabled={locating} onClick={async () => { // the phone's position fills pincode, city, state and area; every field stays editable
+              setLocating(true); setPinMsg("Finding your location…");
+              try { const g = await locateMe(), f = document.getElementById("ckform"); setOsm(g.source === "osm"); if (g.postalCode) { f.pin.value = g.postalCode; } if (g.area && !f.line2.value) f.line2.value = g.area; setWhere({ city: g.city || "", state: g.state || "" }); setPinMsg(g.postalCode ? "Filled from your location. Add your flat or house number below." : "We found " + (g.city || "your area") + "; please type the pincode."); if (g.postalCode) lookupPin(g.postalCode).then(() => setPinMsg("Filled from your location. Add your flat or house number below.")); }
+              catch (e) { setPinMsg(e.message); }
+              setLocating(false); }}><Icon k="pin" />{locating ? "Finding you…" : "Use my current location"}</button>{osm && <small className="co-osm">Address data © OpenStreetMap contributors</small>}</div>
             <label className="co-f third">Pincode<input className="co-in" name="pin" required inputMode="numeric" pattern="\d{6}" maxLength="6" autoComplete="postal-code" defaultValue={saved.length ? "" : me.pin || ""} onChange={e => lookupPin(e.target.value.trim())} /><span className={"co-hint" + (pinMsg ? " ok" : "")} role="status">{pinMsg || "6 digits; city and state fill in"}</span></label>
             <label className="co-f third">City / district<input className="co-in" name="city" required maxLength="80" autoComplete="address-level2" key={"c" + where.city} defaultValue={where.city} /></label>
             <label className="co-f third">State<input className="co-in" name="state" required maxLength="80" autoComplete="address-level1" key={"s" + where.state} defaultValue={where.state} /></label>

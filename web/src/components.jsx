@@ -200,24 +200,47 @@ function Search() {
   </form>;
 }
 
-// "Deliver to" chip: the pincode typed once here is remembered for the product pages and the checkout (a native details pop-over)
+// The browser's position as an address: Google's geocoder once its key is set, OpenStreetMap until then (see geo/reverse).
+// Resolves to { postalCode, city, state, area, source } or rejects with a sentence the customer can act on.
+export const locateMe = () => new Promise((resolve, reject) => {
+  if (!navigator.geolocation) return reject(new Error("This browser cannot share its location. Please type your pincode."));
+  navigator.geolocation.getCurrentPosition(async pos => { try { resolve(await api("geo/reverse", "POST", { lat: pos.coords.latitude, lng: pos.coords.longitude })); } catch (e) { reject(e); } },
+    err => reject(new Error(err.code === 1 ? "Location is blocked for this site. Allow it in the browser's address bar, or type your pincode." : "We could not get your location. Please type your pincode.")),
+    { enableHighAccuracy: false, timeout: 12000, maximumAge: 600000 });
+});
+// "Deliver to": the pincode chosen once here is remembered for the product pages and the checkout. The pattern of Croma's
+// "Select your location": a pincode, or "Use my current location". It opens by itself once, on a first visit to the home page.
 function Deliver() {
-  const [pin, setPin] = useState(() => load("pin", "")), [place, setPlace] = useState(() => load("pinplace", "")), [msg, setMsg] = useState("");
-  const ref = useRef();
-  useEffect(() => { const h = e => { if (ref.current && ref.current.open && !ref.current.contains(e.target)) ref.current.open = false; }; document.addEventListener("click", h); return () => document.removeEventListener("click", h); }, []);
+  const [pin, setPin] = useState(() => load("pin", "")), [place, setPlace] = useState(() => load("pinplace", "")), [msg, setMsg] = useState(""), [osm, setOsm] = useState(false), [busy, setBusy] = useState(false);
+  const ref = useRef(), input = useRef();
+  useEffect(() => {
+    const h = e => { if (ref.current && ref.current.open && !ref.current.contains(e.target)) ref.current.open = false; }; document.addEventListener("click", h);
+    const first = !load("pin", "") && !load("pinAsked", "") && document.body.dataset.page === "home" && setTimeout(() => { if (ref.current && !ref.current.open) { ref.current.open = true; save("pinAsked", "1"); } }, 2200);
+    return () => { document.removeEventListener("click", h); clearTimeout(first); };
+  }, []);
+  const keep = (v, where) => { save("pin", v); save("pinplace", where); save("pinAsked", "1"); setPin(v); setPlace(where); setMsg(""); ref.current.open = false; };
   const submit = async e => {
     e.preventDefault();
-    const v = e.currentTarget.pin.value.trim();
+    const v = input.current.value.trim();
     if (!/^\d{6}$/.test(v)) return setMsg("Please enter a 6-digit pincode.");
     setMsg("Checking…");
     let district = "";
     try { district = (await api("pincode/" + v)).district || ""; }
     catch (ex) { if (/find/.test(ex.message)) return setMsg(ex.message); } // service down: keep the pincode, the standard promise still applies
-    save("pin", v); save("pinplace", district); setPin(v); setPlace(district); setMsg(""); ref.current.open = false;
+    keep(v, district);
   };
-  return <details className="deliver" ref={ref}><summary><Icon k="pin" /><span><small>Deliver to</small><b>{pin ? (place ? place + " " + pin : pin) : "Enter pincode"}</b></span></summary>
-    <form className="dpop" onSubmit={submit}><label>Pincode<input name="pin" inputMode="numeric" maxLength="6" defaultValue={pin} placeholder="6-digit pincode" /></label><button className="btn">Check</button>
-      <p className="muted small" role="status">{msg || "Free delivery, usually in 3 to 5 days. Cash on delivery available."}</p></form></details>;
+  const here = async () => {
+    setBusy(true); setMsg("Finding your location…");
+    try { const g = await locateMe(); setOsm(g.source === "osm"); if (g.postalCode) keep(g.postalCode, g.city); else { if (input.current) input.current.focus(); setMsg((g.city ? "You are in " + g.city + ", but" : "We found you, but") + " the pincode is not known there. Please type it."); } }
+    catch (e) { setMsg(e.message); }
+    setBusy(false);
+  };
+  return <details className="deliver" ref={ref}><summary aria-label="Choose your delivery location"><Icon k="pin" /><span><small>Deliver to</small><b>{pin ? (place ? place + " " + pin : pin) : "Select pincode"}</b></span></summary>
+    <form className="dpop" onSubmit={submit}><button type="button" className="dpop-x" aria-label="Close" onClick={() => { ref.current.open = false; }}>×</button><p className="dpop-h">Select your delivery location</p><p className="dpop-sub">To see delivery dates and offers for your area.</p>
+      <div className="dpop-row"><input ref={input} name="pin" inputMode="numeric" maxLength="6" pattern="\d{6}" defaultValue={pin} placeholder="Enter 6-digit pincode" aria-label="Pincode" autoComplete="postal-code" /><button className="dpop-go">Apply</button></div>
+      <button type="button" className="dpop-here" onClick={here} disabled={busy}><Icon k="pin" />{busy ? "Finding you…" : "Use my current location"}</button>
+      <p className="dpop-msg" role="status">{msg || "Free delivery across India, usually in 3 to 5 days. Cash on delivery available."}</p>
+      {osm && <p className="dpop-osm">Address data © OpenStreetMap contributors</p>}</form></details>;
 }
 
 // a category panel fades down and its tiles, products and links arrive one after another (Motion; nothing moves under reduced motion)
@@ -281,9 +304,8 @@ export function Header() {
     return () => offs.forEach(f => f());
   }, [P]);
 
-  const n = cartCount(), emis = P.filter(p => p.cat === "Televisions" && p.emi).map(p => emiPlans(p.price)[2][1]), emiFrom = emis.length ? Math.min(...emis) : 0;
+  const n = cartCount();
   return <header id="hdr">
-    <div className="abar" aria-label="Store offers">Free delivery · Cash on delivery{emiFrom ? " · No Cost EMI from " + money(emiFrom) + "/month" : ""} · Genuine Elista TVs with brand warranty</div>
     <div className="wrap">
       <a className="logo" href="/"><svg viewBox="0 0 32 32" width="30" height="30" aria-hidden="true"><rect width="32" height="32" rx="9" fill="var(--accent)" /><path d="M18 5 9 18h6l-2 9 10-14h-6z" fill="#ffffff" /></svg><span>mytekk<b>store</b></span></a>
       <Search /><Deliver />

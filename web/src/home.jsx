@@ -22,6 +22,13 @@ const HeroSlide = ({ s, on, eager }) => <a className={"d-slide" + (on ? " on" : 
     <span className="d-scta"><span className="d-btn">{s.cta} {I.arrow}</span>{s.cta2 && <span className="d-btn gold">{s.cta2}</span>}</span></span>
 </a>;
 
+// the promise strip's icons (Lucide outlines, ISC licence): a delivery truck, a banknote, a calendar with a tick, a shield with a tick
+const PROMISE = {
+  truck: '<path d="M14 18V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v11a1 1 0 0 0 1 1h2"/><path d="M15 18H9"/><path d="M19 18h2a1 1 0 0 0 1-1v-3.65a1 1 0 0 0-.22-.62l-3.48-4.35A1 1 0 0 0 17.52 8H14"/><circle cx="17" cy="18" r="2"/><circle cx="7" cy="18" r="2"/>',
+  cash: '<rect width="20" height="12" x="2" y="6" rx="2"/><circle cx="12" cy="12" r="2.5"/><path d="M6 12h.01M18 12h.01"/>',
+  emi: '<rect width="18" height="18" x="3" y="4" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/><path d="m9 16 2 2 4-4"/>',
+  shield: '<path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/>',
+};
 // the design's icons, drawn once
 const I = {
   cart: <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 4h2l2.4 12h11L21 7H6" /><circle cx="9" cy="20" r="1.5" /><circle cx="17" cy="20" r="1.5" /></svg>,
@@ -115,6 +122,7 @@ export function Home() {
   // the hero moves on every 4 s (owner); a dot or swipe restarts the 4 s, a mouse over it or focus inside holds it, a hidden tab or reduced motion never moves it
   useEffect(() => { if (hold || matchMedia("(prefers-reduced-motion: reduce)").matches) return; const t = setInterval(() => { if (!document.hidden) setCur(c => (c + 1) % slides.length); }, 4000); return () => clearInterval(t); }, [cur, hold, slides.length]);
   return <div className="hp">
+    <h1 className="vh">Mytekkstore: Elista smart TVs at factory-direct prices, with free delivery, cash on delivery and No Cost EMI</h1>{/* the page's name for search engines and screen readers; the visible headlines are the slides below */}
     {/* the hero: the owner's banners, one at a time, dots below, a swipe on a phone */}
     <section className="d-hero" aria-roledescription="carousel" aria-label="Offers" onTouchStart={swipeStart} onTouchEnd={swipeEnd} onPointerEnter={e => e.pointerType === "mouse" && setHold(true)} onPointerLeave={() => setHold(false)} onFocus={e => e.target.matches(":focus-visible") && setHold(true)} onBlur={() => setHold(false)}>
       {slides.map((s, i) => <HeroSlide s={s} on={i === cur} eager={i === 0} key={s.key} />)}
@@ -128,24 +136,25 @@ export function Home() {
 
     <section className="d-wrap d-sec">
       <Head h="With every order" sub="What you get when you buy direct from MyTekkStore." />
-      <div className="d-perks">{[
-        [I.truck, "Free delivery", "On every TV, across India, usually in 3 to 5 days.", "/shipping-policy", "Delivery details"],
-        [I.cod, "Cash on delivery", "Pay at your door, or online by UPI, card or net banking.", "/shipping-policy#door", "How it works"],
-        [I.emi, "No Cost EMI", (minEmi ? "From " + money(minEmi) + "/month" : "Monthly instalments") + " on HDFC, ICICI, SBI, Axis and Kotak cards.", "/refund-policy#emi", "EMI terms"],
-        [I.shield, "Genuine, brand warranty", "New, sealed Elista TVs with 1 year or 1 + 1 year warranty.", "/warranty", "Warranty by model"],
-      ].map(([ic, t, d, h, l]) => <a className="d-perk2" href={h} key={t}><span className="d-pico">{ic}</span><span className="d-ptxt"><strong>{t}</strong><span>{d}</span><u>{l} →</u></span></a>)}</div>
+      {/* four promises in one calm strip (28 Oct, after studying Croma's trust tiles): one icon, one title, one line each; the whole tile links to the policy */}
+      <div className="d-promise">{[
+        [PROMISE.truck, "Free delivery", "Across India, usually in 3 to 5 days", "/shipping-policy"],
+        [PROMISE.cash, "Cash on delivery", "Pay when your TV arrives", "/shipping-policy#door"],
+        [PROMISE.emi, "No Cost EMI", minEmi ? "From " + money(minEmi) + "/month on leading bank cards" : "Easy monthly instalments", "/refund-policy#emi"],
+        [PROMISE.shield, "Brand warranty", "Sealed Elista TVs, 1 or 1+1 years", "/warranty"],
+      ].map(([ic, t, d, h]) => <a className="d-prom" href={h} key={t}><span className="d-promic"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" dangerouslySetInnerHTML={{ __html: ic }} /></span><span className="d-promt"><b>{t}</b><small>{d}</small></span></a>)}</div>
     </section>
 
     <section className="d-wrap d-sec"><FestiveBanner tvs={tvs} maxOff={maxOff} minEmi={minEmi} money={money} /></section>
 
     <section className="d-wrap d-sec" id="bank-offers">
-      <Head h="Bank & payment offers" sub="Instant discounts and No Cost EMI from partner banks on card payments." link="All offers & T&C" href="/offers" />
-      <div className="d-banks">{BANK_OFFERS.map(([bank, big, terms, color, chip, badge, foot]) => { const emi = /EMI/.test(bank); return <div className={"d-bank2" + (emi ? " is-emi" : "")} style={{ "--bc": color }} key={bank}>
-        <div className="d-bstrip"><span className="d-bname">{bank}</span><span className="d-btag">{badge}</span></div>
-        <div className="d-bbody"><div className="d-bbig">{emi && minEmi ? money(minEmi) + "/mo" : big}</div><p>{terms}</p>
-          <div className="d-bfoot"><span>{chip}</span><b>{foot}</b></div></div>
-      </div>; })}</div>
-      <div className="d-how"><span><strong>How to avail:</strong> pay online with an eligible card at checkout and the bank applies its offer. One bank offer per order; bank offers can be combined with No Cost EMI.</span><span>Offers are run by the banks and follow their terms.</span></div>
+      <Head h="Bank & payment offers" sub="Save more when you pay by card." link="All offers & T&C" href="/offers" />
+      {/* one panel instead of four boxes (28 Oct, after Croma's EMI store and Amazon's offer list): No Cost EMI as the feature, the bank offers as rows */}
+      {(() => { const emi = BANK_OFFERS.find(b => /EMI/.test(b[0])), banks = BANK_OFFERS.filter(b => b !== emi); return <div className="d-offers">
+        {emi && <div className="d-emi"><span className="d-eye">No Cost EMI</span><b>{minEmi ? <>{money(minEmi)}<small>/month</small></> : emi[1]}</b><p>{emi[2]} {emi[4] === "Interest borne by us" ? "The interest is on us." : emi[4]}</p><a className="d-emibtn" href="/offers">Shop No Cost EMI TVs</a></div>}
+        <ul className="d-brows">{banks.map(([bank, big, terms, , chip]) => <li key={bank}><span className="d-mono" aria-hidden="true">{bank.split(" ")[0]}</span><span className="d-bt"><b>{big} with {bank}</b><small>{terms}</small></span><span className="d-bmeta">{String(chip || "").split(" · ")[0]}</span></li>)}</ul>
+      </div>; })()}
+      <p className="d-bnote">Applied automatically when you pay with an eligible card at checkout. One bank offer per order, and it can be combined with No Cost EMI. Offers are run by the banks and follow their terms.</p>
     </section>
 
     <section className="d-wrap d-sec">

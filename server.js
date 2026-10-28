@@ -9,7 +9,8 @@ fs.mkdirSync(DATA, { recursive: true });
 // when the pages were last built: the stamp web/tidy.js writes at build time (file dates are not reliable on Vercel). The sitemap's lastmod for pages.
 const BUILT = (() => { try { return JSON.parse(fs.readFileSync(path.join(PUBLIC, "assets", "builds.json"), "utf8")).built || new Date().toISOString(); } catch { return new Date().toISOString(); } })();
 // the visitor's address: behind a proxy (Vercel, nginx) set TRUST_PROXY=1 to use the forwarded one
-const ipOf = req => (process.env.TRUST_PROXY && String(req.headers["x-forwarded-for"] || "").split(",").pop().trim()) || req.socket.remoteAddress;
+// the visitor's address for the rate limits: on Vercel its own x-real-ip (Vercel overwrites what a visitor sends); behind another proxy, TRUST_PROXY=1
+const ipOf = req => (process.env.VERCEL && String(req.headers["x-real-ip"] || req.headers["x-forwarded-for"] || "").split(",")[0].trim()) || (process.env.TRUST_PROXY && String(req.headers["x-forwarded-for"] || "").split(",").pop().trim()) || req.socket.remoteAddress;
 // Client decision of 2026-10-12: the store sells televisions only for now. Products in these categories stay in the data (the admin
 // still sees and edits them) but are not served, listed, linked or sold. Empty the list to bring them back.
 const HIDDEN_CATS = ["Washing Machines", "Air Conditioners"];
@@ -398,16 +399,16 @@ on("POST", "register", ({ body, req, res }) => {
 });
 on("POST", "login", ({ body, req, res }) => {
   const email = String(body.email || "").trim().toLowerCase();
-  // behind a reverse proxy every request arrives from the proxy's address, so set TRUST_PROXY=1 there to use the forwarded one
-  const ip = (process.env.TRUST_PROXY && String(req.headers["x-forwarded-for"] || "").split(",").pop().trim()) || req.socket.remoteAddress;
-  const key = ip + " " + email, f = fails.get(key); // per address and account, so one attacker cannot lock everyone out
+  const key = ipOf(req) + " " + email, f = fails.get(key); // per address and account, so one attacker cannot lock everyone out
   if (f && f.n >= 5 && f.until > Date.now()) throw new HttpError(429, "Too many attempts. Please try again in 15 minutes.");
   const u = email && db.users.find(u => u.email === email); // phone-only accounts have no email, so a blank email must not match them
+  if (u && u.lockUntil > Date.now()) throw new HttpError(429, "Too many attempts on this account. Please try again in 15 minutes.");
   if (!u || typeof body.password !== "string" || !checkPw(u, body.password)) {
     fails.set(key, { n: (f && f.until > Date.now() ? f.n : 0) + 1, until: Date.now() + 15 * 60 * 1000 });
+    if (u) { u.failN = ((u.failAt || 0) > Date.now() - 15 * 60 * 1000 ? u.failN || 0 : 0) + 1; u.failAt = Date.now(); if (u.failN >= 20) { u.lockUntil = Date.now() + 15 * 60 * 1000; u.failN = 0; } write("users"); } // twenty wrong passwords from anywhere lock the account for 15 minutes
     throw new HttpError(401, "Wrong email or password.");
   }
-  fails.delete(key);
+  fails.delete(key); if (u.failN || u.lockUntil) { u.failN = 0; delete u.lockUntil; write("users"); }
   startSession(req, res, u);
   return { user: publicUser(u) };
 });
@@ -706,16 +707,25 @@ on("GET", "pincode/(\\d{6})", async ({ params }) => {
 });
 // the browser's position becomes a pincode (Google Geocoding, server key); twenty lookups per address per hour
 const geoIp = new Map();
+// Without a Google key, OpenStreetMap's Nominatim answers (free, no account): its usage policy asks for at most one request a second,
+// an identifying User-Agent and the attribution, which the page shows. ponytail: the one-a-second gap is per server copy; add the Google key for real volume.
+let osmLast = 0;
 on("POST", "geo/reverse", async ({ body, req }) => {
-  if (!MAPS_KEY) throw new HttpError(503, "Location detection is not set up yet. Please type your pincode.");
-  const lat = +body.lat, lng = +body.lng; if (!(Math.abs(lat) <= 90 && Math.abs(lng) <= 180)) bad("Location not valid.");
+  const lat = +body.lat, lng = +body.lng; if (!(Math.abs(lat) <= 90 && Math.abs(lng) <= 180) || body.lat === undefined || body.lng === undefined) bad("Location not valid.");
   const ip = ipOf(req), now = Date.now(), hits = (geoIp.get(ip) || []).filter(t => t > now - 3600000);
   if (hits.length >= 20) throw new HttpError(429, "Too many location requests. Please type your pincode."); geoIp.set(ip, [...hits, now]); if (geoIp.size > 5000) geoIp.clear();
-  const r = await fetch(`https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&result_type=postal_code|locality&key=${MAPS_KEY}`, { signal: AbortSignal.timeout(6000) });
-  const j = r.ok ? await r.json() : {}, first = (j.results || [])[0];
-  if (!first) throw new HttpError(404, "We could not read a pincode from your location. Please type it.");
-  const comp = (t, k = "long_name") => ((first.address_components || []).find(c => c.types.includes(t)) || {})[k] || "";
-  return { country: comp("country", "short_name"), postalCode: comp("postal_code"), city: comp("locality") || comp("administrative_area_level_2"), formattedAddress: first.formatted_address || "" };
+  const notFound = () => { throw new HttpError(404, "We could not read a pincode from your location. Please type it."); };
+  if (MAPS_KEY) {
+    const r = await fetch(`https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&key=${MAPS_KEY}`, { signal: AbortSignal.timeout(6000) });
+    const j = r.ok ? await r.json() : {}, first = (j.results || [])[0]; if (!first) notFound();
+    const comp = t => { for (const res of j.results) { const c = (res.address_components || []).find(c => c.types.includes(t)); if (c) return t === "country" ? c.short_name : c.long_name; } return ""; };
+    return { country: comp("country"), postalCode: comp("postal_code"), city: comp("locality") || comp("administrative_area_level_3") || comp("administrative_area_level_2"), state: comp("administrative_area_level_1"), area: [comp("sublocality_level_2"), comp("sublocality_level_1")].filter(Boolean).join(", "), source: "google" };
+  }
+  const gap = osmLast + 1100 - Date.now(); if (gap > 0) await new Promise(r => setTimeout(r, gap)); osmLast = Date.now();
+  const r = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1&accept-language=en`, { headers: { "User-Agent": "Mytekkstore/1.0 (+" + siteUrl(req) + ")" }, signal: AbortSignal.timeout(6000) }).catch(() => null);
+  const a = (r && r.ok ? await r.json().catch(() => ({})) : {}).address; if (!a) notFound();
+  const postalCode = (String(a.postcode || "").replace(/\s/g, "").match(/^\d{6}$/) || [""])[0];
+  return { country: String(a.country_code || "").toUpperCase(), postalCode, city: a.city || a.town || a.village || a.state_district || a.county || "", state: a.state || "", area: [a.road, a.neighbourhood || a.quarter, a.suburb].filter(Boolean).join(", "), source: "osm" };
 });
 // the checkout asks before the order whether a coupon applies to the cart (the same rule the order route enforces)
 on("POST", "coupons/validate", ({ body, user }) => { const lines = buildLines(body.items), subtotal = lines.reduce((t, l) => t + l.p.price * l.qty, 0), cp = couponFor(user, body.code, subtotal); return { ok: true, discount: cp.discount, code: cp.code }; }, "user");
@@ -973,7 +983,7 @@ const TYPES = { ".html": "text/html; charset=utf-8", ".css": "text/css; charset=
 // Google's button script and sign-in frame are allowed as well.
 const SECURITY = {
   "X-Content-Type-Options": "nosniff", "X-Frame-Options": "DENY", "Referrer-Policy": "strict-origin-when-cross-origin",
-  "Permissions-Policy": "camera=(), microphone=(), geolocation=()",
+  "Permissions-Policy": "camera=(), microphone=(), geolocation=(self)",
   "Content-Security-Policy": `default-src 'self'; script-src 'self' 'inline-speculation-rules'${GOOGLE ? " https://accounts.google.com" : ""}${CLARITY ? " https://www.clarity.ms" : ""}${RZP.id ? " https://checkout.razorpay.com" : ""}${RECAPTCHA.site ? " https://www.google.com https://www.gstatic.com" : ""}; connect-src 'self'${GOOGLE ? " https://accounts.google.com" : ""}${CLARITY ? " https://*.clarity.ms" : ""}${RZP.id ? " https://api.razorpay.com https://lumberjack.razorpay.com" : ""}; frame-src ${[GOOGLE && "https://accounts.google.com", RZP.id && "https://api.razorpay.com https://checkout.razorpay.com", RECAPTCHA.site && "https://www.google.com"].filter(Boolean).join(" ") || "'none'"}; img-src 'self' data: https:; style-src 'self' 'unsafe-inline'${GOOGLE ? " https://accounts.google.com" : ""}; font-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'`,
 };
 const escHtml = s => String(s).replace(/[&<>"']/g, c => "&#" + c.charCodeAt(0) + ";");
@@ -1097,7 +1107,7 @@ function staticHeader() {
   const icon = d => `<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d}</svg>`;
   const li = (label, href) => `<li class="l0"><a class="l0link" href="${href}">${escHtml(label)}</a></li>`;
   const emis = live().filter(p => p.cat === "Televisions" && p.emi).map(p => Math.ceil(p.price / 9)), emiFrom = emis.length ? Math.min(...emis) : 0;
-  return `<a class="skip" href="#main">Skip to content</a><header id="hdr"><div class="abar" aria-label="Store offers">Free delivery · Cash on delivery${emiFrom ? " · No Cost EMI from " + String.fromCharCode(8377) + emiFrom.toLocaleString("en-IN") + "/month" : ""} · Genuine Elista TVs with brand warranty</div><div class="wrap"><a class="logo" href="/"><svg viewBox="0 0 32 32" width="30" height="30" aria-hidden="true"><rect width="32" height="32" rx="9" fill="var(--accent)"/><path d="M18 5 9 18h6l-2 9 10-14h-6z" fill="#ffffff"/></svg><span>mytekk<b>store</b></span></a><form role="search" action="/products" class="sbox"><input type="search" name="q" placeholder="Search &quot;55 inch 4K TV under 50000&quot;" aria-label="Search products" autocomplete="off"></form><details class="deliver"><summary>${icon('<path d="M12 21s-6-5.3-6-11a6 6 0 0112 0c0 5.7-6 11-6 11z"/><circle cx="12" cy="10" r="2.5"/>')}<span><small>Deliver to</small><b>Enter pincode</b></span></summary></details><label class="cty"><select id="country" aria-label="Country and currency"><option>India · INR</option></select></label><a class="hlink" href="/account" aria-label="Sign in">${icon('<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0116 0"/>')} <span>Sign in</span></a><a class="hlink" href="/products?wish=1" aria-label="Wishlist">${icon('<path d="M12 20s-7-4.4-7-10a4 4 0 017-2.6A4 4 0 0119 10c0 5.6-7 10-7 10z"/>')}</a><a class="hlink" href="/cart" aria-label="Cart">${icon('<path d="M3 4h2l2.4 11h11l2-7H7"/><circle cx="9" cy="20" r="1.5"/><circle cx="17" cy="20" r="1.5"/>')}</a></div><nav class="gnav" aria-label="Shop"><ul class="gbar">${[...new Set(live().map(p => p.cat))].map(c => li(c, catPath(c))).join("")}${HIDDEN_CATS.map(c => `<li class="soon"><span>${escHtml(c)}</span></li>`).join("")}${li("Brands", "/products")}${li("Best Deals", "/offers")}${li("Support", "/contact")}${li("Track order", "/account")}</ul></nav></header>`;
+  return `<a class="skip" href="#main">Skip to content</a><header id="hdr"><div class="wrap"><a class="logo" href="/"><svg viewBox="0 0 32 32" width="30" height="30" aria-hidden="true"><rect width="32" height="32" rx="9" fill="var(--accent)"/><path d="M18 5 9 18h6l-2 9 10-14h-6z" fill="#ffffff"/></svg><span>mytekk<b>store</b></span></a><form role="search" action="/products" class="sbox"><input type="search" name="q" placeholder="Search &quot;55 inch 4K TV under 50000&quot;" aria-label="Search products" autocomplete="off"></form><details class="deliver"><summary>${icon('<path d="M12 21s-6-5.3-6-11a6 6 0 0112 0c0 5.7-6 11-6 11z"/><circle cx="12" cy="10" r="2.5"/>')}<span><small>Deliver to</small><b>Select pincode</b></span></summary></details><label class="cty"><select id="country" aria-label="Country and currency"><option>India · INR</option></select></label><a class="hlink" href="/account" aria-label="Sign in">${icon('<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0116 0"/>')} <span>Sign in</span></a><a class="hlink" href="/products?wish=1" aria-label="Wishlist">${icon('<path d="M12 20s-7-4.4-7-10a4 4 0 017-2.6A4 4 0 0119 10c0 5.6-7 10-7 10z"/>')}</a><a class="hlink" href="/cart" aria-label="Cart">${icon('<path d="M3 4h2l2.4 11h11l2-7H7"/><circle cx="9" cy="20" r="1.5"/><circle cx="17" cy="20" r="1.5"/>')}</a></div><nav class="gnav" aria-label="Shop"><ul class="gbar">${[...new Set(live().map(p => p.cat))].map(c => li(c, catPath(c))).join("")}${HIDDEN_CATS.map(c => `<li class="soon"><span>${escHtml(c)}</span></li>`).join("")}${li("Brands", "/products")}${li("Best Deals", "/offers")}${li("Support", "/contact")}${li("Track order", "/account")}</ul></nav></header>`;
 }
 function staticHome() {
   const b = db.banners.filter(x => x.live && x.slot === "home").sort((a, c) => a.order - c.order || a.id - c.id)[0];
