@@ -2768,3 +2768,21 @@ body.su-page main.wrap { min-height:0 } .su, .su-wrap { min-height:calc(100vh - 
 .inv-total td { font-size:16px; background:#F7F7F8 }
 @media (max-width:760px) { .inv-grid { grid-template-columns:1fr } .oact, .invoice { padding:16px } }
 @media print { body * { visibility:hidden } #invoice, #invoice * { visibility:visible } #invoice { position:absolute; left:0; top:0; width:100%; border:0 } #invoice .acc-btn { display:none } }
+
+/* One black and gold look (owner, 28 Oct): the bank offers all wear the EMI card's black and gold, "With every order" is a black band with gold marks, and the 55" size card is no longer boxed */
+.d-bank2, .d-bank2.is-emi { background:linear-gradient(160deg,#17181C 0%,#0E0F12 100%); border:1px solid #2A2C33; box-shadow:0 1px 2px rgba(0,0,0,.2) }
+.d-bank2:hover { box-shadow:0 16px 34px rgba(0,0,0,.28); border-color:#5C4E2E }
+.d-bstrip, .d-bank2.is-emi .d-bstrip { background:transparent; color:#fff; border-bottom:1px solid #2A2C33; padding:16px 18px } .d-bstrip::after { display:none }
+.d-bname { color:#fff; font-size:15px } .d-btag, .d-bank2.is-emi .d-btag { color:#111; background:#E8CF8C; border-color:#E8CF8C }
+.d-bbig, .d-bank2.is-emi .d-bbig { color:#E8CF8C } .d-bbody p, .d-bank2.is-emi p { color:#C9CDD6 }
+.d-bfoot, .d-bank2.is-emi .d-bfoot { border-top:1px solid #2A2C33; color:#AEB4C0 } .d-bfoot b, .d-bank2.is-emi .d-bfoot b { color:#E8CF8C }
+.d-perks { background:linear-gradient(160deg,#17181C 0%,#0E0F12 100%); border-color:#111; box-shadow:none }
+.d-perk2, .d-perk2:hover { color:#fff } .d-perk2:hover { background:rgba(232,207,140,.06) } .d-perk2 + .d-perk2::before { background:#2A2C33 }
+.d-pico { background:rgba(232,207,140,.12); border:1px solid rgba(232,207,140,.35) } .d-pico svg { stroke:#E8CF8C }
+.d-ptxt strong { color:#fff } .d-ptxt > span { color:#C9CDD6 } .d-ptxt u { color:#E8CF8C }
+@media (max-width:1100px) { .d-perk2:nth-child(n+3) { border-top-color:#2A2C33 } } @media (max-width:600px) { .d-perk2 + .d-perk2 { border-top-color:#2A2C33 } }
+.d-sz.top { border:1px solid #ECEEF1 } .d-sz.top .d-szroom { color:#24272E }
+
+/* Account on a phone: the one-column grid may not grow to the tab strip's width (it made every signed-in page 1,700px wide); the strip scrolls inside the card */
+@media (max-width:900px) { .acc { grid-template-columns:minmax(0,1fr) } .acc-side, .acc-nav { min-width:0 } }
+@media (max-width:900px) { .acc-nav { scrollbar-width:none } .acc-nav::-webkit-scrollbar { display:none } }

@@ -204,10 +204,10 @@ export const KV_IMG = { "Televisions": "kv-tv", "Washing Machines": "kv-wash", "
 // Bank offers shown on the home page, the offers page and every product page. SAMPLE offers: replace with the real bank terms before launch.
 // [bank, headline, terms, bank colour for the wordmark (real logos to come from the client)]
 export const BANK_OFFERS = [
-  ["HDFC Bank", "10% off", "Up to ₹2,000 on HDFC Bank credit cards and EMI.", "#004c8f", "Min. order ₹15,000 · Limited period", "Instant", "No code needed"],
-  ["ICICI Bank", "₹1,500 off", "Flat discount on ICICI Bank debit and credit cards.", "#b02a30", "Min. order ₹25,000 · Limited period", "Instant", "No code needed"],
-  ["No Cost EMI", "0% interest", "3, 6 or 9 months on HDFC, ICICI, SBI, Axis and Kotak cards.", "#22409a", "Interest borne by us", "0% interest", "Choose at checkout"],
-  ["Axis Bank", "₹1,000 off", "On Axis Bank cards for orders above ₹25,000.", "#97144d", "Min. order ₹25,000 · Limited period", "Instant", "No code needed"],
+  ["HDFC Bank", "10% off", "Up to ₹2,000 on HDFC Bank credit cards and EMI.", "#111111", "Min. order ₹15,000 · Limited period", "Instant", "No code needed"],
+  ["ICICI Bank", "₹1,500 off", "Flat discount on ICICI Bank debit and credit cards.", "#111111", "Min. order ₹25,000 · Limited period", "Instant", "No code needed"],
+  ["No Cost EMI", "0% interest", "3, 6 or 9 months on HDFC, ICICI, SBI, Axis and Kotak cards.", "#111111", "Interest borne by us", "0% interest", "Choose at checkout"],
+  ["Axis Bank", "₹1,000 off", "On Axis Bank cards for orders above ₹25,000.", "#111111", "Min. order ₹25,000 · Limited period", "Instant", "No code needed"],
 ];
 // The festive offers page. Set ends to a date such as "2026-11-15T23:59:59+05:30" to show a live countdown; empty hides it.
 export const FESTIVE = { title: "Festive Offers", sub: "Big savings on Elista Smart TVs", ends: "" };
