@@ -76,7 +76,7 @@ export function Home() {
   const from = list => list.length ? money(Math.min(...list.map(p => p.price))) : "";
   const { all: sizes } = catSizes(P, "Televisions");
   const bySize = n => tvs.filter(p => inchOf(p) === n);
-  const [cur, setCur] = useState(0), [cmp, setCmp] = useState([]), touch = useRef(0);
+  const [cur, setCur] = useState(0), [hold, setHold] = useState(false), [cmp, setCmp] = useState([]), touch = useRef(0);
   const toggleCmp = id => setCmp(c => c.includes(id) ? c.filter(x => x !== id) : c.length >= 4 ? c : [...c, id]);
   const compare = [cmp, toggleCmp];
   // the deals timer: the row refreshes at midnight, India time
@@ -112,9 +112,11 @@ export function Home() {
 
   const minOf = l => l.length ? Math.min(...l.map(p => p.price)) : 0;
   const slides = heroSlides({ smart: minOf(tvs.filter(p => p.os)), big: minOf(tvs.filter(p => inchOf(p) >= 65)), mini: minOf(miniAll), qled: minOf(tvs.filter(p => typeOf(p) === "QLED")), minEmi, money });
+  // the hero moves on every 4 s (owner); a dot or swipe restarts the 4 s, a mouse over it or focus inside holds it, a hidden tab or reduced motion never moves it
+  useEffect(() => { if (hold || matchMedia("(prefers-reduced-motion: reduce)").matches) return; const t = setInterval(() => { if (!document.hidden) setCur(c => (c + 1) % slides.length); }, 4000); return () => clearInterval(t); }, [cur, hold, slides.length]);
   return <div className="hp">
-    {/* the hero: the owner's banners, one at a time, dots below, a swipe on a phone; nothing moves on its own */}
-    <section className="d-hero" aria-roledescription="carousel" aria-label="Offers" onTouchStart={swipeStart} onTouchEnd={swipeEnd}>
+    {/* the hero: the owner's banners, one at a time, dots below, a swipe on a phone */}
+    <section className="d-hero" aria-roledescription="carousel" aria-label="Offers" onTouchStart={swipeStart} onTouchEnd={swipeEnd} onPointerEnter={e => e.pointerType === "mouse" && setHold(true)} onPointerLeave={() => setHold(false)} onFocus={e => e.target.matches(":focus-visible") && setHold(true)} onBlur={() => setHold(false)}>
       {slides.map((s, i) => <HeroSlide s={s} on={i === cur} eager={i === 0} key={s.key} />)}
       <div className="d-dots" role="tablist">{slides.map((s, i) => <button type="button" role="tab" aria-selected={i === cur} aria-label={"Slide " + (i + 1) + ": " + s.h} className={i === cur ? "on" : undefined} onClick={() => setCur(i)} key={s.key}></button>)}</div>
     </section>
