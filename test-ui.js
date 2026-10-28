@@ -342,7 +342,7 @@ async function run() {
     assert.equal(await b.ev(`document.querySelector(".l0.cur .l0link").textContent`), "Best Deals", "Deals is marked current in the bar");
     await b.goto(base + "/");
     assert.ok(await b.ev(`!document.querySelector("main .box") && document.querySelectorAll(".d-prod").length >= 8 && document.querySelectorAll(".d-size").length >= 5`), "the home page draws its sections, not the error box (a missing import broke it on 22 Oct 2026)");
-    assert.equal(await b.ev(`document.querySelectorAll(".d-bank").length`), 4, "the four bank-offer cards on the home page");
+    assert.equal(await b.ev(`document.querySelectorAll(".d-bank2").length`), 4, "the four bank-offer cards on the home page");
     assert.equal(await b.ev(`document.querySelectorAll(".sizerow").length`), 0, "no shop-by-size rows on the home page (client decision 2026-10-09; sizes live on the category pages)");
     assert.ok(await b.ev(`document.querySelectorAll(".d-faq > div").length >= 5`), "the questions people ask before buying, on the home page");
     await b.goto(base + "/product.html?id=1");

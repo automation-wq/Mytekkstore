@@ -125,26 +125,24 @@ export function Home() {
 
     <section className="d-wrap d-sec">
       <Head h="With every order" sub="What you get when you buy direct from MyTekkStore." />
-      <div className="d-g4">
-        <div className="d-card d-perk">{I.truck}<strong>Free delivery</strong><span className="d-emi">On every TV, across India. Delivered in 3 to 5 days.</span></div>
-        <div className="d-card d-perk">{I.cod}<strong>Cash on delivery</strong><span className="d-emi">Pay at your door, or pay online with UPI, card or net banking.</span></div>
-        <div className="d-card d-perk">{I.emi}<strong>No Cost EMI</strong><span className="d-emi">{minEmi ? "From " + money(minEmi) + "/month" : "Monthly instalments"} on HDFC, ICICI, SBI, Axis and Kotak cards.</span></div>
-        <div className="d-card d-perk">{I.shield}<strong>Genuine, brand warranty</strong><span className="d-emi">1 year or 1+1 year Elista warranty on every TV*.</span></div>
-      </div>
+      <div className="d-perks">{[
+        [I.truck, "Free delivery", "On every TV, across India, usually in 3 to 5 days.", "/shipping-policy", "Delivery details"],
+        [I.cod, "Cash on delivery", "Pay at your door, or online by UPI, card or net banking.", "/shipping-policy#door", "How it works"],
+        [I.emi, "No Cost EMI", (minEmi ? "From " + money(minEmi) + "/month" : "Monthly instalments") + " on HDFC, ICICI, SBI, Axis and Kotak cards.", "/refund-policy#emi", "EMI terms"],
+        [I.shield, "Genuine, brand warranty", "New, sealed Elista TVs with 1 year or 1 + 1 year warranty.", "/warranty", "Warranty by model"],
+      ].map(([ic, t, d, h, l]) => <a className="d-perk2" href={h} key={t}><span className="d-pico">{ic}</span><span className="d-ptxt"><strong>{t}</strong><span>{d}</span><u>{l} →</u></span></a>)}</div>
     </section>
 
     <section className="d-wrap d-sec"><FestiveBanner tvs={tvs} maxOff={maxOff} minEmi={minEmi} money={money} /></section>
 
     <section className="d-wrap d-sec" id="bank-offers">
-      <Head h="Bank & payment offers" sub="Stack a bank offer with No Cost EMI. Applied automatically at checkout." link="All offers & T&C" href="/offers" />
-      <div className="d-g4">{BANK_OFFERS.map(([bank, big, terms, , chip, badge, foot], i) => <div className={"d-card d-bank " + bankTone(i)} key={bank}>
-        <div className="d-bankhead"><span className={"d-chip" + (i === 2 ? " dark" : "")}>{bank}</span><span className={"d-badge" + (i === 2 ? " gold" : i === 3 ? " dark" : "")}>{badge}</span></div>
-        <div className="d-h" style={{ fontSize: i === 2 ? 28 : 30, whiteSpace: "nowrap" }}>{i === 2 && minEmi ? money(minEmi) + "/mo" : big}</div>
-        <span style={{ fontSize: 14 }}>{terms}</span>
-        <span className="d-emi">{chip}</span>
-        <span className="d-emi green">{foot}</span>
-      </div>)}</div>
-      <div className="d-how"><span><strong>How to avail:</strong> add a TV to cart → choose your card at checkout → discount shows before you pay.</span><span>One bank offer per order. Bank offers can be combined with No Cost EMI.</span></div>
+      <Head h="Bank & payment offers" sub="Instant discounts and No Cost EMI from partner banks on card payments." link="All offers & T&C" href="/offers" />
+      <div className="d-banks">{BANK_OFFERS.map(([bank, big, terms, color, chip, badge, foot]) => { const emi = /EMI/.test(bank); return <div className={"d-bank2" + (emi ? " is-emi" : "")} style={{ "--bc": color }} key={bank}>
+        <div className="d-bstrip"><span className="d-bname">{bank}</span><span className="d-btag">{badge}</span></div>
+        <div className="d-bbody"><div className="d-bbig">{emi && minEmi ? money(minEmi) + "/mo" : big}</div><p>{terms}</p>
+          <div className="d-bfoot"><span>{chip}</span><b>{foot}</b></div></div>
+      </div>; })}</div>
+      <div className="d-how"><span><strong>How to avail:</strong> pay online with an eligible card at checkout and the bank applies its offer. One bank offer per order; bank offers can be combined with No Cost EMI.</span><span>Offers are run by the banks and follow their terms.</span></div>
     </section>
 
     <section className="d-wrap d-sec">
