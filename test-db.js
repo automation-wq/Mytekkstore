@@ -5,7 +5,7 @@
 const http = require("http"), assert = require("assert"), fs = require("fs"), os = require("os"), path = require("path");
 const { spawn } = require("child_process");
 
-const kv = new Map(), docs = new Map(), sessions = new Map(), stockT = new Map(), files = new Map(); // what a Postgres would hold (one request at a time, so each UPDATE is atomic as in Postgres)
+const kv = new Map(), docs = new Map(), sessions = new Map(), stockT = new Map(), files = new Map(), counters = new Map(); // what a Postgres would hold (one request at a time, so each UPDATE is atomic as in Postgres)
 const statements = [
   [/^CREATE TABLE/i, () => []],
   [/^INSERT INTO kv /i, p => { kv.set(p[0], { v: p[1], at: p[2] }); return []; }],
@@ -24,6 +24,7 @@ const statements = [
   [/^INSERT INTO stock \(id, n\) VALUES \(\$1, \$2\) ON CONFLICT \(id\) DO UPDATE SET n = EXCLUDED\.n$/i, p => { stockT.set(p[0], +p[1]); return []; }],
   [/^UPDATE stock SET n = n \+ \$2 WHERE id = \$1 AND n \+ \$2 >= 0 RETURNING n$/i, p => { const n = stockT.get(p[0]); if (n === undefined || n + +p[1] < 0) return []; stockT.set(p[0], n + +p[1]); return [{ n: String(n + +p[1]) }]; }],
   [/^UPDATE stock SET n = GREATEST\(n \+ \$2, 0\) WHERE id = \$1 RETURNING n$/i, p => { const n = stockT.get(p[0]); if (n === undefined) return []; stockT.set(p[0], Math.max(0, n + +p[1])); return [{ n: String(stockT.get(p[0])) }]; }],
+  [/^INSERT INTO counters \(k, n\) VALUES \(\$1, 1\) ON CONFLICT \(k\) DO UPDATE SET n = counters\.n \+ 1 RETURNING n$/i, p => { counters.set(p[0], (counters.get(p[0]) || 0) + 1); return [{ n: String(counters.get(p[0])) }]; }],
   [/^SELECT id, n FROM stock$/i, () => [...stockT].map(([id, n]) => ({ id, n: String(n) }))],
   [/^INSERT INTO files \(id, type, data, at\) VALUES \(\$1, \$2, \$3, \$4\)$/i, p => { files.set(p[0], { type: p[1], data: p[2] }); return []; }],
   [/^SELECT type, data FROM files WHERE id = \$1$/i, p => files.has(p[0]) ? [files.get(p[0])] : []],

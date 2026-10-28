@@ -63,8 +63,10 @@ function DCard({ p, tag, tagTone, money, compare }) {
     <ul className="d-pts">{(p.features || []).slice(0, 3).map(f => <li key={f}>{f}</li>)}</ul>
     <div className="d-pricerow"><span className="d-price">{money(p.price)}</span>{p.mrp > p.price && <span className="d-mrp">{money(p.mrp)}</span>}</div>
     {p.price >= 15000 && <span className="d-save">{p.mrp > p.price ? "Save " + money(p.mrp - p.price) + " · " : ""}10% off with HDFC Bank</span>}
-    <span className="d-emi">No Cost EMI {money(emi9(p))}/mo · Delivery {etaText()}</span>
-    <span className="d-emi small">Free delivery · Cash on delivery · {warranty(p)}</span>
+    {/* one fact per line, the way the large stores' cards read: EMI (only on models that have it), the delivery date, then COD and warranty */}
+    {p.emi && <span className="d-cl"><b>No Cost EMI</b> from {money(emi9(p))}/month</span>}
+    <span className="d-cl del"><b>Free delivery</b> by {etaText().split(" to ").pop()}</span>
+    <span className="d-emi small">Cash on delivery · {warranty(p)}</span>
     <div className="d-btns"><button type="button" className="d-btn" data-add={p.id}>{I.cart}Add to cart</button><button type="button" className="d-btn black" data-buy={p.id}>{I.bolt}Buy now</button></div>
     {compare && <label className="d-cmp"><input type="checkbox" checked={compare[0].includes(p.id)} onChange={() => compare[1](p.id)} /> Add to compare</label>}
   </div>;

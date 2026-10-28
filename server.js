@@ -28,6 +28,7 @@ const CC = process.env.SMS_COUNTRY_CODE || "+91"; // country code added to mobil
 // OTP by SMS for Indian numbers through MSG91 (a DLT-registered OTP template; the owner's spec of 27 Oct); Twilio for other numbers or when MSG91 is not set
 const MSG91 = { key: process.env.MSG91_AUTH_KEY || "", template: process.env.MSG91_TEMPLATE_ID || "" }, msg91Ready = !!(MSG91.key && MSG91.template);
 const otpSmsReady = msg91Ready || smsReady;
+const MSG91_ORDER = process.env.MSG91_ORDER_TEMPLATE_ID || "", orderSmsReady = !!(MSG91.key && MSG91_ORDER) || smsReady; // order updates: MSG91's flow with its DLT template, else Twilio
 const RECAPTCHA = { site: process.env.RECAPTCHA_SITE_KEY || "", secret: process.env.RECAPTCHA_SECRET || "" }; // reCAPTCHA v3 on the send-code route, once both keys exist
 const MAPS_KEY = process.env.GOOGLE_MAPS_SERVER_KEY || ""; // "Use my current location": the browser's position becomes a pincode through Google Geocoding
 // Google sign-in: the OAuth client id from console.cloud.google.com. Without it the Google button is not shown.
@@ -82,6 +83,7 @@ async function initStore() {
   await sql("CREATE TABLE IF NOT EXISTS sessions (token text PRIMARY KEY, user_id text NOT NULL, exp bigint NOT NULL)");
   await sql("CREATE TABLE IF NOT EXISTS stock (id text PRIMARY KEY, n integer NOT NULL)"); // see moveStock
   await sql("CREATE TABLE IF NOT EXISTS files (id text PRIMARY KEY, type text NOT NULL, data text NOT NULL, at bigint NOT NULL)"); // uploaded photos (see admin/upload)
+  await sql("CREATE TABLE IF NOT EXISTS counters (k text PRIMARY KEY, n integer NOT NULL)"); // invoice numbers: one atomic step per invoice, whichever server copy issues it
   for (const n of Object.keys(db)) {
     if (ROWS.has(n)) {
       const rows = await sql("SELECT v, at FROM docs WHERE col = $1 ORDER BY at, id", [n]);
@@ -114,6 +116,7 @@ async function sync() { // what other instances saved since this one last looked
   overlayStock(stock); // after any catalogue reload above, whose own stock numbers may be old
 }
 async function flush() { // this instance's writes, before it answers; a write the database refuses stays dirty and goes again with the next flush
+  if (outgoing.length) { const all = outgoing.splice(0); await Promise.race([Promise.allSettled(all), new Promise(r => setTimeout(r, 8000))]); } // the messages first: their "sent" marks go with this flush
   if (!DB_URL) return;
   const jobs = pending.splice(0), names = [...dirty], done = []; // done: [collection, id, json or null], marked saved only once the database has them
   dirty.clear();
@@ -136,6 +139,8 @@ const db = {
   users: read("users", []),
   orders: read("orders", []),
   otps: read("otps", []), // sign-in codes: salted hashes only, 5 minutes each
+  business: read("business", {}), // the store's registered details for the GST invoice and the legal pages (Admin, Settings)
+  counters: read("counters", {}), // invoice numbers per financial year, without a database (with one: the counters table)
 };
 if (!fs.existsSync(file("products"))) write("products");
 // ponytail: one-off migration. Products saved before the No Cost EMI flag existed take the seed's value for the same id.
@@ -273,6 +278,15 @@ async function sendSms(to, text) {
   });
   if (!r.ok) throw new Error(`Twilio ${r.status}: ${(await r.text()).slice(0, 200)}`);
 }
+const statusWord = (o, text) => o.returnRequest && /return/i.test(text) ? "return " + o.returnRequest.status.toLowerCase() : String(o.status).toLowerCase();
+async function sendOrderSms(o, text, link) {
+  const to = e164(o.phone);
+  if (MSG91.key && MSG91_ORDER && to.startsWith("+91")) { // the DLT template "Mytekkstore: your order ##order## is ##status##. Details and invoice: ##link##" (see docs/LAUNCH.md)
+    const r = await fetch("https://control.msg91.com/api/v5/flow", { method: "POST", headers: { authkey: MSG91.key, "Content-Type": "application/json", accept: "application/json" }, body: JSON.stringify({ template_id: MSG91_ORDER, short_url: "0", recipients: [{ mobiles: to.slice(1), order: o.id, status: statusWord(o, text), link }] }), signal: AbortSignal.timeout(7000) });
+    const j = await r.json().catch(() => ({})); if (!r.ok || j.type === "error") throw new Error(`MSG91 ${r.status}: ${String(j.message || "").slice(0, 200)}`); return;
+  }
+  return sendSms(to, text);
+}
 async function sendOtpSms(to, code, text) { // the code is ours, so the hash check stays here whichever service carries the message
   if (msg91Ready && to.startsWith("+91")) {
     const r = await fetch(`https://control.msg91.com/api/v5/otp?template_id=${encodeURIComponent(MSG91.template)}&mobile=${to.slice(1)}&otp=${code}`, { method: "POST", headers: { authkey: MSG91.key, "Content-Type": "application/json" }, body: JSON.stringify({ OTP: code }) });
@@ -289,9 +303,9 @@ async function welcome(u) { // the welcome message of the sign-up design: SMS wh
     if (u.email && mailReady) { await sendMail(u.email, "Welcome to Mytekkstore", text); record(u.email, text, "sent by email"); }
   } catch (e) { console.error("welcome:", e.message); }
 }
-async function sendMail(to, subject, text) {
+async function sendMail(to, subject, text, html) {
   const r = await fetch("https://api.brevo.com/v3/smtp/email", { method: "POST", headers: { "api-key": BREVO, "Content-Type": "application/json" },
-    body: JSON.stringify({ sender: { name: "Mytekkstore", email: MAIL_FROM }, to: [{ email: to }], subject, textContent: text }) });
+    body: JSON.stringify({ sender: { name: "Mytekkstore", email: MAIL_FROM }, to: [{ email: to }], subject, textContent: text, ...(html && { htmlContent: html }) }), signal: AbortSignal.timeout(7000) });
   if (!r.ok) throw new Error(`Brevo ${r.status}: ${(await r.text()).slice(0, 200)}`);
 }
 function record(to, text, sent) {
@@ -302,12 +316,75 @@ function record(to, text, sent) {
   return m;
 }
 // order confirmations and status updates: recorded at once, then sent in the background (SMS first, else email) so an order is never held up
+// Every update goes by SMS to the order's mobile number and by email when the customer gave one, each with a private link to the
+// order and its invoice; every message is recorded in the outbox (Admin, Messages). Sending finishes before the response (see flush).
+let SITE = process.env.SITE_URL || ""; // the address the messages link to; the first request fills it in when not set
+const outgoing = [];
+const newKey = () => crypto.randomBytes(12).toString("hex");
+const keyOf = o => { if (!o.key) { o.key = newKey(); write("orders"); } return o.key; };
+const orderLink = o => SITE + "/o/" + o.id + "/" + keyOf(o);
+function send(label, ready, go, text) {
+  const m = record(label, text, ready ? "sending" : "recorded only");
+  if (ready) outgoing.push(go().then(() => { m.sent = "sent"; write("outbox"); }, e => { m.sent = "failed: " + e.message; write("outbox"); console.error("message:", e.message); }));
+}
 function notify(o, text) {
-  const via = smsReady && o.phone ? "sms" : mailReady && o.email ? "email" : "";
-  const m = record(`${o.name} (${o.phone}${o.email ? ", " + o.email : ""})`, text, via ? "sending by " + via : "recorded only");
-  if (!via) return;
-  (via === "sms" ? sendSms(e164(o.phone), text) : sendMail(o.email, "Mytekkstore order " + o.id, text))
-    .then(() => { m.sent = "sent by " + via; write("outbox"); }, e => { m.sent = "failed: " + e.message; write("outbox"); console.error(e); });
+  const link = orderLink(o), sms = text + " Details and invoice: " + link;
+  send(`SMS to ${o.name} (${o.phone})`, orderSmsReady, () => sendOrderSms(o, sms, link), sms);
+  if (o.email) send(`Email to ${o.name} (${o.email})`, mailReady, () => sendMail(o.email, text.split(". ")[0].replace(/^Your /, "Your ") + " | Mytekkstore", sms, orderEmail(o, text, link)), text);
+}
+function alertStore(o) { // the store hears of every new order by email (Admin, Settings, "New-order alerts to")
+  const b = db.business || {}, to = b.alertsEmail || b.email; if (!to) return;
+  const text = `New order ${o.id}: ₹${o.total.toLocaleString("en-IN")}, ${o.pay}. ${o.items.map(i => i.qty + " × " + i.brand + " " + i.name).join(", ")}. ${o.name}, ${o.phone}, ${o.pin}.`;
+  send("Email to the store (" + to + ")", mailReady, () => sendMail(to, `New order ${o.id} · ₹${o.total.toLocaleString("en-IN")}`, text + " " + SITE + "/admin#orders", orderEmail(o, "New order " + o.id + " from " + o.name + ".", SITE + "/admin#orders", "Open it in the admin")), text);
+}
+const rupees = n => "₹" + Number(n).toLocaleString("en-IN", { minimumFractionDigits: n % 1 ? 2 : 0, maximumFractionDigits: 2 });
+function orderEmail(o, text, link, button = "View your order and invoice") { // a plain, branded email; mail apps ignore page styles, so they are inline
+  const row = (a, b, bold) => `<tr><td style="padding:6px 0;color:#5F6775">${a}</td><td style="padding:6px 0;text-align:right;${bold ? "font-weight:700;color:#111" : ""}">${b}</td></tr>`;
+  return `<div style="background:#F5F6F8;padding:24px 12px;font-family:Arial,Helvetica,sans-serif;color:#111"><div style="max-width:560px;margin:0 auto;background:#fff;border-radius:12px;overflow:hidden;border:1px solid #E6E8EC">
+<div style="background:#0E0F12;padding:18px 24px;font-size:22px;color:#fff">mytekk<b style="color:#2FCB93">store</b></div>
+<div style="padding:24px"><p style="font-size:17px;font-weight:700;margin:0 0 6px">${escHtml(text)}</p><p style="margin:0 0 18px;color:#5F6775;font-size:14px">Order ${escHtml(o.id)} · ${new Date(o.at).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" })}</p>
+<table style="width:100%;border-collapse:collapse;font-size:14px">${o.items.map(i => row(escHtml(i.qty + " × " + i.brand + " " + i.name), rupees(i.price * i.qty))).join("")}${o.discount ? row("Coupon " + escHtml(o.coupon), "−" + rupees(o.discount)) : ""}${row("Delivery", "Free")}${row("Total", rupees(o.total), 1)}${row("Payment", escHtml(o.pay))}</table>
+<p style="margin:16px 0 0;font-size:14px;color:#3F4551">Delivering to ${escHtml(o.name)}, ${escHtml(o.address)}, ${escHtml(o.pin)}</p>
+<p style="margin:22px 0 0"><a href="${escHtml(link)}" style="display:inline-block;background:#08805F;color:#fff;text-decoration:none;font-weight:700;padding:12px 20px;border-radius:8px">${escHtml(button)}</a></p></div>
+<div style="padding:14px 24px;border-top:1px solid #F0F1F3;font-size:12px;color:#8A909C">Mytekkstore · Genuine Elista TVs with brand warranty · Free delivery and cash on delivery</div></div></div>`;
+}
+
+// ===== GST tax invoice (CGST Rules, rules 46 and 47): issued when the TV is dispatched, numbered without gaps within each financial year =====
+const GST_RATE = 18; // televisions of every size since 22 September 2025
+const GST_STATES = { "01": "Jammu and Kashmir", "02": "Himachal Pradesh", "03": "Punjab", "04": "Chandigarh", "05": "Uttarakhand", "06": "Haryana", "07": "Delhi", "08": "Rajasthan", "09": "Uttar Pradesh", "10": "Bihar", "11": "Sikkim", "12": "Arunachal Pradesh", "13": "Nagaland", "14": "Manipur", "15": "Mizoram", "16": "Tripura", "17": "Meghalaya", "18": "Assam", "19": "West Bengal", "20": "Jharkhand", "21": "Odisha", "22": "Chhattisgarh", "23": "Madhya Pradesh", "24": "Gujarat", "26": "Dadra and Nagar Haveli and Daman and Diu", "27": "Maharashtra", "29": "Karnataka", "30": "Goa", "31": "Lakshadweep", "32": "Kerala", "33": "Tamil Nadu", "34": "Puducherry", "35": "Andaman and Nicobar Islands", "36": "Telangana", "37": "Andhra Pradesh", "38": "Ladakh" };
+const plain = v => String(v || "").toLowerCase().replace(/&/g, "and").replace(/[^a-z]/g, "");
+const STATE_ALIASES = { nctofdelhi: "07", orissa: "21", pondicherry: "34", uttaranchal: "05", chattisgarh: "22", dadraandnagarhaveli: "26", damananddiu: "26", andamanandnicobar: "35", jammuandkashmirut: "01" };
+const stateCode = name => Object.keys(GST_STATES).find(c => plain(GST_STATES[c]) === plain(name)) || STATE_ALIASES[plain(name)] || "";
+const gstinOk = g => { // the format, then the check digit (a mod-36 weighted sum, as on the GST portal)
+  if (!/^\d{2}[A-Z]{5}\d{4}[A-Z][1-9A-Z]Z[0-9A-Z]$/.test(g)) return false;
+  const C = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ"; let sum = 0;
+  for (let i = 0; i < 14; i++) { const p = C.indexOf(g[i]) * (i % 2 + 1); sum += Math.floor(p / 36) + p % 36; }
+  return C[(36 - sum % 36) % 36] === g[14];
+};
+const fyOf = when => { const t = new Date(new Date(when).toLocaleString("en-US", { timeZone: "Asia/Kolkata" })), start = (t.getMonth() >= 3 ? t.getFullYear() : t.getFullYear() - 1) % 100; return String(start).padStart(2, "0") + "-" + String((start + 1) % 100).padStart(2, "0"); };
+async function nextNumber(k) { // one atomic step in the database, so two server copies never issue the same number
+  if (DB_URL) return +(await sql("INSERT INTO counters (k, n) VALUES ($1, 1) ON CONFLICT (k) DO UPDATE SET n = counters.n + 1 RETURNING n", [k]))[0].n;
+  db.counters[k] = (db.counters[k] || 0) + 1; write("counters"); return db.counters[k];
+}
+const bizReady = b => !!(b && b.legalName && b.address && b.state && b.pin && b.gstin && b.signatory);
+async function issueInvoice(o) { // at dispatch (rule 47: at or before the removal of the goods); the seller's details are kept as they were that day
+  if (o.invoice) return;
+  const b = db.business || {}, fy = fyOf(Date.now()), n = await nextNumber("invoice:" + fy);
+  o.invoice = { no: `${b.prefix || "MTS"}/${fy}/${String(n).padStart(5, "0")}`, date: new Date().toISOString(), seller: { ...b }, hsn: b.hsn || "8528", rate: GST_RATE };
+}
+function invoiceLines(o) { // prices include GST: each line's share of the coupon comes off first, then the tax is taken out of what is left
+  const gross = o.items.reduce((t, i) => t + i.price * i.qty, 0) || 1, rate = (o.invoice && o.invoice.rate) || GST_RATE, r2 = n => Math.round(n * 100) / 100;
+  let left = o.total;
+  return o.items.map((i, k) => { const g = i.price * i.qty, net = k === o.items.length - 1 ? r2(left) : r2(g - (o.discount || 0) * g / gross); left -= net; const taxable = r2(net / (1 + rate / 100)); return { ...i, gross: g, net, taxable, tax: r2(net - taxable) }; });
+}
+const ONES = ["", "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine", "Ten", "Eleven", "Twelve", "Thirteen", "Fourteen", "Fifteen", "Sixteen", "Seventeen", "Eighteen", "Nineteen"], TENS = ["", "", "Twenty", "Thirty", "Forty", "Fifty", "Sixty", "Seventy", "Eighty", "Ninety"];
+const two = n => n < 20 ? ONES[n] : TENS[Math.floor(n / 10)] + (n % 10 ? " " + ONES[n % 10] : "");
+const three = n => (n >= 100 ? ONES[Math.floor(n / 100)] + " Hundred" + (n % 100 ? " " : "") : "") + (n % 100 ? two(n % 100) : "");
+function inWords(amount) { // the Indian way: crore, lakh, thousand
+  let n = Math.floor(amount); const paise = Math.round((amount - n) * 100), parts = [];
+  const crore = Math.floor(n / 1e7); n %= 1e7; const lakh = Math.floor(n / 1e5); n %= 1e5; const thousand = Math.floor(n / 1000); n %= 1000;
+  if (crore) parts.push(three(crore) + " Crore"); if (lakh) parts.push(two(lakh) + " Lakh"); if (thousand) parts.push(two(thousand) + " Thousand"); if (n) parts.push(three(n));
+  return "Rupees " + (parts.join(" ") || "Zero") + (paise ? " and " + two(paise) + " Paise" : "") + " Only";
 }
 
 // ===== API =====
@@ -596,7 +673,7 @@ async function confirmPaid(o, paymentId, via) { // idempotent: the checkout call
   // ponytail: the callback and the webhook landing on two different copies within the same moment could each take the stock; order-row locking if that is ever seen
   for (const it of o.items) { const p = db.products.find(p => p.id === it.id); if (p && !(await moveStock(p, -it.qty))) { o.stockIssue = true; await moveStock(p, -it.qty, false); } } // stock is taken on confirmation; paid beyond the last unit, the order is flagged
   write("orders");
-  notify(o, `Your Mytekkstore order ${o.id} is placed. Total ₹${o.total}. ${o.pay}.`);
+  notify(o, `Your Mytekkstore order ${o.id} is placed. Total ₹${o.total.toLocaleString("en-IN")}. ${o.pay}.`); alertStore(o);
 }
 function failPayment(o, paymentId, reason) { o.payment.attempts.push({ ...stamp("Failed"), paymentId, reason: String(reason || "").slice(0, 200) }); o.payment.history.push(stamp("Payment failed")); write("orders"); }
 function expirePending() { // a payment not completed within 30 minutes releases the order; nothing was deducted for it
@@ -636,7 +713,7 @@ on("POST", "pay/order", async ({ body, user }) => {
   const lines = buildLines(body.items), subtotal = lines.reduce((t, l) => t + l.p.price * l.qty, 0), cp = couponFor(user, body.coupon, subtotal), total = subtotal - cp.discount;
   const id = "MT" + crypto.randomBytes(5).toString("hex").toUpperCase();
   const rz = await razorpayCreateOrder(total * 100, id);
-  const order = { id, at: new Date().toISOString(), status: "Pending payment", name, phone, address, pin, email: user.email || "", country: "IN", pay: "Online (Razorpay)", userId: user.id,
+  const order = { id, at: new Date().toISOString(), status: "Pending payment", name, phone, address, pin, email: user.email || "", country: "IN", state: await placeOf(pin), key: newKey(), pay: "Online (Razorpay)", userId: user.id,
     items: lines.map(({ p, qty }) => ({ id: p.id, brand: p.brand, name: p.name, img: p.img, price: p.price, qty })), subtotal, discount: cp.discount, coupon: cp.code, total,
     payment: { provider: "razorpay", providerOrderId: rz.id, paymentId: "", attempts: [], events: [], history: [stamp("Pending payment")] } };
   db.orders.push(order); write("orders");
@@ -674,7 +751,7 @@ async function askModel(system, history, message) {
   throw new HttpError(503, "The assistant is not available right now.");
 }
 
-on("GET", "config", async ({ req }) => ({ country: String(req.headers["x-vercel-ip-country"] || "").toUpperCase().slice(0, 2), /* the hosting's own geolocation header; empty on a local machine */ google: GOOGLE, sms: otpSmsReady, mail: mailReady, demoCodes: OTP_DEMO, recaptcha: RECAPTCHA.site, geo: !!MAPS_KEY, clarity: !!CLARITY, chat: !!(GEMINI_KEY || CHAT_KEY), db: !!DB_URL, pay: PAY_PROVIDER, payDemo: PAY_PROVIDER === "demo" && isLocal(req) /* the test payment window, on the developer's machine only */, payKey: RZP.id, fx: await fxNow(), destinations: Object.fromEntries(Object.entries(DESTINATIONS).map(([k, d]) => [k, { name: d.name, display: d.display, ship: d.ship, methods: d.methods }])) }));
+on("GET", "config", async ({ req }) => ({ country: String(req.headers["x-vercel-ip-country"] || "").toUpperCase().slice(0, 2), /* the hosting's own geolocation header; empty on a local machine */ google: GOOGLE, sms: otpSmsReady, mail: mailReady, demoCodes: OTP_DEMO, recaptcha: RECAPTCHA.site, geo: !!MAPS_KEY, clarity: !!CLARITY, chat: !!(GEMINI_KEY || CHAT_KEY), orderSms: orderSmsReady, db: !!DB_URL, business: (({ alertsEmail, ...b }) => b)(db.business || {}), pay: PAY_PROVIDER, payDemo: PAY_PROVIDER === "demo" && isLocal(req) /* the test payment window, on the developer's machine only */, payKey: RZP.id, fx: await fxNow(), destinations: Object.fromEntries(Object.entries(DESTINATIONS).map(([k, d]) => [k, { name: d.name, display: d.display, ship: d.ship, methods: d.methods }])) }));
 // Contact form (page.html?p=contact): the message is recorded in the admin outbox ("Customer messages"), so the store sees it
 // even before an email provider is connected. ponytail: no rate limit beyond the body size; add one if the form gets abused.
 on("POST", "contact", ({ body }) => {
@@ -687,8 +764,8 @@ on("POST", "contact", ({ body }) => {
 // ===== delivery check: India Post's free pincode service (no key), answers cached for a day =====
 const pins = new Map(); // pin -> { at, data }
 const PIN_STATES = { 11: "Delhi", 12: "Haryana", 13: "Haryana", 14: "Punjab", 15: "Punjab", 16: "Punjab", 17: "Himachal Pradesh", 18: "Jammu and Kashmir", 19: "Jammu and Kashmir", 20: "Uttar Pradesh", 21: "Uttar Pradesh", 22: "Uttar Pradesh", 23: "Uttar Pradesh", 24: "Uttarakhand", 25: "Uttar Pradesh", 26: "Uttarakhand", 27: "Uttar Pradesh", 28: "Uttar Pradesh", 30: "Rajasthan", 31: "Rajasthan", 32: "Rajasthan", 33: "Rajasthan", 34: "Rajasthan", 36: "Gujarat", 37: "Gujarat", 38: "Gujarat", 39: "Gujarat", 40: "Maharashtra", 41: "Maharashtra", 42: "Maharashtra", 43: "Maharashtra", 44: "Maharashtra", 45: "Madhya Pradesh", 46: "Madhya Pradesh", 47: "Madhya Pradesh", 48: "Madhya Pradesh", 49: "Chhattisgarh", 50: "Telangana", 51: "Andhra Pradesh", 52: "Andhra Pradesh", 53: "Andhra Pradesh", 56: "Karnataka", 57: "Karnataka", 58: "Karnataka", 59: "Karnataka", 60: "Tamil Nadu", 61: "Tamil Nadu", 62: "Tamil Nadu", 63: "Tamil Nadu", 64: "Tamil Nadu", 67: "Kerala", 68: "Kerala", 69: "Kerala", 70: "West Bengal", 71: "West Bengal", 72: "West Bengal", 73: "West Bengal", 74: "West Bengal", 75: "Odisha", 76: "Odisha", 77: "Odisha", 78: "Assam", 79: "North East", 80: "Bihar", 81: "Bihar", 82: "Jharkhand", 83: "Jharkhand", 84: "Bihar", 85: "Bihar" }; // the postal circles by the first two digits: the fallback when India Post does not answer
-on("GET", "pincode/(\\d{6})", async ({ params }) => {
-  const pin = params[0], hit = pins.get(pin);
+async function pinInfo(pin) {
+  const hit = pins.get(pin);
   if (hit && hit.at > Date.now() - 86400000) return hit.data;
   let data;
   try {
@@ -704,7 +781,9 @@ on("GET", "pincode/(\\d{6})", async ({ params }) => {
   }
   pins.set(pin, { at: Date.now(), data });
   return data;
-});
+}
+on("GET", "pincode/(\\d{6})", ({ params }) => pinInfo(params[0]));
+const placeOf = async pin => { if (!/^\d{6}$/.test(pin)) return ""; try { return (await pinInfo(pin)).state || ""; } catch { return PIN_STATES[pin.slice(0, 2)] || ""; } }; // the delivery state: the place of supply on the invoice
 // the browser's position becomes a pincode (Google Geocoding, server key); twenty lookups per address per hour
 const geoIp = new Map();
 // Without a Google key, OpenStreetMap's Nominatim answers (free, no account): its usage policy asks for at most one request a second,
@@ -740,6 +819,7 @@ on("POST", "orders", async ({ body, user, req }) => { // sign-in required, with 
   if (body.pay === "online" && PAY_PROVIDER === "demo" && !isLocal(req)) bad("Online payment opens soon. Please choose cash on delivery.");
   const lines = buildLines(body.items); // prices and stock from the server's own product list, never from the browser
   const subtotal = lines.reduce((t, l) => t + l.p.price * l.qty, 0), cp = couponFor(user, body.coupon, subtotal);
+  const place = await placeOf(pin);
   await takeLines(lines); // the last check that can refuse; nothing below throws
   useCoupon(user, cp.code);
   const order = {
@@ -748,10 +828,10 @@ on("POST", "orders", async ({ body, user, req }) => { // sign-in required, with 
     // "online" is a demo payment: no gateway is called. Connect a real gateway here and verify its payment signature before saving.
     pay: body.pay === "online" ? "Paid online (demo payment)" : "Cash on delivery", userId: user ? user.id : null,
     items: lines.map(({ p, qty }) => ({ id: p.id, brand: p.brand, name: p.name, img: p.img, price: p.price, qty })),
-    subtotal, discount: cp.discount, coupon: cp.code, total: subtotal - cp.discount,
+    subtotal, discount: cp.discount, coupon: cp.code, total: subtotal - cp.discount, state: place, key: newKey(),
   };
   db.orders.push(order); write("orders");
-  notify(order, `Your Mytekkstore order ${order.id} is placed. Total ₹${order.total}. ${order.pay}.`);
+  notify(order, `Your Mytekkstore order ${order.id} is placed. Total ₹${order.total.toLocaleString("en-IN")}. ${order.pay}.`); alertStore(order);
   if (user) { // the address is remembered for next time; the order's contact number stays on the order and never replaces the account's verified number
     if (!user.phone) user.phone = e164(phone);
     Object.assign(user, { address, pin }); write("users");
@@ -780,8 +860,9 @@ on("PATCH", "admin/orders/(MT[0-9A-F]{10})", async ({ params, body }) => {
   if (delta === -1) await giveBack(o.items);
   o.status = body.status;
   if (o.status === "Delivered" && !o.deliveredAt) o.deliveredAt = new Date().toISOString(); // the return window and the warranty start here
+  if (o.status === "Shipped" || o.status === "Delivered") await issueInvoice(o); // the tax invoice goes with the TV
   write("orders");
-  notify(o, `Your Mytekkstore order ${o.id} is now: ${o.status}.`);
+  notify(o, o.status === "Shipped" && o.invoice ? `Your Mytekkstore order ${o.id} is shipped. Your GST invoice ${o.invoice.no} is ready.` : `Your Mytekkstore order ${o.id} is now: ${o.status}.`);
   return { order: o };
 }, "admin");
 // the customer cancels an order that has not shipped: the stock comes back, a welcome coupon used on it is returned to the wallet
@@ -928,6 +1009,26 @@ Reply as JSON only: {"reply": "...", "links": [{"label": "...", "href": "/..."}]
   return { reply: String(out.reply || "").slice(0, 800), links, provider };
 });
 
+// the store's registered details, as on its GST registration certificate; checked so an invoice cannot carry a wrong GSTIN
+function businessFrom(b) {
+  const gstin = String(b.gstin || "").trim().toUpperCase(), state = String(b.state || "").trim(), code = stateCode(state);
+  if (gstin && !gstinOk(gstin)) bad("That GSTIN is not valid. Please copy it from your GST registration certificate.");
+  if (state && !code) bad("Choose the state from the list.");
+  if (gstin && code && gstin.slice(0, 2) !== code) bad(`The GSTIN starts with ${gstin.slice(0, 2)}, the code of ${GST_STATES[gstin.slice(0, 2)] || "another state"}, but the address is in ${state}.`);
+  const pin = String(b.pin || "").trim(); if (pin && !/^\d{6}$/.test(pin)) bad("The pincode has 6 digits.");
+  const cin = String(b.cin || "").trim().toUpperCase(); if (cin && !/^[LU]\d{5}[A-Z]{2}\d{4}[A-Z]{3}\d{6}$/.test(cin)) bad("That CIN is not valid (21 characters, from the certificate of incorporation).");
+  const prefix = String(b.prefix || "MTS").trim().toUpperCase(); if (!/^[A-Z0-9]{1,4}$/.test(prefix)) bad("The invoice prefix is 1 to 4 letters or digits.");
+  const hsn = String(b.hsn || "8528").trim(); if (!/^\d{4}(\d{2}(\d{2})?)?$/.test(hsn)) bad("The HSN code has 4, 6 or 8 digits.");
+  const mail = (v, label) => { v = String(v || "").trim(); if (v && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)) bad(label + " is not a valid email address."); return v; };
+  const phone = (v, label) => { v = String(v || "").trim(); if (v && !/^[0-9+ -]{8,16}$/.test(v)) bad(label + " is not a valid phone number."); return v; };
+  return { legalName: opt(b.legalName, "Legal name", 120), tradeName: opt(b.tradeName, "Trade name", 80), address: opt(b.address, "Address", 300), city: opt(b.city, "City", 80), state: code ? GST_STATES[code] : "", pin, gstin, cin,
+    email: mail(b.email, "The customer care email"), phone: phone(b.phone, "The customer care phone"), signatory: opt(b.signatory, "Authorised signatory", 80),
+    grievanceName: opt(b.grievanceName, "Grievance officer's name", 80), grievanceDesignation: opt(b.grievanceDesignation, "Grievance officer's designation", 80), grievanceEmail: mail(b.grievanceEmail, "The grievance officer's email"), grievancePhone: phone(b.grievancePhone, "The grievance officer's phone"),
+    prefix, hsn, alertsEmail: mail(b.alertsEmail, "The new-order alert email"), updated: new Date().toISOString() };
+}
+on("GET", "admin/business", () => ({ business: db.business || {}, ready: bizReady(db.business), states: Object.values(GST_STATES) }), "admin");
+on("PUT", "admin/business", ({ body }) => { db.business = businessFrom(body); write("business"); return { business: db.business, ready: bizReady(db.business) }; }, "admin");
+
 // ===== HTTP plumbing =====
 const hits = new Map(); // address -> { n, since }: the write limit above
 function readBody(req, limit) {
@@ -939,6 +1040,7 @@ function readBody(req, limit) {
   });
 }
 async function handleApi(req, res, pathname) {
+  if (!SITE && req.headers.host) SITE = siteUrl(req); // the address order messages link to
   if (pathname === "/api/pay/webhook" && req.method === "POST") return razorpayWebhook(req, res); // signed raw body, no session, no origin
   const send = (code, obj) => { res.writeHead(code, { "Content-Type": "application/json; charset=utf-8", "Cache-Control": "no-store" }); res.end(JSON.stringify(obj)); };
   try {
@@ -1213,12 +1315,47 @@ const server = http.createServer(async (req, res) => {
     res.writeHead(200, { "Content-Type": "application/xml; charset=utf-8" });
     return res.end('<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n' + urls.map(([u, d]) => "<url><loc>" + escHtml(base + u) + "</loc><lastmod>" + d.slice(0, 10) + "</lastmod></url>").join("\n") + "\n</urlset>\n");
   }
+  const op = /^\/o\/(MT[0-9A-F]{10})\/([a-f0-9]{24})$/.exec(pathname); // the order and invoice page that messages link to: private by its key, no sign-in
+  if (op) { const o = db.orders.find(x => x.id === op[1]); const ok = o && o.key && crypto.timingSafeEqual(Buffer.from(o.key), Buffer.from(op[2]));
+    res.writeHead(ok ? 200 : 404, { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "private, no-store", "X-Robots-Tag": "noindex" }); return res.end(ok ? orderPageHtml(o) : "<!doctype html><title>Not found</title><p style='font-family:sans-serif;padding:40px'>This order link is not valid. Sign in at <a href='/account'>Mytekkstore</a> to see your orders.</p>"); }
   const fileId = /^\/files\/([a-f0-9]{16})\.jpg$/.exec(pathname); // a photo uploaded in the admin (see admin/upload)
   if (fileId && DB_URL) {
     try { await ready(); const row = (await sql("SELECT type, data FROM files WHERE id = $1", [fileId[1]]))[0]; if (row) { res.writeHead(200, { "Content-Type": row.type, "Cache-Control": "public, max-age=31536000, immutable" }); return res.end(Buffer.from(row.data, "base64")); } } catch (e) { console.error("files:", e.message); }
   }
   serveStatic(req, res, url, resolveClean(pathname));
 });
+
+// The order page that messages link to. Once the TV is dispatched it is the GST tax invoice (rule 46: the supplier's name, address and
+// GSTIN; a consecutive number and the date; the recipient and the delivery address; the place of supply with its state code; HSN; the
+// taxable value and the tax, split CGST + SGST within the store's state or IGST across states; reverse charge; the signatory).
+function orderPageHtml(o) {
+  const e = escHtml, inv = o.invoice, b = { ...(db.business || {}), ...Object.fromEntries(Object.entries((inv && inv.seller) || {}).filter(([, v]) => v)) }, lines = invoiceLines(o);
+  const sellerCode = (b.gstin || "").slice(0, 2) || stateCode(b.state), placeCode = stateCode(o.state), intra = sellerCode && placeCode && sellerCode === placeCode, rate = (inv && inv.rate) || GST_RATE;
+  const money = n => rupees(Math.round(n * 100) / 100), date = d => new Date(d).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" });
+  const taxable = lines.reduce((t, l) => t + l.taxable, 0), tax = lines.reduce((t, l) => t + l.tax, 0), half = n => Math.round(n / 2 * 100) / 100;
+  const steps = ["Placed", "Confirmed", "Shipped", "Delivered"], at = steps.indexOf(o.status);
+  const head = inv ? `<div class="t"><h1>Tax invoice</h1><p>Original for recipient</p></div>` : `<div class="t"><h1>Order ${e(o.id)}</h1><p>${o.status === "Cancelled" ? "Cancelled" : "Your GST tax invoice appears on this page when your TV is dispatched."}</p></div>`;
+  const seller = `<div><h3>Sold by</h3><b>${e(b.legalName || b.tradeName || "Mytekkstore")}</b>${b.tradeName && b.legalName ? `<span>Trading as ${e(b.tradeName)}</span>` : ""}${b.address ? `<span>${e(b.address)}${b.city ? ", " + e(b.city) : ""}</span><span>${e(b.state || "")} ${e(b.pin || "")}${b.state ? " (state code " + e(stateCode(b.state)) + ")" : ""}</span>` : ""}${b.gstin ? `<span>GSTIN <b>${e(b.gstin)}</b> · PAN ${e(b.gstin.slice(2, 12))}</span>` : `<span class="warn">GSTIN not added yet</span>`}${b.cin ? `<span>CIN ${e(b.cin)}</span>` : ""}${b.email || b.phone ? `<span>${e([b.phone, b.email].filter(Boolean).join(" · "))}</span>` : ""}</div>`;
+  const buyer = `<div><h3>Bill to and ship to</h3><b>${e(o.name)}</b><span>${e(o.address)}, ${e(o.pin)}</span><span>${e(o.state || "")}${placeCode ? " (state code " + placeCode + ")" : ""}</span><span>${e(o.phone)}${o.email ? " · " + e(o.email) : ""}</span></div>`;
+  const meta = `<div><h3>${inv ? "Invoice" : "Order"}</h3>${inv ? `<span>Invoice no. <b>${e(inv.no)}</b></span><span>Invoice date ${date(inv.date)}</span>` : ""}<span>Order no. ${e(o.id)}</span><span>Order date ${date(o.at)}</span>${inv ? `<span>Place of supply: ${e(o.state || "")}${placeCode ? " (" + placeCode + ")" : ""}</span><span>Tax payable on reverse charge: No</span>` : ""}<span>Payment: ${e(o.pay)}</span></div>`;
+  const cols = inv ? (intra ? `<th>CGST ${rate / 2}%</th><th>SGST ${rate / 2}%</th>` : `<th>IGST ${rate}%</th>`) : "";
+  const rows = lines.map((l, k) => `<tr><td>${k + 1}</td><td><b>${e(l.brand + " " + l.name)}</b>${inv ? `<small>HSN ${e(inv.hsn)}</small>` : ""}</td><td class="n">${l.qty}</td><td class="n">${money(l.price)}</td>${inv ? `<td class="n">${money(l.taxable)}</td>` + (intra ? `<td class="n">${money(half(l.tax))}</td><td class="n">${money(l.tax - half(l.tax))}</td>` : `<td class="n">${money(l.tax)}</td>`) : ""}<td class="n"><b>${money(l.net)}</b></td></tr>`).join("");
+  const totals = `<table class="sum">${o.discount ? `<tr><td>Items</td><td>${money(o.subtotal)}</td></tr><tr><td>Coupon ${e(o.coupon)}</td><td>−${money(o.discount)}</td></tr>` : ""}${inv ? `<tr><td>Taxable value</td><td>${money(taxable)}</td></tr>` + (intra ? `<tr><td>CGST ${rate / 2}%</td><td>${money(half(tax))}</td></tr><tr><td>SGST ${rate / 2}%</td><td>${money(tax - half(tax))}</td></tr>` : `<tr><td>IGST ${rate}%</td><td>${money(tax)}</td></tr>`) : ""}<tr><td>Delivery</td><td>Free</td></tr><tr class="g"><td>${inv ? "Invoice total" : "Total"}</td><td>${money(o.total)}</td></tr></table>`;
+  const track = !inv && o.status !== "Cancelled" ? `<ol class="track">${steps.map((s, i) => `<li class="${i <= at ? "on" : ""}">${s}</li>`).join("")}</ol>` : "";
+  return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><link rel="icon" href="/favicon.svg"><title>${inv ? "Invoice " + e(inv.no) : "Order " + e(o.id)} | Mytekkstore</title><style>
+*{box-sizing:border-box}body{margin:0;background:#F5F6F8;font:14px/1.5 Arial,Helvetica,sans-serif;color:#111}.page{max-width:900px;margin:24px auto;background:#fff;border:1px solid #E6E8EC;border-radius:12px;overflow:hidden}
+.top{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:18px 28px;background:#0E0F12;color:#fff}.logo{font-size:24px}.logo b{color:#2FCB93}button{height:38px;padding:0 16px;border:0;border-radius:8px;background:#E8CF8C;color:#111;font-weight:700;cursor:pointer}
+.body{padding:24px 28px}.t h1{margin:0;font-size:24px}.t p{margin:2px 0 0;color:#5F6775}.parts{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin:22px 0}.parts h3{margin:0 0 6px;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#8A909C}.parts span{display:block;color:#3F4551}.warn{color:#B42318!important;font-weight:700}
+table{width:100%;border-collapse:collapse}.items th{padding:9px 8px;background:#F5F6F8;font-size:12px;text-align:left;color:#5F6775;border-bottom:1px solid #E6E8EC}.items td{padding:10px 8px;border-bottom:1px solid #F0F1F3;vertical-align:top}.items small{display:block;color:#8A909C}.n{text-align:right;white-space:nowrap}.items th:nth-child(n+3){text-align:right}
+.foot{display:flex;justify-content:space-between;gap:24px;margin-top:18px;flex-wrap:wrap}.sum{width:300px;margin-left:auto}.sum td{padding:5px 0}.sum td:last-child{text-align:right}.sum .g td{border-top:2px solid #111;padding-top:8px;font-size:16px;font-weight:700}.words{max-width:420px;color:#3F4551}.sign{margin-top:28px;text-align:right;color:#3F4551}.sign b{display:block;color:#111}
+.track{display:flex;gap:6px;padding:0;margin:18px 0;list-style:none}.track li{flex:1;padding:8px;border-radius:8px;background:#F1F2F4;color:#8A909C;text-align:center;font-weight:700;font-size:13px}.track li.on{background:#E8F5F0;color:#08805F}.note{margin-top:20px;font-size:12px;color:#8A909C}
+@media(max-width:640px){.page{margin:0;border-radius:0}.parts{grid-template-columns:1fr}.body,.top{padding:16px}.sum{width:100%}.items{font-size:12.5px}}@media print{body{background:#fff}.page{margin:0;border:0}.top{background:#fff;color:#111;border-bottom:2px solid #111}#print{display:none}.track{display:none}}
+</style></head><body><div class="page"><div class="top"><span class="logo">mytekk<b>store</b></span><button id="print" type="button">${inv ? "Print or save as PDF" : "Print"}</button></div><div class="body">${head}${track}<div class="parts">${seller}${buyer}${meta}</div>
+<div style="overflow-x:auto"><table class="items"><thead><tr><th>#</th><th>Item</th><th>Qty</th><th>Price</th>${inv ? "<th>Taxable value</th>" + cols : ""}<th>Amount</th></tr></thead><tbody>${rows}</tbody></table></div>
+<div class="foot">${inv ? `<p class="words"><b>Amount in words:</b> ${inWords(o.total)}</p>` : "<span></span>"}${totals}</div>
+${inv ? `<div class="sign">For ${e(b.legalName || b.tradeName || "Mytekkstore")}<b>${e(b.signatory || "Authorised signatory")}</b>Authorised signatory</div><p class="note">This is a computer-generated invoice. Prices include GST. Goods once delivered can be returned within ${RETURN_DAYS} days as per the cancellation, returns and refund policy. Warranty is provided by the brand.</p>` : `<p class="note">Questions about this order? Write to us from ${e(SITE || "")}/contact with the order number.</p>`}
+</div></div><script src="/print.js" defer></script></body></html>`;
+}
 
 // ===== safety net (only when run directly, so the tests still fail loudly) =====
 // data/backups/<date>/ gets a copy of every data file once a day and is kept for 14 days. To restore, copy one back over data/<name>.json.

@@ -14,6 +14,8 @@ export const POLICY = { returnDays: 7, refundDays: 7 };
 // the business's legal details for the legal pages (Consumer Protection (E-Commerce) Rules, 2020 ask for the seller's legal name, address and a grievance officer).
 // Fill these in before launch; empty fields are simply left out of the pages.
 export const LEGAL = { entity: "", address: "", gstin: "", city: "", grievance: { name: "", email: "", phone: "" }, updated: "28 October 2026" };
+// the business details the owner enters in Admin, Settings (they come with /api/config) fill the legal pages and the footer
+export const fillLegal = b => { if (!b || !b.legalName && !b.gstin) return; Object.assign(LEGAL, { entity: b.legalName || "", trade: b.tradeName || "", address: [b.address, b.city, b.state, b.pin].filter(Boolean).join(", "), gstin: b.gstin || "", cin: b.cin || "", city: b.city || "", grievance: { name: b.grievanceName || "", designation: b.grievanceDesignation || "", email: b.grievanceEmail || "", phone: b.grievancePhone || "" } }); };
 
 // ===== client decisions of 2026-10-12 (meeting notes) =====
 // The store sells televisions only for now: washing machines and air conditioners are hidden by HIDDEN_CATS in server.js.

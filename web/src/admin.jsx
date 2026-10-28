@@ -51,8 +51,8 @@ export function Admin() {
   const [d, setD] = useState(null), [creative, setCreative] = useState(null), [menu, setMenu] = useState(false);
   const allowed = !!(me && me.admin);
   const load = async () => {
-    const [o, p, m, b, c] = await Promise.all([api("admin/orders"), api("products?all=1"), api("admin/outbox"), api("banners?all=1"), api("campaigns?all=1")]); // the admin also sees the hidden categories
-    setD({ orders: o.orders, products: p.products, outbox: m.messages, banners: b.banners, campaigns: c.campaigns });
+    const [o, p, m, b, c, biz] = await Promise.all([api("admin/orders"), api("products?all=1"), api("admin/outbox"), api("banners?all=1"), api("campaigns?all=1"), api("admin/business")]); // the admin also sees the hidden categories
+    setD({ orders: o.orders, products: p.products, outbox: m.messages, banners: b.banners, campaigns: c.campaigns, business: biz.business, bizReady: biz.ready, states: biz.states });
   };
   useEffect(() => {
     document.title = "Store admin | Mytekkstore";
@@ -83,7 +83,7 @@ export function Admin() {
   </div>;
 }
 
-function Home({ d, money, CFG, counts, go }) {
+function Home({ d, money, CFG, counts, go }) { // d.bizReady: the store can issue GST invoices
   const live = d.orders.filter(o => !["Cancelled", "Expired", "Pending payment"].includes(o.status)), today = new Date().toDateString();
   const todays = live.filter(o => new Date(o.at).toDateString() === today);
   const hour = new Date().getHours(), hello = hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
@@ -92,6 +92,7 @@ function Home({ d, money, CFG, counts, go }) {
     counts.toShip && [counts.toShip + " order" + (counts.toShip === 1 ? "" : "s") + " to ship", "Hand them to the delivery partner, then mark them shipped.", "orders/Confirmed"],
     counts.returns && [counts.returns + " return request" + (counts.returns === 1 ? "" : "s"), "Approve or decline, and arrange the pickup.", "orders/returns"],
     counts.low && [counts.low + " product" + (counts.low === 1 ? "" : "s") + " low or out of stock", "Update the stock so customers can keep ordering.", "products"],
+    !d.bizReady && ["Add your business details", "GST invoices and the legal pages need your registered name, address, GSTIN and signatory.", "settings"],
     CFG.pay !== "razorpay" && ["Online payments are not connected", "Customers can pay cash on delivery only. Connect Razorpay to take UPI and cards.", "settings"],
   ].filter(Boolean);
   return <section>
@@ -156,7 +157,9 @@ function OrderPanel({ o, d, money, reload, toast, onClose }) {
       <h3>Items</h3>
       <ul className="ad-items">{o.items.map(i => { const p = d.products.find(x => x.id === i.id); return <li key={i.id}><img src={pic(i.img || (p && p.img), 480)} alt="" /><span><b>{i.brand} {i.name}</b><small>{i.qty} × {money(i.price)}</small></span><strong>{money(i.price * i.qty)}</strong></li>; })}</ul>
       <div className="ad-sumr"><div><span>Subtotal</span><span>{money(o.subtotal || o.total)}</span></div>{o.discount > 0 && <div className="g"><span>Coupon {o.coupon}</span><span>−{money(o.discount)}</span></div>}<div><span>Delivery</span><span>Free</span></div><div className="tot"><span>Total</span><b>{money(o.total)}</b></div><div><span>Payment</span><span>{o.pay}</span></div>{o.deliveredAt && <div><span>Delivered</span><span>{when(o.deliveredAt)}</span></div>}</div>
-      <a className="ad-link" href={"/order?id=" + o.id} target="_blank" rel="noopener">Customer's order page and GST invoice ↗</a>
+      <h3>Invoice</h3>
+      <div className="ad-box">{o.invoice ? <><b>GST tax invoice {o.invoice.no}</b><p>Issued {when(o.invoice.date)}</p><a href={"/o/" + o.id + "/" + o.key} target="_blank" rel="noopener">Open, print or save as PDF ↗</a></> : <><b>{o.status === "Cancelled" ? "No invoice (cancelled before dispatch)" : "Issued when you mark it shipped"}</b><p>GST law wants the tax invoice at dispatch; the number is the next in the financial year.</p></>}{!d.bizReady && <p className="ad-warn">Add your business details in Settings first: the invoice needs your GSTIN.</p>}</div>
+      {o.key && <a className="ad-link" href={"/o/" + o.id + "/" + o.key} target="_blank" rel="noopener">The page the customer's messages link to ↗</a>}
     </aside>
   </div>;
 }
@@ -369,10 +372,43 @@ function Messages({ d, CFG }) {
   </section>;
 }
 
-function Settings({ CFG, toast, reload }) {
+// the registered details, the way the GST certificate states them; every field says where it appears
+const gstinCheck = g => { if (!/^\d{2}[A-Z]{5}\d{4}[A-Z][1-9A-Z]Z[0-9A-Z]$/.test(g)) return false; const C = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ"; let s = 0; for (let i = 0; i < 14; i++) { const p = C.indexOf(g[i]) * (i % 2 + 1); s += Math.floor(p / 36) + p % 36; } return C[(36 - s % 36) % 36] === g[14]; };
+function Business({ d, toast, reload }) {
+  const [b, setB] = useState(() => ({ legalName: "", tradeName: "Mytekkstore", address: "", city: "", state: "", pin: "", gstin: "", cin: "", email: "", phone: "", signatory: "", grievanceName: "", grievanceDesignation: "", grievanceEmail: "", grievancePhone: "", prefix: "MTS", hsn: "8528", alertsEmail: "", ...(d.business || {}) }));
+  const [busy, setBusy] = useState(false), [err, setErr] = useState("");
+  const set = k => e => setB(x => ({ ...x, [k]: k === "gstin" || k === "cin" || k === "prefix" ? e.target.value.toUpperCase() : e.target.value }));
+  const g = b.gstin.trim(), gOk = !g || gstinCheck(g), fy = (() => { const t = new Date(), y = (t.getMonth() >= 3 ? t.getFullYear() : t.getFullYear() - 1) % 100; return String(y).padStart(2, "0") + "-" + String((y + 1) % 100).padStart(2, "0"); })();
+  const missing = [["legalName", "legal name"], ["address", "address"], ["state", "state"], ["pin", "pincode"], ["gstin", "GSTIN"], ["signatory", "authorised signatory"]].filter(([k]) => !String(b[k] || "").trim()).map(([, l]) => l);
+  const save = async e => { e.preventDefault(); setErr(""); setBusy(true); try { await api("admin/business", "PUT", b); toast("Business details saved. Invoices and the legal pages use them now."); await reload(); } catch (ex) { setErr(ex.message); } setBusy(false); };
+  const F = (k, label, hint, props = {}) => <label className={"ad-f" + (props.wide ? " ad-wide" : "")}>{label}{hint && <small>{hint}</small>}<input className="ad-in" value={b[k] || ""} onChange={set(k)} {...Object.fromEntries(Object.entries(props).filter(([n]) => n !== "wide"))} /></label>;
+  return <form className="ad-card ad-biz" onSubmit={save}><div className="ad-cardhd"><h2>Business details</h2>{missing.length ? <span className="ad-off">Missing: {missing.join(", ")}</span> : <span className="ad-on">Ready for GST invoices</span>}</div>
+    <p className="ad-hint">Exactly as on your GST registration certificate. They print on every tax invoice and fill the Terms, Privacy and Grievance sections.</p>
+    <h3 className="ad-sub">Registered business</h3>
+    <div className="ad-grid2">{F("legalName", "Legal name", "As on the GST certificate, e.g. ABC Retail Private Limited", { required: true, maxLength: 120 })}{F("tradeName", "Trade name", "The store name customers know", { maxLength: 80 })}
+      {F("address", "Registered address", "Building, street, area", { required: true, maxLength: 300, wide: true })}{F("city", "City", "", { maxLength: 80 })}
+      <label className="ad-f">State<small>Decides CGST + SGST or IGST on each invoice</small><select className="ad-in" required value={b.state} onChange={set("state")}><option value="">Choose…</option>{(d.states || []).map(x => <option key={x}>{x}</option>)}</select></label>
+      {F("pin", "Pincode", "", { required: true, inputMode: "numeric", pattern: "\\d{6}", maxLength: 6 })}
+      <label className="ad-f">GSTIN<small>15 characters; the first two are your state's code</small><input className={"ad-in" + (gOk ? "" : " bad")} required maxLength="15" value={b.gstin} onChange={set("gstin")} aria-invalid={!gOk} />{g && <small className={gOk ? "ok" : "no"}>{gOk ? "Valid GSTIN (PAN " + g.slice(2, 12) + ")" : "Not a valid GSTIN: check each character"}</small>}</label>
+      {F("cin", "CIN (companies only)", "21 characters, from the certificate of incorporation", { maxLength: 21 })}</div>
+    <h3 className="ad-sub">Customer care</h3>
+    <div className="ad-grid2">{F("phone", "Phone", "On invoices and the contact page", { type: "tel", maxLength: 16 })}{F("email", "Email", "", { type: "email", maxLength: 120 })}</div>
+    <h3 className="ad-sub">Grievance officer</h3><p className="ad-hint">Required on every Indian e-commerce site (Consumer Protection (E-Commerce) Rules, 2020). Shown in the Terms and Privacy pages.</p>
+    <div className="ad-grid2">{F("grievanceName", "Name", "", { maxLength: 80 })}{F("grievanceDesignation", "Designation", "", { maxLength: 80 })}{F("grievanceEmail", "Email", "", { type: "email", maxLength: 120 })}{F("grievancePhone", "Phone", "", { type: "tel", maxLength: 16 })}</div>
+    <h3 className="ad-sub">Invoices</h3>
+    <div className="ad-grid2">{F("signatory", "Authorised signatory", "The person who signs for the business", { required: true, maxLength: 80 })}
+      <label className="ad-f">Invoice prefix<small>Numbers run {(b.prefix || "MTS")}/{fy}/00001, 00002… and restart each April</small><input className="ad-in" maxLength="4" pattern="[A-Za-z0-9]{1,4}" value={b.prefix} onChange={set("prefix")} /></label>
+      {F("hsn", "HSN code for televisions", "8528 (4 digits) under ₹5 crore turnover; 6 digits above", { inputMode: "numeric", maxLength: 8 })}
+      {F("alertsEmail", "New-order alerts to", "Every new order is emailed here (not shown to customers)", { type: "email", maxLength: 120 })}</div>
+    {err && <p className="ad-err-b" role="alert">{err}</p>}
+    <div className="ad-bizsave"><button className="ad-btn" id="saveBusiness" disabled={busy || !gOk}>{busy ? "Saving…" : "Save business details"}</button></div>
+  </form>;
+}
+function Settings({ CFG, toast, reload, d }) {
   const [sure, ask] = useSure();
   const LINKS = [["Database", CFG.db, "Keeps accounts, orders, stock and photos safe across the live site's servers.", "Vercel → Storage → Neon"],
     ["Online payments", CFG.pay === "razorpay", "UPI, cards, net banking and No Cost EMI through Razorpay. Until then: cash on delivery only.", "Razorpay keys in Vercel"],
+    ["Order SMS", CFG.orderSms, "Order placed, shipped (with the invoice link) and delivered, by SMS. India needs a DLT-registered template (see the launch guide).", "MSG91 order template ID in Vercel"],
     ["SMS sign-in codes", CFG.sms, "Sends the 6-digit sign-in code by SMS (MSG91 for India).", "MSG91 keys in Vercel"],
     ["Email", CFG.mail, "Order emails and email sign-in codes (Brevo).", "Brevo key in Vercel"],
     ["Google sign-in", !!CFG.google, "“Continue with Google” on the sign-in page.", "Google client ID in Vercel"],
@@ -380,7 +416,8 @@ function Settings({ CFG, toast, reload }) {
     ["Bot protection", !!CFG.recaptcha, "reCAPTCHA on sign-in code requests.", "reCAPTCHA keys in Vercel"],
     ["Shopping assistant", CFG.chat, "The AI help chat answers from the catalogue.", "Gemini key in Vercel"]];
   return <section>
-    <div className="ad-hd"><div><h1>Settings</h1><p>What is connected, and the before-launch tools.</p></div></div>
+    <div className="ad-hd"><div><h1>Settings</h1><p>Your business details, what is connected, and the before-launch tools.</p></div></div>
+    <Business d={d} toast={toast} reload={reload} />
     <div className="ad-card"><h2>Connections</h2><ul className="ad-links">{LINKS.map(([name, on, what, how]) => <li key={name}><span><b>{name}</b><small>{what}</small></span>{on ? <span className="ad-on">Connected</span> : <span className="ad-off" title={how}>Not connected<small>{how}</small></span>}</li>)}</ul></div>
     <div className="ad-card ad-dz"><h2>Before launch</h2><p className="ad-hint">Clears every customer account, every order and the message log; the catalogue, banners, campaigns and this admin account stay, and stock held by open orders comes back. Use it once, before real customers arrive.</p>
       <button type="button" className="ad-btn ghost danger" id="resetCustomers" onClick={async () => { if (!ask("reset")) return; try { const r = await api("admin/reset-customers", "POST", {}); toast(r.users + " customer account" + (r.users === 1 ? "" : "s") + " and all orders cleared"); await reload(); } catch (e) { toast(e.message); } }}>{sure === "reset" ? "Sure? This cannot be undone" : "Clear all customer accounts and orders"}</button></div>

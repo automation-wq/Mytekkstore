@@ -4,7 +4,7 @@ import { m, AnimatePresence } from "motion/react";
 import { useStore } from "./store.jsx";
 import { api, qs, demoPay, track } from "./api.js";
 import { Card, Row, Strip, Box, Line, OrderItems, BankOffers, Form, Ico, Icon, Photo, locateMe } from "./components.jsx";
-import { LEGAL, DRAW_ICONS, STEPS, FESTIVE, KV_IMG, POLICY, catUrl, brandUrl, listUrl, off, etaText, pic, emiPlans } from "./data.js";
+import { DRAW_ICONS, STEPS, FESTIVE, KV_IMG, POLICY, catUrl, brandUrl, listUrl, off, etaText, pic, emiPlans } from "./data.js";
 import { reveal } from "./motion.js";
 import { FestiveBanner } from "./home.jsx"; // the brochure festive banner opens the offers page too
 
@@ -231,21 +231,12 @@ function OrderActions({ o, setO }) {
   </section>;
 }
 // the invoice: every line, the GST included in the price, the buyer and the order; prints on its own
-function Invoice({ o }) {
-  const { money } = useStore();
-  const sub = o.subtotal || o.items.reduce((t, i) => t + i.price * i.qty, 0), total = o.total, taxable = Math.round(total / 1.18 * 100) / 100, gst = Math.round((total - taxable) * 100) / 100;
-  const inr = n => "₹" + n.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-  return <section className="invoice" id="invoice"><div className="inv-head"><div><h2>{LEGAL.gstin ? "Tax invoice" : "Invoice"}</h2><p className="acc-muted small">{LEGAL.gstin ? "" : "The GST tax invoice with the seller's GSTIN travels with the TV. "}Keep this for the warranty.</p></div><button type="button" className="acc-btn ghost" onClick={() => window.print()}>Print or save as PDF</button></div>
-    <div className="inv-grid"><div><b>Sold by</b><p>{LEGAL.entity || "MyTekkStore"}{LEGAL.address ? <><br />{LEGAL.address}</> : null}{LEGAL.gstin ? <><br />GSTIN {LEGAL.gstin}</> : null}</p></div>
-      <div><b>Billed and shipped to</b><p>{o.name}<br />{o.address}, {o.pin}<br />{o.phone}</p></div>
-      <div><b>Invoice for order</b><p>{o.id}<br />{new Date(o.at).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" })}<br />{o.pay}</p></div></div>
-    <div className="lg-table"><table><thead><tr><th>Item</th><th>HSN</th><th>Qty</th><th>Price</th><th>Amount</th></tr></thead><tbody>
-      {o.items.map(i => <tr key={i.id}><td>{i.brand} {i.name}</td><td>8528</td><td>{i.qty}</td><td>{money(i.price)}</td><td>{money(i.price * i.qty)}</td></tr>)}
-      {o.discount > 0 && <tr><td colSpan="4">Coupon {o.coupon}</td><td>−{money(o.discount)}</td></tr>}
-      <tr><td colSpan="4">Delivery</td><td>Free</td></tr>
-      <tr><td colSpan="4">Taxable value</td><td>{inr(taxable)}</td></tr><tr><td colSpan="4">GST at 18% (included)</td><td>{inr(gst)}</td></tr>
-      <tr className="inv-total"><td colSpan="4"><b>Total paid{/cash/i.test(o.pay) ? " on delivery" : ""}</b></td><td><b>{money(total)}</b></td></tr></tbody></table></div>
-    {sub !== total && <p className="acc-muted small">Price before the coupon {money(sub)}.</p>}
+function Invoice({ o }) { // the GST tax invoice is a page of its own (the link in every order message): issued when the TV is dispatched
+  const link = o.key ? "/o/" + o.id + "/" + o.key : "", date = d => new Date(d).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" });
+  return <section className="invoice inv-card" id="invoice"><span className="inv-ic"><Icon k="box" /></span>
+    <div><h2>{o.invoice ? "GST tax invoice" : "Invoice"}</h2>
+      <p>{o.invoice ? <>Invoice <b>{o.invoice.no}</b> · {date(o.invoice.date)}</> : o.status === "Cancelled" ? "No invoice: this order was cancelled before dispatch." : "Your GST tax invoice is issued when your TV is dispatched. The link comes to you by SMS and email."}</p></div>
+    {link && o.status !== "Cancelled" && <a className="d-btn" href={link} target="_blank" rel="noopener">{o.invoice ? "View or download" : "Order receipt"}</a>}
   </section>;
 }
 

@@ -319,6 +319,29 @@ server.listen(0, "127.0.0.1", async () => {
       assert.equal((await call("/api/me", "GET", null, admin)).data.user.admin, true, "the admin stays");
       assert.equal((await call("/api/products")).data.products.length, nBefore, "the catalogue stays"); }
     r = await call("/api/config"); assert.equal(r.data.pay, "demo"); assert.ok(r.data.fx && r.data.fx.rates && r.data.fx.rates.USD > 0 && r.data.destinations.IN.ship === true && r.data.destinations.AE.ship === false, "config carries the pay provider, display rates and destinations");
+    // GST invoice: the business details are checked; dispatch issues consecutive numbers; CGST + SGST within the store's state, IGST across states
+    { r = await call("/api/admin/business", "PUT", { legalName: "Test Retail Pvt Ltd", gstin: "29ABCDE1234F1ZX", state: "Karnataka" }, admin); assert.equal(r.status, 400, "a GSTIN with a wrong check digit is refused");
+      r = await call("/api/admin/business", "PUT", { legalName: "Test Retail Pvt Ltd", gstin: "27AAPFU0939F1ZV", state: "Karnataka" }, admin); assert.match(r.data.error, /27.*Maharashtra.*Karnataka/, "a GSTIN of another state is refused");
+      r = await call("/api/admin/business", "PUT", { legalName: "Test Retail Pvt Ltd", tradeName: "Mytekkstore", address: "12 MG Road", city: "Bengaluru", state: "Karnataka", pin: "560001", gstin: "29ABCDE1234F1ZW", signatory: "A. Owner", prefix: "MTS", alertsEmail: "orders@example.com" }, admin);
+      assert.equal(r.status, 200); assert.equal(r.data.ready, true, "complete details make the store ready to invoice");
+      const cfg = (await call("/api/config")).data.business; assert.equal(cfg.gstin, "29ABCDE1234F1ZW"); assert.equal(cfg.alertsEmail, undefined, "the alert address stays private");
+      const code = (await call("/api/otp/send", "POST", { to: "9811177788" })).data.demoCode, shopper = (await call("/api/otp/verify", "POST", { to: "9811177788", code, name: "Invoice Test", email: "invoice@example.com" })).cookie; // the reset above cleared the earlier customers
+      const place = async pin => (await call("/api/orders", "POST", { ...addr, pin, pay: "cod", items: [{ id: 14, qty: 1 }] }, shopper)).data.id;
+      const inKa = await place("560038"), inDl = await place("110001");
+      for (const id of [inKa, inDl]) assert.equal((await call("/api/admin/orders/" + id, "PATCH", { status: "Shipped" }, admin)).status, 200);
+      const all = (await call("/api/admin/orders", "GET", null, admin)).data.orders, ka = all.find(o => o.id === inKa), dl = all.find(o => o.id === inDl);
+      assert.match(ka.invoice.no, /^MTS\/\d{2}-\d{2}\/\d{5}$/, "the invoice number: prefix, financial year, serial");
+      assert.equal(+dl.invoice.no.slice(-5), +ka.invoice.no.slice(-5) + 1, "consecutive numbers, no gaps");
+      const page = async o => { const x = await fetch(base + "/o/" + o.id + "/" + o.key); return { status: x.status, html: await x.text() }; };
+      const pk = await page(ka), pd = await page(dl);
+      assert.equal(pk.status, 200); assert.match(pk.html, /Tax invoice/); assert.match(pk.html, /29ABCDE1234F1ZW/); assert.match(pk.html, /CGST 9%/); assert.match(pk.html, /SGST 9%/); assert.doesNotMatch(pk.html, /IGST/, "within Karnataka: CGST and SGST");
+      assert.match(pd.html, /IGST 18%/); assert.doesNotMatch(pd.html, /CGST/, "Karnataka to Delhi: IGST"); assert.match(pd.html, /Place of supply: Delhi \(07\)/);
+      assert.match(pk.html, /Rupees [A-Za-z ]+ Only/, "the amount in words"); assert.match(pk.html, /\/print\.js/);
+      assert.equal((await fetch(base + "/o/" + ka.id + "/" + "0".repeat(24))).status, 404, "a wrong key shows nothing");
+      const out = (await call("/api/admin/outbox", "GET", null, admin)).data.messages;
+      assert.ok(out.some(m => m.text.includes("/o/" + ka.id + "/" + ka.key)), "the customer's messages carry the private link to the order and its invoice");
+      assert.ok(out.some(m => /Email to the store \(orders@example\.com\)/.test(m.to) && m.text.includes(ka.id)), "the store is told of each new order");
+      assert.ok(out.some(m => m.text.includes(ka.invoice.no)), "the shipped message names the invoice"); }
     // security: the browser may share its position with this site only; password guessing is limited per visitor and per account
     assert.match((await fetch(base + "/")).headers.get("permissions-policy"), /geolocation=\(self\)/, "Use my current location is allowed for this site, camera and microphone are not");
     { assert.equal((await call("/api/register", "POST", { name: "Lock Test", email: "lock@example.com", password: "right-password-1" })).status, 200);

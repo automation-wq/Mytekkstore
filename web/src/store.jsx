@@ -1,7 +1,7 @@
 // Shared state: catalogue, signed-in customer, optional services, cart, wishlist, recently viewed, country, toast and cart drawer.
 import { createContext, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { api, load, save, track, bootCache } from "./api.js";
-import { COUNTRIES } from "./data.js";
+import { COUNTRIES, fillLegal } from "./data.js";
 
 const Ctx = createContext(null);
 export const useStore = () => useContext(Ctx);
@@ -33,7 +33,7 @@ export function StoreProvider({ children }) {
       // keep only cart items that still exist and are in stock
       setCart(Object.fromEntries(Object.entries(load("cart", {})).filter(([id, q]) => byId(id) && byId(id).stock > 0 && q > 0).map(([id, q]) => [id, Math.min(q, byId(id).stock, 10)])));
       setWishState(w => w.filter(id => byId(id)));
-      setP(products); setMe(user); setCFG(cfg); setBanners(banners);
+      setP(products); setMe(user); fillLegal(cfg.business); setCFG(cfg); setBanners(banners);
       setLoaded(true);
     };
     // the answers kept from the last page (api.js bootCache) draw the page at once; the server's fresh ones replace them a moment later

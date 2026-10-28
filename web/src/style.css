@@ -3124,3 +3124,20 @@ body[data-page="checkout"] #hdr .wrap::after { color:#2FCB93; background-image:u
 body:has(.deliver[open]) .chatfab, body:has(.deliver[open]) .totop { display:none } /* the location sheet is never under the help bubble */
 @media (max-width:760px) { #hdr .gnav { display:block } } /* phones keep the category row: its menus are the only way to Brands and the TV ranges */
 .vh { position:absolute; width:1px; height:1px; margin:-1px; padding:0; overflow:hidden; clip:rect(0 0 0 0); clip-path:inset(50%); white-space:nowrap; border:0 } /* read by screen readers and search engines, not shown */
+
+/* Business details (Admin, Settings) and the customer's invoice card */
+.ad-grid2 { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:0 16px } .ad-grid2 .ad-wide { grid-column:1 / -1 }
+.ad-sub { margin:18px 0 10px; padding-top:14px; border-top:1px solid #F0F1F3; font-size:12px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:#8A909C }
+.ad-f small.ok { color:#08805F; font-weight:700 } .ad-f small.no { color:#B42318; font-weight:700 } .ad-in.bad { border-color:#B42318 }
+.ad-warn { margin:6px 0 0; color:#8A5A00; font-weight:600; font-size:13px } .ad-err-b { margin:10px 0 0; padding:10px 12px; border-radius:8px; background:#FDECEC; color:#8A1F1F; font-weight:600; font-size:13px }
+.ad-bizsave { display:flex; justify-content:flex-end; margin-top:16px } .ad-biz + .ad-card { margin-top:18px }
+@media (max-width:900px) { .ad-grid2 { grid-template-columns:minmax(0,1fr) } }
+.inv-card { display:flex; align-items:center; gap:16px; padding:20px 22px; border:1px solid #E6E8EC; border-radius:14px; background:#fff }
+.inv-card > div { flex:1; min-width:0 } .inv-card h2 { margin:0 0 4px; font-size:18px } .inv-card p { margin:0; color:#5F6775; font-size:14px } .inv-card .d-btn { flex:none; height:46px }
+.inv-ic { width:46px; height:46px; flex:none; display:grid; place-items:center; border-radius:50%; background:#F7F1E1; color:#8A6512 } .inv-ic .ic { width:22px; height:22px }
+@media (max-width:600px) { .inv-card { flex-wrap:wrap } .inv-card .d-btn { width:100% } }
+/* home cards: one fact per line (EMI, delivery date), never cut mid-sentence */
+.d-card .d-cl { display:block; margin-top:4px; font-size:13px; line-height:1.4; color:#3F4551; white-space:nowrap; overflow:hidden; text-overflow:ellipsis } .d-card .d-cl b { font-weight:700; color:#111 } .d-card .d-cl.del b { color:#08805F }
+@media (max-width:600px) { .d-card .d-cl { font-size:12px } }
+.d-card, .d-g4 > *, .d-g3 > *, .d-g6 > * { min-width:0 } /* a grid column may shrink below its longest one-line text (the card lines end in an ellipsis instead) */
+@media (max-width:600px) { .d-card .d-cl { white-space:normal; overflow:visible } } /* on a phone the EMI and delivery lines wrap rather than cut a price */
