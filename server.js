@@ -672,7 +672,7 @@ async function askModel(system, history, message) {
   throw new HttpError(503, "The assistant is not available right now.");
 }
 
-on("GET", "config", async ({ req }) => ({ country: String(req.headers["x-vercel-ip-country"] || "").toUpperCase().slice(0, 2), /* the hosting's own geolocation header; empty on a local machine */ google: GOOGLE, sms: otpSmsReady, mail: mailReady, demoCodes: OTP_DEMO, recaptcha: RECAPTCHA.site, geo: !!MAPS_KEY, clarity: !!CLARITY, chat: !!(GEMINI_KEY || CHAT_KEY), pay: PAY_PROVIDER, payKey: RZP.id, fx: await fxNow(), destinations: Object.fromEntries(Object.entries(DESTINATIONS).map(([k, d]) => [k, { name: d.name, display: d.display, ship: d.ship, methods: d.methods }])) }));
+on("GET", "config", async ({ req }) => ({ country: String(req.headers["x-vercel-ip-country"] || "").toUpperCase().slice(0, 2), /* the hosting's own geolocation header; empty on a local machine */ google: GOOGLE, sms: otpSmsReady, mail: mailReady, demoCodes: OTP_DEMO, recaptcha: RECAPTCHA.site, geo: !!MAPS_KEY, clarity: !!CLARITY, chat: !!(GEMINI_KEY || CHAT_KEY), pay: PAY_PROVIDER, payDemo: PAY_PROVIDER === "demo" && isLocal(req) /* the test payment window, on the developer's machine only */, payKey: RZP.id, fx: await fxNow(), destinations: Object.fromEntries(Object.entries(DESTINATIONS).map(([k, d]) => [k, { name: d.name, display: d.display, ship: d.ship, methods: d.methods }])) }));
 // Contact form (page.html?p=contact): the message is recorded in the admin outbox ("Customer messages"), so the store sees it
 // even before an email provider is connected. ponytail: no rate limit beyond the body size; add one if the form gets abused.
 on("POST", "contact", ({ body }) => {
@@ -719,12 +719,14 @@ on("POST", "geo/reverse", async ({ body, req }) => {
 // the checkout asks before the order whether a coupon applies to the cart (the same rule the order route enforces)
 on("POST", "coupons/validate", ({ body, user }) => { const lines = buildLines(body.items), subtotal = lines.reduce((t, l) => t + l.p.price * l.qty, 0), cp = couponFor(user, body.code, subtotal); return { ok: true, discount: cp.discount, code: cp.code }; }, "user");
 
-on("POST", "orders", async ({ body, user }) => { // sign-in required, with a verified mobile number (delivery and cash on delivery need it; the owner's spec)
+on("POST", "orders", async ({ body, user, req }) => { // sign-in required, with a verified mobile number (delivery and cash on delivery need it; the owner's spec)
   if (!user.phoneVerified) throw new HttpError(403, "Please verify your mobile number before placing an order.");
   const name = str(body.name, "Name", 80), phone = str(body.phone, "Phone", 15, /^[0-9+ ]{7,15}$/);
   const address = str(body.address, "Address", 400), pin = str(body.pin, "Pincode", 10, /^[0-9A-Za-z ]{4,10}$/);
   const dest = destinationOf(body); // India only until a destination is approved
   if (!dest.methods.includes(body.pay === "online" ? "online" : "cod")) bad("That payment method is not available for this destination.");
+  // without gateway keys "online" is the test window: a customer on the live site could otherwise get an order marked paid without paying
+  if (body.pay === "online" && PAY_PROVIDER === "demo" && !isLocal(req)) bad("Online payment opens soon. Please choose cash on delivery.");
   const lines = buildLines(body.items); // prices and stock from the server's own product list, never from the browser
   const subtotal = lines.reduce((t, l) => t + l.p.price * l.qty, 0), cp = couponFor(user, body.coupon, subtotal);
   await takeLines(lines); // the last check that can refuse; nothing below throws

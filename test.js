@@ -21,6 +21,10 @@ server.listen(0, "127.0.0.1", async () => {
     const buyer = (await call("/api/register", "POST", { name: "Buyer One", email: "buyer@example.com", password: "longenough1" })).cookie;
     assert.equal((await call("/api/orders", "POST", { ...addr, items: [{ id: 26, qty: 2 }] }, buyer)).status, 403, "an order needs a verified mobile number");
     { const s = await call("/api/otp/send", "POST", { to: "9000000001" }, buyer); const v = await call("/api/otp/verify", "POST", { to: "9000000001", code: s.data.demoCode }, buyer); assert.equal(v.status, 200); assert.equal(v.data.linked, true, "a signed-in account claims the number it verifies"); assert.equal(v.data.user.email, "buyer@example.com"); assert.equal(v.data.user.phone, "+919000000001"); assert.equal(s.data.newUser, true); }
+    // without gateway keys, a request that came through a proxy (the live site) cannot get an order marked paid online; only the local test window can
+    r = await call("/api/orders", "POST", { ...addr, pay: "online", items: [{ id: 3, qty: 1 }] }, buyer, { "Content-Type": "application/json", cookie: buyer, "x-forwarded-for": "203.0.113.9" });
+    assert.equal(r.status, 400, "the live site refuses an online order while the gateway is not connected"); assert.match(r.data.error, /cash on delivery/);
+    assert.equal((await call("/api/config", "GET", null, null, { "x-forwarded-for": "203.0.113.9" })).data.payDemo, false, "and the live checkout shows the online methods as coming soon");
     // order: total comes from server prices, stock goes down, a demo message is recorded
     r = await call("/api/orders", "POST", { ...addr, pay: "online", items: [{ id: 26, qty: 2, price: 1 }, { id: 3, qty: 1 }] }, buyer);
     assert.equal(r.status, 200);

@@ -2819,3 +2819,105 @@ body.su-page main.wrap { min-height:0 } .su, .su-wrap { min-height:calc(100vh - 
 }
 @media (max-width:760px) { #hdr .cty { width:122px; overflow:hidden } #hdr .cty select { width:100%; min-width:0; text-overflow:ellipsis } }
 @media (max-width:760px) { #hdr .hlink { position:relative } #hdr .hlink .count { position:absolute; top:-7px; right:-7px; min-width:18px; height:18px; font-size:11px; padding:0 5px } .ck-tile { padding-top:38px; align-items:flex-start } #invoice .lg-table td:first-child { min-width:160px } }
+
+/* Checkout rebuilt (owner, 28 Oct) in the pattern of the large Indian stores: a quiet header, steps, address then payment,
+   a sticky summary with the coupon wallet and price details; on a phone, a fixed bar with the total and Place order */
+body[data-page="checkout"] { background:#F5F6F8 }
+body[data-page="checkout"] .abar, body[data-page="checkout"] #hdr .sbox, body[data-page="checkout"] #hdr .cty, body[data-page="checkout"] #hdr .gnav, body[data-page="checkout"] #hdr .hlink[aria-label="Wishlist"] { display:none }
+body[data-page="checkout"] #hdr .hlink { order:2 }
+body[data-page="checkout"] #hdr .wrap::after { content:"100% secure checkout"; order:1; margin-left:auto; margin-right:8px; padding-left:24px; font-size:13px; font-weight:700; color:#08805F; white-space:nowrap; background:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2308805F' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><rect x='4' y='11' width='16' height='10' rx='2'/><path d='M8 11V7a4 4 0 0 1 8 0v4'/></svg>") no-repeat left center/17px }
+.co { max-width:1240px; margin:0 auto; padding:20px 0 64px; font-family:Inter,"Inter Fallback",system-ui,sans-serif; color:#111 }
+.co-steps { list-style:none; display:flex; align-items:center; justify-content:center; margin:4px 0 26px; padding:0; font-size:14px; font-weight:600; color:#8A909C }
+.co-steps li { display:flex; align-items:center; gap:10px; white-space:nowrap }
+.co-steps li + li::before { content:""; width:72px; height:2px; margin:0 14px; border-radius:2px; background:#D9DCE3 }
+.co-steps li.on::before { background:#08805F }
+.co-steps i { width:28px; height:28px; border-radius:50%; display:grid; place-items:center; font-style:normal; font-size:13px; background:#fff; border:2px solid #D9DCE3; color:#8A909C }
+.co-steps .done a { display:flex; align-items:center; gap:10px; color:#111; text-decoration:none } .co-steps .done i { background:#08805F; border-color:#08805F; color:#fff } .co-steps .done .ic { width:15px; height:15px }
+.co-steps .on { color:#111 } .co-steps .on i { background:#111; border-color:#111; color:#E8CF8C }
+.co-cols { display:grid; grid-template-columns:minmax(0,1fr) 400px; gap:24px; align-items:start }
+.co-main { display:flex; flex-direction:column; gap:18px; margin:0 } .co-main > .err:empty { display:none }
+.co-card { background:#fff; border:1px solid #E6E8EC; border-radius:14px; padding:24px; box-shadow:0 1px 2px rgba(17,17,17,.04) }
+.co-hd { display:flex; align-items:flex-start; gap:14px; margin-bottom:20px }
+.co-hd h2 { margin:0; font-family:var(--d-font); font-size:20px; font-weight:800; letter-spacing:-.01em; color:#111 } .co-hd p { margin:3px 0 0; font-size:13px; color:#5F6775 }
+.co-n { width:32px; height:32px; flex:none; border-radius:50%; background:#111; color:#E8CF8C; display:grid; place-items:center; font-weight:800; font-size:14px }
+.co-addrs { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px }
+.co-addr { display:flex; gap:12px; padding:16px; border:1.5px solid #E6E8EC; border-radius:12px; cursor:pointer; font-size:14px; line-height:1.5; color:#3F4551; transition:border-color .15s, background .15s }
+.co-addr:hover { border-color:#BFC4CD } .co-addr.on { border-color:#111; background:#FAFAF7; box-shadow:inset 0 0 0 1px #111 }
+.co-addr input { accent-color:#111; margin-top:4px; flex:none; width:17px; height:17px }
+.co-addr b { display:flex; flex-wrap:wrap; align-items:center; gap:6px; color:#111; font-size:15px; margin-bottom:2px }
+.co-addr b em { font-style:normal; font-size:10.5px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; padding:2px 7px; border-radius:4px; background:#F1F2F4; color:#3F4551 } .co-addr b em.dflt { background:#111; color:#E8CF8C }
+.co-addr small { color:#5F6775 } .co-addr.new { align-items:center; border-style:dashed } .co-addr.new b { color:#08805F }
+.co-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px } .co-addrs + .co-grid { margin-top:18px; padding-top:18px; border-top:1px solid #ECEEF1 }
+.co-f { display:flex; flex-direction:column; gap:6px; font-size:13px; font-weight:600; color:#24272E } .co-f small { font-weight:500; color:#8A909C } .co-f.span2 { grid-column:1 / -1 }
+.co-in { width:100%; height:48px; padding:0 14px; box-sizing:border-box; border:1.5px solid #D9DCE3; border-radius:10px; background:#fff; font:inherit; font-size:15px; font-weight:500; color:#111; transition:border-color .15s, box-shadow .15s }
+.co-in:focus { outline:none; border-color:#111; box-shadow:0 0 0 3px rgba(17,17,17,.08) } .co-in:user-invalid { border-color:#C4312F }
+.co-hint { font-size:12px; font-weight:500; color:#8A909C } .co-hint.ok { color:#08805F; font-weight:600 }
+.co-tel { display:flex } .co-tel b { display:grid; place-items:center; padding:0 12px; border:1.5px solid #D9DCE3; border-right:0; border-radius:10px 0 0 10px; background:#F5F6F8; font-size:15px; color:#3F4551 } .co-tel .co-in { border-radius:0 10px 10px 0; min-width:0 }
+.co-chips { display:flex; flex-wrap:wrap; gap:10px; margin-top:2px }
+.co-chips button { display:inline-flex; align-items:center; gap:8px; height:42px; padding:0 16px; border:1.5px solid #D9DCE3; border-radius:999px; background:#fff; font:inherit; font-size:14px; font-weight:600; color:#3F4551; cursor:pointer } .co-chips .ic { width:16px; height:16px }
+.co-chips button.on { border-color:#111; background:#111; color:#fff }
+.co-check { display:flex; align-items:center; gap:10px; font-size:14px; color:#3F4551; cursor:pointer } .co-check input { width:18px; height:18px; accent-color:#111; flex:none }
+.co-pay { display:flex; flex-direction:column; border:1px solid #E6E8EC; border-radius:12px; overflow:hidden }
+.co-pm { display:flex; align-items:center; gap:14px; padding:16px 18px; background:#fff; cursor:pointer; transition:background .15s } .co-pm + .co-pm { border-top:1px solid #E6E8EC }
+.co-pm.on { background:#FAFAF7; box-shadow:inset 3px 0 0 #111 } .co-pm input { accent-color:#111; width:18px; height:18px; flex:none }
+.co-pi { width:42px; height:42px; flex:none; display:grid; place-items:center; border-radius:10px; background:#F3F4F6; color:#3F4551 } .co-pi .ic { width:22px; height:22px } .co-pm.on .co-pi { background:#111; color:#E8CF8C }
+.co-pt { display:flex; flex-direction:column; gap:2px; flex:1; min-width:0 } .co-pt b { font-size:15px; color:#111 } .co-pt small { font-size:13px; line-height:1.4; color:#5F6775 }
+.co-pm em { font-style:normal; font-size:10.5px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; padding:4px 8px; border-radius:4px; background:#F1F2F4; color:#5F6775; white-space:nowrap } .co-pm em.ok { background:#E8F5F0; color:#08805F }
+.co-pm.off { cursor:not-allowed } .co-pm.off .co-pt, .co-pm.off .co-pi { opacity:.5 }
+.co-note { margin:12px 2px 0; font-size:13px; color:#5F6775 }
+.co-side { position:sticky; top:96px; display:flex; flex-direction:column; gap:14px }
+.co-sum { padding:22px }
+.co-sumhd { display:flex; justify-content:space-between; align-items:baseline; margin-bottom:14px } .co-sumhd h2 { margin:0; font-family:var(--d-font); font-size:18px; font-weight:800; color:#111 } .co-sumhd a { font-size:13px; font-weight:700; color:#08805F; text-decoration:none }
+.co-items { list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:14px }
+.co-items li { display:grid; grid-template-columns:64px minmax(0,1fr) auto; gap:12px; align-items:center }
+.co-ph { width:64px; height:64px; display:block; border:1px solid #ECEEF1; border-radius:10px; background:#F7F8FA; overflow:hidden } .co-ph img { width:100%; height:100%; object-fit:contain; display:block }
+.co-it { display:flex; flex-direction:column; gap:3px; min-width:0 } .co-it b { display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:2; overflow:hidden; font-size:14px; font-weight:600; line-height:1.35; color:#111 } .co-it small { font-size:12.5px; color:#5F6775 } .co-it s { color:#8A909C } .co-it i { font-style:normal; font-weight:700; color:#08805F }
+.co-items strong { font-size:15px; font-weight:700; white-space:nowrap }
+.co-eta { display:flex; align-items:center; gap:8px; margin:16px 0 0; padding:10px 12px; border-radius:10px; background:#F0F7F4; color:#0B5E47; font-size:13px } .co-eta .ic { width:18px; height:18px; flex:none }
+.co-coupon { display:flex; flex-direction:column; gap:10px; margin-top:16px; padding-top:16px; border-top:1px solid #ECEEF1 }
+.co-ct { display:flex; align-items:center; gap:8px; font-size:14px } .co-ct .ic { width:18px; height:18px; color:#8A6512 }
+.co-wallet { display:flex; align-items:center; justify-content:space-between; gap:12px; width:100%; padding:12px 14px; border:1.5px dashed #C9A85A; border-radius:10px; background:#FFFBF0; font:inherit; text-align:left; cursor:pointer } .co-wallet span { display:flex; flex-direction:column; gap:2px } .co-wallet b { font-size:14px; letter-spacing:.04em; color:#111 } .co-wallet small { font-size:12px; color:#5F6775 } .co-wallet em { font-style:normal; font-size:13px; font-weight:800; color:#8A6512 }
+.co-cin { display:flex; gap:8px } .co-cin .co-in { height:44px; text-transform:uppercase } .co-cin .acc-btn { height:44px; flex:none }
+.co-applied { display:flex; align-items:center; gap:10px; padding:12px 14px; border-radius:10px; background:#E8F5F0; color:#0B5E47; font-size:14px } .co-applied span:first-child { flex:1 } .co-applied button { padding:0; border:0; background:none; font:inherit; font-size:13px; font-weight:700; color:#8A1F1F; cursor:pointer }
+.co-cmsg { margin:0; font-size:13px; font-weight:600; color:#8A1F1F }
+.co-price { display:flex; flex-direction:column; gap:10px; margin-top:16px; padding-top:16px; border-top:1px solid #ECEEF1; font-size:14px; color:#3F4551 }
+.co-price h3 { margin:0 0 2px; font-size:12px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:#8A909C }
+.co-price > div { display:flex; justify-content:space-between; gap:12px } .co-price .g { color:#08805F; font-weight:600 }
+.co-price .grand { margin-top:4px; padding-top:12px; border-top:1px dashed #D9DCE3; font-size:16px; font-weight:700; color:#111 } .co-price .grand b { font-family:var(--d-font); font-size:22px; font-weight:800 }
+.co-save { margin:0; padding:9px 12px; border-radius:8px; background:#E8F5F0; color:#08805F; font-size:13px; font-weight:700; text-align:center }
+.co-emi { margin:0; font-size:12.5px; color:#5F6775 } .co-emi b { color:#111 }
+.co-err { margin:14px 0 0; padding:10px 12px; border-radius:8px; background:#FDECEC; color:#8A1F1F; font-size:13px; font-weight:600 }
+.co-place { display:flex; align-items:center; justify-content:center; width:100%; height:54px; margin-top:16px; border:0; border-radius:10px; background:#08805F; color:#fff; font:inherit; font-size:16px; font-weight:700; cursor:pointer; box-shadow:0 1px 2px rgba(0,0,0,.12); transition:background .15s, transform .1s }
+.co-place:hover { background:#066B4F } .co-place:active { transform:translateY(1px) } .co-place:disabled { opacity:.7; cursor:progress }
+.co-tax { margin:10px 0 0; text-align:center; font-size:12px; color:#8A909C }
+.co-trust { display:grid; grid-template-columns:repeat(3,1fr); gap:8px } .co-trust span { display:flex; flex-direction:column; align-items:center; gap:6px; padding:12px 6px; border:1px solid #E6E8EC; border-radius:12px; background:#fff; font-size:12px; font-weight:600; color:#3F4551; text-align:center } .co-trust .ic { width:20px; height:20px; color:#08805F }
+.co-help { margin:0; text-align:center; font-size:13px; color:#5F6775 } .co-help a { color:#111; font-weight:600 }
+.co-bar { display:none }
+@media (max-width:900px) {
+  .co { padding:12px 0 128px } .co-cols { grid-template-columns:minmax(0,1fr) } .co-side { position:static }
+  .co-steps { font-size:12px; margin-bottom:16px } .co-steps li + li::before { width:20px; margin:0 8px } .co-steps i { width:24px; height:24px; font-size:12px }
+  .co-card { padding:18px 16px; border-radius:12px } .co-hd { margin-bottom:16px } .co-hd h2 { font-size:18px }
+  .co-addrs, .co-grid { grid-template-columns:minmax(0,1fr) } .co-pm { padding:14px }
+  .co-sum .co-place { display:none }
+  .co-bar { display:flex; flex-wrap:wrap; align-items:center; gap:12px; position:fixed; left:0; right:0; bottom:0; z-index:30; padding:10px 16px calc(10px + env(safe-area-inset-bottom, 0px)); background:#fff; border-top:1px solid #E6E8EC; box-shadow:0 -6px 20px rgba(17,17,17,.08) }
+  .co-bar > span { display:flex; flex-direction:column; line-height:1.25 } .co-bar > span b { font-family:var(--d-font); font-size:19px; font-weight:800 } .co-bar > span a { font-size:12px; font-weight:700; color:#08805F; text-decoration:none }
+  .co-bar .co-place { flex:1; width:auto; height:48px; margin:0; font-size:15px }
+  .co-barerr { flex-basis:100%; order:-1; font-size:12px; font-weight:600; color:#8A1F1F }
+  body[data-page="checkout"] .mnav, body[data-page="checkout"] .chatfab, body[data-page="checkout"] .totop { display:none }
+  body[data-page="checkout"] #hdr .wrap::after { font-size:12px }
+}
+@media (max-width:420px) { body[data-page="checkout"] #hdr .wrap::after { content:"Secure checkout" } }
+
+/* Checkout, second pass: its own grid classes (the account pages' global .span2 made a stray column on phones); pincode, city and state
+   share a row; no inherited section margins; on a phone only the current step keeps its label, so nothing is wider than the screen */
+.co .co-card { margin:0 }
+body[data-page="checkout"] #hdr .deliver { display:none }
+.co-grid { grid-template-columns:repeat(6,minmax(0,1fr)) } .co-f { grid-column:span 3 } .co-f.third { grid-column:span 2 } .co-wide { grid-column:1 / -1 }
+.co-f > span { display:block } .co-f > span small { margin-left:4px }
+@media (max-width:900px) {
+  .co-grid { grid-template-columns:minmax(0,1fr) } .co-grid > * { grid-column:1 / -1 }
+  .co-steps li:not(.on) span { display:none } .co-steps li + li::before { width:28px }
+  .co-pm em.ok { display:none }
+}
+@media (max-width:420px) { body[data-page="checkout"] #hdr .wrap::after { content:"Secure"; margin-right:4px } }
+.co-f > .co-tel { display:flex } @media (max-width:900px) { .co .co-grid > * { grid-column:1 / -1 } }
