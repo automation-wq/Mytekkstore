@@ -90,7 +90,7 @@ export function Admin() {
       <tr><th>Order</th><th>Date</th><th>Customer</th><th>Items</th><th>Total</th><th>Status</th></tr>
       {orders.map(o => <tr key={o.id}><td><a className="alink" href={"/order?id=" + o.id}>{o.id}</a></td><td>{new Date(o.at).toLocaleString()}</td>
         <td>{o.name}<br /><span className="muted">{o.phone}<br />{o.address}, {o.pin}</span></td>
-        <td>{o.items.map((i, k) => <span key={k}>{k ? <br /> : null}{i.qty} × {i.brand} {i.name}</span>)}</td><td>{money(o.total)}</td>
+        <td>{o.items.map((i, k) => <span key={k}>{k ? <br /> : null}{i.qty} × {i.brand} {i.name}</span>)}</td><td>{money(o.total)}{o.returnRequest && <><br /><span className="stock low">Return {o.returnRequest.status.toLowerCase()}: {o.returnRequest.reason}</span></>}{o.cancelReason && <><br /><span className="muted">Cancelled by customer: {o.cancelReason}</span></>}</td>
         <td><select data-order={o.id} aria-label={"Status of " + o.id} value={o.status} onChange={e => status(o.id, e.target.value)}>{ALL.map(s => <option value={s} key={s}>{s}</option>)}</select></td></tr>)}
     </tbody></table></div> : <p className="muted">No orders yet.</p>}</section>
     <section><h2>Products</h2>

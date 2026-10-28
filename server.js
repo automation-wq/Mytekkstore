@@ -249,6 +249,7 @@ function productFrom(b) {
   return p;
 }
 const STATUSES = ["Placed", "Confirmed", "Shipped", "Delivered", "Cancelled"];
+const RETURN_DAYS = 7; // the return window (POLICY.returnDays in web/src/data.js says the same)
 // ===== customer messages =====
 // Every message is recorded in the outbox (shown in the admin). With Twilio set up it is also sent by SMS, or by WhatsApp when
 // TWILIO_FROM starts with "whatsapp:".
@@ -733,10 +734,39 @@ on("PATCH", "admin/orders/(MT[0-9A-F]{10})", ({ params, body }) => {
   if (delta === 1) lines.forEach(({ it, p }) => { if (p && p.stock < it.qty) throw new HttpError(409, `Only ${p.stock} left of ${p.brand} ${p.name}, so this order cannot be reopened.`); });
   if (delta) lines.forEach(({ it, p }) => { if (p) p.stock -= delta * it.qty; });
   o.status = body.status;
+  if (o.status === "Delivered" && !o.deliveredAt) o.deliveredAt = new Date().toISOString(); // the return window and the warranty start here
+  if (o.returnRequest && body.returnStatus && ["Approved", "Picked up", "Refunded", "Declined"].includes(body.returnStatus)) o.returnRequest.status = body.returnStatus;
   write("orders"); write("products");
   notify(o, `Your Mytekkstore order ${o.id} is now: ${o.status}.`);
   return { order: o };
 }, "admin");
+// the customer cancels an order that has not shipped: the stock comes back, a welcome coupon used on it is returned to the wallet
+on("POST", "orders/(MT[0-9A-F]{10})/cancel", ({ params, body, user }) => {
+  const o = db.orders.find(o => o.id === params[0] && o.userId === user.id);
+  if (!o) throw new HttpError(404, "Order not found.");
+  if (!["Placed", "Confirmed"].includes(o.status)) throw new HttpError(409, o.status === "Cancelled" ? "This order is already cancelled." : "This order has already shipped. You can refuse it at the door or ask for a return after delivery.");
+  o.items.forEach(it => { const p = db.products.find(p => p.id === it.id); if (p) p.stock += it.qty; });
+  o.status = "Cancelled"; o.cancelledAt = new Date().toISOString(); o.cancelReason = body.reason ? str(body.reason, "Reason", 200) : "";
+  if (o.coupon) { const c = (user.coupons || []).find(c => c.code === o.coupon); if (c) { c.used = false; delete c.usedAt; write("users"); } }
+  write("orders"); write("products");
+  notify(o, `Your Mytekkstore order ${o.id} is cancelled.${/online/i.test(o.pay) && !/cash/i.test(o.pay) ? " The refund goes back to your payment method within " + 7 + " working days." : ""}`);
+  return { order: publicOrder(o) };
+}, "user");
+// the customer asks for a return within the window after delivery; the admin sees it on the order and arranges the pickup
+on("POST", "orders/(MT[0-9A-F]{10})/return", ({ params, body, user }) => {
+  const o = db.orders.find(o => o.id === params[0] && o.userId === user.id);
+  if (!o) throw new HttpError(404, "Order not found.");
+  if (o.status !== "Delivered") throw new HttpError(409, "A return can be requested once the order is delivered.");
+  if (o.returnRequest) throw new HttpError(409, "A return is already requested for this order.");
+  const since = Date.now() - new Date(o.deliveredAt || o.at).getTime();
+  if (since > RETURN_DAYS * 86400000) throw new HttpError(409, `The ${RETURN_DAYS}-day return window has closed. The manufacturer's warranty still covers faults.`);
+  const reason = str(body.reason, "Reason", 300);
+  o.returnRequest = { at: new Date().toISOString(), reason, status: "Requested" };
+  write("orders");
+  record(o.phone || o.email, `Return requested for order ${o.id}: ${reason}`, "received");
+  notify(o, `We have your return request for order ${o.id}. We will call you to arrange the pickup.`);
+  return { order: publicOrder(o) };
+}, "user");
 on("GET", "admin/outbox", () => ({ messages: [...db.outbox].reverse() }), "admin");
 // Product photo upload. The admin page resizes the photo to a small JPEG before sending it.
 on("POST", "admin/upload", ({ body }) => {

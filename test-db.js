@@ -17,6 +17,7 @@ const statements = [
   [/^SELECT col, id, v, at FROM docs WHERE at > \$1 ORDER BY at$/i, p => [...docs.values()].filter(r => +r.at > +p[0]).sort((a, b) => +a.at - +b.at)],
   [/^SELECT user_id, exp FROM sessions WHERE token = \$1$/i, p => sessions.has(p[0]) ? [sessions.get(p[0])] : []],
   [/^DELETE FROM sessions WHERE token = \$1$/i, p => { sessions.delete(p[0]); return []; }],
+  [/^DELETE FROM sessions WHERE user_id = \$1$/i, p => { for (const [t, s] of sessions) if (String(s.user_id) === String(p[0])) sessions.delete(t); return []; }],
   [/^DELETE FROM sessions WHERE exp < \$1$/i, p => { for (const [t, s] of sessions) if (+s.exp < +p[0]) sessions.delete(t); return []; }],
   [/^DELETE FROM docs WHERE col = \$1 AND id = \$2$/i, p => { docs.delete(p[0] + "\u0000" + p[1]); return []; }],
 ];
@@ -36,24 +37,28 @@ const startStore = env => new Promise(resolve => { const c = spawn(process.execP
 
 neon.listen(0, "127.0.0.1", async () => {
   const url = "postgres://store:secret@127.0.0.1:" + neon.address().port + "/mytekkstore"; process.env.TEST_DB_URL = url;
+  const kids = [];
   try {
     // 1. the whole API suite, with the database behind it
     const suite = await run(process.execPath, ["test.js"], { DATABASE_URL: url, TEST_DB_URL: url });
     assert.ok(/ALL TESTS PASSED/.test(suite.out), "the API suite in database mode:\n" + suite.out.split("\n").filter(l => /FAIL|Error|error/.test(l)).join("\n"));
     const afterSuite = queries;
     // 2. the hosted-store problem itself: two separate processes share one database
-    const a = await startStore({ DATABASE_URL: url, TEST_DB_URL: url });
+    const a = await startStore({ DATABASE_URL: url, TEST_DB_URL: url }); kids.push(a.child);
     const reg = await fetch(a.base + "/api/register", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name: "Two Instances", email: "two@example.com", password: "password-12" }) });
     assert.equal(reg.status, 200, "register on instance A"); const cookie = (reg.headers.get("set-cookie") || "").split(";")[0];
+    const post = (p, body) => fetch(a.base + p, { method: "POST", headers: { "Content-Type": "application/json", cookie }, body: JSON.stringify(body) }).then(r => r.json());
+    const sent = await post("/api/otp/send", { to: "9999999999" }); // orders need a verified phone
+    assert.equal((await post("/api/otp/verify", { to: "9999999999", code: sent.demoCode })).linked, true, "the phone verifies on instance A");
     const ord = await fetch(a.base + "/api/orders", { method: "POST", headers: { "Content-Type": "application/json", cookie }, body: JSON.stringify({ name: "Two Instances", phone: "9999999999", address: "1 Test Street", pin: "110001", pay: "cod", items: [{ id: 1, qty: 1 }] }) });
     assert.equal(ord.status, 200, "order on instance A"); const id = (await ord.json()).id;
-    const b = await startStore({ DATABASE_URL: url, TEST_DB_URL: url }); // a fresh process with an empty data folder: everything it knows comes from the database
+    const b = await startStore({ DATABASE_URL: url, TEST_DB_URL: url }); kids.push(b.child); // a fresh process with an empty data folder: everything it knows comes from the database
     const me = await fetch(b.base + "/api/me", { headers: { cookie } }); assert.equal(me.status, 200, "the sign-in cookie works on instance B");
     const got = await fetch(b.base + "/api/orders/" + id, { headers: { cookie } }); assert.equal(got.status, 200, "the order placed on A is found on B: " + (await got.text()).slice(0, 80));
     const stock = p => fetch(p.base + "/api/products").then(r => r.json()).then(d => (d.products || d).find(x => x.id === 1).stock);
     assert.equal(await stock(b), await stock(a), "stock taken on A is seen on B");
-    a.child.kill(); b.child.kill();
     console.log(`ALL DB TESTS PASSED (${afterSuite} statements in the suite, ${queries - afterSuite} across two instances)`);
   } catch (e) { console.error("DB TEST FAILED:", e.message); process.exitCode = 1; }
+  kids.forEach(c => c.kill());
   neon.close(); neon.closeAllConnections();
 });

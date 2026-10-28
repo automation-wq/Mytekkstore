@@ -58,7 +58,10 @@ export function Category() {
   const sizesOf = p => { if (!sizeOf(p)) return null; const m = new Map(); catAll.filter(x => x.brand === p.brand).forEach(x => { const s = sizeOf(x); if (s && (!m.has(s.n) || x.id === p.id)) m.set(s.n, x); }); return [...m.values()].sort((a, b) => sizeOf(a).n - sizeOf(b).n).map(x => [String(sizeOf(x).n), productUrl(x), x.id === p.id]); };
   const base = catAll.filter(p => (!wishOnly || wish.includes(p.id)) && (p.brand + " " + p.cat + " " + p.name).toLowerCase().includes(q.toLowerCase()));
   // skip names one group, so a choice can show how many products it would give
-  const pass = (p, skip) => (skip === "brand" || !f.brand.length || f.brand.includes(p.brand)) && (!f.size || (sizeOf(p) || {}).label === f.size) && (skip === "os" || !f.os || p.os === f.os) && (skip === "res" || !f.res || resOf(p) === f.res) && (skip === "type" || !f.type || typeOf(p) === f.type)
+  // the size in the address: the label ("55 inch TVs"), a plain inch number ("55", from the home page's size cards) or "65+" (65 inch and above)
+  const sizeMatch = (p, v) => { const s = sizeOf(p); if (!s) return false; const m = /^(\d+)(\+?)$/.exec(String(v).trim()); return m ? (m[2] ? s.n >= +m[1] : s.n === +m[1]) : s.label === v; };
+  const sizeTitle = v => { const m = /^(\d+)(\+?)$/.exec(String(v).trim()); return m ? m[1] + "-inch" + (m[2] ? " and above" : "") : String(v).replace(/ TVs$/, "").replace(/ inch$/, "-inch"); };
+  const pass = (p, skip) => (skip === "brand" || !f.brand.length || f.brand.includes(p.brand)) && (!f.size || sizeMatch(p, f.size)) && (skip === "os" || !f.os || p.os === f.os) && (skip === "res" || !f.res || resOf(p) === f.res) && (skip === "type" || !f.type || typeOf(p) === f.type)
     && (skip === "price" || ((!f.min || p.price >= f.min) && (!f.max || p.price <= f.max))) && (skip === "off" || !f.off || off(p) >= f.off)
     && (skip === "instock" || !f.instock || p.stock > 0) && (skip === "emi" || !f.emi || p.emi) && (skip === "rating" || !f.rating || avg(p) >= f.rating);
   const list = base.filter(p => pass(p));
@@ -72,7 +75,7 @@ export function Category() {
     (f.max && !f.min ? short + " under " + money(f.max)
       : f.min && f.max ? short + " from " + money(f.min) + " to " + money(f.max)
       : f.min && !f.max ? short + " above " + money(f.min)
-      : f.size ? f.size.replace(/ TVs$/, "").replace(/ inch$/, "-inch") + " " + short
+      : f.size ? sizeTitle(f.size) + " " + short
       : f.res ? f.res + " " + short
       : f.type ? f.type + " " + short : "");
   useEffect(() => { document.title = (coll || title) + " | Mytekkstore"; }, [coll]);
@@ -91,7 +94,7 @@ export function Category() {
   const tiles = [];
   if (!cat && !f.brand.length) CATS.forEach(c => tiles.push([c, P.filter(p => p.cat === c).length + " products", catUrl(c), catImg(c), false])); // category tiles only when no category is chosen
   const band = BANDS.find(([a, b]) => a === f.min && b === f.max);
-  const chips = [...f.brand.map(b => [b, () => set({ brand: f.brand.filter(x => x !== b) })]), ...(f.size ? [[f.size, () => set({ size: "" })]] : []), ...(f.os ? [[f.os, () => set({ os: "" })]] : []), ...(f.res ? [[f.res, () => set({ res: "" })]] : []), ...(f.type ? [[f.type, () => set({ type: "" })]] : []),
+  const chips = [...f.brand.map(b => [b, () => set({ brand: f.brand.filter(x => x !== b) })]), ...(f.size ? [[sizeTitle(f.size).replace(/-inch/, " inch"), () => set({ size: "" })]] : []), ...(f.os ? [[f.os, () => set({ os: "" })]] : []), ...(f.res ? [[f.res, () => set({ res: "" })]] : []), ...(f.type ? [[f.type, () => set({ type: "" })]] : []),
     ...((f.min || f.max) ? [[band ? band[2] : money(f.min) + " to " + money(f.max), () => set({ min: 0, max: 0 })]] : []), ...(f.off ? [[f.off + "% off or more", () => set({ off: 0 })]] : []),
     ...(f.instock ? [["In stock", () => set({ instock: false })]] : []), ...(f.emi ? [["No Cost EMI", () => set({ emi: false })]] : []), ...(f.rating ? [[f.rating + "★ and above", () => set({ rating: 0 })]] : [])];
   const n = list.length, nText = n + " product" + (n === 1 ? "" : "s");

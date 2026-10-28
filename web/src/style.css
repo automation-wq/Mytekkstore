@@ -2757,3 +2757,14 @@ body.su-page main.wrap { min-height:0 } .su, .su-wrap { min-height:calc(100vh - 
 .d-szroom { font-size:13px; font-weight:600; color:#24272E; margin-top:4px } .d-szfrom { font-size:13px; color:#3F4551 } .d-szfrom b { color:#111; font-weight:800 } .d-sz.top .d-szroom { color:#8A6512 }
 @media (max-width:1100px) { .d-lineup { grid-template-columns:repeat(4, minmax(0,1fr)) } }
 @media (max-width:600px) { .d-lineup { grid-template-columns:repeat(2, minmax(0,1fr)); gap:10px } .d-szstage { height:110px } }
+
+/* order page: manage (cancel, return) and the invoice (28 Oct) */
+.oact, .invoice { background:#fff; border:1px solid #ECEEF1; border-radius:14px; padding:22px 24px; display:flex; flex-direction:column; gap:14px; scroll-margin-top:calc(var(--hh,150px) + 16px) }
+.oact h2, .invoice h2 { margin:0; font-family:var(--d-font); font-size:22px; font-weight:800; letter-spacing:-.01em }
+.oact-row { display:flex; justify-content:space-between; align-items:center; gap:16px; flex-wrap:wrap } .oact-row p { margin:0; color:#24272E; font-size:15px; max-width:640px } .oact-form { display:flex; flex-direction:column; gap:12px; max-width:520px }
+.acc-btn.danger { background:#B42318 } .acc-btn.danger:hover { background:#912018 }
+.inv-head { display:flex; justify-content:space-between; align-items:flex-start; gap:16px; flex-wrap:wrap } .inv-head p { margin:4px 0 0 }
+.inv-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:16px } .inv-grid b { font-size:12px; letter-spacing:.12em; text-transform:uppercase; color:#5F6775 } .inv-grid p { margin:6px 0 0; font-size:14px; line-height:1.6; color:#111 }
+.inv-total td { font-size:16px; background:#F7F7F8 }
+@media (max-width:760px) { .inv-grid { grid-template-columns:1fr } .oact, .invoice { padding:16px } }
+@media print { body * { visibility:hidden } #invoice, #invoice * { visibility:visible } #invoice { position:absolute; left:0; top:0; width:100%; border:0 } #invoice .acc-btn { display:none } }

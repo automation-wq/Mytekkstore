@@ -4,7 +4,7 @@ import { m, AnimatePresence } from "motion/react";
 import { useStore } from "./store.jsx";
 import { api, qs, demoPay, track } from "./api.js";
 import { Card, Row, Strip, Box, Line, OrderItems, BankOffers, Form, Ico, Icon } from "./components.jsx";
-import { DRAW_ICONS, STEPS, FESTIVE, KV_IMG, POLICY, catUrl, brandUrl, listUrl, off, etaText, pic, emiPlans } from "./data.js";
+import { LEGAL, DRAW_ICONS, STEPS, FESTIVE, KV_IMG, POLICY, catUrl, brandUrl, listUrl, off, etaText, pic, emiPlans } from "./data.js";
 import { reveal } from "./motion.js";
 import { FestiveBanner } from "./home.jsx"; // the brochure festive banner opens the offers page too
 
@@ -164,12 +164,51 @@ export function Order() {
     {o.status !== "Cancelled" && <section><h2>What happens next</h2><p className="lead">Every step shows in your account, and we message you as it moves.</p>
       <div className="why steps3">{[["Confirmed", "We check the stock and confirm your order, usually within a day."], ["Shipped", "Your order leaves with the delivery partner. Large items travel with care."], ["Delivered", /cash/i.test(o.pay) ? "Pay the delivery partner when it arrives, then check the product. " + POLICY.returnDays + " days to tell us if anything is wrong." : "Check the product when it arrives. " + POLICY.returnDays + " days to tell us if anything is wrong."]]
         .map(([t, s], i) => <div className={i + 1 <= step ? "done" : undefined} key={t}><span className="pnum">{String(i + 1).padStart(2, "0")}</span><b>{t}</b><p>{s}</p></div>)}</div></section>}
+    <OrderActions o={o} setO={setO} />
+    <Invoice o={o} />
     <section><h2>Need a hand?</h2><div className="ways ways3">
       <a className="way" href="/account"><i className="kico"><Icon k="box" /></i><b>Track this order</b><span>Open your account at any time to see where it is.</span></a>
       <a className="way" href="/returns"><i className="kico"><Icon k="undo" /></i><b>Returns</b><span>How a return works, start to finish.</span></a>
       <a className="way" href="/contact"><i className="kico"><Icon k="user" /></i><b>Contact us</b><span>Write to us with your order number.</span></a></div></section>
     <Row title="You may also like" href="/products?sort=off" list={[...P].filter(p => p.stock > 0 && !o.items.some(i => i.id === p.id)).sort((a, b) => off(b) - off(a)).slice(0, 5)} />
   </>;
+}
+
+// cancel before shipping, ask for a return within the window after delivery
+function OrderActions({ o, setO }) {
+  const [open, setOpen] = useState(""), [reason, setReason] = useState(""), [err, setErr] = useState(""), [busy, setBusy] = useState(false);
+  const canCancel = ["Placed", "Confirmed"].includes(o.status), delivered = o.status === "Delivered";
+  const left = delivered ? POLICY.returnDays - Math.floor((Date.now() - new Date(o.deliveredAt || o.at).getTime()) / 86400000) : 0;
+  if (!canCancel && !(delivered && (o.returnRequest || left > 0))) return null;
+  const go = async kind => { setBusy(true); setErr(""); try { const r = await api("orders/" + o.id + "/" + kind, "POST", { reason }); setO(r.order); setOpen(""); } catch (e) { setErr(e.message); } finally { setBusy(false); } };
+  return <section className="oact" id="manage"><h2>Manage this order</h2>
+    {canCancel && (open !== "cancel" ? <div className="oact-row"><p>Not shipped yet: you can cancel it now.{/online/i.test(o.pay) && !/cash/i.test(o.pay) ? " Anything paid goes back to your payment method." : ""}{o.coupon ? " Your coupon " + o.coupon + " returns to your wallet." : ""}</p><button type="button" className="acc-btn ghost" id="cancelOrder" onClick={() => setOpen("cancel")}>Cancel order</button></div>
+      : <div className="oact-form"><label className="acc-f">Why are you cancelling? (optional)<select className="acc-in" value={reason} onChange={e => setReason(e.target.value)}><option value="">Choose a reason</option><option>Ordered by mistake</option><option>Found a better price</option><option>Delivery takes too long</option><option>Want a different size or model</option><option>Other</option></select></label>
+        <div className="acc-actions start"><button type="button" className="acc-btn danger" id="confirmCancel" disabled={busy} onClick={() => go("cancel")}>Yes, cancel this order</button><button type="button" className="acc-btn ghost" onClick={() => setOpen("")}>Keep the order</button></div></div>)}
+    {delivered && o.returnRequest && <div className="oact-row"><p><b>Return {o.returnRequest.status.toLowerCase()}</b> on {new Date(o.returnRequest.at).toLocaleDateString("en-IN", { day: "numeric", month: "short" })}: {o.returnRequest.reason}. We call you to arrange the pickup.</p></div>}
+    {delivered && !o.returnRequest && left > 0 && (open !== "return" ? <div className="oact-row"><p>Damaged, faulty or not what you ordered? You can ask for a return for {left} more day{left === 1 ? "" : "s"}.</p><button type="button" className="acc-btn ghost" id="returnOrder" onClick={() => setOpen("return")}>Request a return</button></div>
+      : <div className="oact-form"><label className="acc-f">What is wrong?<select className="acc-in" value={reason} onChange={e => setReason(e.target.value)}><option value="">Choose a reason</option><option>Arrived damaged</option><option>Does not switch on or is faulty</option><option>Missing parts or accessories</option><option>Not what I ordered</option></select></label>
+        <div className="acc-actions start"><button type="button" className="acc-btn" id="confirmReturn" disabled={busy || !reason} onClick={() => go("return")}>Request the return</button><button type="button" className="acc-btn ghost" onClick={() => setOpen("")}>Not now</button></div></div>)}
+    {err && <p className="acc-err" role="alert">{err}</p>}
+  </section>;
+}
+// the invoice: every line, the GST included in the price, the buyer and the order; prints on its own
+function Invoice({ o }) {
+  const { money } = useStore();
+  const sub = o.subtotal || o.items.reduce((t, i) => t + i.price * i.qty, 0), total = o.total, taxable = Math.round(total / 1.18 * 100) / 100, gst = Math.round((total - taxable) * 100) / 100;
+  const inr = n => "₹" + n.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  return <section className="invoice" id="invoice"><div className="inv-head"><div><h2>{LEGAL.gstin ? "Tax invoice" : "Invoice"}</h2><p className="acc-muted small">{LEGAL.gstin ? "" : "The GST tax invoice with the seller's GSTIN travels with the TV. "}Keep this for the warranty.</p></div><button type="button" className="acc-btn ghost" onClick={() => window.print()}>Print or save as PDF</button></div>
+    <div className="inv-grid"><div><b>Sold by</b><p>{LEGAL.entity || "MyTekkStore"}{LEGAL.address ? <><br />{LEGAL.address}</> : null}{LEGAL.gstin ? <><br />GSTIN {LEGAL.gstin}</> : null}</p></div>
+      <div><b>Billed and shipped to</b><p>{o.name}<br />{o.address}, {o.pin}<br />{o.phone}</p></div>
+      <div><b>Invoice for order</b><p>{o.id}<br />{new Date(o.at).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" })}<br />{o.pay}</p></div></div>
+    <div className="lg-table"><table><thead><tr><th>Item</th><th>HSN</th><th>Qty</th><th>Price</th><th>Amount</th></tr></thead><tbody>
+      {o.items.map(i => <tr key={i.id}><td>{i.brand} {i.name}</td><td>8528</td><td>{i.qty}</td><td>{money(i.price)}</td><td>{money(i.price * i.qty)}</td></tr>)}
+      {o.discount > 0 && <tr><td colSpan="4">Coupon {o.coupon}</td><td>−{money(o.discount)}</td></tr>}
+      <tr><td colSpan="4">Delivery</td><td>Free</td></tr>
+      <tr><td colSpan="4">Taxable value</td><td>{inr(taxable)}</td></tr><tr><td colSpan="4">GST at 18% (included)</td><td>{inr(gst)}</td></tr>
+      <tr className="inv-total"><td colSpan="4"><b>Total paid{/cash/i.test(o.pay) ? " on delivery" : ""}</b></td><td><b>{money(total)}</b></td></tr></tbody></table></div>
+    {sub !== total && <p className="acc-muted small">Price before the coupon {money(sub)}.</p>}
+  </section>;
 }
 
 export { InfoPage } from "./info.jsx";

@@ -174,7 +174,7 @@ export function Home() {
     </section>
 
     <section className="d-wrap d-sec" id="big-screens">
-      <Head h={"Big screens: 65\" to 85\""} sub="Cinema at home. Free delivery and cash on delivery on every TV." link="View all" href={listUrl({ cat: "Televisions", size: 65 })} />
+      <Head h={"Big screens: 65\" to 85\""} sub="Cinema at home. Free delivery and cash on delivery on every TV." link="View all" href={listUrl({ cat: "Televisions", size: "65+" })} />
       <div className="d-g4">{big.map(p => <DCard p={p} tag={p.id === 18 ? "Flagship" : undefined} money={money} compare={compare} key={p.id} />)}</div>
     </section>
 
