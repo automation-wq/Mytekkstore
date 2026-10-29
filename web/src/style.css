@@ -3213,3 +3213,6 @@ body[data-page="checkout"] #hdr .wrap::after { color:#08805F; background-image:u
 .hc .pincheck, .hc form.pincheck { max-width:520px }
 @media (max-width:900px) { .hc-facts, .hc-steps { grid-template-columns:repeat(2,minmax(0,1fr)) } .hc-two, .hc-three { grid-template-columns:minmax(0,1fr) } .hc-after { flex-direction:column; align-items:flex-start } }
 @media (max-width:600px) { .hc { gap:30px } .hc-head h1 { font-size:32px } .hc-head p { font-size:15.5px } .hc-facts > div { padding:14px } .hc-steps { grid-template-columns:minmax(0,1fr) } .hc-table > div { grid-template-columns:minmax(0,1fr); gap:2px } .hc-help { flex-wrap:wrap } .hc-help .d-btn { width:100% } .hc-cta { width:100% } .hc-cta > * { flex:1 1 100%; justify-content:center } }
+/* card badges and fact lines (29 Oct): the 1+1 year warranty as a badge where a model has it; one fact per line on listing cards */
+.d-badge.warr { background:#E8F5F0; color:#08805F }
+.cfacts li span b { font-weight:700; color:#111 } .cfacts li:last-child span b { color:#08805F }

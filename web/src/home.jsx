@@ -47,26 +47,25 @@ const inchOf = p => +((/\((\d+) inch\)/.exec(p.name || "") || [])[1] || 0);
 const cmOf = p => +((/(\d+) cm/.exec(p.name || "") || [])[1] || 0);
 const resOf = p => /4K/i.test(p.name) ? "4K Ultra HD" : /Full HD/i.test(p.name) ? "Full HD" : "HD Ready";
 const typeOf = p => /Mini-LED/i.test(p.name) ? "Mini-LED PRO" : /QLED/i.test(p.name) ? "QLED" : "LED";
-const title = p => `${p.brand} ${inchOf(p)}" (${cmOf(p)} cm) ${p.name.replace(/^\d+ cm \(\d+ inch\) /, "")}${p.os ? " · " + p.os : ""}`;
-const warranty = p => { const w = ((p.specs || []).find(([k]) => /warranty/i.test(k)) || [])[1] || ""; return /1 \+ 1|1\+1/.test(w) ? "1+1 yr warranty*" : w ? "1 yr warranty*" : "Brand warranty*"; };
+const title = p => `${p.brand} ${inchOf(p)}" (${cmOf(p)} cm) ${p.name.replace(/^\d+ cm \(\d+ inch\) /, "")}`; // the system is in the name or the first feature point, never tacked on with a dot
+const twoYear = p => /1 \+ 1|1\+1/.test(((p.specs || []).find(([k]) => /warranty/i.test(k)) || [])[1] || ""); // 1 + 1 year warranty models
 const emi9 = p => emiPlans(p.price)[2][1];
 
 // one product card, the design's layout: badges, wishlist, the owner's front card cropped to the set, stars, title, three points, price, EMI line, two buttons, compare
 function DCard({ p, tag, tagTone, money, compare }) {
   const d = off(p), n = (p.reviews || []).length;
   return <div className="d-card d-prod">
-    <div className="d-badges">{d > 0 && <span className="d-badge">{d}% off</span>}{tag && <span className={"d-badge " + (tagTone || "dark")}>{tag}</span>}</div>
+    <div className="d-badges">{d > 0 && <span className="d-badge">{d}% off</span>}{tag && <span className={"d-badge " + (tagTone || "dark")}>{tag}</span>}{twoYear(p) && <span className="d-badge warr">1+1 yr warranty</span>}</div>
     <button type="button" className="d-wish" data-wish={p.id} aria-label="Add to wishlist">{I.heart}</button>
     <a className="d-ph" href={productUrl(p)} aria-label={title(p)}><img src={pic(p.img, 480)} srcSet={picSet(p.img)} sizes="(max-width:760px) 46vw, 300px" alt="" loading="lazy" width="1500" height="1500" /></a>
     {n > 0 ? <span className="d-stars">★★★★★ <span>{avg(p).toFixed(1)} ({n})</span></span> : <span className="d-stars muted">New in store</span>}
     <a className="d-title" href={productUrl(p)}>{title(p)}</a>
-    <ul className="d-pts">{(p.features || []).slice(0, 3).map(f => <li key={f}>{f}</li>)}</ul>
+    <ul className="d-pts">{(p.features || []).slice(0, 3).map(f => <li key={f}>{f.replace(/ · /g, " & ")}</li>)}</ul>
     <div className="d-pricerow"><span className="d-price">{money(p.price)}</span>{p.mrp > p.price && <span className="d-mrp">{money(p.mrp)}</span>}</div>
     {p.price >= 15000 && <span className="d-save">{p.mrp > p.price ? "Save " + money(p.mrp - p.price) + " · " : ""}10% off with HDFC Bank</span>}
     {/* one fact per line, the way the large stores' cards read: EMI (only on models that have it), the delivery date, then COD and warranty */}
     {p.emi && <span className="d-cl"><b>No Cost EMI</b> from {money(emi9(p))}/month</span>}
     <span className="d-cl del"><b>Free delivery</b> by {etaText().split(" to ").pop()}</span>
-    <span className="d-emi small">Cash on delivery · {warranty(p)}</span>
     <div className="d-btns"><button type="button" className="d-btn" data-add={p.id}>{I.cart}Add to cart</button><button type="button" className="d-btn black" data-buy={p.id}>{I.bolt}Buy now</button></div>
     {compare && <label className="d-cmp"><input type="checkbox" checked={compare[0].includes(p.id)} onChange={() => compare[1](p.id)} /> Add to compare</label>}
   </div>;
@@ -238,7 +237,7 @@ export function Home() {
 
     {allReviews.length >= 3 && <section className="d-wrap d-sec">
       <div className="d-hd"><h2 className="d-h">Customers say</h2><span className="d-stars big">★★★★★ <span>{(allReviews.reduce((s, r) => s + r.rating, 0) / allReviews.length).toFixed(1)} from {allReviews.length} reviews</span></span></div>
-      <div className="d-g3">{reviews.map((r, i) => <div className="d-card d-review" key={i}><span className="d-stars">{"★".repeat(r.rating)}</span><p>{r.text}</p><span className="d-emi">{r.name} · Bought {inchOf(r.p)}" {r.p.os || "TV"} · Verified purchase</span></div>)}</div>
+      <div className="d-g3">{reviews.map((r, i) => <div className="d-card d-review" key={i}><span className="d-stars">{"★".repeat(r.rating)}</span><p>{r.text}</p><span className="d-emi">{r.name} · {inchOf(r.p)}" {r.p.os || "TV"}{r.verified ? " · Verified purchase" : ""}</span></div>)}</div>
     </section>}
 
     <section className="d-wrap d-sec" id="faq">

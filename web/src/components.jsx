@@ -6,7 +6,7 @@ import { reduced } from "./motion.js";
 import { useStore } from "./store.jsx";
 import { CONTACT, brandLogo } from "./data.js";
 import { api, qs, load, save, track } from "./api.js";
-import { POLICY, ICONS, DRAW_ICONS, COUNTRIES, BANK_OFFERS, TOP_FEATURES, CAT_SIZE, TV_OS, OS_ROWS, SHOW_STORES, COMING_SOON, catSizes, emiPlans, catUrl, brandUrl, listUrl, off, avg, starRow, eta, productUrl, pic, picSet, dims, osList, osUrl } from "./data.js";
+import { etaText, ICONS, DRAW_ICONS, COUNTRIES, BANK_OFFERS, TOP_FEATURES, CAT_SIZE, TV_OS, OS_ROWS, SHOW_STORES, COMING_SOON, catSizes, emiPlans, catUrl, brandUrl, listUrl, off, avg, starRow, eta, productUrl, pic, picSet, dims, osList, osUrl } from "./data.js";
 
 const $ = (s, el = document) => el.querySelector(s);
 const $$ = (s, el = document) => [...el.querySelectorAll(s)];
@@ -61,8 +61,8 @@ export function Card({ p, i = 0, sizes, compare }) {
   const inch = (/\((\d+)\s*inch\)/.exec(sp("screen size") || p.name) || [])[1];
   const chips = [inch && inch + " inch", sp("resolution").split(",")[0].trim(), sp("display type").split(",")[0].trim(), !p.os && p.cat === "Televisions" && "Non-smart"].filter(Boolean); // a non-smart set says so on its card
   // the design file's bank line: the biggest instant discount among the bank offers, worded "up to" because it depends on the card
-  const bankTop = BANK_OFFERS.map(([bank, , note]) => [bank.replace(/ (Bank|Card)$/, ""), +(((/Up to ₹([\d,]+)/.exec(note) || [])[1] || "0").replace(/,/g, ""))]).sort((a, b) => b[1] - a[1])[0];
-  const bankLine = bankTop && bankTop[1] ? "Extra up to " + money(bankTop[1]) + " off with " + bankTop[0] : "";
+  const bankTop = BANK_OFFERS.map(([bank, , note, , chip]) => [bank.replace(/ (Bank|Card)$/, ""), +(((/Up to ₹([\d,]+)/.exec(note) || [])[1] || "0").replace(/,/g, "")), +(((/Min\. order ₹([\d,]+)/.exec(chip || "") || [])[1] || "0").replace(/,/g, ""))]).sort((a, b) => b[1] - a[1])[0];
+  const bankLine = bankTop && bankTop[1] && p.price >= bankTop[2] ? "Extra up to " + money(bankTop[1]) + " off with " + bankTop[0] : ""; // never on a TV below the offer's minimum order
   return <m.div className="card" style={{ rotateX: rx, rotateY: ry, transformPerspective: 900 }} onPointerMove={onMove} onPointerLeave={onLeave}
     initial={{ opacity: 0, y: 10 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: "0px 0px -40px" }} transition={{ type: "spring", stiffness: 220, damping: 26, delay: (i % 6) * .06 }}><Heart p={p} />
     <a href={productUrl(p)} className="cbody"><div className="img"><Photo p={p} />{off(p) > 0 && <span className="badge">{off(p)}% OFF</span>}<button type="button" className="qview" data-quick={p.id} aria-label={"Quick view " + p.brand + " " + p.name}>Quick view</button></div>
@@ -71,7 +71,7 @@ export function Card({ p, i = 0, sizes, compare }) {
       <small>{p.brand}</small><h3>{p.name}</h3>
       {chips.length > 0 && <ul className="cspecs" aria-label="Key specs">{chips.map(c => <li key={c}>{c}</li>)}</ul>}
       <Stars p={p} />
-      <ul className="cfacts">{p.emi && <li className="emi"><Icon k="cash" /><span><b>EMI {money(emiPlans(p.price)[2][1])}/mo</b> · No-cost</span></li>}{bankLine && <li className="cbank">{bankLine}</li>}<li><Icon k="truck" /><span>Free delivery in 3 to 5 days · {POLICY.returnDays}-day returns</span></li></ul></a>
+      <ul className="cfacts">{p.emi && <li className="emi"><Icon k="cash" /><span><b>No Cost EMI</b> from {money(emiPlans(p.price)[2][1])}/month</span></li>}{bankLine && <li className="cbank">{bankLine}</li>}<li><Icon k="truck" /><span><b>Free delivery</b> by {etaText().split(" to ").pop()}</span></li></ul></a>
     {sizes && sizes.length > 1 && <span className="csizes"><small>Sizes</small>{sizes.map(([l, href, on]) => on ? <b key={l}>{l}</b> : <a href={href} key={l}>{l}</a>)}</span>}
     <Buy p={p} />{compare && <label className="ccmp"><input type="checkbox" checked={compare[0]} onChange={() => compare[1](p.id)} /> Compare</label>}</m.div>;
 }

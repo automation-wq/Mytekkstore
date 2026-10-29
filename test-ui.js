@@ -253,7 +253,7 @@ async function run() {
     await tick(0); await tick(1); await sleep(400);
     const picked = await b.ev(`({ bar: (document.querySelector(".cmpbar span") || {}).textContent, cols: document.querySelectorAll(".cmp .ctable thead th").length - 1, h2: document.querySelector(".cmp h2").textContent, sizes: document.querySelectorAll(".card .csizes b").length, emi: (document.querySelector(".card .emi") || {}).textContent, find: document.querySelectorAll(".findtv .fcols > div").length })`);
     assert.equal(picked.bar, "2 of 4"); assert.equal(picked.cols, 2, "the compare table shows the two picks"); assert.equal(picked.h2, "Compare your picks");
-    assert.ok(picked.sizes > 0, "size pills on cards"); assert.ok(/\/mo\b/.test(picked.emi), "No Cost EMI per month on cards"); assert.equal(picked.find, 4, "find by size, budget, operating system and resolution");
+    assert.ok(picked.sizes > 0, "size pills on cards"); assert.ok(/\/month\b/.test(picked.emi), "No Cost EMI per month on cards"); assert.equal(picked.find, 4, "find by size, budget, operating system and resolution");
 
     step = "campaign page, compare page, the product's own banner, the help bot";
     await b.goto(base + "/campaigns/festive-tv-days"); await sleep(600);
