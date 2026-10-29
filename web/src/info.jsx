@@ -6,7 +6,7 @@ import { useEffect, useRef, useState } from "react";
 import { useStore } from "./store.jsx";
 import { api, qs } from "./api.js";
 import { Row, Form, Icon, KvImg, Qa } from "./components.jsx";
-import { KV_IMG, CAT_SIZE, BANK_OFFERS, FAQ, CONTACT, STORES, POLICY, SHOW_STORES, WARRANTY_QA, BRAND_BLURB, TV_OS, catSizes, catUrl, brandUrl, listUrl, off, etaText } from "./data.js";
+import { KV_IMG, CAT_SIZE, BANK_OFFERS, FAQ, CONTACT, STORES, POLICY, SHOW_STORES, WARRANTY_QA, BRAND_BLURB, TV_OS, catSizes, catUrl, brandUrl, listUrl, off, etaText, pic, picSet, brandLogo } from "./data.js";
 import { countUp } from "./motion.js";
 import { LegalPage, LEGAL_PAGES } from "./legal.jsx";
 
@@ -82,14 +82,26 @@ export function InfoPage() {
   const one = CATS.length === 1 ? CATS[0] : "", sizes = one ? catSizes(P, one).all : [];
   const biz = (CFG && CFG.business) || {}, phone = CONTACT.phone || biz.phone || "", email = CONTACT.email || biz.email || "";
   const tvs = P.filter(x => x.cat === "Televisions"), low = tvs.length ? Math.min(...tvs.map(x => x.price)) : 0, emiLow = Math.min(...tvs.filter(x => x.emi).map(x => Math.ceil(x.price / 9)));
-  if (p === "about") return <>{crumbs}<div className="hc">
-    <div className="hc-head"><span className="hc-eye">Company</span><h1>About Mytekkstore</h1><p>An online store for Elista smart TVs: every model and every size, at the brand's prices, delivered free across India with cash on delivery, No Cost EMI and the brand's own warranty.</p>
+  // About, 29 Oct: a picture-led page. The living-room photo opens it; every size and range is a tile with its own TV picture and live price
+  // a different TV range's picture on each tile where the size has one (the same render seven times looked like a mistake)
+  const used = new Set(), fam = src => String(src || "").replace(/^.*\//, "").replace(/-\d+in.*$/, "");
+  const picsOf = list => list.map(x => (x.images || [])[0] || x.img).filter(Boolean);
+  const pickFrom = pics => { const pick = pics.find(src => !used.has(fam(src))) || pics[0]; used.add(fam(pick)); return pick; };
+  const shot = list => pickFrom(picsOf(list));
+  const bySize = n => tvs.filter(x => new RegExp("\\(" + n + " inch\\)").test(x.name)), fromOf = list => list.length ? money(Math.min(...list.map(x => x.price))) : "";
+  const typeOf = t => tvs.filter(x => new RegExp(t, "i").test(x.name));
+  // sizes with the fewest TV ranges choose first, so each size gets a range nobody else needs
+  const sizePic = {}; [...sizes].map(sz => [sz.n, picsOf(bySize(sz.n))]).sort((a, b) => new Set(a[1].map(fam)).size - new Set(b[1].map(fam)).size).forEach(([n, pics]) => { if (pics.length) sizePic[n] = pickFrom(pics); });
+  if (p === "about") return <>{crumbs}<div className="hc ab">
+    <div className="ab-hero"><div className="ab-copy"><span className="hc-eye">About Mytekkstore</span><h1>Big-screen TVs, made simple to buy.</h1><p>An online store for Elista smart TVs: every model and every size at the brand's prices, delivered free across India with cash on delivery, No Cost EMI and the brand's own warranty.</p>
       <div className="hc-cta"><a className="d-btn" href="/televisions">Shop all TVs</a><a className="hc-ghost" href="/contact">Contact us</a></div></div>
+      <div className="ab-pic"><img src={pic("img/elista/Google-TV-Xplore-85in_2.webp", 960)} srcSet={picSet("img/elista/Google-TV-Xplore-85in_2.webp")} sizes="(max-width:900px) 100vw, 50vw" alt="An Elista 85 inch Google TV in a living room" width="1500" height="1500" /></div></div>
     <div className="hc-stats" ref={numRef}>{[[tvs.length, "", "TV models"], [sizes.length, "", "screen sizes, 24 to 85 inch"], [low, "₹", "starting price"], [100, "%", "genuine, sealed, brand warranty"]].map(([n, pre, t]) => <div key={t}><b>{pre === "₹" ? money(n) : <><i data-n={n}>0</i>{pre}</>}</b><span>{t}</span></div>)}</div>
     <section className="hc-sec"><h2>What we promise on every order</h2><Facts list={PROMISES.map(([ic, t, s]) => [ic, t, s])} /></section>
-    <section className="hc-sec"><h2>The range</h2><p className="hc-lead">{BRANDS.join(" and ")} televisions, from compact HD sets to 85-inch Mini-LED and QLED, with Google TV, WebOS, Android TV and Coolita OS.</p>
-      <div className="hc-links">{sizes.map(sz => <a href={catUrl("Televisions") + "?size=" + sz.n} key={sz.n}><b>{sz.n}"</b><small>{tvs.filter(x => new RegExp("\\(" + sz.n + " inch\\)").test(x.name)).length} models</small></a>)}<a href="/televisions?type=Mini-LED+PRO"><b>Mini-LED</b><small>PRO range</small></a><a href="/televisions?type=QLED"><b>QLED</b><small>Colour range</small></a></div></section>
-    {BRANDS.map(b => <section className="hc-sec hc-after" key={b}><div><h2>{b}</h2><p>{BRAND_BLURB[b] || ""}</p></div><a className="hc-ghost" href={brandUrl(b)}>Shop {b}</a></section>)}
+    <section className="hc-sec"><h2>Every size, every room</h2><p className="hc-lead">{BRANDS.join(" and ")} televisions from a 24-inch kitchen set to an 85-inch home theatre, with Google TV, WebOS, Android TV and Coolita OS.</p>
+      <div className="ab-sizes">{sizes.map(sz => { const list = bySize(sz.n); return list.length ? <a className="ab-tile" href={catUrl("Televisions") + "?size=" + sz.n} key={sz.n}><span className="ab-img"><img src={pic(sizePic[sz.n], 480)} alt="" loading="lazy" width="480" height="480" /></span><b>{sz.n}"</b><small>{list.length} model{list.length === 1 ? "" : "s"} · from {fromOf(list)}</small></a> : null; })}</div>
+      <div className="ab-ranges">{[["Mini-LED PRO", "Mini-LED", "Mini-LED backlight with QLED colour, Dolby Vision and Atmos.", "/televisions?type=Mini-LED+PRO"], ["QLED", "QLED", "Brighter, richer colour from quantum-dot panels.", "/televisions?type=QLED"]].map(([t, re, d, h]) => { const list = typeOf(re); return list.length ? <a className="ab-range" href={h} key={t}><span className="ab-img"><img src={pic(shot(list), 480)} alt="" loading="lazy" width="480" height="480" /></span><span><b>{t}</b><small>{d}</small><u>{list.length} model{list.length === 1 ? "" : "s"} from {fromOf(list)} →</u></span></a> : null; })}</div></section>
+    {BRANDS.map(b => <section className="ab-brand" key={b}>{brandLogo(b) ? <img src={brandLogo(b)} alt={b} width="160" height="60" /> : <b className="bigb">{b}</b>}<div><h2>The brand: {b}</h2><p>{BRAND_BLURB[b] || ""} Every TV we sell is new, sealed and carries {b}'s own warranty, serviced through {b}'s network.</p></div><a className="hc-ghost" href={brandUrl(b)}>Shop {b}</a></section>)}
     <section className="hc-sec"><h2>Common questions</h2><Ask list={FAQ.slice(0, 6).map(([q, a]) => [q, a])} /></section>
     <Help /></div></>;
 

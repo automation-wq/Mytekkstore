@@ -55,10 +55,10 @@ const emi9 = p => emiPlans(p.price)[2][1];
 function DCard({ p, tag, tagTone, money, compare }) {
   const d = off(p), n = (p.reviews || []).length;
   return <div className="d-card d-prod">
-    <div className="d-badges">{d > 0 && <span className="d-badge">{d}% off</span>}{tag && <span className={"d-badge " + (tagTone || "dark")}>{tag}</span>}{twoYear(p) && <span className="d-badge warr">1+1 yr warranty</span>}</div>
+    <div className="d-badges">{[d > 0 && <span className="d-badge" key="off">{d}% off</span>, tag && <span className={"d-badge " + (tagTone || "dark")} key="tag">{tag}</span>, n === 0 && <span className="d-badge new" key="new">New in store</span>, twoYear(p) && <span className="d-badge warr" key="warr">1+1 yr warranty</span>].filter(Boolean).slice(0, 2)}</div>{/* two badges at most, in this order, so they always fit on one line */}
     <button type="button" className="d-wish" data-wish={p.id} aria-label="Add to wishlist">{I.heart}</button>
     <a className="d-ph" href={productUrl(p)} aria-label={title(p)}><img src={pic(p.img, 480)} srcSet={picSet(p.img)} sizes="(max-width:760px) 46vw, 300px" alt="" loading="lazy" width="1500" height="1500" /></a>
-    {n > 0 ? <span className="d-stars">★★★★★ <span>{avg(p).toFixed(1)} ({n})</span></span> : <span className="d-stars muted">New in store</span>}
+    {n > 0 && <span className="d-stars">★★★★★ <span>{avg(p).toFixed(1)} ({n})</span></span>}
     <a className="d-title" href={productUrl(p)}>{title(p)}</a>
     <ul className="d-pts">{(p.features || []).slice(0, 3).map(f => <li key={f}>{f.replace(/ · /g, " & ")}</li>)}</ul>
     <div className="d-pricerow"><span className="d-price">{money(p.price)}</span>{p.mrp > p.price && <span className="d-mrp">{money(p.mrp)}</span>}</div>
@@ -216,7 +216,7 @@ export function Home() {
       <Head h="Shop by type" link="All TVs" href="/televisions" />
       <div className="d-g6">{types.filter(([, , list]) => list.length).map(([name, tile, list, href, note]) => <a className="d-card d-type" href={href} key={name}>
         <div className="d-tv"><img src={pic("img/elista/" + tile + "_2.webp", 480)} srcSet={picSet("img/elista/" + tile + "_2.webp")} sizes="(max-width:900px) 46vw, 260px" alt="" loading="lazy" width="1500" height="1500" /></div>
-        <strong>{name}</strong><span className="d-emi">{note ? note + " · " : ""}from {from(list)}</span>{Math.max(...list.map(off)) > 0 && <span className="d-save">Up to {Math.max(...list.map(off))}% off</span>}
+        <strong>{name}</strong>{note && <span className="d-emi">{note.replace(/ · /g, ", ")}</span>}<span className="d-from">From <b>{from(list)}</b></span>{Math.max(...list.map(off)) > 0 && <span className="d-save">Up to {Math.max(...list.map(off))}% off</span>}
       </a>)}</div>
     </section>
 
@@ -253,7 +253,7 @@ export function Home() {
 
     <section className="d-pay"><div className="d-wrap">
       <div className="d-payhead"><h2 className="d-h" style={{ fontSize: 24 }}>Pay the way you like</h2><span className="d-secure">{I.lock}Secure checkout · GST invoice on every order</span></div>
-      <div className="d-g6">{[["UPI", "GPay, PhonePe, Paytm, any UPI app"], ["Cards", "Visa, Mastercard, RuPay, Amex"], ["No-cost EMI", "3 to 12 months on HDFC, ICICI, SBI, Axis, Kotak", true], ["Net banking", "All major Indian banks"], ["Cash on delivery", "Available on all TVs · pay at your door"], ["Free delivery", "On every TV, anywhere we deliver", true]].map(([t, d, gold]) => <div className="d-paybox" key={t}><strong className={gold ? "gold" : undefined}>{t}</strong><span className="d-emi">{d}</span></div>)}</div>
+      <div className="d-g6">{[["UPI", "GPay, PhonePe, Paytm, any UPI app"], ["Cards", "Visa, Mastercard, RuPay, Amex"], ["No-cost EMI", "3 to 12 months on HDFC, ICICI, SBI, Axis, Kotak", true], ["Net banking", "All major Indian banks"], ["Cash on delivery", "Pay at your door, on every TV"], ["Free delivery", "On every TV, anywhere we deliver", true]].map(([t, d, gold]) => <div className="d-paybox" key={t}><strong className={gold ? "gold" : undefined}>{t}</strong><span className="d-emi">{d}</span></div>)}</div>
     </div></section>
 
     {cmp.length >= 2 && <a className="d-cmpbar" href={"/compare?ids=" + cmp.join(",")}>Compare {cmp.length} TVs →</a>}
