@@ -40,18 +40,20 @@ export function Cart() {
   useEffect(() => { document.title = "Cart | Mytekkstore"; }, []);
   if (!cartCount()) return <><Box title="Your cart is empty" text="Add something you like and it will show up here." href="/" cta="Continue shopping" />
     <Row title="Deals of the Day" href="/products?sort=off" list={[...P].sort((a, b) => off(b) - off(a)).slice(0, 5)} /></>;
-  return <>
-    <h1 className="ptitle">Your cart <span className="muted">({cartCount()})</span></h1>
-    <div className="cols">
-      <div className="lines panel"><AnimatePresence initial={false}>{Object.keys(cart).map(id => <m.div layout key={id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, x: 40 }} transition={{ type: "spring", stiffness: 320, damping: 32 }}><Line p={byId(id)} /></m.div>)}</AnimatePresence></div>
-      <aside className="panel sum"><h3>Order summary</h3>
-        <div className="tot"><span>Items ({cartCount()})</span><span>{money(cartTotal())}</span></div>
-        <div className="tot"><span>Delivery</span><span className="free">Free</span></div>
-        <div className="tot grand"><span>Total</span><b>{money(cartTotal())}</b></div>
-        <a className="btn" href="/checkout">Proceed to checkout</a><a className="btn ghost" href="/">Continue shopping</a><div className="perks"><span><Icon k="truck" /> Free delivery</span><span><Icon k="cash" /> Cash on delivery</span><span><Icon k="undo" /> Easy returns</span><span><Icon k="shield" /> Brand warranty</span></div></aside>
+  const items = Object.keys(cart).map(byId).filter(Boolean), mrpTotal = items.reduce((t, p) => t + Math.max(p.mrp || 0, p.price) * cart[p.id], 0), mrpOff = mrpTotal - cartTotal(), emiAny = items.some(p => p.emi);
+  return <div className="co cart">
+    <ol className="co-steps" aria-label="Checkout steps"><li className="on" aria-current="step"><i>1</i><span>Cart</span></li><li><i>2</i><span>Delivery &amp; payment</span></li><li><i>3</i><span>Confirmation</span></li></ol>
+    <div className="co-cols">
+      <div className="co-main"><section className="co-card"><div className="co-hd"><span className="co-n">{cartCount()}</span><div><h2>Your cart</h2><p>{cartCount()} item{cartCount() === 1 ? "" : "s"} · free delivery by {etaText().split(" to ").pop()}</p></div></div>
+        <div className="lines cart-lines"><AnimatePresence initial={false}>{Object.keys(cart).map(id => <m.div layout key={id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, x: 40 }} transition={{ type: "spring", stiffness: 320, damping: 32 }}><Line p={byId(id)} /></m.div>)}</AnimatePresence></div></section></div>
+      <aside className="co-side"><div className="co-card co-sum"><div className="co-sumhd"><h2>Order summary</h2></div>
+        <div className="co-price"><h3>Price details</h3><div><span>{mrpOff > 0 ? "Total MRP" : "Price"} ({cartCount()} item{cartCount() === 1 ? "" : "s"})</span><span>{money(mrpOff > 0 ? mrpTotal : cartTotal())}</span></div>{mrpOff > 0 && <div className="g"><span>Discount on MRP</span><span>−{money(mrpOff)}</span></div>}<div><span>Delivery</span><span className="g">Free</span></div>
+          <div className="tot grand"><span>Total amount</span><b>{money(cartTotal())}</b></div>{emiAny && <p className="co-emi">No Cost EMI from <b>{money(emiPlans(cartTotal())[2][1])}/month</b> on participating cards.</p>}</div>
+        <a className="co-place ck-place" href="/checkout">Proceed to checkout</a><a className="co-cont" href="/">Continue shopping</a><p className="co-tax">Coupons are applied at checkout</p></div>
+        <div className="co-trust"><span><Icon k="lock" />Secure checkout</span><span><Icon k="medal" />100% genuine</span><span><Icon k="undo" />{POLICY.returnDays}-day returns</span></div></aside>
     </div>
     <Row title="You may also like" href="/products?sort=off" list={P.filter(p => !cart[p.id] && p.stock > 0).sort((a, b) => off(b) - off(a)).slice(0, 5)} />
-  </>;
+  </div>;
 }
 
 export function Checkout() {

@@ -93,7 +93,7 @@ export function Category() {
 
   // tiles: the categories, only when no category is chosen (a category page has the three-tab discovery instead)
   const tiles = [];
-  if (!cat && !f.brand.length) CATS.forEach(c => tiles.push([c, P.filter(p => p.cat === c).length + " products", catUrl(c), catImg(c), false])); // category tiles only when no category is chosen
+  if (!cat && !f.brand.length && CATS.length > 1) CATS.forEach(c => tiles.push([c, P.filter(p => p.cat === c).length + " products", catUrl(c), catImg(c), false])); // category tiles only when no category is chosen
   const band = BANDS.find(([a, b]) => a === f.min && b === f.max);
   const chips = [...f.brand.map(b => [b, () => set({ brand: f.brand.filter(x => x !== b) })]), ...(f.size ? [[sizeTitle(f.size).replace(/-inch/, " inch"), () => set({ size: "" })]] : []), ...(f.os ? [[f.os, () => set({ os: "" })]] : []), ...(f.res ? [[f.res, () => set({ res: "" })]] : []), ...(f.type ? [[f.type, () => set({ type: "" })]] : []),
     ...((f.min || f.max) ? [[band ? band[2] : !f.min ? "Under " + money(f.max) : !f.max ? "Above " + money(f.min) : money(f.min) + " to " + money(f.max), () => set({ min: 0, max: 0 })]] : []), ...(f.off ? [[f.off + "% off or more", () => set({ off: 0 })]] : []),
@@ -103,7 +103,7 @@ export function Category() {
     <div className="crumbs"><a href="/">Home</a> › {coll && cat ? <><a href={catUrl(cat)}>{cat}</a> › {coll}</> : title}</div>
     {wishOnly ? <h1>My wishlist</h1> : S && KV_IMG[cat] ? <div className="kv"><div className="kvimg"><KvImg src={cat === "Televisions" ? life("category", "img/kv-tv.jpg") : `img/${KV_IMG[cat]}.jpg`} sizes="(max-width:1240px) 100vw, 1240px" eager /></div><div><span className="eyebrow">{cat}</span><h1 className="explore">{coll || "A World of Entertainment Awaits."}</h1><p>{coll ? n + " model" + (n === 1 ? "" : "s") + " · free delivery and cash on delivery on every TV." : "Discover televisions designed for every room and every moment."}</p></div></div>
       : !cat && f.brand.length === 1 && !q ? <BrandStrip brand={f.brand[0]} P={P} />
-      : <h1 className="explore">{S ? "Explore " + S.short : title}</h1>}
+      : <h1 className={"explore" + (q ? " srch" : "")}>{S ? "Explore " + S.short : title}</h1>}
     {!wishOnly && S && cat && catAll.length > 0 && <Discover list={catAll} sizes={sizeList} sizeOf={sizeOf} f={f} set={set} url={url} money={money} />}
     {!wishOnly && tiles.length > 0 && <div className="finder"><div className="tiles">{tiles.map(([name, note, href, img, on]) => <a className={"tile" + (on ? " on" : "")} href={href} aria-current={on ? "page" : undefined} key={href}><span><b>{name}</b><small>{note}</small></span><img src={pic(img, 480)} alt="" loading="lazy" width="800" height="800" /></a>)}</div></div>}
     <div className="ptool"><h2 className="ptotal">{coll || nText}{coll ? <small className="pcount"> · {nText}</small> : q ? ' · "' + q + '"' : ""}</h2>
@@ -210,7 +210,7 @@ export function ComparePage() {
   const cat = list[0].cat;
   return <>
     <div className="crumbs"><a href="/">Home</a> › <a href={catUrl(cat)}>{cat}</a> › Compare</div>
-    <h1>Compare</h1>
+    <h1 className="vh">Compare TVs</h1>
     <CompareAll list={list} cat={cat} short={cat.toLowerCase()} picked />
     <Row title="More to look at" href={catUrl(cat)} list={P.filter(p => p.cat === cat && !ids.includes(p.id)).slice(0, 6)} />
   </>;

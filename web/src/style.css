@@ -3320,3 +3320,19 @@ body[data-page="checkout"] { background:linear-gradient(180deg,#F7F4EC 0, #F5F6F
 .co-trust span { border-color:#ECE7DA } .co-trust .ic { color:#8A6512 }
 .co-inr { margin:0; padding:10px 22px; background:#FFF4D6; color:#8A5A00; font-size:13px; font-weight:600 }
 @media (max-width:900px) { .co-bar .co-place { width:auto; margin:0 } }
+
+/* 29 Oct review fixes: the cart in the checkout's look; the order page as cards with no gaps; search heading; account gap; admin labels */
+.cart .cart-lines .line { padding:16px 0; border-bottom:1px solid #F0EDE4 } .cart .cart-lines .line:last-child { border-bottom:0 }
+.co-place { text-decoration:none } a.co-place { display:flex }
+.co-cont { display:flex; align-items:center; justify-content:center; height:46px; margin:10px 22px 0; border:1.5px solid #E2DFD6; border-radius:10px; color:#111; font-weight:700; text-decoration:none } .co-cont:hover { border-color:#111; color:#111 }
+@media (max-width:900px) { .cart .co-sum .co-place { display:flex } .cart .co { padding-bottom:40px } }
+body[data-page="order"] { background:linear-gradient(180deg,#F7F4EC 0, #F5F6F8 340px) }
+body[data-page="order"] .okbox { position:relative; margin-top:16px; background:#fff; border:1px solid #ECE7DA; border-radius:16px; box-shadow:0 12px 32px -24px rgba(60,45,10,.25); overflow:hidden }
+body[data-page="order"] .okbox::before { content:""; position:absolute; left:0; top:0; right:0; height:3px; background:linear-gradient(90deg,#111,#C9A85A 60%,#F3DFA6) }
+body[data-page="order"] main > .cols { margin-top:18px; align-items:start } body[data-page="order"] main > section { margin-top:32px }
+body[data-page="order"] .panel { background:#fff; border:1px solid #ECE7DA; border-radius:16px; box-shadow:0 12px 32px -24px rgba(60,45,10,.25) }
+body[data-page="order"] .panel h3 { font-family:var(--d-font); font-size:17px; font-weight:800 } body[data-page="order"] .panel .tot.grand { margin-top:8px; padding:14px 16px; border-radius:10px; background:linear-gradient(135deg,#FBF6E9,#F3E7C6) }
+h1.explore.srch { text-align:left; font-size:34px; margin:12px 0 18px }
+.acc-main { margin-top:0 } @media (max-width:900px) { .acc { gap:16px } }
+.ad-biz .ad-f { color:#24272E !important }
+@media (max-width:900px) { body[data-page="cart"] .chatfab, body[data-page="order"] .chatfab { display:none } } /* the help bubble never covers a total or a button on these pages; Help stays in the menu */
