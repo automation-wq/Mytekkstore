@@ -55,7 +55,8 @@ export function Cart() {
 }
 
 export function Checkout() {
-  const { me, cart, byId, money, cartCount, cartTotal, clearCart } = useStore();
+  const { me, cart, byId, cartCount, cartTotal, clearCart, country } = useStore();
+  const money = n => "₹" + Math.round(n).toLocaleString("en-IN"); // orders are delivered in India and charged in rupees, whatever display currency the header shows
   const { CFG: payCfg } = useStore(); // pay: "razorpay" once the server has gateway keys; payDemo: the test window, on a local copy only
   useEffect(() => { if (payCfg && payCfg.pay === "razorpay" && !document.querySelector('script[src^="https://checkout.razorpay.com/"]')) { const sc = document.createElement("script"); sc.src = "https://checkout.razorpay.com/v1/checkout.js"; sc.async = true; document.head.appendChild(sc); } }, [payCfg && payCfg.pay]);
   const [where, setWhere] = useState({ city: "", state: "" }), [pinMsg, setPinMsg] = useState(""), [locating, setLocating] = useState(false), [osm, setOsm] = useState(false);
@@ -144,7 +145,7 @@ export function Checkout() {
         </section>
       </Form>
       <aside className="co-side">
-        <div className="co-card co-sum"><div className="co-sumhd"><h2>Order summary</h2><a href="/cart">Edit cart</a></div>
+        <div className="co-card co-sum">{country !== "India" && <p className="co-inr">You are browsing in another currency. Orders are delivered in India and charged in Indian rupees.</p>}<div className="co-sumhd"><h2>Order summary</h2><a href="/cart">Edit cart</a></div>
           <ul className="co-items ck-lines">{items.map(p => { const q = cart[p.id]; return <li className="line" key={p.id}><span className="co-ph"><Photo p={p} sizes="72px" /></span><span className="co-it"><b>{p.brand} {p.name}</b><small>Qty {q}{p.mrp > p.price ? <> · <s>{money(p.mrp * q)}</s> <i>{off(p)}% off</i></> : null}</small></span><strong>{money(p.price * q)}</strong></li>; })}</ul>
           <p className="co-eta"><Icon k="truck" /><span>Free delivery by <b>{etaText()}</b></span></p>
           <div className="co-coupon ck-coupon-wrap"><b className="co-ct"><Icon k="tag" />Coupons</b>

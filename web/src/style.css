@@ -3295,3 +3295,28 @@ body[data-page="checkout"] #hdr .wrap::after { color:#08805F; background-image:u
 .bk-cards, .bk-emi, .bk-cards ~ .d-bnote { max-width:1320px } .bk-card { aspect-ratio:1.95; padding:18px 20px } .bk-big { font-size:30px } .bk-mid { margin:10px 0 auto }
 .bk-intl { color:#8A6512; font-weight:600 }
 @media (max-width:760px) { .bk-card { aspect-ratio:auto } }
+
+/* Checkout, premium pass (29 Oct): the store's black and gold on the same flow */
+body[data-page="checkout"] { background:linear-gradient(180deg,#F7F4EC 0, #F5F6F8 340px) }
+.co-steps li.on i { background:linear-gradient(135deg,#F3DFA6,#C9A85A); border-color:#C9A85A; color:#111 } .co-steps li.on::before, .co-steps .done + li::before { background:linear-gradient(90deg,#08805F,#C9A85A) }
+.co-card { border-color:#ECE7DA; box-shadow:0 1px 2px rgba(17,17,17,.04), 0 12px 32px -24px rgba(60,45,10,.25) }
+.co-main .co-card { position:relative; overflow:hidden } .co-main .co-card::before { content:""; position:absolute; left:0; top:0; right:0; height:3px; background:linear-gradient(90deg,#111,#C9A85A 60%,#F3DFA6) }
+.co-n { background:#111; color:#E8CF8C; box-shadow:0 0 0 4px #FBF6E9 }
+.co-hd h2 { font-size:21px }
+.co-in { background:#FCFCFB; border-color:#E2DFD6 } .co-in:focus { background:#fff; border-color:#C9A85A; box-shadow:0 0 0 3px rgba(201,168,90,.22) }
+.co-tel b { background:#F7F1E1; border-color:#E2DFD6; color:#8A6512 }
+.co-locate { border-color:#C9A85A; background:#FFFBF0 } .co-locate:hover { background:#F7F1E1 } .co-locate .ic { color:#8A6512 }
+.co-chips button.on { background:#111; border-color:#111; color:#E8CF8C }
+.co-addr.on { border-color:#C9A85A; background:#FFFBF0; box-shadow:inset 0 0 0 1px #C9A85A } .co-addr b em.dflt { background:#111; color:#E8CF8C }
+.co-pay { border-color:#ECE7DA } .co-pm.on { background:#FFFBF0; box-shadow:inset 4px 0 0 #C9A85A } .co-pm.on .co-pi { background:#111; color:#E8CF8C } .co-pm em.ok { background:#111; color:#E8CF8C }
+.co-sum { padding:0; overflow:hidden }
+.co-sumhd { margin:0; padding:18px 22px; background:#111 } .co-sumhd h2 { color:#fff } .co-sumhd a { color:#E8CF8C }
+.co-sum > .co-items, .co-sum > .co-eta, .co-sum > .co-coupon, .co-sum > .co-price, .co-sum > .co-err, .co-sum > .co-tax { margin-left:22px; margin-right:22px } .co-sum > .co-items { margin-top:18px }
+.co-sum > .co-place { width:calc(100% - 44px); margin:16px 22px 0 }
+.co-sum > .co-tax { margin-bottom:20px }
+.co-price .grand { margin:6px -22px 0; padding:16px 22px; border-top:0; background:linear-gradient(135deg,#FBF6E9,#F3E7C6) } .co-price .grand b { font-size:26px }
+.co-save { background:#111; color:#E8CF8C }
+.co-place { background:#111; color:#fff; box-shadow:0 10px 24px -12px rgba(0,0,0,.55) } .co-place:hover { background:#24262C } .co-place::after { content:" →"; color:#E8CF8C; margin-left:6px }
+.co-trust span { border-color:#ECE7DA } .co-trust .ic { color:#8A6512 }
+.co-inr { margin:0; padding:10px 22px; background:#FFF4D6; color:#8A5A00; font-size:13px; font-weight:600 }
+@media (max-width:900px) { .co-bar .co-place { width:auto; margin:0 } }
