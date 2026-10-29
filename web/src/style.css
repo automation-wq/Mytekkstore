@@ -3260,3 +3260,10 @@ body[data-page="checkout"] #hdr .wrap::after { color:#08805F; background-image:u
 @media (max-width:600px) { .hc-stats b { font-size:24px } .hc-toc { overflow-x:auto; flex-wrap:nowrap; scrollbar-width:none } .hc-toc a { white-space:nowrap } }
 .row > .card { height:auto; align-self:stretch } /* in a scrolling strip the cards stretch to the tallest, so their buttons line up */
 .hc-stats i { font-style:normal } .hc-form .form { padding:0; margin:0; border:0; box-shadow:none; background:none; max-width:none }
+
+/* bank offer cards in each bank's own colour (owner, 29 Oct): a light-to-deep sweep of the bank colour with a soft sheen, white text, the gold chip */
+.bk-card { background:radial-gradient(130% 100% at 100% 0%, rgba(255,255,255,.22), transparent 50%), linear-gradient(150deg, color-mix(in srgb, var(--bc) 78%, #fff) 0%, var(--bc) 48%, color-mix(in srgb, var(--bc) 62%, #000) 100%); box-shadow:0 18px 34px -18px color-mix(in srgb, var(--bc) 70%, #000), inset 0 0 0 1px rgba(255,255,255,.12) }
+.bk-card:hover { box-shadow:0 26px 44px -18px color-mix(in srgb, var(--bc) 75%, #000), inset 0 0 0 1px rgba(255,255,255,.3) }
+.bk-big { color:#fff } .bk-terms { color:rgba(255,255,255,.85) } .bk-tag { color:#fff; border-color:rgba(255,255,255,.55); background:rgba(255,255,255,.12) }
+.bk-foot { color:rgba(255,255,255,.75); border-top-color:rgba(255,255,255,.2) } .bk-foot u { color:#fff } .bk-nfc { color:rgba(255,255,255,.7) }
+@media (max-width:760px) { .bk-card { aspect-ratio:auto; min-height:210px } .bk-mid { margin-bottom:14px } } /* on a phone the card grows to fit its text instead of cutting the last line */

@@ -271,7 +271,7 @@ export function BankPanel({ tvs, money }) {
   const cheap = tvs.filter(x => x.emi).sort((a, b) => a.price - b.price)[0], plans = cheap ? emiPlans(cheap.price) : [];
   const [m, setM] = useState(plans.length ? plans[plans.length - 1][0] : 9), cur = plans.find(([n]) => n === m);
   return <>
-    <div className="bk-cards">{banks.map(([bank, big, terms, , chip, badge]) => { const min = String(chip || "").split(" · ")[0]; return <a className="bk-card" href="/offers#bank-terms" key={bank}>
+    <div className="bk-cards">{banks.map(([bank, big, terms, color, chip, badge]) => { const min = String(chip || "").split(" · ")[0]; return <a className="bk-card" href="/offers#bank-terms" style={{ "--bc": color }} key={bank}>
       <div className="bk-top"><b className="bk-bank">{bank}</b><span className="bk-tag">{badge}</span></div>
       <div className="bk-mid">{CHIP}{WAVES}</div>
       <div className="bk-big">{big}</div><p className="bk-terms">{terms}</p>
