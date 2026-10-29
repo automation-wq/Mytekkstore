@@ -3290,3 +3290,8 @@ body[data-page="checkout"] #hdr .wrap::after { color:#08805F; background-image:u
 .ab-range .ab-img { aspect-ratio:16/10 } /* hide the render's printed title */
 .d-from { display:block; margin-top:2px; font-size:14px; color:#3F4551 } .d-from b { color:#111; font-weight:800 } .d-badges { flex-wrap:nowrap; overflow:hidden }
 .d-badges { flex-wrap:wrap; overflow:visible } /* two badges at most; on a narrow card the second drops below rather than being cut */
+
+/* bank offers, 29 Oct: real-card proportions and a width limit, so a wide screen never blows the cards up */
+.bk-cards, .bk-emi, .bk-cards ~ .d-bnote { max-width:1320px } .bk-card { aspect-ratio:1.95; padding:18px 20px } .bk-big { font-size:30px } .bk-mid { margin:10px 0 auto }
+.bk-intl { color:#8A6512; font-weight:600 }
+@media (max-width:760px) { .bk-card { aspect-ratio:auto } }

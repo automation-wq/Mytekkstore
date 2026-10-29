@@ -266,7 +266,9 @@ export function Home() {
 // as a strip whose 3, 6 and 9 month buttons show the real instalment on the lowest-priced No Cost EMI TV. Used on the home and offers pages.
 const CHIP = <svg className="bk-chip" viewBox="0 0 46 34" aria-hidden="true"><rect x="1" y="1" width="44" height="32" rx="6" fill="url(#bkg)" stroke="#8A6512" strokeOpacity=".35" /><path d="M1 12h14m16 0h14M1 22h14m16 0h14M15 1v32M31 1v32M15 12h16v10H15z" fill="none" stroke="#8A6512" strokeOpacity=".45" /><defs><linearGradient id="bkg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stopColor="#F3DFA6" /><stop offset="1" stopColor="#C9A85A" /></linearGradient></defs></svg>;
 const WAVES = <svg className="bk-nfc" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><path d="M8.5 7.5a6 6 0 0 1 0 9M12 5a9.5 9.5 0 0 1 0 14M15.5 2.5a13 13 0 0 1 0 19" /></svg>;
-export function BankPanel({ tvs, money }) {
+export function BankPanel({ tvs }) {
+  // Indian bank cards and No Cost EMI exist only in rupees, whatever display currency the visitor picked in the header
+  const { country } = useStore(), money = n => "₹" + Math.round(n).toLocaleString("en-IN");
   const emi = BANK_OFFERS.find(b => /EMI/.test(b[0])), banks = BANK_OFFERS.filter(b => b !== emi);
   const cheap = tvs.filter(x => x.emi).sort((a, b) => a.price - b.price)[0], plans = cheap ? emiPlans(cheap.price) : [];
   const [m, setM] = useState(plans.length ? plans[plans.length - 1][0] : 9), cur = plans.find(([n]) => n === m);
@@ -280,6 +282,7 @@ export function BankPanel({ tvs, money }) {
       <div className="bk-emi-l"><span className="d-eye">No Cost EMI</span><b className="bk-emi-v">{money(cur[1])}<small>/month × {m} months</small></b><p>{emi[2]} {emi[4] === "Interest borne by us" ? "The interest is on us." : emi[4]}</p></div>
       <div className="bk-emi-r"><div className="bk-seg" role="radiogroup" aria-label="EMI months">{plans.map(([n]) => <button type="button" role="radio" aria-checked={n === m} className={n === m ? "on" : ""} onClick={() => setM(n)} key={n}>{n} months</button>)}</div>
         <small className="d-tnote">On the {cheap.brand} {cheap.name}, {money(cheap.price)}</small><a className="d-emibtn" href={listUrl({ cat: "Televisions", emi: 1 })}>Shop No Cost EMI TVs</a></div></div>}
+    {country !== "India" && <p className="d-bnote bk-intl">These offers are on Indian bank cards, for orders delivered in India, so they are shown in rupees.</p>}
     <p className="d-bnote">Applied automatically when you pay with an eligible card at checkout. One bank offer per order, and it can be combined with No Cost EMI. Offers are run by the banks and follow their terms.</p>
   </>;
 }
