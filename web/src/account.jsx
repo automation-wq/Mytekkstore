@@ -9,6 +9,12 @@ import { useEffect, useRef, useState } from "react";
 import { useStore } from "./store.jsx";
 import { api, qs, load, save } from "./api.js";
 import { Form, Icon, Card } from "./components.jsx";
+// a password box with an eye button that shows or hides what was typed (the button never submits the form)
+const EYE = '<path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>', EYE_OFF = '<path d="M3 3l18 18"/><path d="M10.6 5.1A10 10 0 0 1 12 5c6.4 0 10 7 10 7a17 17 0 0 1-3.2 4.1M6.6 6.6C3.8 8.4 2 12 2 12s3.6 7 10 7a9.6 9.6 0 0 0 5.4-1.6"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"/>';
+function PwInput(props) {
+  const [show, setShow] = useState(false);
+  return <span className="pw"><input {...props} type={show ? "text" : "password"} /><button type="button" className="pw-eye" onClick={() => setShow(v => !v)} aria-label={show ? "Hide password" : "Show password"} aria-pressed={show} title={show ? "Hide password" : "Show password"}><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" dangerouslySetInnerHTML={{ __html: show ? EYE_OFF : EYE }} /></button></span>;
+}
 import { off, pic, picSet, productUrl, emiPlans, BANK_OFFERS, STEPS, etaText, CONTACT, listUrl } from "./data.js";
 
 const inchOf = p => +((/\((\d+) inch\)/.exec((p && p.name) || "") || [])[1] || 0);
@@ -149,7 +155,7 @@ function SignUp({ CFG, money, linkUser }) {
 function PasswordSignIn({ next }) {
   return <Form className="su-pw" id="login" onSubmit={async f => { await api("login", "POST", f); location.href = next; }} after={busy => <button className="su-btn ghost" disabled={busy}>Sign in with password</button>}>
     <label>Email<input name="email" type="email" required autoComplete="email" placeholder="you@example.com" /></label>
-    <label>Password<input name="password" type="password" required autoComplete="current-password" placeholder="Your password" /></label>
+    <label>Password<PwInput name="password" required autoComplete="current-password" placeholder="Your password" /></label>
   </Form>;
 }
 
@@ -238,7 +244,7 @@ function Profile({ me }) {
     </Form>
     <Form className="acc-card acc-form" onSubmit={async f => { await api("me/password", "POST", f); location.reload(); }} after={busy => <button className="acc-btn ghost" disabled={busy}>{me.hasPassword ? "Change password" : "Set a password"}</button>}>
       <b>{me.hasPassword ? "Password" : "Add a password (optional)"}</b><span className="acc-muted">{me.hasPassword ? "You can sign in with your email and this password as well as with an OTP." : "Sign in with an OTP any time; a password is an extra way in for your email."}</span>
-      <label className="acc-f">{me.hasPassword ? "New password" : "Password"}<input className="acc-in" name="password" type="password" required minLength="8" autoComplete="new-password" placeholder="At least 8 characters" /></label>
+      <label className="acc-f">{me.hasPassword ? "New password" : "Password"}<PwInput className="acc-in" name="password" required minLength="8" autoComplete="new-password" placeholder="At least 8 characters" /></label>
       <span className="acc-muted small">Member since {me.since ? new Date(me.since).toLocaleDateString("en-IN", { month: "long", year: "numeric" }) : "the start"}.</span>
     </Form>
   </div>;

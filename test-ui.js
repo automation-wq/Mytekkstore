@@ -337,12 +337,13 @@ async function run() {
     await b.goto(base + "/offers.html");
     assert.ok(await b.ev(`!!document.querySelector(".d-fest .d-festimg img")`), "the festive banner opens the offers page"); // the owner's festive-lights living-room card is its picture
     assert.equal(await b.ev(`document.querySelectorAll(".ftile").length`), 0, "the offers-by-category tiles appear only with more than one category on sale");
-    assert.equal(await b.ev(`document.querySelectorAll(".offer").length`), 4, "bank offer cards");
+    assert.equal(await b.ev(`document.querySelectorAll(".bk-card").length`), 3, "a card for each bank offer"); assert.equal(await b.ev(`document.querySelectorAll(".ofr-terms > div").length`), 4, "the terms of every offer");
     assert.ok(await b.ev(`document.querySelectorAll(".card .emi").length`) > 0, "No Cost EMI tags on deal cards");
     assert.equal(await b.ev(`document.querySelector(".l0.cur .l0link").textContent`), "Best Deals", "Deals is marked current in the bar");
     await b.goto(base + "/");
     assert.ok(await b.ev(`!document.querySelector("main .box") && document.querySelectorAll(".d-prod").length >= 8 && document.querySelectorAll(".d-sz").length >= 5`), "the home page draws its sections, not the error box (a missing import broke it on 22 Oct 2026)");
-    assert.ok(await b.ev(`!!document.querySelector("#bank-offers .d-emi") && document.querySelectorAll("#bank-offers .d-brows li").length === 3`), "the home page's offers panel: No Cost EMI and a row for each of the three bank offers");
+    assert.ok(await b.ev(`document.querySelectorAll("#bank-offers .bk-card").length === 3 && !!document.querySelector("#bank-offers .bk-emi")`), "the home page's offers: a card for each bank offer and the No Cost EMI strip");
+    { const v = () => b.ev(`document.querySelector("#bank-offers .bk-emi-v").textContent`), nine = await v(); await b.ev(`document.querySelectorAll("#bank-offers .bk-seg button")[0].click()`); await sleep(100); assert.notEqual(await v(), nine, "the 3, 6, 9 month buttons change the instalment"); }
     assert.equal(await b.ev(`document.querySelectorAll(".sizerow").length`), 0, "no shop-by-size rows on the home page (client decision 2026-10-09; sizes live on the category pages)");
     assert.ok(await b.ev(`document.querySelectorAll(".d-faq > div").length >= 5`), "the questions people ask before buying, on the home page");
     await b.goto(base + "/product.html?id=1");
@@ -352,7 +353,7 @@ async function run() {
 
     step = "buying guide page and recent searches";
     await b.goto(base + "/buying-guide");
-    assert.ok(await b.ev(`document.title.startsWith("How to choose a TV") && document.querySelectorAll(".gtable tbody tr").length === 5 && !!document.querySelector(".bgrid .bcard")`), "the buying guide has its size table and budget cards");
+    assert.ok(await b.ev(`document.title.startsWith("How to choose a TV") && document.querySelectorAll(".hc-table > a[role=row]").length === 6 && document.querySelectorAll("#budget .hc-links a").length === 4`), "the buying guide has its size table and budget bands");
     await b.goto(base + "/");
     await b.ev(`localStorage.setItem("recentq", JSON.stringify(["55 inch","telefunken"]))`);
     await b.goto(base + "/");

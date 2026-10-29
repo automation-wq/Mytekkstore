@@ -3216,3 +3216,47 @@ body[data-page="checkout"] #hdr .wrap::after { color:#08805F; background-image:u
 /* card badges and fact lines (29 Oct): the 1+1 year warranty as a badge where a model has it; one fact per line on listing cards */
 .d-badge.warr { background:#E8F5F0; color:#08805F }
 .cfacts li span b { font-weight:700; color:#111 } .cfacts li:last-child span b { color:#08805F }
+
+/* 29 Oct: every product card has its buttons on one line across its row (the card fills its grid cell, the buttons sit at its foot) */
+.grid, .d-g4, .row { align-items:stretch }
+.card { display:flex; flex-direction:column; height:100% } .card > .cbody { flex:1 1 auto } .card > .buy { margin-top:auto }
+.d-card.d-prod { display:flex; flex-direction:column; height:100% } .d-card.d-prod > .d-btns { margin-top:auto; padding-top:12px }
+
+/* bank offers: each offer drawn as the card it applies to */
+.bk-cards { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:18px }
+.bk-card { position:relative; display:flex; flex-direction:column; aspect-ratio:1.586; padding:20px 22px; border-radius:18px; overflow:hidden; text-decoration:none; color:#fff;
+  background:radial-gradient(120% 90% at 100% 0%, rgba(232,207,140,.22), transparent 55%), linear-gradient(150deg,#22242B 0%,#0E0F12 70%); box-shadow:0 18px 36px -18px rgba(0,0,0,.55), inset 0 0 0 1px rgba(255,255,255,.06); transition:transform .2s, box-shadow .2s }
+.bk-card:hover { transform:translateY(-4px); box-shadow:0 26px 44px -18px rgba(0,0,0,.6), inset 0 0 0 1px rgba(232,207,140,.35); color:#fff }
+.bk-top { display:flex; justify-content:space-between; align-items:center; gap:8px } .bk-bank { font-size:16px; font-weight:800; letter-spacing:.02em }
+.bk-tag { padding:3px 9px; border-radius:999px; border:1px solid rgba(232,207,140,.5); color:#E8CF8C; font-size:10.5px; font-weight:700; letter-spacing:.1em; text-transform:uppercase }
+.bk-mid { display:flex; align-items:center; gap:10px; margin:14px 0 auto } .bk-chip { width:44px; height:33px } .bk-nfc { width:22px; height:22px; color:rgba(255,255,255,.55) }
+.bk-big { font-family:var(--d-font); font-size:34px; font-weight:800; letter-spacing:-.02em; line-height:1; color:#E8CF8C }
+.bk-terms { margin:6px 0 0; font-size:13px; line-height:1.4; color:#C9CDD6 }
+.bk-foot { display:flex; justify-content:space-between; align-items:center; gap:8px; margin-top:12px; padding-top:10px; border-top:1px solid rgba(255,255,255,.1); font-size:12px; color:#AEB4C0; letter-spacing:.04em }
+.bk-foot u { text-decoration:none; color:#E8CF8C; font-weight:700 }
+.bk-emi { display:grid; grid-template-columns:minmax(0,1.2fr) minmax(0,1fr); gap:24px; align-items:center; margin-top:18px; padding:26px 28px; border-radius:18px; background:#FBF6E9; border:1px solid #EFE3C2 }
+.bk-emi-l { display:flex; flex-direction:column; gap:8px } .bk-emi-v { font-family:var(--d-font); font-size:40px; font-weight:800; letter-spacing:-.03em; line-height:1; color:#111 } .bk-emi-v small { margin-left:6px; font-size:15px; font-weight:600; letter-spacing:0; color:#5F6775 } .bk-emi-l p { margin:0; max-width:46ch; font-size:14.5px; line-height:1.55; color:#3F4551 }
+.bk-emi-r { display:flex; flex-direction:column; align-items:flex-start; gap:10px }
+.bk-seg { display:inline-flex; padding:4px; border-radius:12px; background:#fff; border:1px solid #E8DCC0 } .bk-seg button { height:40px; padding:0 16px; border:0; border-radius:9px; background:none; font:inherit; font-size:14px; font-weight:700; color:#5F6775; cursor:pointer } .bk-seg button.on { background:#111; color:#E8CF8C }
+@media (max-width:900px) { .bk-emi { grid-template-columns:minmax(0,1fr) } }
+@media (max-width:760px) { .bk-cards { display:flex; overflow-x:auto; scroll-snap-type:x mandatory; gap:12px; margin:0 -16px; padding:4px 16px 12px; scrollbar-width:none } .bk-cards::-webkit-scrollbar { display:none } .bk-card { flex:0 0 84%; scroll-snap-align:center } .bk-big { font-size:30px } .bk-emi { padding:20px } .bk-emi-v { font-size:34px } .bk-seg { width:100% } .bk-seg button { flex:1; padding:0 8px } }
+.ofr-terms { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px } .ofr-terms > div { padding:18px 20px; border:1px solid #ECEEF1; border-radius:14px; background:#fff } .ofr-terms b { font-size:16px } .ofr-terms p { margin:6px 0 8px; color:#3F4551 } .ofr-terms ul { margin:0; padding-left:18px; font-size:13.5px; color:#5F6775; display:flex; flex-direction:column; gap:4px }
+@media (max-width:760px) { .ofr-terms { grid-template-columns:minmax(0,1fr) } }
+
+/* password boxes with an eye button */
+.pw { position:relative; display:block } .pw input { width:100%; padding-right:48px !important; box-sizing:border-box }
+.pw-eye { position:absolute; right:4px; top:50%; transform:translateY(-50%); width:40px; height:40px; display:grid; place-items:center; padding:0; border:0; border-radius:8px; background:none; color:#5F6775; cursor:pointer } .pw-eye:hover, .pw-eye[aria-pressed="true"] { color:#111; background:#F3F4F6 }
+
+/* help pages, second set (About, Contact, Buying guide) */
+.hc-stats { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:12px } .hc-stats > div { padding:20px; border-radius:14px; background:#111; color:#fff; display:flex; flex-direction:column; gap:6px } .hc-stats b { font-family:var(--d-font); font-size:32px; font-weight:800; color:#E8CF8C; letter-spacing:-.02em } .hc-stats span { font-size:13.5px; color:#C9CDD6 }
+.hc-links { display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:10px } .hc-links a { display:flex; flex-direction:column; gap:2px; padding:16px; border:1px solid #ECEEF1; border-radius:12px; background:#fff; color:#111; text-decoration:none; transition:border-color .15s } .hc-links a:hover { border-color:#111 } .hc-links b { font-size:18px } .hc-links small { color:#5F6775 }
+.hc-toc { display:flex; flex-wrap:wrap; gap:8px; position:sticky; top:calc(var(--hh,120px) + 8px); z-index:4; padding:8px 0; background:#fff } .hc-toc a { padding:8px 14px; border:1px solid #E1E4E9; border-radius:999px; background:#fff; color:#111; font-size:14px; font-weight:600; text-decoration:none } .hc-toc a:hover { border-color:#111 }
+.hc-sec[id] { scroll-margin-top:calc(var(--hh,120px) + 70px) }
+.hc-table > a { display:grid; grid-template-columns:200px 200px minmax(0,1fr); gap:16px; padding:14px 18px; font-size:15px; color:inherit; text-decoration:none; border-top:1px solid #F0F1F3 } .hc-table > a:hover { background:#FAFAF7 } .hc-table > .th { display:grid; grid-template-columns:200px 200px minmax(0,1fr); gap:16px; background:#FAFAFB; font-size:12px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:#8A909C }
+.hc-tag { display:block; margin-top:2px; font-size:12px; color:#8A6512; font-weight:700 } .hc-p { margin:0; font-size:15px; line-height:1.6; color:#3F4551 }
+.hc-contact { display:grid; grid-template-columns:minmax(0,1.3fr) minmax(0,1fr); gap:18px; align-items:start } .hc-form .form { display:flex; flex-direction:column; gap:14px } .hc-form .form label { display:flex; flex-direction:column; gap:6px; font-size:13px; font-weight:600 } .hc-form .form input, .hc-form .form textarea { padding:12px; border:1.5px solid #D9DCE3; border-radius:10px; font:inherit; font-size:15px } .hc-form .form input:focus, .hc-form .form textarea:focus { outline:none; border-color:#111 }
+.hc-ways { display:flex; flex-direction:column; gap:10px } .hc-way { display:flex; align-items:center; gap:14px; padding:14px 16px; border:1px solid #ECEEF1; border-radius:14px; background:#fff; color:#111; text-decoration:none; transition:border-color .15s } .hc-way:hover { border-color:#111; color:#111 } .hc-way > span:last-child { display:flex; flex-direction:column; gap:2px } .hc-way small { color:#5F6775; font-size:13px }
+@media (max-width:900px) { .hc-stats { grid-template-columns:repeat(2,minmax(0,1fr)) } .hc-contact { grid-template-columns:minmax(0,1fr) } .hc-table > a, .hc-table > .th { grid-template-columns:minmax(0,1fr) minmax(0,1fr) } .hc-table > a > span:last-child, .hc-table > .th > span:last-child { grid-column:1 / -1; color:#5F6775 } }
+@media (max-width:600px) { .hc-stats b { font-size:24px } .hc-toc { overflow-x:auto; flex-wrap:nowrap; scrollbar-width:none } .hc-toc a { white-space:nowrap } }
+.row > .card { height:auto; align-self:stretch } /* in a scrolling strip the cards stretch to the tallest, so their buttons line up */
+.hc-stats i { font-style:normal } .hc-form .form { padding:0; margin:0; border:0; box-shadow:none; background:none; max-width:none }

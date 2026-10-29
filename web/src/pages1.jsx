@@ -4,9 +4,9 @@ import { m, AnimatePresence } from "motion/react";
 import { useStore } from "./store.jsx";
 import { api, qs, demoPay, track } from "./api.js";
 import { Card, Row, Strip, Box, Line, OrderItems, BankOffers, Form, Ico, Icon, Photo, locateMe } from "./components.jsx";
-import { DRAW_ICONS, STEPS, FESTIVE, KV_IMG, POLICY, catUrl, brandUrl, listUrl, off, etaText, pic, emiPlans } from "./data.js";
+import { BANK_OFFERS, DRAW_ICONS, STEPS, FESTIVE, KV_IMG, POLICY, catUrl, brandUrl, listUrl, off, etaText, pic, emiPlans } from "./data.js";
 import { reveal } from "./motion.js";
-import { FestiveBanner } from "./home.jsx"; // the brochure festive banner opens the offers page too
+import { FestiveBanner, BankPanel } from "./home.jsx"; // the brochure festive banner opens the offers page too
 
 const $ = (s, el = document) => el.querySelector(s);
 const $$ = (s, el = document) => [...el.querySelectorAll(s)];
@@ -29,8 +29,8 @@ export function Offers() {
     {FESTIVE.ends && <div className="fest"><div className="cdown" aria-label="Time left">{["Days", "Hours", "Minutes", "Seconds"].map((l, i) => <div key={l}><b>{cells[i]}</b><span>{l}</span></div>)}</div></div>}
     {CATS.length > 1 && <section><h2>Offers by category</h2><p className="lead">The biggest discount in each category right now.</p><div className="ftiles">{CATS.map(c => <a className="ftile" href={listUrl({ cat: c, sort: "off" })} key={c}><span><b>Up to {maxOff(c)}% off</b>{c}</span><img src={pic(catImg(c), 480)} alt="" loading="lazy" width="800" height="800" /></a>)}</div></section>}
     <section><h2>{maxOff() > 0 ? "Top deals" : "No Cost EMI picks"} <a href="/products?sort=off">View all</a></h2><p className="lead">{maxOff() > 0 ? "Sorted by discount, biggest first." : "Pay monthly with no extra interest, lowest price first."}</p><div className="grid">{deals.slice(0, 8).map(p => <Card p={p} key={p.id} />)}</div></section>
-    <BankOffers />
-    <section><div className="emiband"><div><p className="kicker">No Cost EMI</p><h2>Pay in easy monthly instalments</h2><p>Products marked "No Cost EMI" can be paid for in 3, 6 or 9 monthly instalments on participating bank credit cards, with no extra interest.</p></div><a className="btn" href="/products">Shop now</a></div></section>
+    <section className="d-sec"><h2>Bank and payment offers</h2><p className="lead">Save more when you pay by card.</p><BankPanel tvs={tvs} money={money} /></section>
+    <section id="bank-terms"><h2>Offer terms</h2><div className="ofr-terms">{BANK_OFFERS.map(([bank, big, terms, , chip, badge, foot]) => <div key={bank}><b>{bank}: {big}</b><p>{terms}</p><ul>{[chip, badge === "Instant" ? "Instant discount at checkout, " + String(foot || "").toLowerCase() : foot, "One bank offer per order. Run by the bank and subject to its terms; the bank may change or end it."].filter(Boolean).map(t => <li key={t}>{t}</li>)}</ul></div>)}</div></section>
     <p className="muted small" style={{ marginTop: 24 }}>Offers depend on bank terms and stock. Discounts are against the MRP.</p>
   </>;
 }

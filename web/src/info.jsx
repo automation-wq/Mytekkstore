@@ -6,7 +6,7 @@ import { useEffect, useRef, useState } from "react";
 import { useStore } from "./store.jsx";
 import { api, qs } from "./api.js";
 import { Row, Form, Icon, KvImg, Qa } from "./components.jsx";
-import { KV_IMG, CAT_SIZE, BANK_OFFERS, FAQ, CONTACT, STORES, POLICY, SHOW_STORES, WARRANTY_QA, BRAND_BLURB, catSizes, catUrl, brandUrl, listUrl, off, etaText } from "./data.js";
+import { KV_IMG, CAT_SIZE, BANK_OFFERS, FAQ, CONTACT, STORES, POLICY, SHOW_STORES, WARRANTY_QA, BRAND_BLURB, TV_OS, catSizes, catUrl, brandUrl, listUrl, off, etaText } from "./data.js";
 import { countUp } from "./motion.js";
 import { LegalPage, LEGAL_PAGES } from "./legal.jsx";
 
@@ -71,31 +71,44 @@ export function InfoPage() {
   const hero = <Hero eyebrow={eyebrow} title={head} sub={sub} cat={cat} />;
   const cta = <section><a className="cban" href="/offers"><KvImg className="cph" src={`img/${KV_IMG[cat]}.jpg`} sizes="(max-width:1240px) 100vw, 1240px" /><div><span className="kicker">Festive offers</span><h2>{maxOff > 0 ? "Up to " + maxOff + "% off" : "No Cost EMI on every smart TV"}</h2><p>Bank offers · free delivery · cash on delivery on every TV</p><u>See the offers →</u></div></a></section>;
 
-  const one = CATS.length === 1 ? CATS[0] : "", sizes = one ? catSizes(P, one).all : [];
-  if (p === "about") return <>{crumbs}{hero}
-    <div className="num" ref={numRef}>{[[P.length, "", "Models", one ? one.toLowerCase() + (sizes.length > 1 ? ", " + sizes.length + " sizes" : "") : "across " + CATS.length + " categories"], [BRANDS.length, "", "Brands", BRANDS.join(" and ")], [BANK_OFFERS.length, "", "Bank offers", "plus No Cost EMI"], [100, "%", "Genuine", "brand warranty on everything"]]
-      .map(([n, suf, t, s]) => <div key={t}><b><i data-n={n}>0</i>{suf}</b><span>{t}</span><small>{s}</small></div>)}</div>
-    <section><h2>What we sell</h2><p className="lead">{one ? "Every " + one.toLowerCase().replace(/s$/, "") + " we stock, in every size, from " + BRANDS.join(" and ") + "." : CATS.length + " categories, every size we stock, from " + BRANDS.join(" and ") + "."}</p><Cats /></section>
-    <section><h2>The brands</h2><p className="lead">{BRANDS.join(" and ")}, side by side on every category page.</p>
-      <div className="why brands2">{BRANDS.map(b => { const ps = P.filter(x => x.brand === b); return <div key={b}><b className="bigb">{b}</b><p>{brandBlurb[b] || `${ps.length} products in our range.`}</p><a className="alink" href={brandUrl(b)}>Shop {b} · {ps.length} product{ps.length === 1 ? "" : "s"} →</a></div>; })}</div></section>
-    <section><h2>How we work</h2><p className="lead">The same four promises on every order.</p><Promises /></section>
-    <Faq list={FAQ} lead="Short answers before you order." />
-    {cta}</>;
+  // Delivery and Returns as help pages in the pattern of Amazon's help centre (28 Oct): a plain heading with the next action, the key
+  // facts, the real steps on this site, then the details. Every rule here is the one in the Shipping and the Refund policies.
+  const Facts = ({ list }) => <div className="hc-facts">{list.map(([ic, t, s]) => <div key={t}><span className="hc-ic"><Icon k={ic} /></span><b>{t}</b><small>{s}</small></div>)}</div>;
+  const Steps = ({ list }) => <ol className="hc-steps">{list.map(([t, s, link], i) => <li key={t}><span className="hc-n">{i + 1}</span><div><b>{t}</b><p>{s}</p>{link && <a className="alink" href={link[1]}>{link[0]} →</a>}</div></li>)}</ol>;
+  const Ask = ({ list }) => <div className="hc-faq">{list.map(([q, x]) => <details key={q}><summary>{q}</summary><p>{x}</p></details>)}</div>;
+  const Help = () => <div className="hc-help"><span className="hc-ic"><Icon k="user" /></span><div><b>Still need help?</b><p>Write to us with your order number and we reply by email.</p></div><a className="d-btn" href="/contact">Contact us</a></div>;
+  const rd = POLICY.returnDays, fd = POLICY.refundDays;
 
-  if (p === "contact") return <>{crumbs}{hero}
-    <section><h2>Write to us</h2><p className="lead">Tell us what you need and we reply to the email you give.</p>
-      <div className="contact">
-        <ContactForm />
-        <div className="ways">
-          {CONTACT.phone && <a className="way" href={"tel:" + CONTACT.phone.replace(/\s/g, "")}><i className="kico"><Icon k="user" /></i><b>Call us</b><span>{CONTACT.phone}</span>{CONTACT.hours && <small>{CONTACT.hours}</small>}</a>}
-          {CONTACT.email && <a className="way" href={"mailto:" + CONTACT.email}><i className="kico"><Icon k="tag" /></i><b>Email</b><span>{CONTACT.email}</span></a>}
-          {CONTACT.address && <div className="way"><i className="kico"><Icon k="pin" /></i><b>Visit</b><span>{CONTACT.address}</span></div>}
-          <a className="way" href="/account"><i className="kico"><Icon k="box" /></i><b>Track an order</b><span>Every order shows its status from Placed to Delivered in your account.</span></a>
-          <a className="way" href="/returns"><i className="kico"><Icon k="undo" /></i><b>Return something</b><span>How returns and refunds work, step by step.</span></a>
-          <a className="way" href="/shipping"><i className="kico"><Icon k="truck" /></i><b>Delivery questions</b><span>Where we deliver, how long it takes, and how to check your pincode.</span></a>
-        </div></div></section>
-    <Faq list={FAQ} lead="The questions we are asked most." />
-    {cta}</>;
+  const one = CATS.length === 1 ? CATS[0] : "", sizes = one ? catSizes(P, one).all : [];
+  const biz = (CFG && CFG.business) || {}, phone = CONTACT.phone || biz.phone || "", email = CONTACT.email || biz.email || "";
+  const tvs = P.filter(x => x.cat === "Televisions"), low = tvs.length ? Math.min(...tvs.map(x => x.price)) : 0, emiLow = Math.min(...tvs.filter(x => x.emi).map(x => Math.ceil(x.price / 9)));
+  if (p === "about") return <>{crumbs}<div className="hc">
+    <div className="hc-head"><span className="hc-eye">Company</span><h1>About Mytekkstore</h1><p>An online store for Elista smart TVs: every model and every size, at the brand's prices, delivered free across India with cash on delivery, No Cost EMI and the brand's own warranty.</p>
+      <div className="hc-cta"><a className="d-btn" href="/televisions">Shop all TVs</a><a className="hc-ghost" href="/contact">Contact us</a></div></div>
+    <div className="hc-stats" ref={numRef}>{[[tvs.length, "", "TV models"], [sizes.length, "", "screen sizes, 24 to 85 inch"], [low, "₹", "starting price"], [100, "%", "genuine, sealed, brand warranty"]].map(([n, pre, t]) => <div key={t}><b>{pre === "₹" ? money(n) : <><i data-n={n}>0</i>{pre}</>}</b><span>{t}</span></div>)}</div>
+    <section className="hc-sec"><h2>What we promise on every order</h2><Facts list={PROMISES.map(([ic, t, s]) => [ic, t, s])} /></section>
+    <section className="hc-sec"><h2>The range</h2><p className="hc-lead">{BRANDS.join(" and ")} televisions, from compact HD sets to 85-inch Mini-LED and QLED, with Google TV, WebOS, Android TV and Coolita OS.</p>
+      <div className="hc-links">{sizes.map(sz => <a href={catUrl("Televisions") + "?size=" + sz.n} key={sz.n}><b>{sz.n}"</b><small>{tvs.filter(x => new RegExp("\\(" + sz.n + " inch\\)").test(x.name)).length} models</small></a>)}<a href="/televisions?type=Mini-LED+PRO"><b>Mini-LED</b><small>PRO range</small></a><a href="/televisions?type=QLED"><b>QLED</b><small>Colour range</small></a></div></section>
+    {BRANDS.map(b => <section className="hc-sec hc-after" key={b}><div><h2>{b}</h2><p>{BRAND_BLURB[b] || ""}</p></div><a className="hc-ghost" href={brandUrl(b)}>Shop {b}</a></section>)}
+    <section className="hc-sec"><h2>Common questions</h2><Ask list={FAQ.slice(0, 6).map(([q, a]) => [q, a])} /></section>
+    <Help /></div></>;
+
+  if (p === "contact") return <>{crumbs}<div className="hc">
+    <div className="hc-head"><span className="hc-eye">Help</span><h1>Contact us</h1><p>Orders, delivery, returns and service. Write to us with your order number and we reply by email{phone ? ", or call us" : ""}.</p></div>
+    <div className="hc-contact">
+      <div className="hc-card hc-form"><h3>Send us a message</h3><ContactForm /></div>
+      <div className="hc-ways">
+        {phone && <a className="hc-way" href={"tel:" + phone.replace(/\s/g, "")}><span className="hc-ic"><Icon k="user" /></span><span><b>Call us</b><small>{phone}{CONTACT.hours ? " · " + CONTACT.hours : ""}</small></span></a>}
+        {email && <a className="hc-way" href={"mailto:" + email}><span className="hc-ic"><Icon k="tag" /></span><span><b>Email</b><small>{email}</small></span></a>}
+        <a className="hc-way" href="/account?s=orders"><span className="hc-ic"><Icon k="box" /></span><span><b>Track an order</b><small>Every order, from Placed to Delivered</small></span></a>
+        <a className="hc-way" href="/returns"><span className="hc-ic"><Icon k="undo" /></span><span><b>Return or cancel</b><small>{POLICY.returnDays}-day returns, free pickup</small></span></a>
+        <a className="hc-way" href="/shipping"><span className="hc-ic"><Icon k="truck" /></span><span><b>Delivery</b><small>Free, usually in 3 to 5 days</small></span></a>
+        <a className="hc-way" href="/warranty"><span className="hc-ic"><Icon k="shield" /></span><span><b>Warranty and service</b><small>1 year or 1 + 1 years by model</small></span></a>
+      </div></div>
+    {(biz.legalName || biz.grievanceName) && <section className="hc-sec hc-two">
+      {biz.legalName && <div className="hc-card"><h3>Registered office</h3><p className="hc-p"><b>{biz.legalName}</b><br />{[biz.address, biz.city, biz.state, biz.pin].filter(Boolean).join(", ")}{biz.gstin && <><br />GSTIN {biz.gstin}</>}</p></div>}
+      {biz.grievanceName && <div className="hc-card"><h3>Grievance officer</h3><p className="hc-p"><b>{biz.grievanceName}</b>{biz.grievanceDesignation && ", " + biz.grievanceDesignation}{biz.grievanceEmail && <><br />{biz.grievanceEmail}</>}{biz.grievancePhone && <><br />{biz.grievancePhone}</>}</p><small>Under the Consumer Protection (E-Commerce) Rules, 2020. We acknowledge a complaint within 48 hours and resolve it within one month.</small></div>}</section>}
+    <section className="hc-sec"><h2>Common questions</h2><Ask list={FAQ.filter(([q]) => /deliver|pay|track|return|genuine|warranty|EMI/i.test(q)).slice(0, 6).map(([q, a]) => [q, a])} /></section></div></>;
 
   if (p === "stores") return <>{crumbs}{hero}
     {STORES.length > 0 && <section><h2>Our stores</h2><p className="lead">Walk in, see the products, and order at the store price.</p>
@@ -105,13 +118,28 @@ export function InfoPage() {
     <section><h2>How we work</h2><Promises /></section>
     {cta}</>;
 
-  // Delivery and Returns as help pages in the pattern of Amazon's help centre (28 Oct): a plain heading with the next action, the key
-  // facts, the real steps on this site, then the details. Every rule here is the one in the Shipping and the Refund policies.
-  const Facts = ({ list }) => <div className="hc-facts">{list.map(([ic, t, s]) => <div key={t}><span className="hc-ic"><Icon k={ic} /></span><b>{t}</b><small>{s}</small></div>)}</div>;
-  const Steps = ({ list }) => <ol className="hc-steps">{list.map(([t, s, link], i) => <li key={t}><span className="hc-n">{i + 1}</span><div><b>{t}</b><p>{s}</p>{link && <a className="alink" href={link[1]}>{link[0]} →</a>}</div></li>)}</ol>;
-  const Ask = ({ list }) => <div className="hc-faq">{list.map(([q, x]) => <details key={q}><summary>{q}</summary><p>{x}</p></details>)}</div>;
-  const Help = () => <div className="hc-help"><span className="hc-ic"><Icon k="user" /></span><div><b>Still need help?</b><p>Write to us with your order number and we reply by email.</p></div><a className="d-btn" href="/contact">Contact us</a></div>;
-  const rd = POLICY.returnDays, fd = POLICY.refundDays;
+  if (p === "buying-guide") return <>{crumbs}<div className="hc">
+    <div className="hc-head"><span className="hc-eye">Buying guide</span><h1>How to choose the right TV</h1><p>Size, picture, smart system, sound and budget, in plain words, so you buy once and buy right.</p>
+      <div className="hc-cta"><a className="d-btn" href="/televisions">Shop all TVs</a><a className="hc-ghost" href="/compare?ids=26,29,19">Compare three TVs</a></div></div>
+    <nav className="hc-toc" aria-label="On this page">{[["size", "1. Size"], ["picture", "2. Picture"], ["system", "3. Smart system"], ["sound", "4. Sound and ports"], ["budget", "5. Budget"]].map(([id, t]) => <a href={"#" + id} key={id}>{t}</a>)}</nav>
+    <section className="hc-sec" id="size"><h2>1. Start with the size</h2><p className="hc-lead">Measure from your sofa to the wall where the TV goes. Sit about 1.5 times the screen width away.</p>
+      <div className="hc-table" role="table" aria-label="Screen size by viewing distance"><div role="row" className="th"><b role="columnheader">Screen</b><span role="columnheader">Sit this far away</span><span role="columnheader">Suits</span></div>{[["32 inch (80 cm)", "1.2 to 2 m", "Bedroom, kitchen, compact rooms", 32], ["43 inch (109 cm)", "1.6 to 2.5 m", "Small living room", 43], ["50 inch (126 cm)", "2 to 2.8 m", "Living room", 50], ["55 inch (140 cm)", "2 to 3 m", "Living room, 2 BHK", 55], ["65 inch (165 cm)", "2.5 to 3.5 m", "Large room", 65], ["75 to 85 inch", "3 to 4.5 m", "Home theatre", 75]].map(([a, b, c, n]) => <a role="row" href={"/televisions?size=" + n} key={a}><b role="cell">{a}</b><span role="cell">{b}</span><span role="cell">{c}</span></a>)}</div>
+      <p className="hc-note">When in doubt, go one size up: most buyers wish they had.</p></section>
+    <section className="hc-sec" id="picture"><h2>2. The picture</h2><div className="hc-three">
+      <div><b>HD Ready</b><small className="hc-tag">1366 × 768</small><p>The most affordable. Right for 24 and 32 inch screens and everyday TV channels.</p></div>
+      <div><b>Full HD</b><small className="hc-tag">1920 × 1080</small><p>Sharper; a good match for 40 to 43 inch and most streaming.</p></div>
+      <div><b>4K Ultra HD</b><small className="hc-tag">3840 × 2160</small><p>Four times the detail of Full HD. The one to pick at 50 inch and above, for films, sport and games.</p></div></div>
+      <div className="hc-two"><div className="hc-card"><h3>QLED</h3><p className="hc-p">A layer of quantum dots gives brighter, more saturated colour than a standard LED panel at a similar price.</p><a className="alink" href="/televisions?type=QLED">QLED TVs →</a></div><div className="hc-card"><h3>Mini-LED PRO</h3><p className="hc-p">Thousands of tiny backlight LEDs, with QLED colour, over 500 nits, Dolby Vision and HDR10: deeper blacks and brighter highlights.</p><a className="alink" href="/televisions?type=Mini-LED+PRO">Mini-LED TVs →</a></div></div></section>
+    <section className="hc-sec" id="system"><h2>3. The smart system</h2><p className="hc-lead">It decides which apps you get and how you find them. Every one has YouTube and the major Indian streaming apps.</p>
+      <div className="hc-two">{[...Object.entries(TV_OS).map(([n, o]) => [n, o.blurb]), ["Coolita OS", "Elista's own smart system with certified apps and a simple home screen."]].map(([n, b]) => <div className="hc-card" key={n}><h3>{n}</h3><p className="hc-p">{b}</p><a className="alink" href={"/televisions?os=" + encodeURIComponent(n)}>{n} TVs →</a></div>)}</div></section>
+    <section className="hc-sec" id="sound"><h2>4. Sound and ports</h2><div className="hc-three">
+      <div><b>HDMI ports</b><p>For a set-top box, a console and a soundbar. Two cover most homes; three leave room to grow.</p></div>
+      <div><b>USB ports</b><p>Play your own films and photos from a pen drive or a hard disk.</p></div>
+      <div><b>Sound</b><p>Built-in speakers suit everyday viewing; Dolby Audio or Atmos, or a soundbar, give a fuller sound.</p></div></div></section>
+    <section className="hc-sec" id="budget"><h2>5. Your budget</h2><p className="hc-lead">Every price band we stock, with the number of models in it.{emiLow < Infinity ? " No Cost EMI from " + money(emiLow) + "/month." : ""}</p>
+      <div className="hc-links">{[[0, 25000, "Under " + money(25000)], [25000, 50000, money(25000) + " to " + money(50000)], [50000, 100000, money(50000) + " to " + money(100000)], [100000, 0, "Above " + money(100000)]].map(([mn, mx, label]) => { const c = tvs.filter(x => (!mn || x.price >= mn) && (!mx || x.price < mx)).length; return <a href={listUrl({ cat: "Televisions", min: mn || "", max: mx || "" })} key={label}><b>{label}</b><small>{c} model{c === 1 ? "" : "s"}</small></a>; })}</div></section>
+    <section className="hc-sec"><h2>Common questions</h2><Ask list={FAQ.filter(([q]) => /size|LED|Google TV|choose|difference/i.test(q)).map(([q, a]) => [q, a])} /></section>
+    <Help /></div></>;
 
   if (p === "shipping") return <>{crumbs}<div className="hc">
     <div className="hc-head"><span className="hc-eye">Help · Delivery</span><h1>Delivery and tracking</h1><p>Free delivery across India, usually in 3 to 5 days, with cash on delivery if you prefer. Order today and it usually arrives by {etaText()}.</p>
@@ -164,32 +192,6 @@ export function InfoPage() {
       ["The box looked damaged at delivery. What do I do?", "You may refuse the delivery, and we arrange a replacement or a refund. If you accepted it and find damage on unboxing, request a return with photos."],
     ]} /></section>
     <Help /></div></>;
-
-  if (p === "buying-guide") return <>{crumbs}{hero}
-    <section><h2>Start with the size</h2><p className="lead">The right screen size depends on how far you sit from it — here is a rough guide.</p>
-      <div className="scroll"><table className="gtable"><thead><tr><th>Screen size</th><th>Best viewing distance</th><th>Good for</th></tr></thead><tbody>
-        {[["32 inch", "1.2 – 1.8 m", "Bedrooms, kitchens, compact rooms"], ["43 inch", "1.8 – 2.2 m", "Everyday living-room viewing"], ["50 – 55 inch", "2.0 – 2.6 m", "The living-room favourite"], ["65 inch", "2.5 – 3.0 m", "A cinematic main TV"], ["75 inch and up", "3.0 m and more", "Large rooms and home cinema"]].map(r => <tr key={r[0]}>{r.map((c, i) => <td key={i}>{c}</td>)}</tr>)}
-      </tbody></table></div>
-      <p className="muted">Sit too close to a big screen and you notice the pixels; sit too far from a small one and you miss the detail. When in doubt, go one size up.</p>
-      <a className="alink" href="/televisions">Shop TVs by size →</a></section>
-    <section><h2>Resolution: how sharp the picture is</h2><Policy sections={[
-      ["HD Ready (1366 × 768)", "The most affordable. Good for smaller screens around 32 inch and for normal TV channels."],
-      ["Full HD (1920 × 1080)", "Sharper, a good match for 40 to 43 inch and for most streaming."],
-      ["4K Ultra HD (3840 × 2160)", "Four times the detail of Full HD. The standard for 50 inch and above, and the one to pick for films, sport and gaming."],
-    ]} /></section>
-    <section><h2>The operating system</h2><p className="lead">The smart system is how you find apps like YouTube and your streaming services.</p>
-      <div className="why"><div><i className="kico"><Icon k="check" /></i><b>Google TV</b><p>Apps from Google Play, Google Assistant on the remote and Chromecast built in — one home screen that gathers your shows.</p></div>
-        <div><i className="kico"><Icon k="check" /></i><b>WebOS</b><p>A quick card-style home screen with the streaming apps built in, and no set-top box needed.</p></div></div>
-      <a className="alink" href="/televisions#os">Compare the operating systems side by side →</a></section>
-    <section><h2>Connections to check</h2><Policy sections={[
-      ["HDMI ports", "For a set-top box, a game console and a soundbar. Two covers most homes; three leaves room to grow."],
-      ["USB ports", "For a pen drive or hard disk, to play your own films and photos."],
-      ["Sound", "Built-in speakers are fine for everyday viewing; look for Dolby Audio, or add a soundbar, for a fuller sound."],
-    ]} /></section>
-    <section><h2>Match it to your budget</h2><p className="lead">Every range we stock, at a glance.</p>
-      <div className="bgrid">{[[0, 10000, "Under " + money(10000)], [10000, 25000, money(10000) + " – " + money(25000)], [25000, 50000, money(25000) + " – " + money(50000)], [50000, 0, "Above " + money(50000)]].map(([mn, mx, label]) => { const c = P.filter(x => x.cat === "Televisions" && (!mn || x.price >= mn) && (!mx || x.price <= mx)).length; return <a className="bcard" href={listUrl({ cat: "Televisions", min: mn || "", max: mx || "" })} key={label}><span><b>{label}</b><small>{c} TV{c === 1 ? "" : "s"}</small></span><i aria-hidden="true">→</i></a>; })}</div></section>
-    <Faq list={FAQ.filter(([q]) => /size|LED|Google TV|choose|difference/i.test(q))} lead="More questions before you buy." />
-    {cta}</>;
 
   return null;
 }
