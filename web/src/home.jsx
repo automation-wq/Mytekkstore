@@ -268,23 +268,33 @@ export function Home() {
 const CHIP = <svg className="bk-chip" viewBox="0 0 46 34" aria-hidden="true"><rect x="1" y="1" width="44" height="32" rx="6" fill="url(#bkg)" stroke="#8A6512" strokeOpacity=".35" /><path d="M1 12h14m16 0h14M1 22h14m16 0h14M15 1v32M31 1v32M15 12h16v10H15z" fill="none" stroke="#8A6512" strokeOpacity=".45" /><defs><linearGradient id="bkg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stopColor="#F3DFA6" /><stop offset="1" stopColor="#C9A85A" /></linearGradient></defs></svg>;
 const WAVES = <svg className="bk-nfc" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><path d="M8.5 7.5a6 6 0 0 1 0 9M12 5a9.5 9.5 0 0 1 0 14M15.5 2.5a13 13 0 0 1 0 19" /></svg>;
 export function BankPanel({ tvs }) {
-  // Indian bank cards and No Cost EMI exist only in rupees, whatever display currency the visitor picked in the header
-  const { country } = useStore(), money = n => "₹" + Math.round(n).toLocaleString("en-IN");
-  const emi = BANK_OFFERS.find(b => /EMI/.test(b[0])), banks = BANK_OFFERS.filter(b => b !== emi);
-  const cheap = tvs.filter(x => x.emi).sort((a, b) => a.price - b.price)[0], plans = cheap ? emiPlans(cheap.price) : [];
-  const [m, setM] = useState(plans.length ? plans[plans.length - 1][0] : 9), cur = plans.find(([n]) => n === m);
+  // 24 Nov rebuild, in the pattern of Amazon's and Flipkart's offer lists: one panel. Left, each bank offer as a row with a small card in
+  // the bank's colour and what it saves on the chosen TV, worked out from the offer's own terms; right, a No Cost EMI calculator where the
+  // customer picks the TV and the months. Indian cards and EMI exist only in rupees, whatever display currency the header shows.
+  const { country } = useStore(), money = n => "₹" + Math.round(n).toLocaleString("en-IN"), num = t => +String(t || "").replace(/[^\d]/g, "");
+  const emi = BANK_OFFERS.find(x => /EMI/.test(x[0])), banks = BANK_OFFERS.filter(x => x !== emi);
+  const list = tvs.filter(x => x.emi).sort((p, q) => p.price - q.price), short = p => p.name.replace(/^\d+ cm \((\d+) inch\) /, '$1" ');
+  const [id, setId] = useState(list[0] ? list[0].id : 0), [m, setM] = useState(9);
+  const tv = list.find(x => x.id === +id) || list[0]; if (!tv) return null;
+  const plans = emiPlans(tv.price), cur = plans.find(([n]) => n === m) || plans[plans.length - 1];
+  const saving = ([, big, terms, , chip]) => { const min = num((/Min\. order ₹([\d,]+)/.exec(chip || "") || [])[1]), pct = (/(\d+)% off/.exec(big) || [])[1], cap = num((/Up to ₹([\d,]+)/.exec(terms) || [])[1]), flat = num((/₹([\d,]+) off/.exec(big) || [])[1]);
+    if (tv.price < min) return { ok: false, min }; return { ok: true, v: pct ? Math.min(Math.round(tv.price * pct / 100), cap || Infinity) : flat }; };
   return <>
-    <div className="bk-cards">{banks.map(([bank, big, terms, color, chip, badge]) => { const min = String(chip || "").split(" · ")[0]; return <a className="bk-card" href="/offers#bank-terms" style={{ "--bc": color }} key={bank}>
-      <div className="bk-top"><b className="bk-bank">{bank}</b><span className="bk-tag">{badge}</span></div>
-      <div className="bk-mid">{CHIP}{WAVES}</div>
-      <div className="bk-big">{big}</div><p className="bk-terms">{terms}</p>
-      <div className="bk-foot"><span>{min}</span><u>Offer terms ›</u></div></a>; })}</div>
-    {emi && cheap && <div className="bk-emi">
-      <div className="bk-emi-l"><span className="d-eye">No Cost EMI</span><b className="bk-emi-v">{money(cur[1])}<small>/month × {m} months</small></b><p>{emi[2]} {emi[4] === "Interest borne by us" ? "The interest is on us." : emi[4]}</p></div>
-      <div className="bk-emi-r"><div className="bk-seg" role="radiogroup" aria-label="EMI months">{plans.map(([n]) => <button type="button" role="radio" aria-checked={n === m} className={n === m ? "on" : ""} onClick={() => setM(n)} key={n}>{n} months</button>)}</div>
-        <small className="d-tnote">On the {cheap.brand} {cheap.name}, {money(cheap.price)}</small><a className="d-emibtn" href={listUrl({ cat: "Televisions", emi: 1 })}>Shop No Cost EMI TVs</a></div></div>}
+    <div className="bk-panel">
+      <div className="bk-list"><p className="bk-eye">Instant bank discounts <span>on {short(tv)}</span></p>
+        {banks.map(o => { const [bank, big, terms, color] = o, sv = saving(o); return <a className="bk-row" href="/offers#bank-terms" style={{ "--bc": color }} key={bank}>
+          <span className="bk-mini" aria-hidden="true"><i></i><b>{bank.replace(/ Bank$/, "")}</b></span>
+          <span className="bk-txt"><b>{big} with {bank}</b><small>{terms}</small></span>
+          <span className={"bk-save" + (sv.ok ? "" : " no")}>{sv.ok ? <><small>You save</small><b>{money(sv.v)}</b></> : <><small>Min. order</small><b>{money(sv.min)}</b></>}</span></a>; })}
+        <p className="bk-fine">Applied automatically when you pay with an eligible card at checkout. One bank offer per order; it can be combined with No Cost EMI. Offers are run by the banks and follow their terms.</p></div>
+      {emi && <div className="bk-calc"><p className="bk-eye gold">No Cost EMI</p>
+        <label className="bk-pick"><span>TV</span><select value={tv.id} onChange={e => setId(+e.target.value)} aria-label="Choose a TV">{list.map(x => <option value={x.id} key={x.id}>{short(x)} · {money(x.price)}</option>)}</select></label>
+        <div className="bk-seg" role="radiogroup" aria-label="EMI months">{plans.map(([n]) => <button type="button" role="radio" aria-checked={n === cur[0]} className={n === cur[0] ? "on" : ""} onClick={() => setM(n)} key={n}>{n} months</button>)}</div>
+        <b className="bk-emi-v">{money(cur[1])}<small>/month</small></b>
+        <p className="bk-calc-note">{cur[0]} payments of {money(cur[1])}, total {money(tv.price)}. No interest; {emi[2].replace(/^3, 6 or 9 months on /, "on ").replace(/\.$/, "")}.</p>
+        <a className="bk-go" href={productUrl(tv)}>View this TV</a></div>}
+    </div>
     {country !== "India" && <p className="d-bnote bk-intl">These offers are on Indian bank cards, for orders delivered in India, so they are shown in rupees.</p>}
-    <p className="d-bnote">Applied automatically when you pay with an eligible card at checkout. One bank offer per order, and it can be combined with No Cost EMI. Offers are run by the banks and follow their terms.</p>
   </>;
 }
 

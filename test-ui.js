@@ -337,12 +337,16 @@ async function run() {
     await b.goto(base + "/offers.html");
     assert.ok(await b.ev(`!!document.querySelector(".d-fest .d-festimg img")`), "the festive banner opens the offers page"); // the owner's festive-lights living-room card is its picture
     assert.equal(await b.ev(`document.querySelectorAll(".ftile").length`), 0, "the offers-by-category tiles appear only with more than one category on sale");
-    assert.equal(await b.ev(`document.querySelectorAll(".bk-card").length`), 3, "a card for each bank offer"); assert.equal(await b.ev(`document.querySelectorAll(".ofr-terms > div").length`), 4, "the terms of every offer");
+    assert.equal(await b.ev(`document.querySelectorAll(".bk-row").length`), 3, "a row for each bank offer"); assert.equal(await b.ev(`document.querySelectorAll(".ofr-terms > div").length`), 4, "the terms of every offer");
     assert.ok(await b.ev(`document.querySelectorAll(".card .emi").length`) > 0, "No Cost EMI tags on deal cards");
     assert.equal(await b.ev(`document.querySelector(".l0.cur .l0link").textContent`), "Best Deals", "Deals is marked current in the bar");
     await b.goto(base + "/");
     assert.ok(await b.ev(`!document.querySelector("main .box") && document.querySelectorAll(".d-prod").length >= 8 && document.querySelectorAll(".d-sz").length >= 5`), "the home page draws its sections, not the error box (a missing import broke it on 22 Oct 2026)");
-    assert.ok(await b.ev(`document.querySelectorAll("#bank-offers .bk-card").length === 3 && !!document.querySelector("#bank-offers .bk-emi")`), "the home page's offers: a card for each bank offer and the No Cost EMI strip");
+    assert.ok(await b.ev(`document.querySelectorAll("#bank-offers .bk-row").length === 3 && !!document.querySelector("#bank-offers .bk-calc")`), "the home page's offers: a row for each bank offer and the No Cost EMI calculator");
+    { const save = () => b.ev(`[...document.querySelectorAll("#bank-offers .bk-save")].map(x => x.textContent).join("|")`), first = await save();
+      assert.match(first, /Min\. order/, "on the cheapest TV the offers above its price say their minimum order");
+      await b.ev(`(() => { const sel = document.querySelector("#bank-offers .bk-pick select"); Object.getOwnPropertyDescriptor(HTMLSelectElement.prototype, "value").set.call(sel, sel.options[sel.options.length - 1].value); sel.dispatchEvent(new Event("change", { bubbles: true })); })()`); await sleep(150);
+      const last = await save(); assert.equal((last.match(/You save/g) || []).length, 3, "on the dearest TV every bank offer applies: " + last); assert.match(last, /₹2,000/, "HDFC's 10% stops at its ₹2,000 cap"); }
     { const v = () => b.ev(`document.querySelector("#bank-offers .bk-emi-v").textContent`), nine = await v(); await b.ev(`document.querySelectorAll("#bank-offers .bk-seg button")[0].click()`); await sleep(100); assert.notEqual(await v(), nine, "the 3, 6, 9 month buttons change the instalment"); }
     assert.equal(await b.ev(`document.querySelectorAll(".sizerow").length`), 0, "no shop-by-size rows on the home page (client decision 2026-10-09; sizes live on the category pages)");
     assert.ok(await b.ev(`document.querySelectorAll(".d-faq > div").length >= 5`), "the questions people ask before buying, on the home page");
