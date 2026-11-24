@@ -3347,3 +3347,16 @@ h1.explore.srch { text-align:left; font-size:34px; margin:12px 0 18px }
 @media (max-width:760px) { .d-sphoto.bn { height:52vw } .d-sphoto.bn img { transform:none; object-position:var(--fx,70%) 50% } .d-sphoto.bn::after { background:linear-gradient(0deg,rgba(14,15,18,.85) 0%,rgba(14,15,18,0) 40%) } }
 .d-hero .d-slide.on { min-height:500px } @media (max-width:760px) { .d-hero .d-slide.on { min-height:0 } .d-hero .d-stext { min-height:330px; box-sizing:border-box } } /* every banner the same height, so the page below never jumps as the slides change */
 @media (max-width:760px) { .d-hero .d-stext { min-height:366px } }
+
+/* Hero slide bar (24 Nov): under the banner, one tab per slide with its number and name; the active tab's gold line fills over the 4 seconds */
+.d-dots.d-tabs { position:static; left:auto; bottom:auto; transform:none; display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:0; background:#0E0F12; border-top:1px solid rgba(255,255,255,.1) }
+.d-dots.d-tabs button { position:relative; display:flex; align-items:center; gap:12px; width:auto; height:auto; padding:18px 28px; border:0; border-radius:0; background:none; color:rgba(255,255,255,.5); font:inherit; font-size:14px; font-weight:600; text-align:left; cursor:pointer; transition:color .2s, background .2s }
+.d-dots.d-tabs button + button { box-shadow:inset 1px 0 0 rgba(255,255,255,.08) }
+.d-dots.d-tabs button:hover { color:#fff; background:rgba(255,255,255,.04) } .d-dots.d-tabs button.on { width:auto; color:#fff; background:rgba(255,255,255,.05) }
+.d-tabs b { font-size:12px; font-weight:800; letter-spacing:.08em; color:rgba(232,207,140,.55) } .d-tabs button.on b { color:#E8CF8C }
+.d-tabs span { white-space:nowrap; overflow:hidden; text-overflow:ellipsis }
+.d-prog { position:absolute; left:0; top:-1px; height:2px; width:100%; background:#E8CF8C; transform-origin:left; transform:scaleX(0); animation:d-prog 4s linear forwards }
+@keyframes d-prog { to { transform:scaleX(1) } } .d-hero.hold .d-prog { animation-play-state:paused }
+@media (prefers-reduced-motion: reduce) { .d-prog { animation:none; transform:scaleX(1) } }
+@media (max-width:760px) { .d-dots.d-tabs button { flex-direction:column; align-items:flex-start; gap:2px; padding:12px 10px; font-size:11.5px } .d-tabs span { max-width:100% } .d-hero .d-stext { min-height:352px } }
+@media (max-width:760px) { .d-hero .d-stext { min-height:364px } }
