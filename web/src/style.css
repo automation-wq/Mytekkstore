@@ -3355,7 +3355,7 @@ h1.explore.srch { text-align:left; font-size:34px; margin:12px 0 18px }
 .d-dots.d-tabs button:hover { color:#fff; background:rgba(255,255,255,.04) } .d-dots.d-tabs button.on { width:auto; color:#fff; background:rgba(255,255,255,.05) }
 .d-tabs b { font-size:12px; font-weight:800; letter-spacing:.08em; color:rgba(232,207,140,.55) } .d-tabs button.on b { color:#E8CF8C }
 .d-tabs span { white-space:nowrap; overflow:hidden; text-overflow:ellipsis }
-.d-prog { position:absolute; left:0; top:-1px; height:2px; width:100%; background:#E8CF8C; transform-origin:left; transform:scaleX(0); animation:d-prog 4s linear forwards }
+.d-prog { position:absolute; left:0; top:-1px; height:2px; width:100%; background:#E8CF8C; transform-origin:left; transform:scaleX(0); animation:d-prog 3s linear forwards }
 @keyframes d-prog { to { transform:scaleX(1) } } .d-hero.hold .d-prog { animation-play-state:paused }
 @media (prefers-reduced-motion: reduce) { .d-prog { animation:none; transform:scaleX(1) } }
 @media (max-width:760px) { .d-dots.d-tabs button { flex-direction:column; align-items:flex-start; gap:2px; padding:12px 10px; font-size:11.5px } .d-tabs span { max-width:100% } .d-hero .d-stext { min-height:352px } }

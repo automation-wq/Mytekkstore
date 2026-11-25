@@ -122,8 +122,8 @@ export function Home() {
 
   const minOf = l => l.length ? Math.min(...l.map(p => p.price)) : 0;
   const slides = heroSlides({ smart: minOf(tvs.filter(p => p.os)), big: minOf(tvs.filter(p => inchOf(p) >= 65)), mini: minOf(miniAll), qled: minOf(tvs.filter(p => typeOf(p) === "QLED")), minEmi, money });
-  // the hero moves on every 4 s (owner); a dot or swipe restarts the 4 s, a mouse over it or focus inside holds it, a hidden tab or reduced motion never moves it
-  useEffect(() => { if (hold || matchMedia("(prefers-reduced-motion: reduce)").matches) return; const t = setInterval(() => { if (!document.hidden) setCur(c => (c + 1) % slides.length); }, 4000); return () => clearInterval(t); }, [cur, hold, slides.length]);
+  // the hero moves on every 3 s (owner, 25 Nov; was 4 s); a dot or swipe restarts the 3 s, a mouse over it or focus inside holds it, a hidden tab or reduced motion never moves it
+  useEffect(() => { if (hold || matchMedia("(prefers-reduced-motion: reduce)").matches) return; const t = setInterval(() => { if (!document.hidden) setCur(c => (c + 1) % slides.length); }, 3000); return () => clearInterval(t); }, [cur, hold, slides.length]);
   return <div className="hp">
     <h1 className="vh">Mytekkstore: Elista smart TVs at factory-direct prices, with free delivery, cash on delivery and No Cost EMI</h1>{/* the page's name for search engines and screen readers; the visible headlines are the slides below */}
     {/* the hero: the owner's banners, one at a time, dots below, a swipe on a phone */}
