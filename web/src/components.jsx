@@ -298,7 +298,8 @@ export function Header() {
       closeCart();
     });
     // other sticky parts and the menu panels sit just below the header, whatever its height
-    const syncHeader = () => document.documentElement.style.setProperty("--hh", $("#hdr").offsetHeight + "px");
+    const syncHeader = () => { const h = $("#hdr"), f = h.querySelector("form"), lift = f && matchMedia("(max-width:760px)").matches ? Math.max(0, Math.round(f.getBoundingClientRect().top - h.getBoundingClientRect().top) - 8) : 0;
+      h.style.top = lift ? -lift + "px" : ""; document.documentElement.style.setProperty("--hh", h.offsetHeight - lift + "px"); document.documentElement.style.setProperty("--hb", h.offsetHeight + "px"); };
     syncHeader(); on(window, "resize", syncHeader);
     if (document.fonts) document.fonts.ready.then(syncHeader);
     return () => offs.forEach(f => f());

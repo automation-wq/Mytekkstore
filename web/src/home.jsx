@@ -74,6 +74,7 @@ function DCard({ p, tag, tagTone, money, compare }) {
 
 const Head = ({ h, sub, link, href, children }) => <div className="d-hd"><div style={{ display: "flex", alignItems: "center", gap: 18, flexWrap: "wrap" }}><div><h2 className="d-h">{h}</h2>{sub && <p className="d-sub">{sub}</p>}</div>{children}</div>{link && <a className="d-link" href={href}>{link}</a>}</div>;
 
+const phone = typeof matchMedia === "function" && matchMedia("(max-width:760px)").matches;
 export function Home() {
   const { P, money } = useStore();
   const tvs = P.filter(p => p.cat === "Televisions");
@@ -133,7 +134,7 @@ export function Home() {
 
     <section className="d-wrap" id="deals" style={{ paddingTop: 48 }}>
       <Head h="Deals of the Day" link="All deals" href={listUrl({ cat: "Televisions", sort: "off" })}><span className="d-count">Refreshes in <b>{String(Math.floor(left / 60)).padStart(2, "0")}</b>h <b>{String(left % 60).padStart(2, "0")}</b>m</span></Head>
-      <div className="d-g4 d-roomy">{deals.map(({ p, tag, tone }) => <DCard p={p} tag={tag} tagTone={tone} money={money} compare={compare} key={p.id} />)}</div>
+      <div className="d-g4 d-roomy d-rail">{deals.map(({ p, tag, tone }) => <DCard p={p} tag={tag} tagTone={tone} money={money} compare={compare} key={p.id} />)}</div>
     </section>
 
     <section className="d-wrap d-sec">
@@ -156,11 +157,11 @@ export function Home() {
 
     <section className="d-wrap d-sec">
       <Head h="Bestsellers this week" sub="What customers are buying most." link="View all" href="/televisions" />
-      <div className="d-g4">{best.map((p, i) => <DCard p={p} tag={i === 0 ? "No.1 seller" : undefined} money={money} compare={compare} key={p.id} />)}</div>
+      <div className="d-g4 d-rail">{best.map((p, i) => <DCard p={p} tag={i === 0 ? "No.1 seller" : undefined} money={money} compare={compare} key={p.id} />)}</div>
     </section>
 
     <section className="d-wrap d-sec">
-      <div className="d-g3">
+      <div className="d-g3 d-rail d-rail-promo">
         <a className="d-promo" href="#big-screens"><img src={pic("img/elista/webOS-Smart-TV-85in_2.webp", 960)} srcSet={picSet("img/elista/webOS-Smart-TV-85in_2.webp")} sizes="(max-width:900px) 50vw, 30vw" alt="" loading="lazy" width="1500" height="1500" /><span className="d-ov"></span><div className="d-t">{maxOff > 0 && <span className="d-badge">Up to {maxOff}% off</span>}<h3 className="d-h">65" &amp; above</h3><span>Cinema-size screens from {from(tvs.filter(p => inchOf(p) >= 65))}</span></div></a>
         <a className="d-promo" href={listUrl({ cat: "Televisions", type: "Mini-LED PRO" })}><img src={pic("img/elista/Mini-LED-PRO-65in_2.webp", 960)} srcSet={picSet("img/elista/Mini-LED-PRO-65in_2.webp")} sizes="(max-width:900px) 50vw, 30vw" alt="" loading="lazy" width="1500" height="1500" /><span className="d-ov"></span><div className="d-t"><span className="d-badge dark">New</span><h3 className="d-h">Mini-LED PRO</h3><span>Dolby Vision · Atmos · from {from(miniAll)}</span></div></a>
         <a className="d-promo" href="#under-30000"><img src={pic("img/elista/Coolita-OS-HD-Smart-TV-32in_2.webp", 960)} srcSet={picSet("img/elista/Coolita-OS-HD-Smart-TV-32in_2.webp")} sizes="(max-width:900px) 50vw, 30vw" alt="" loading="lazy" width="1500" height="1500" /><span className="d-ov"></span><div className="d-t"><span className="d-badge green">Budget</span><h3 className="d-h">Under ₹30,000</h3><span>Smart TVs for bedroom and kitchen</span></div></a>
@@ -169,12 +170,12 @@ export function Home() {
 
     <section className="d-wrap d-sec" id="under-30000">
       <Head h="Under ₹30,000" sub="Smart TVs for bedrooms, kitchens and first homes." link="View all" href={listUrl({ cat: "Televisions", max: 30000 })} />
-      <div className="d-g4">{under.map(p => <DCard p={p} money={money} compare={compare} key={p.id} />)}</div>
+      <div className="d-g4 d-rail">{under.map(p => <DCard p={p} money={money} compare={compare} key={p.id} />)}</div>
     </section>
 
     <section className="d-wrap d-sec" id="sizes">
       <Head h="Shop by size" sub={"Sit 1.5× the screen width away for the best picture. Example: a 55\" TV suits a sofa about 2 metres from the wall."} link="Size guide" href="/buying-guide" />
-      <div className="d-lineup">{sizes.filter(sz => sz.n >= 32).sort((x, y) => x.n - y.n).map((sz, i) => { const list = bySize(sz.n), want = [/QLED/, /Google/, /Coolita|Android/, /WebOS/, /Mini-LED/, /Google/, /WebOS/][i % 7], shot = ((list.find(p => (p.images || [])[0] && want.test(p.name + " " + (p.os || ""))) || list.find(p => (p.images || [])[0])) || {}).images, cm = cmOf(list[0] || {}); return <a className="d-sz" href={listUrl({ cat: "Televisions", size: sz.n })} key={sz.n}>
+      <div className="d-lineup d-rail d-rail-sz">{sizes.filter(sz => sz.n >= 32).sort((x, y) => x.n - y.n).map((sz, i) => { const list = bySize(sz.n), want = [/QLED/, /Google/, /Coolita|Android/, /WebOS/, /Mini-LED/, /Google/, /WebOS/][i % 7], shot = ((list.find(p => (p.images || [])[0] && want.test(p.name + " " + (p.os || ""))) || list.find(p => (p.images || [])[0])) || {}).images, cm = cmOf(list[0] || {}); return <a className="d-sz" href={listUrl({ cat: "Televisions", size: sz.n })} key={sz.n}>
         <span className="d-szstage" aria-hidden="true"><span className="d-szscreen" style={{ width: Math.round(42 + (sz.n - 32) / (85 - 32) * 56) + "%" }}>{shot && <img src={pic(shot[0], 480)} alt="" loading="lazy" width="480" height="480" />}</span><span className="d-szstand"></span></span>
         <span className="d-szinfo"><strong>{sz.n}"</strong><small>{cm ? cm + " cm · " : ""}{DIST[sz.n] || ""}</small><span className="d-szroom">{rooms[sz.n] || "Living room"}</span><span className="d-szfrom">from <b>{from(list)}</b></span></span>
       </a>; })}</div>
@@ -182,7 +183,7 @@ export function Home() {
 
     <section className="d-wrap d-sec" id="big-screens">
       <Head h={"Big screens: 65\" to 85\""} sub="Cinema at home. Free delivery and cash on delivery on every TV." link="View all" href={listUrl({ cat: "Televisions", size: "65+" })} />
-      <div className="d-g4">{big.map(p => <DCard p={p} tag={p.id === 18 ? "Flagship" : undefined} money={money} compare={compare} key={p.id} />)}</div>
+      <div className="d-g4 d-rail">{big.map(p => <DCard p={p} tag={p.id === 18 ? "Flagship" : undefined} money={money} compare={compare} key={p.id} />)}</div>
     </section>
 
     {mini && <section className="d-wrap d-sec">
@@ -199,7 +200,7 @@ export function Home() {
       </div>
     </section>}
 
-    {cmpPicks.length === 3 && <section className="d-wrap d-sec">
+    {cmpPicks.length === 3 && <section className="d-wrap d-sec d-cmpsec">
       <Head h="Compare top picks" sub="The three TVs most customers choose between." link="Compare all" href={"/compare?ids=" + cmpPicks.map(p => p.id).join(",")} />
       <div className="d-tbl"><table><thead><tr><th style={{ width: "22%" }}>Model</th>{cmpPicks.map(p => <th key={p.id}><a href={productUrl(p)}>{title(p)}</a></th>)}</tr></thead><tbody>
         <tr><td className="muted">Price</td>{cmpPicks.map(p => <td key={p.id}><span className="d-price" style={{ fontSize: 20 }}>{money(p.price)}</span>{p.mrp > p.price && <span className="d-mrp"> {money(p.mrp)}</span>}</td>)}</tr>
@@ -210,12 +211,12 @@ export function Home() {
 
     <section className="d-wrap d-sec">
       <Head h={"Living-room favourites: 50\" and 55\""} sub="The sizes most Indian living rooms are built for." link="View all" href={listUrl({ cat: "Televisions", size: 55 })} />
-      <div className="d-g4">{living.map(p => <DCard p={p} money={money} compare={compare} key={p.id} />)}</div>
+      <div className="d-g4 d-rail">{living.map(p => <DCard p={p} money={money} compare={compare} key={p.id} />)}</div>
     </section>
 
     <section className="d-wrap d-sec">
       <Head h="Shop by type" link="All TVs" href="/televisions" />
-      <div className="d-g6">{types.filter(([, , list]) => list.length).map(([name, tile, list, href, note]) => <a className="d-card d-type" href={href} key={name}>
+      <div className="d-g6 d-rail d-rail-sz">{types.filter(([, , list]) => list.length).map(([name, tile, list, href, note]) => <a className="d-card d-type" href={href} key={name}>
         <div className="d-tv"><img src={pic("img/elista/" + tile + "_2.webp", 480)} srcSet={picSet("img/elista/" + tile + "_2.webp")} sizes="(max-width:900px) 46vw, 260px" alt="" loading="lazy" width="1500" height="1500" /></div>
         <strong>{name}</strong>{note && <span className="d-emi">{note.replace(/ · /g, ", ")}</span>}<span className="d-from">From <b>{from(list)}</b></span>{Math.max(...list.map(off)) > 0 && <span className="d-save">Up to {Math.max(...list.map(off))}% off</span>}
       </a>)}</div>
@@ -239,13 +240,13 @@ export function Home() {
       <div className="d-faq">
         {[["Is the price lower than Amazon or Croma?", "Our prices are factory-direct for Elista, with no seller margin added."], ["How is MyTekkStore different from Croma, Amazon or Flipkart?", "Price: factory-direct, no seller margin added. Delivery: free on every TV, not varying by seller. Cash on delivery: on every TV. No Cost EMI: on every smart TV, not selected items only. Product: genuine, with the brand's warranty. Support: direct from the store, not a call centre. What the big stores have that we do not yet is a shop you can walk into and thousands of reviews, which this store earns one delivered TV at a time."], ["How fast is delivery?", "Free delivery across India, usually within 3 to 5 days. You get tracking by email and from your account."],
           ["Can I pay cash on delivery?", "Yes. Cash on delivery is available on every TV. You can also pay online by UPI, card or net banking."], ["Which cards get No Cost EMI?", "HDFC, ICICI, SBI, Axis and Kotak credit cards, for 3 to 12 months. The interest is borne by us."],
-          ["What about warranty and service?", "Every TV carries Elista's 1 or 1+1 year warranty. Register it with the brand after delivery; Elista's service network handles repairs."], ["Is the TV genuine?", "Yes. Every TV is a new, sealed Elista unit with the brand warranty card, sourced directly from the manufacturer."]].map(([q, a]) => <div key={q}><strong>{q}</strong><span className="d-sub">{a}</span></div>)}
+          ["What about warranty and service?", "Every TV carries Elista's 1 or 1+1 year warranty. Register it with the brand after delivery; Elista's service network handles repairs."], ["Is the TV genuine?", "Yes. Every TV is a new, sealed Elista unit with the brand warranty card, sourced directly from the manufacturer."]].map(([q, a]) => <details key={q} open={!phone}><summary><strong>{q}</strong></summary><span className="d-sub">{a}</span></details>)}
       </div>
     </section>
 
     <section className="d-wrap d-sec">
       <Head h="Buying guides" link="All guides" href="/buying-guide" />
-      <div className="d-g3">
+      <div className="d-g3 d-rail d-rail-guide">
         <a className="d-card d-guide" href="/buying-guide"><img src={pic("img/elista/webOS-Smart-TV-55in_2.webp", 480)} alt="" loading="lazy" /><div><strong>Which TV size is right for your room?</strong><span className="d-emi">A 2-minute guide with distances for every size.</span></div></a>
         <a className="d-card d-guide" href="/buying-guide"><img src={pic("img/elista/Cloud-TV-QLED-43in_2.webp", 480)} alt="" loading="lazy" /><div><strong>QLED vs Mini-LED vs 4K LED</strong><span className="d-emi">What the names mean and which is worth paying for.</span></div></a>
         <a className="d-card d-guide" href="/buying-guide"><img src={pic("img/elista/Google-TV-Xplore-55in_2.webp", 480)} alt="" loading="lazy" /><div><strong>Google TV or webOS Hub?</strong><span className="d-emi">Apps, remotes and voice, compared side by side.</span></div></a>

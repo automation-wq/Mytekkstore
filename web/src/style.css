@@ -516,7 +516,7 @@ h2 a { transition:letter-spacing .2s } h2 a:hover { letter-spacing:.5px }
 .l0:hover .l0link::after, .l0.open .l0link::after, .l0.cur .l0link::after { transform:scaleX(1) }
 /* The panel is positioned against the header (the list items stay unpositioned), so it spans the full width and is not clipped by the scrolling bar on phones. */
 .npanel { position:absolute; left:0; right:0; top:100%; background:var(--head); border-top:1px solid var(--line); box-shadow:0 30px 50px -22px #00000047; white-space:normal;
-  max-height:calc(100vh - var(--hh,150px)); max-height:calc(100dvh - var(--hh,150px)); overflow-y:auto; overscroll-behavior:contain;
+  max-height:calc(100vh - var(--hb,var(--hh,150px))); max-height:calc(100dvh - var(--hb,var(--hh,150px))); overflow-y:auto; overscroll-behavior:contain; /* --hb: the whole header, which shows at the top of the page on phones */
   visibility:hidden; transition:visibility 0s .2s } /* fades down and staggers its tiles through Motion (flyIn in components.jsx) */
 .l0.open .npanel { visibility:visible; transition:none }
 .ngrid { max-width:1200px; margin:auto; padding:28px 16px 34px; display:grid; grid-template-columns:1.5fr 1.15fr .85fr; gap:44px; align-items:start }
@@ -3381,3 +3381,34 @@ h1.explore.srch { text-align:left; font-size:34px; margin:12px 0 18px }
 
 .bk-fine { margin:auto 0 0; padding-top:16px; font-size:12.5px; line-height:1.5; color:#8A909C }
 @media (max-width:600px) { .bk-mini { width:60px; height:40px; border-radius:7px } .bk-mini i { left:7px; top:6px; width:12px; height:9px } .bk-mini b { left:7px; bottom:5px; font-size:9px } .bk-row { padding:12px 8px; margin:0 -8px; align-items:start } .bk-txt small { font-size:12.5px } .bk-calc { gap:12px } .bk-fine { padding-top:12px } }
+
+/* ===== Phone home page, 25 Nov: the page was 24 phone screens tall. Product lists, sizes, types, promos and guides become swipe rows
+   (Croma, Amazon and Flipkart on phones); the questions fold; the compare table and the payment boxes (both said again by the footer) stay on
+   larger screens. Desktop is unchanged. ===== */
+.d-faq summary { list-style:none; cursor:default } .d-faq summary::-webkit-details-marker { display:none }
+.d-faq > details { border-bottom:1px solid #ECEEF1; padding:16px 0 } .d-faq > details strong { display:block; margin-bottom:6px }
+@media (max-width:760px) {
+  .hp .d-rail { display:grid; grid-template-columns:none; grid-auto-flow:column; grid-auto-columns:calc((100% - 10px) / 2.15); gap:10px; overflow-x:auto; overscroll-behavior-x:contain;
+    scroll-snap-type:x mandatory; scroll-padding-inline:16px; margin-inline:-16px; padding:2px 16px 8px; scrollbar-width:none }
+  .hp .d-rail::-webkit-scrollbar { display:none } .hp .d-rail > * { scroll-snap-align:start; min-width:0 }
+  .hp .d-rail-sz { grid-auto-columns:calc((100% - 20px) / 2.6) }
+  .hp .d-rail-promo, .hp .d-rail-guide { grid-auto-columns:78% }
+  .hp .d-rail-promo .d-promo { aspect-ratio:1.45 }
+  .hp .d-hd { gap:6px } .hp .d-hd .d-sub { font-size:14.5px; line-height:1.45 } .hp .d-sec { padding-top:40px }
+  .hp .d-cmpsec, .hp .d-pay { display:none }
+  .hp .d-lineup .d-szstage { height:96px }
+  .d-faq { gap:0 } .d-faq > details { padding:0 } .d-faq summary { display:flex; align-items:center; justify-content:space-between; gap:14px; padding:16px 0; cursor:pointer }
+  .d-faq summary strong { margin:0; font-size:15.5px; line-height:1.4 } .d-faq summary::after { content:"+"; flex:none; font-size:22px; font-weight:400; color:#5F6775; line-height:1 }
+  .d-faq details[open] summary::after { content:"−" } .d-faq details > .d-sub { display:block; padding:0 0 16px; margin:0 }
+  .hp .d-hero .d-schips { display:none } .hp .d-hero .d-stext { min-height:0 }
+  .hp .d-fimg, .hp .d-festimg { min-height:0; aspect-ratio:16 / 9 }
+  .hp .d-ftext .d-h[style] { font-size:28px !important } .hp .d-stats { display:none }
+  .hp .d-prom { padding:16px 14px } .hp .d-promic { width:36px; height:36px }
+  .f-cols { grid-template-columns:1fr 1fr; gap:28px 20px; padding:40px 0 28px } .f-cols > div:first-child { grid-column:1 / -1 }
+}
+@media (max-width:760px) {
+  .hp .d-rail .d-badges > :nth-child(n+2) { display:none } /* one badge on a swipe card, so it never wraps or clips */
+  .hp .d-fimg img { object-position:100% 50% } /* only the television, not the words printed on the left of the owner's banner */
+  .hp #bank-offers .bk-fine { display:none } .hp #bank-offers .bk-row { padding-block:10px } /* the terms sit behind "All offers & T&C" */
+}
+@media (max-width:760px) { .hp .d-fimg img { transform:scale(1.18); transform-origin:100% 50% } }

@@ -349,7 +349,7 @@ async function run() {
       const last = await save(); assert.equal((last.match(/You save/g) || []).length, 3, "on the dearest TV every bank offer applies: " + last); assert.match(last, /₹2,000/, "HDFC's 10% stops at its ₹2,000 cap"); }
     { const v = () => b.ev(`document.querySelector("#bank-offers .bk-emi-v").textContent`), nine = await v(); await b.ev(`document.querySelectorAll("#bank-offers .bk-seg button")[0].click()`); await sleep(100); assert.notEqual(await v(), nine, "the 3, 6, 9 month buttons change the instalment"); }
     assert.equal(await b.ev(`document.querySelectorAll(".sizerow").length`), 0, "no shop-by-size rows on the home page (client decision 2026-10-09; sizes live on the category pages)");
-    assert.ok(await b.ev(`document.querySelectorAll(".d-faq > div").length >= 5`), "the questions people ask before buying, on the home page");
+    assert.ok(await b.ev(`document.querySelectorAll(".d-faq > details").length >= 5`), "the questions people ask before buying, on the home page");
     await b.goto(base + "/product.html?id=1");
     assert.ok(await b.ev(`!!document.querySelector(".pdp .emiline") && document.querySelectorAll(".pofs div").length === 3`), "EMI line and offers box on the product page");
     assert.ok(await b.ev(`document.querySelectorAll("#t-specs .specgroup").length >= 3`), "grouped specifications on the product page");
