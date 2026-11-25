@@ -76,6 +76,21 @@ export function Product() {
   if (p.os) groups[0][1].unshift(["Operating system", p.os]);
 
   const feats = (p.specs || []).slice(0, 6); // feature strip under the photo, from the product's own specifications
+  // key specifications (25 Nov), the way Amazon's and Croma's spec summaries lead: the four figures buyers compare first (size, picture,
+  // sound, warranty) and then the rows that tell TVs apart, all read from the product's own specifications, never the first six rows by position
+  const ks = (() => {
+    const specs = p.specs || [], get = re => (specs.find(([k]) => re.test(k)) || [])[1] || "", size = get(/^Screen size/i), inch = (/(\d+)\s*inch/i.exec(size) || [])[1];
+    if (!inch) return null;
+    const res = get(/^Resolution/i).split(/,\s*/), snd = get(/^Sound/i), w = snd.match(/\d+(?=\s*W\b)/g), disp = get(/^Display/i), war = get(/^Warranty/i);
+    const stats = [[inch + '"', ((/\d+\s*cm/.exec(size) || [])[0] || "") + " screen"]];
+    if (res[0]) stats.push([res[0].replace(/^4K Ultra HD$/, "4K UHD"), (res[1] || "Resolution").replace(/ x /, " × ")]);
+    if (w) stats.push([w.join("/") + " W", snd.split(/,| \(/)[0].replace(/ \d+ W.*$/, "")]); else if (snd) stats.push([snd.split(" ")[0], snd.split(" ").slice(1).join(" ") + " sound"]); else if (disp) stats.push([disp.split(/,\s*/)[0], "Panel"]);
+    if (war) stats.push([/1\s*\+\s*1/.test(war) ? "1+1 yr" : war.replace(/ years?/, " yr"), /registration/.test(war) ? "2nd year on registration" : "Brand warranty"]);
+    // a TV whose specifications give no resolution row (the Mini-LED PRO, the 43" Xplore) shows its panel in that slot instead
+    const panel = disp && !stats.some(x => x[1] === "Panel") && stats.length < 4; if (panel) stats.splice(1, 0, [disp.split(/,\s*/)[0].replace(/ PRO$/, ""), /QLED/.test(disp) && !/^QLED/.test(disp) ? "QLED panel" : "Panel"]);
+    const rows = [panel ? "" : "Display type", "HDR", "Smart TV", "Apps", "Voice", "Memory", "Ports"].map(k => specs.find(([n]) => n === k)).filter(Boolean).slice(0, 4);
+    return { stats, rows };
+  })();
   const images = galleryOf(p); // the admin's photos, or the six-picture gallery built from the render (data.js galleryOf)
   const BR_LABELS = [[/-room\./, "In the living room"], [/magic-remote-guide/, "Magic Remote guide"], [/magic-remote/, "Magic Remote"], [/-tv\./, "Product picture"]]; // the brochure pictures by name
   const labelOf = src => /^img\/br\//.test(src) ? (BR_LABELS.find(([re]) => re.test(src)) || [0, "From the brochure"])[1] : /^img\/p\d/.test(src) || /_1\.webp$/.test(src) ? "Front view" : /_2\.webp$/.test(src) ? "In the living room" : /_3\.webp$/.test(src) ? "Key features" : /_4\.webp$/.test(src) ? "Specifications" : /_5\.webp$/.test(src) ? "Entertainment" : GALLERY_LABELS[images.indexOf(src)] || "Photo";
@@ -141,8 +156,11 @@ export function Product() {
         <p style={{ marginTop: 12 }}>{stock} <span className="muted" style={{ fontSize: 13 }}>· Sold by Mytekkstore</span></p>
         {p.stock > 0 && p.stock <= 10 && <div className="stockbar"><span>Hurry, only {p.stock} left in stock</span><i><b style={{ width: p.stock * 10 + "%" }}></b></i></div>}
         {sizes.length > 0 && <div className="sizes"><span>{S.by}</span>{sizes.map(({ s, t, on }) => <a className={"chip sw" + (on ? " on" : "")} href={productUrl(t)} aria-current={on ? "page" : undefined} key={s.label}><b>{s.label.replace(/ TVs$/, "")}</b><small>{money(t.price)}</small></a>)}</div>}
-        {feats.length > 0 && <div className="fstrip"><b className="fhead">Key specifications</b>{feats.map(([k, v]) => <div className="ft" key={k}><Ico shapes={specIcon(k)} /><span><small>{k}</small><b>{v}</b></span></div>)}<a className="alink" href="#tabs" data-tab="t-specs">All specifications →</a></div>}
-        <div className="pill"><i></i><b>Free delivery</b> · usually by {etaText()} · cash on delivery available</div>
+        {ks ? <div className="kspec"><div className="ks-head"><b>Key specifications</b><a className="alink" href="#tabs" data-tab="t-specs">All specifications →</a></div>
+          <div className="ks-stats">{ks.stats.map(([big, small]) => <div className="ks-stat" key={small}><b>{big}</b><small>{small}</small></div>)}</div>
+          <div className="ks-rows">{ks.rows.map(([k, v]) => <div className="ks-row" key={k}><Ico shapes={specIcon(k)} /><small>{k}</small><b>{v}</b></div>)}</div></div>
+        : feats.length > 0 && <div className="fstrip"><b className="fhead">Key specifications</b>{feats.map(([k, v]) => <div className="ft" key={k}><Ico shapes={specIcon(k)} /><span><small>{k}</small><b>{v}</b></span></div>)}<a className="alink" href="#tabs" data-tab="t-specs">All specifications →</a></div>}
+        <div className="pill"><i></i><b>Free delivery</b><span>usually by {etaText()} · cash on delivery available</span></div>
         <form className="pin" id="pincheck" noValidate ref={pinRef} onSubmit={e => { e.preventDefault(); pinCheck(); }}><label>Deliver to <input name="pin" inputMode="numeric" maxLength="6" placeholder="Enter pincode" defaultValue={(me && me.pin) || load("pin", "")} aria-label="Pincode" /></label><button className="btn ghost">Check</button>
           <p id="pinmsg" className="muted" role="status">{typeof pinMsg === "string" ? pinMsg : <><b>Delivery available</b> to {pinMsg.pin} · usually by {etaText()} · cash on delivery available</>}</p></form>
         {picks.length > 0 && <div className="bundle"><b>Complete your home</b><p className="muted small">Pair it with these and add everything in one go.</p>

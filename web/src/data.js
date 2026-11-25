@@ -182,6 +182,13 @@ export const DRAW_ICONS = {
 };
 // line icons for the feature strip under the product photo, picked by the specification's name
 export const SPEC_ICONS = [
+  [/^display|panel/i, '<rect pathLength="1" x="3" y="4" width="18" height="12" rx="2"/><path pathLength="1" d="M7 13l3-4 3 3 2-2 2 3"/>'],
+  [/^hdr|vision/i, '<circle pathLength="1" cx="12" cy="12" r="4"/><path pathLength="1" d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>'],
+  [/^apps/i, '<rect pathLength="1" x="3" y="5" width="18" height="14" rx="3"/><path pathLength="1" d="M10 9l5 3-5 3z"/>'],
+  [/^voice|mic/i, '<rect pathLength="1" x="9" y="3" width="6" height="11" rx="3"/><path pathLength="1" d="M5 11a7 7 0 0014 0M12 18v3"/>'],
+  [/memory|ram|storage|processor|chip/i, '<rect pathLength="1" x="6" y="6" width="12" height="12" rx="2"/><path pathLength="1" d="M10 10h4v4h-4zM9 3v3M15 3v3M9 18v3M15 18v3M3 9h3M3 15h3M18 9h3M18 15h3"/>'],
+  [/wi-?fi|wireless/i, '<path pathLength="1" d="M2 9a15 15 0 0120 0M5 12.5a10 10 0 0114 0M8.5 16a5 5 0 017 0M12 19.5h.01"/>'],
+  [/mirror|share|cast/i, '<path pathLength="1" d="M3 8V6a2 2 0 012-2h14a2 2 0 012 2v12a2 2 0 01-2 2h-6M3 12a8 8 0 018 8M3 16a4 4 0 014 4M3 20h.01"/>'],
   [/screen|size|inch|\bcm\b/i, '<rect pathLength="1" x="2" y="4" width="20" height="13" rx="2"/><path pathLength="1" d="M8 21h8M12 17v4"/>'],
   [/resolution|4k|hd|pixel/i, '<rect pathLength="1" x="3" y="5" width="18" height="14" rx="2"/><path pathLength="1" d="M8 9v6M8 12l4-3M8 12l4 3M14 9h2a2 2 0 010 4h-2zM14 13l3 2"/>'],
   [/sound|audio|speaker|dolby/i, '<path pathLength="1" d="M4 10v4h4l5 4V6L8 10z"/><path pathLength="1" d="M16 9a4 4 0 010 6M18.5 6.5a8 8 0 010 11"/>'],

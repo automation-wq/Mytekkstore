@@ -291,7 +291,7 @@ async function run() {
     const cmp = await b.ev(`({ cols: document.querySelectorAll(".ctable thead th").length - 1, diff: document.querySelectorAll(".ctable tr.diff").length, me: document.querySelector(".ctable thead th.me .stock").textContent, buys: document.querySelectorAll(".ctable .buy").length })`);
     assert.equal(cmp.cols, 4, "this TV compared with three others"); assert.ok(cmp.diff > 0, "differing rows are marked");
     assert.equal(cmp.me, "This product"); assert.equal(cmp.buys, 4, "a buy control in every column (a button, or the stepper once it is in the cart)");
-    const pdp = await b.ev(`({ feats: document.querySelectorAll(".fstrip .ft").length, emi: !!document.querySelector(".emiline"), share: document.querySelectorAll(".sharerow a").length, sw: document.querySelectorAll(".chip.sw small").length, pill: !!document.querySelector(".pill") })`);
+    const pdp = await b.ev(`({ feats: document.querySelectorAll(".kspec .ks-stat, .kspec .ks-row, .fstrip .ft").length, emi: !!document.querySelector(".emiline"), share: document.querySelectorAll(".sharerow a").length, sw: document.querySelectorAll(".chip.sw small").length, pill: !!document.querySelector(".pill") })`);
     assert.ok(pdp.feats >= 4, "feature strip under the photo"); assert.ok(pdp.emi, "EMI per month line"); assert.equal(pdp.share, 3, "share links");
     assert.ok(pdp.sw >= 3, "size swatches show prices"); assert.ok(pdp.pill, "delivery pill");
     assert.equal(await b.ev(`document.querySelectorAll(".bundle").length`), 0, "no add-on box while the store sells one category (it pairs products across categories)");
